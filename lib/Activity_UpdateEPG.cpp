@@ -27,7 +27,7 @@
 
 #include <libdvbv5/eit.h>
 #include <libdvbv5/mgt.h>
-#include <libdvbv5/atsc_eit.h>
+//#include <libdvbv5/atsc_eit.h>
 #include <libdvbv5/dvb-scan.h>
 #include <libdvbv5/dvb-demux.h>
 
@@ -57,6 +57,7 @@ bool Activity_UpdateEPG::Perform( )
     frontend->LogError( "unable to open adapter demux" );
     goto fail;
   }
+/*
   if( transponder->HasMGT( ))
   {
     frontend->Log( "Reading MGT" );
@@ -102,6 +103,7 @@ bool Activity_UpdateEPG::Perform( )
     return true;
   }
   else // no MGT
+*/
   {
     frontend->Log( "Reading EIT" );
     struct dvb_table_eit *eit = NULL;

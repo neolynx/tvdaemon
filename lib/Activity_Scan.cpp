@@ -91,6 +91,7 @@ bool Activity_Scan::Perform( )
   if( transponder->GetState( ) == Transponder::State_Duplicate )
     goto scan_aborted;
 
+/*
   if( transponder->HasVCT( ))
   {
     frontend->Log( "Reading VCT" );
@@ -124,6 +125,7 @@ bool Activity_Scan::Perform( )
     if( vct )
       atsc_table_vct_free( vct );
   }
+*/
 
   if( transponder->HasSDT( ))
   {
@@ -193,13 +195,13 @@ bool Activity_Scan::Perform( )
     {
       if( !IsActive( ))
         break;
+      if( *it == 0 )
+      {
+        frontend->LogWarn( "  Ignoring PAT of service 0" );
+        continue;
+      }
       if( *it == program->service_id )
       {
-        if( program->service_id == 0 )
-        {
-          frontend->LogWarn( "  Ignoring PMT of service 0" );
-          break;
-        }
 
         transponder->UpdateProgram( program->service_id, program->pid );
 
