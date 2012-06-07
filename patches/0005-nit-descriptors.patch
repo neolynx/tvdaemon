@@ -1,0 +1,262 @@
+From 49afb98245097dad6d79f1abfad7ae1675098519 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Thu, 7 Jun 2012 18:45:59 +0200
+Subject: [PATCH] nit descriptors
+
+---
+ lib/include/descriptors.h           |    4 +-
+ lib/include/descriptors/language.h  |    3 +-
+ lib/include/descriptors/nit.h       |    7 ++-
+ lib/libdvbv5/descriptors.c          |    6 +-
+ lib/libdvbv5/descriptors/language.c |   11 +++--
+ lib/libdvbv5/descriptors/nit.c      |   82 ++++++++++++++++++++++++-----------
+ lib/libdvbv5/descriptors/pmt.c      |    1 -
+ 7 files changed, 74 insertions(+), 40 deletions(-)
+
+diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
+index 9b81295..6d6ab0c 100644
+--- a/lib/include/descriptors.h
++++ b/lib/include/descriptors.h
+@@ -52,13 +52,13 @@ struct dvb_desc {
+ 	uint8_t data[];
+ } __attribute__((packed));
+ 
+-void dvb_desc_init(const uint8_t *buf, struct dvb_desc *desc);
++void dvb_desc_init(const uint8_t **buf, struct dvb_desc *desc);
+ 
+ ssize_t dvb_parse_descriptor(const uint8_t *buf, uint8_t *dest, uint16_t section_length, struct dvb_desc **head_desc);
+ 
+ struct dvb_v5_fe_parms;
+ 
+-typedef ssize_t (*dvb_desc_init_func)(const uint8_t *buf, struct dvb_desc *desc);
++typedef ssize_t (*dvb_desc_init_func)(const uint8_t **buf, struct dvb_desc *desc);
+ typedef void (*dvb_desc_print_func)(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
+ 
+ struct dvb_descriptor {
+diff --git a/lib/include/descriptors/language.h b/lib/include/descriptors/language.h
+index 8cc3e7f..31af97e 100644
+--- a/lib/include/descriptors/language.h
++++ b/lib/include/descriptors/language.h
+@@ -28,6 +28,7 @@
+ struct dvb_desc_language {
+ 	uint8_t type;
+ 	struct dvb_desc *next;
++
+ 	unsigned char language[4];
+ 	uint8_t audio_type;
+ } __attribute__((packed));
+@@ -38,7 +39,7 @@ struct dvb_v5_fe_parms;
+ extern "C" {
+ #endif
+ 
+-ssize_t dvb_desc_language_init(const uint8_t *buf, struct dvb_desc *desc);
++ssize_t dvb_desc_language_init(const uint8_t **buf, struct dvb_desc *desc);
+ void dvb_desc_language_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
+ 
+ #ifdef __cplusplus
+diff --git a/lib/include/descriptors/nit.h b/lib/include/descriptors/nit.h
+index dffd19e..e094551 100644
+--- a/lib/include/descriptors/nit.h
++++ b/lib/include/descriptors/nit.h
+@@ -45,10 +45,12 @@ struct dvb_table_nit_transport {
+ 	union {
+ 		uint16_t bitfield;
+ 		struct {
+-			uint16_t desc_length:12;
++			uint16_t section_length:12;
+ 			uint16_t reserved:4;
+ 		};
+ 	};
++	struct dvb_desc *descriptor;
++	struct dvb_table_nit_transport *next;
+ } __attribute__((packed));
+ 
+ struct dvb_table_nit {
+@@ -60,8 +62,7 @@ struct dvb_table_nit {
+ 			uint16_t reserved:4;
+ 		};
+ 	};
+-	uint16_t transports;
+-	struct dvb_table_nit_transport transport[];
++	struct dvb_table_nit_transport *transport;
+ } __attribute__((packed));
+ 
+ struct dvb_v5_fe_parms;
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index 031d7b6..3c9edef 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -34,9 +34,9 @@
+ #include "descriptors/language.h"
+ #include "descriptors/nit.h"
+ 
+-void dvb_desc_init(const uint8_t *buf, struct dvb_desc *desc)
++void dvb_desc_init(const uint8_t **buf, struct dvb_desc *desc)
+ {
+-	desc->type = buf[0];
++	desc->type = *buf[0];
+ 	desc->next = NULL;
+ }
+ 
+@@ -62,7 +62,7 @@ ssize_t dvb_parse_descriptor(const uint8_t *buf, uint8_t *dest, uint16_t section
+ 	while (length < section_length) {
+ 		uint8_t type = buf[0];
+ 		if (dvb_descriptors[type].init) {
+-			ssize_t len = dvb_descriptors[type].init( buf, (struct dvb_desc *) dest );
++			ssize_t len = dvb_descriptors[type].init( &buf, (struct dvb_desc *) dest );
+ 			if(!*head_desc)
+ 				*head_desc = (struct dvb_desc *) dest;
+ 			dest += len;
+diff --git a/lib/libdvbv5/descriptors/language.c b/lib/libdvbv5/descriptors/language.c
+index 018007d..cb99aa2 100644
+--- a/lib/libdvbv5/descriptors/language.c
++++ b/lib/libdvbv5/descriptors/language.c
+@@ -23,15 +23,16 @@
+ #include "descriptors.h"
+ #include "dvb-fe.h"
+ 
+-ssize_t dvb_desc_language_init(const uint8_t *buf, struct dvb_desc *desc)
++ssize_t dvb_desc_language_init(const uint8_t **buf, struct dvb_desc *desc)
+ {
+ 	dvb_desc_init(buf, desc);
+ 	struct dvb_desc_language *lang = (struct dvb_desc_language *) desc;
+-	lang->language[0] = buf[2];
+-	lang->language[1] = buf[3];
+-	lang->language[2] = buf[4];
++	lang->language[0] = (*buf)[2];
++	lang->language[1] = (*buf)[3];
++	lang->language[2] = (*buf)[4];
+ 	lang->language[3] = '\0';
+-	lang->audio_type  = buf[5];
++	lang->audio_type  = (*buf)[5];
++	*buf += 5;
+ 	return sizeof(struct dvb_desc_language);
+ }
+ 
+diff --git a/lib/libdvbv5/descriptors/nit.c b/lib/libdvbv5/descriptors/nit.c
+index 05cecdf..e36cbd3 100644
+--- a/lib/libdvbv5/descriptors/nit.c
++++ b/lib/libdvbv5/descriptors/nit.c
+@@ -20,50 +20,82 @@
+  */
+ 
+ #include "descriptors/nit.h"
+-#include "descriptors.h"
+ #include "dvb-fe.h"
+ 
+ void *dvb_table_nit_init(const uint8_t *buf, ssize_t size)
+ {
+-	struct dvb_table_nit *nit = malloc(size + sizeof(uint16_t));
+-	memcpy(nit, buf, sizeof(struct dvb_table_nit) - sizeof(uint16_t));
++	uint8_t *d = malloc(DVB_MAX_PAYLOAD_PACKET_SIZE * 2);
++	const uint8_t *p = buf;
++	struct dvb_table_nit *nit = (struct dvb_table_nit *) d;
++
++	memcpy(nit, p, sizeof(struct dvb_table_nit) - sizeof(nit->transport));
++	p += sizeof(struct dvb_table_nit) - sizeof(nit->transport);
++	d += sizeof(struct dvb_table_nit);
+ 
+ 	dvb_table_header_init(&nit->header);
+ 	bswap16(nit->bitfield);
++	nit->transport = NULL;
++
++	/* skip desc section */
++	p += nit->desc_length;
+ 
+-	printf("nit size: %d\n", (int)size);
+-	union dvb_table_nit_transport_header *h = (union dvb_table_nit_transport_header *)
+-					  (buf + sizeof(struct dvb_table_nit) - sizeof(uint16_t) + nit->desc_length);
+-	bswap16(h->bitfield);
++	/*union dvb_table_nit_transport_header *h = (union dvb_table_nit_transport_header *)*/
++					  /*(buf + sizeof(struct dvb_table_nit) - sizeof(uint16_t) + nit->desc_length);*/
++	/*bswap16(h->bitfield);*/
+ 
+-	printf("got transport len: %d\n", h->transport_length);
++	/*printf("got transport len: %d\n", h->transport_length);*/
+ 
+-	uint8_t *p = (uint8_t *) h;
++	/*uint8_t *p = (uint8_t *) h;*/
+ 	p += sizeof(union dvb_table_nit_transport_header);
+ 
+-	int i = 0;
++	struct dvb_table_nit_transport *last = NULL;
++	struct dvb_table_nit_transport **head = &nit->transport;
+ 	while ((uint8_t *) p < buf + size - 4) {
+-		memcpy(nit->transport + i, p, sizeof(struct dvb_table_nit_transport));
+-		bswap16(nit->transport[i].transport_id);
+-		bswap16(nit->transport[i].network_id);
+-		bswap16(nit->transport[i].bitfield);
+-		p += sizeof(struct dvb_table_nit_transport);
+-		p += nit->transport[i].desc_length;
+-		i++;
++		struct dvb_table_nit_transport *transport = (struct dvb_table_nit_transport *) d;
++		memcpy(d, p, sizeof(struct dvb_table_nit_transport) - sizeof(transport->descriptor) - sizeof(transport->next));
++		p += sizeof(struct dvb_table_nit_transport) - sizeof(transport->descriptor) - sizeof(transport->next);
++		d += sizeof(struct dvb_table_nit_transport);
++
++		bswap16(transport->transport_id);
++		bswap16(transport->network_id);
++		bswap16(transport->bitfield);
++		transport->descriptor = NULL;
++		transport->next = NULL;
++
++		if(!*head)
++			*head = transport;
++		if(last)
++			last->next = transport;
++
++		/* get the descriptors for each program */
++		struct dvb_desc **head_desc = &transport->descriptor;
++		d += dvb_parse_descriptor(p, d, transport->section_length, head_desc);
++
++		p += transport->section_length;
++		last = transport;
+ 	}
+-	nit->transports = i;
+ 	return nit;
+ }
+ 
+-void dvb_table_nit_print(struct dvb_v5_fe_parms *parms, struct dvb_table_nit *t)
++void dvb_table_nit_print(struct dvb_v5_fe_parms *parms, struct dvb_table_nit *nit)
+ {
+ 	dvb_log("NIT");
+-	dvb_table_header_print(parms, &t->header);
+-	dvb_log("| desc_length   %d", t->desc_length);
+-	dvb_log("|\\  transport_id  network_id (%d transports)", t->transports);
+-	int i;
+-	for (i = 0; i < t->transports; i++) {
+-		dvb_log("|- %7d %7d", t->transport[i].transport_id, t->transport[i].network_id);
++	dvb_table_header_print(parms, &nit->header);
++	dvb_log("| desc_length   %d", nit->desc_length);
++	dvb_log("|\\  transport_id  network_id");
++	const struct dvb_table_nit_transport *transport = nit->transport;
++	uint16_t transports = 0;
++	while(transport) {
++		dvb_log("|- %7d %7d", transport->transport_id, transport->network_id);
++		struct dvb_desc *desc = transport->descriptor;
++		while (desc) {
++			if (dvb_descriptors[desc->type].print)
++				dvb_descriptors[desc->type].print(parms, desc);
++			desc = desc->next;
++		}
++		transport = transport->next;
++		transports++;
+ 	}
++	dvb_log("|_  %d transports", transports);
+ }
+ 
+diff --git a/lib/libdvbv5/descriptors/pmt.c b/lib/libdvbv5/descriptors/pmt.c
+index fe0ae6b..379dd86 100644
+--- a/lib/libdvbv5/descriptors/pmt.c
++++ b/lib/libdvbv5/descriptors/pmt.c
+@@ -28,7 +28,6 @@ void *dvb_table_pmt_init(const uint8_t *buf, ssize_t size)
+ {
+ 	uint8_t *d = malloc(DVB_MAX_PAYLOAD_PACKET_SIZE * 2);
+ 	const uint8_t *p = buf;
+-
+ 	struct dvb_table_pmt *pmt = (struct dvb_table_pmt *) d;
+ 
+ 	memcpy(pmt, p, sizeof(struct dvb_table_pmt) - sizeof(pmt->stream));
+-- 
+1.7.2.5
+
