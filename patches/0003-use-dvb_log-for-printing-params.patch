@@ -1,0 +1,178 @@
+From e8bd2089710eab685bfb78f445fa2e6cb19bae8b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Thu, 7 Jun 2012 16:17:29 +0200
+Subject: [PATCH 3/4] use dvb_log for printing params
+
+---
+ lib/include/dvb-fe.h    |    2 +-
+ lib/libdvbv5/dvb-fe.c   |   14 +++++++-------
+ lib/libdvbv5/dvb-scan.c |   17 +++++++----------
+ utils/dvb/dvb-fe-tool.c |    2 +-
+ utils/dvb/dvbv5-scan.c  |    4 ++--
+ 5 files changed, 18 insertions(+), 21 deletions(-)
+
+diff --git a/lib/include/dvb-fe.h b/lib/include/dvb-fe.h
+index a7e0f03..4816af4 100644
+--- a/lib/include/dvb-fe.h
++++ b/lib/include/dvb-fe.h
+@@ -122,7 +122,7 @@ int dvb_add_parms_for_sys(struct dtv_property *dvb_prop,
+ int dvb_set_compat_delivery_system(struct dvb_v5_fe_parms *parms,
+ 				   uint32_t desired_system);
+ 
+-void dvb_fe_prt_parms(FILE *fp, const struct dvb_v5_fe_parms *parms);
++void dvb_fe_prt_parms(const struct dvb_v5_fe_parms *parms);
+ int dvb_fe_set_parms(struct dvb_v5_fe_parms *parms);
+ int dvb_fe_get_parms(struct dvb_v5_fe_parms *parms);
+ 
+diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
+index 90ad18f..12acf82 100644
+--- a/lib/libdvbv5/dvb-fe.c
++++ b/lib/libdvbv5/dvb-fe.c
+@@ -421,7 +421,7 @@ const char *const *dvb_attr_names(int cmd)
+ 	return NULL;
+ }
+ 
+-void dvb_fe_prt_parms(FILE *fp, const struct dvb_v5_fe_parms *parms)
++void dvb_fe_prt_parms(const struct dvb_v5_fe_parms *parms)
+ {
+ 	int i;
+ 
+@@ -438,11 +438,11 @@ void dvb_fe_prt_parms(FILE *fp, const struct dvb_v5_fe_parms *parms)
+ 		}
+ 
+ 		if (!attr_name || !*attr_name)
+-			fprintf(fp, "%s = %u\n",
++			dvb_log("%s = %u",
+ 				dvb_cmd_name(parms->dvb_prop[i].cmd),
+ 				parms->dvb_prop[i].u.data);
+ 		else
+-			fprintf(fp, "%s = %s\n",
++			dvb_log("%s = %s",
+ 				dvb_cmd_name(parms->dvb_prop[i].cmd),
+ 				*attr_name);
+ 	}
+@@ -524,9 +524,9 @@ int dvb_fe_get_parms(struct dvb_v5_fe_parms *parms)
+ 			return errno;
+ 		}
+ 		if (parms->verbose) {
+-			printf("Got parameters for %s:\n",
++			dvb_log("Got parameters for %s:",
+ 			       delivery_system_name[parms->current_sys]);
+-			dvb_fe_prt_parms(stdout, parms);
++			dvb_fe_prt_parms(parms);
+ 		}
+ 		goto ret;
+ 	}
+@@ -601,7 +601,7 @@ int dvb_fe_set_parms(struct dvb_v5_fe_parms *parms)
+ 		if (ioctl(parms->fd, FE_SET_PROPERTY, &prop) == -1) {
+ 			dvb_perror("FE_SET_PROPERTY");
+ 			if (parms->verbose)
+-				dvb_fe_prt_parms(stderr, parms);
++				dvb_fe_prt_parms(parms);
+ 			return errno;
+ 		}
+ 		goto ret;
+@@ -643,7 +643,7 @@ int dvb_fe_set_parms(struct dvb_v5_fe_parms *parms)
+ 	if (ioctl(parms->fd, FE_SET_FRONTEND, &v3_parms) == -1) {
+ 		dvb_perror("FE_SET_FRONTEND");
+ 		if (parms->verbose)
+-			dvb_fe_prt_parms(stderr, parms);
++			dvb_fe_prt_parms(parms);
+ 		return errno;
+ 	}
+ ret:
+diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
+index 6178fb0..836ec8f 100644
+--- a/lib/libdvbv5/dvb-scan.c
++++ b/lib/libdvbv5/dvb-scan.c
+@@ -139,7 +139,6 @@ static void parse_pmt(struct dvb_v5_descriptors *dvb_desc,
+ 		len = ((buf[3] & 0x0f) << 8) | buf[4];
+ 		pid = ((buf[1] & 0x1f) << 8) | buf[2];
+ 
+-		printf( "PMT len: %d\n", len );
+ 		switch (buf[0]) {
+ 			case 0x01: /* ISO/IEC 11172-2 Video */
+ 			case 0x02: /* H.262, ISO/IEC 13818-2 or ISO/IEC 11172-2 video */
+@@ -308,12 +307,13 @@ static int poll(int filedes, unsigned int seconds)
+ }
+ 
+ 
+-int dvb_read_section(int dmx_fd, unsigned char table, uint16_t pid, unsigned char **buf,
++int dvb_read_section(int dmx_fd, unsigned char table, uint16_t pid, uint8_t **buf,
+ 		unsigned *length, unsigned timeout)
+ {
+ 	int available;
+ 	ssize_t count = 0;
+ 	struct dmx_sct_filter_params f;
++	uint8_t *tmp;
+ 
+ 	// FIXME: verify known table
+ 	*buf = NULL;
+@@ -332,10 +332,8 @@ int dvb_read_section(int dmx_fd, unsigned char table, uint16_t pid, unsigned cha
+ 	do {
+ 		available = poll(dmx_fd, timeout);
+ 		if (available > 0) {
+-			*buf = malloc(DVB_MAX_PAYLOAD_PACKET_SIZE +
+-					dvb_table_initializers[table].info_length);
+-			count = read(dmx_fd,
+-					*buf + dvb_table_initializers[table].info_length,
++			tmp = malloc(DVB_MAX_PAYLOAD_PACKET_SIZE);
++			count = read(dmx_fd, tmp,
+ 					DVB_MAX_PAYLOAD_PACKET_SIZE);
+ 		}
+ 	} while (available < 0 && errno == EOVERFLOW);
+@@ -347,19 +345,18 @@ int dvb_read_section(int dmx_fd, unsigned char table, uint16_t pid, unsigned cha
+ 		perror("read_sections: read error");
+ 		return -2;
+ 	}
+-	/**buf = realloc(*buf, count + dvb_table_initializers[table].info_length);*/
+ 
+-	uint32_t crc = crc32(*buf + dvb_table_initializers[table].info_length, count, 0xFFFFFFFF);
++	uint32_t crc = crc32(tmp, count, 0xFFFFFFFF);
+ 	if (crc != 0) {
+ 		printf("crc error\n");
+ 		return -3;
+ 	}
+ 
+ 	//ARRAY_SIZE(vb_table_initializers) >= table
+-	int r = dvb_table_initializers[table].init(*buf, count);
++	*buf = dvb_table_initializers[table].init(tmp, count);
+ 	if (length)
+ 		*length = count;
+-	return r;
++	return 0;
+ }
+ 
+ static int read_section(int dmx_fd, struct dvb_v5_descriptors *dvb_desc,
+diff --git a/utils/dvb/dvb-fe-tool.c b/utils/dvb/dvb-fe-tool.c
+index 0292199..4c88afd 100644
+--- a/utils/dvb/dvb-fe-tool.c
++++ b/utils/dvb/dvb-fe-tool.c
+@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
+ #endif
+ 	if (get) {
+ 		dvb_fe_get_parms(parms);
+-		dvb_fe_prt_parms(stdout, parms);
++		dvb_fe_prt_parms(parms);
+ 	}
+ 
+ 	dvb_fe_close(parms);
+diff --git a/utils/dvb/dvbv5-scan.c b/utils/dvb/dvbv5-scan.c
+index 01cd63d..33032a9 100644
+--- a/utils/dvb/dvbv5-scan.c
++++ b/utils/dvb/dvbv5-scan.c
+@@ -404,9 +404,9 @@ static int run_scan(struct arguments *args,
+ 
+ 		dvb_fe_retrieve_parm(parms, DTV_FREQUENCY, &freq);
+ 		count++;
+-		printf("Scanning frequency #%d %d\n", count, freq);
++		dvb_log("Scanning frequency #%d %d", count, freq);
+ 		if (verbose)
+-			dvb_fe_prt_parms(stdout, parms);
++			dvb_fe_prt_parms(parms);
+ 
+ 		rc = check_frontend(parms, 4);
+ 		if (rc < 0)
+-- 
+1.7.2.5
+

@@ -1,0 +1,2893 @@
+From d532918b85e166a9fdd58a43faa08746e9624087 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 20 May 2012 14:50:53 +0200
+Subject: [PATCH 1/4] table tests
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/include/descriptors.h                   |  371 +++++++++++++++++++++++++++
+ lib/include/descriptors/header.h            |   62 +++++
+ lib/include/descriptors/pat.h               |   68 +++++
+ lib/include/descriptors/pmt.h               |   99 +++++++
+ lib/include/descriptors/sdt.h               |  108 ++++++++
+ lib/include/dvb-demux.h                     |   11 +
+ lib/include/dvb-fe.h                        |   19 +-
+ lib/include/dvb-file.h                      |    6 +-
+ lib/include/dvb-log.h                       |   42 +++
+ lib/include/dvb-scan.h                      |  120 +--------
+ lib/libdvbv5/Makefile.am                    |   10 +-
+ lib/libdvbv5/crc32.c                        |   76 ++++++
+ lib/libdvbv5/crc32.h                        |   31 +++
+ lib/libdvbv5/descriptors.c                  |  320 ++++++++++++-----------
+ lib/libdvbv5/descriptors.h                  |  214 ---------------
+ lib/libdvbv5/descriptors/header.c           |   48 ++++
+ lib/libdvbv5/descriptors/pat.c              |   53 ++++
+ lib/libdvbv5/descriptors/pmt.c              |  124 +++++++++
+ lib/libdvbv5/dvb-demux.c                    |   16 ++
+ lib/libdvbv5/dvb-fe.c                       |   40 +---
+ lib/libdvbv5/dvb-file.c                     |   10 +-
+ lib/libdvbv5/dvb-log.c                      |   63 +++++
+ lib/libdvbv5/dvb-scan.c                     |  335 ++++++++++++++----------
+ utils/dvb/dvbv5-scan.c                      |    4 +-
+ utils/v4l2-compliance/v4l2-test-formats.cpp |   10 +-
+ 25 files changed, 1564 insertions(+), 696 deletions(-)
+ create mode 100644 lib/include/descriptors.h
+ create mode 100644 lib/include/descriptors/header.h
+ create mode 100644 lib/include/descriptors/pat.h
+ create mode 100644 lib/include/descriptors/pmt.h
+ create mode 100644 lib/include/descriptors/sdt.h
+ create mode 100644 lib/include/dvb-log.h
+ create mode 100644 lib/libdvbv5/crc32.c
+ create mode 100644 lib/libdvbv5/crc32.h
+ delete mode 100644 lib/libdvbv5/descriptors.h
+ create mode 100644 lib/libdvbv5/descriptors/header.c
+ create mode 100644 lib/libdvbv5/descriptors/pat.c
+ create mode 100644 lib/libdvbv5/descriptors/pmt.c
+ create mode 100644 lib/libdvbv5/dvb-log.c
+
+diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
+new file mode 100644
+index 0000000..affd17d
+--- /dev/null
++++ b/lib/include/descriptors.h
+@@ -0,0 +1,371 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ */
++
++/*
++ * Descriptors, as defined on ETSI EN 300 468 V1.11.1 (2010-04)
++ */
++
++
++#ifndef _DESCRIPTORS_H
++#define _DESCRIPTORS_H
++
++#include <endian.h>
++#include <unistd.h>
++#include <stdint.h>
++
++#define DVB_MAX_PAYLOAD_PACKET_SIZE 4096
++#define DVB_PID_SDT      17
++#define DVB_TABLE_SDT    66
++#define DVB_PID_NIT      16
++#define DVB_TABLE_NIT    64
++#define DVB_PMT_TABLE_ID 2
++
++typedef int (*dvb_table_init_func)(uint8_t *ptr, ssize_t size);
++
++struct dvb_table_init {
++	dvb_table_init_func init;
++	size_t info_length;
++};
++
++extern const struct dvb_table_init dvb_table_initializers[];
++
++#define bswap16(b) do {\
++	b = be16toh(b); \
++} while (0)
++
++struct dvb_desc {
++	uint8_t type;
++
++};
++
++typedef int (*dvb_desc_init_func)(uint8_t *buf, struct dvb_desc *desc);
++
++struct dvb_descriptor {
++	const char *name;
++	dvb_desc_init_func init;
++};
++
++extern const struct dvb_descriptor dvb_descriptors[];
++
++enum dvb_tables {
++	PAT,
++	PMT,
++	NIT,
++	SDT,
++};
++
++enum descriptors {
++	/* ISO/IEC 13818-1 */
++	video_stream_descriptor				= 0x02,
++	audio_stream_descriptor				= 0x03,
++	hierarchy_descriptor				= 0x04,
++	dvbpsi_registration_descriptor			= 0x05,
++	ds_alignment_descriptor				= 0x06,
++	target_background_grid_descriptor		= 0x07,
++	video_window_descriptor				= 0x08,
++	conditional_access_descriptor			= 0x09,
++	iso639_language_descriptor			= 0x0a,
++	system_clock_descriptor				= 0x0b,
++	multiplex_buffer_utilization_descriptor		= 0x0c,
++	copyright_descriptor				= 0x0d,
++	maximum_bitrate_descriptor			= 0x0e,
++	private_data_indicator_descriptor		= 0x0f,
++	smoothing_buffer_descriptor			= 0x10,
++	std_descriptor					= 0x11,
++	ibp_descriptor					= 0x12,
++
++	mpeg4_video_descriptor				= 0x1b,
++	mpeg4_audio_descriptor				= 0x1c,
++	iod_descriptor					= 0x1d,
++	sl_descriptor					= 0x1e,
++	fmc_descriptor					= 0x1f,
++	external_es_id_descriptor			= 0x20,
++	muxcode_descriptor				= 0x21,
++	fmxbuffersize_descriptor			= 0x22,
++	multiplexbuffer_descriptor			= 0x23,
++	content_labeling_descriptor			= 0x24,
++	metadata_pointer_descriptor			= 0x25,
++	metadata_descriptor				= 0x26,
++	metadata_std_descriptor				= 0x27,
++	AVC_video_descriptor				= 0x28,
++	ipmp_descriptor					= 0x29,
++	AVC_timing_and_HRD_descriptor			= 0x2a,
++	mpeg2_aac_audio_descriptor			= 0x2b,
++	flexmux_timing_descriptor			= 0x2c,
++
++	/* ETSI EN 300 468 V1.11.1 (2010-04) */
++
++	network_name_descriptor				= 0x40,
++	service_list_descriptor				= 0x41,
++	stuffing_descriptor				= 0x42,
++	satellite_delivery_system_descriptor		= 0x43,
++	cable_delivery_system_descriptor		= 0x44,
++	VBI_data_descriptor				= 0x45,
++	VBI_teletext_descriptor				= 0x46,
++	bouquet_name_descriptor				= 0x47,
++	service_descriptor				= 0x48,
++	country_availability_descriptor			= 0x49,
++	linkage_descriptor				= 0x4a,
++	NVOD_reference_descriptor			= 0x4b,
++	time_shifted_service_descriptor			= 0x4c,
++	short_event_descriptor				= 0x4d,
++	extended_event_descriptor			= 0x4e,
++	time_shifted_event_descriptor			= 0x4f,
++	component_descriptor				= 0x50,
++	mosaic_descriptor				= 0x51,
++	stream_identifier_descriptor			= 0x52,
++	CA_identifier_descriptor			= 0x53,
++	content_descriptor				= 0x54,
++	parental_rating_descriptor			= 0x55,
++	teletext_descriptor				= 0x56,
++	telephone_descriptor				= 0x57,
++	local_time_offset_descriptor			= 0x58,
++	subtitling_descriptor				= 0x59,
++	terrestrial_delivery_system_descriptor		= 0x5a,
++	multilingual_network_name_descriptor		= 0x5b,
++	multilingual_bouquet_name_descriptor		= 0x5c,
++	multilingual_service_name_descriptor		= 0x5d,
++	multilingual_component_descriptor		= 0x5e,
++	private_data_specifier_descriptor		= 0x5f,
++	service_move_descriptor				= 0x60,
++	short_smoothing_buffer_descriptor		= 0x61,
++	frequency_list_descriptor			= 0x62,
++	partial_transport_stream_descriptor		= 0x63,
++	data_broadcast_descriptor			= 0x64,
++	scrambling_descriptor				= 0x65,
++	data_broadcast_id_descriptor			= 0x66,
++	transport_stream_descriptor			= 0x67,
++	DSNG_descriptor					= 0x68,
++	PDC_descriptor					= 0x69,
++	AC_3_descriptor					= 0x6a,
++	ancillary_data_descriptor			= 0x6b,
++	cell_list_descriptor				= 0x6c,
++	cell_frequency_link_descriptor			= 0x6d,
++	announcement_support_descriptor			= 0x6e,
++	application_signalling_descriptor		= 0x6f,
++	adaptation_field_data_descriptor		= 0x70,
++	service_identifier_descriptor			= 0x71,
++	service_availability_descriptor			= 0x72,
++	default_authority_descriptor			= 0x73,
++	related_content_descriptor			= 0x74,
++	TVA_id_descriptor				= 0x75,
++	content_identifier_descriptor			= 0x76,
++	time_slice_fec_identifier_descriptor		= 0x77,
++	ECM_repetition_rate_descriptor			= 0x78,
++	S2_satellite_delivery_system_descriptor		= 0x79,
++	enhanced_AC_3_descriptor			= 0x7a,
++	DTS_descriptor					= 0x7b,
++	AAC_descriptor					= 0x7c,
++	XAIT_location_descriptor			= 0x7d,
++	FTA_content_management_descriptor		= 0x7e,
++	extension_descriptor				= 0x7f,
++
++	/* SCTE 35 2004 */
++	CUE_identifier_descriptor			= 0x8a,
++
++	/* From http://www.etherguidesystems.com/Help/SDOs/ATSC/Semantics/Descriptors/Default.aspx */
++	component_name_descriptor			= 0xa3,
++
++	/* From http://www.coolstf.com/tsreader/descriptors.html */
++	logical_channel_number_descriptor		= 0x83,
++
++	/* ISDB Descriptors, as defined on ABNT NBR 15603-1 2007 */
++
++	carousel_id_descriptor				= 0x13,
++	association_tag_descriptor			= 0x14,
++	deferred_association_tags_descriptor		= 0x15,
++
++	hierarchical_transmission_descriptor		= 0xc0,
++	digital_copy_control_descriptor			= 0xc1,
++	network_identifier_descriptor			= 0xc2,
++	partial_transport_stream_time_descriptor	= 0xc3,
++	audio_component_descriptor			= 0xc4,
++	hyperlink_descriptor				= 0xc5,
++	target_area_descriptor				= 0xc6,
++	data_contents_descriptor			= 0xc7,
++	video_decode_control_descriptor			= 0xc8,
++	download_content_descriptor			= 0xc9,
++	CA_EMM_TS_descriptor				= 0xca,
++	CA_contract_information_descriptor		= 0xcb,
++	CA_service_descriptor				= 0xcc,
++	TS_Information_descriptior			= 0xcd,
++	extended_broadcaster_descriptor			= 0xce,
++	logo_transmission_descriptor			= 0xcf,
++	basic_local_event_descriptor			= 0xd0,
++	reference_descriptor				= 0xd1,
++	node_relation_descriptor			= 0xd2,
++	short_node_information_descriptor		= 0xd3,
++	STC_reference_descriptor			= 0xd4,
++	series_descriptor				= 0xd5,
++	event_group_descriptor				= 0xd6,
++	SI_parameter_descriptor				= 0xd7,
++	broadcaster_Name_Descriptor			= 0xd8,
++	component_group_descriptor			= 0xd9,
++	SI_prime_TS_descriptor				= 0xda,
++	board_information_descriptor			= 0xdb,
++	LDT_linkage_descriptor				= 0xdc,
++	connected_transmission_descriptor		= 0xdd,
++	content_availability_descriptor			= 0xde,
++	service_group_descriptor			= 0xe0,
++	carousel_compatible_composite_Descriptor	= 0xf7,
++	conditional_playback_descriptor			= 0xf8,
++	ISDBT_delivery_system_descriptor		= 0xfa,
++	partial_reception_descriptor			= 0xfb,
++	emergency_information_descriptor		= 0xfc,
++	data_component_descriptor			= 0xfd,
++	system_management_descriptor			= 0xfe,
++};
++
++
++enum extension_descriptors {
++	image_icon_descriptor				= 0x00,
++	cpcm_delivery_signalling_descriptor		= 0x01,
++	CP_descriptor					= 0x02,
++	CP_identifier_descriptor			= 0x03,
++	T2_delivery_system_descriptor			= 0x04,
++	SH_delivery_system_descriptor			= 0x05,
++	supplementary_audio_descriptor			= 0x06,
++	network_change_notify_descriptor		= 0x07,
++	message_descriptor				= 0x08,
++	target_region_descriptor			= 0x09,
++	target_region_name_descriptor			= 0x0a,
++	service_relocated_descriptor			= 0x0b,
++};
++
++struct pmt_table {
++	uint16_t program_number, pcr_pid;
++	unsigned char version;
++};
++
++struct el_pid {
++	uint8_t  type;
++	uint16_t pid;
++};
++
++struct pid_table {
++	uint16_t service_id;
++	uint16_t pid;
++	struct pmt_table pmt_table;
++	unsigned video_pid_len, audio_pid_len, other_el_pid_len;
++	uint16_t *video_pid;
++	uint16_t *audio_pid;
++	struct el_pid *other_el_pid;
++};
++
++struct pat_table {
++	uint16_t  ts_id;
++	unsigned char version;
++	struct pid_table *pid_table;
++	unsigned pid_table_len;
++};
++
++struct transport_table {
++	uint16_t tr_id;
++};
++
++struct lcn_table {
++	uint16_t service_id;
++	uint16_t lcn;
++};
++
++struct nit_table {
++	uint16_t network_id;
++	unsigned char version;
++	char *network_name, *network_alias;
++	struct transport_table *tr_table;
++	unsigned tr_table_len;
++	unsigned virtual_channel;
++	unsigned area_code;
++
++	/* Network Parameters */
++	uint32_t delivery_system;
++	uint32_t guard_interval;
++	uint32_t fec_inner, fec_outer;
++	uint32_t pol;
++	uint32_t modulation;
++	uint32_t rolloff;
++	uint32_t symbol_rate;
++	uint32_t bandwidth;
++	uint32_t code_rate_hp;
++	uint32_t code_rate_lp;
++	uint32_t transmission_mode;
++	uint32_t hierarchy;
++	uint32_t plp_id;
++	uint32_t system_id;
++
++	unsigned has_dvbt:1;
++	unsigned is_hp:1;
++	unsigned has_time_slicing:1;
++	unsigned has_mpe_fec:1;
++	unsigned has_other_frequency:1;
++	unsigned is_in_depth_interleaver:1;
++
++	char *orbit;
++	uint32_t *frequency;
++	unsigned frequency_len;
++
++	uint32_t *other_frequency;
++	unsigned other_frequency_len;
++
++	uint16_t *partial_reception;
++	unsigned partial_reception_len;
++
++	struct lcn_table *lcn;
++	unsigned lcn_len;
++};
++
++struct service_table {
++	uint16_t service_id;
++	char running;
++	char scrambled;
++	unsigned char type;
++	char *service_name, *service_alias;
++	char *provider_name, *provider_alias;
++};
++
++struct sdt_table {
++	unsigned char version;
++	uint16_t ts_id;
++	struct service_table *service_table;
++	unsigned service_table_len;
++};
++struct dvb_v5_descriptors {
++	int verbose;
++	uint32_t delivery_system;
++
++	struct pat_table pat_table;
++	struct nit_table nit_table;
++	struct sdt_table sdt_table;
++
++	/* Used by descriptors to know where to update a PMT/Service/TS */
++	unsigned cur_pmt;
++	unsigned cur_service;
++	unsigned cur_ts;
++};
++
++void parse_descriptor(enum dvb_tables type,
++		      struct dvb_v5_descriptors *dvb_desc,
++		      const unsigned char *buf, int len);
++
++int has_descriptor(struct dvb_v5_descriptors *dvb_desc,
++		    unsigned char needed_descriptor,
++	            const unsigned char *buf, int len);
++
++
++#endif
+diff --git a/lib/include/descriptors/header.h b/lib/include/descriptors/header.h
+new file mode 100644
+index 0000000..d2add2d
+--- /dev/null
++++ b/lib/include/descriptors/header.h
+@@ -0,0 +1,62 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _HEADER_H
++#define _HEADER_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++struct dvb_table_header {
++	uint8_t  table_id;
++	union {
++		uint16_t bitfield;
++		struct {
++			uint16_t section_length:10;
++			uint8_t  zero:2;
++			uint8_t  one:2;
++			uint8_t  zero2:1;
++			uint8_t  syntax:1;
++		} __attribute__((packed));
++	};
++	uint16_t id;
++	uint8_t  current_next:1;
++	uint8_t  version:5;
++	uint8_t  one2:2;
++
++	uint8_t  section_id;
++	uint8_t  last_section;
++} __attribute__((packed));
++
++struct dvb_v5_fe_parms;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++int  dvb_table_header_init (struct dvb_table_header *t);
++void dvb_table_header_print(struct dvb_v5_fe_parms *parms, struct dvb_table_header *t);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/lib/include/descriptors/pat.h b/lib/include/descriptors/pat.h
+new file mode 100644
+index 0000000..4eb6e85
+--- /dev/null
++++ b/lib/include/descriptors/pat.h
+@@ -0,0 +1,68 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _PAT_H
++#define _PAT_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++#include "descriptors/header.h"
++
++#define DVB_TABLE_PAT      0
++#define DVB_TABLE_PAT_PID  0
++
++struct dvb_table_pat_entry {
++	uint16_t program_id;
++	union {
++		uint16_t bitfield;
++		struct {
++			uint16_t pid:13;
++			uint8_t  reserved:3;
++		} __attribute__((packed));
++	};
++
++} __attribute__((packed));
++
++struct dvb_table_pat_info {
++	uint16_t entries;
++};
++
++struct dvb_table_pat {
++	struct dvb_table_pat_info info;
++	struct dvb_table_header header;
++	struct dvb_table_pat_entry entry[];
++} __attribute__((packed));
++
++struct dvb_v5_fe_parms;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++int  dvb_table_pat_init(unsigned char *buf, ssize_t size);
++void dvb_table_pat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pat *t);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/lib/include/descriptors/pmt.h b/lib/include/descriptors/pmt.h
+new file mode 100644
+index 0000000..6289c1b
+--- /dev/null
++++ b/lib/include/descriptors/pmt.h
+@@ -0,0 +1,99 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _PMT_H
++#define _PMT_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++#include "descriptors/header.h"
++
++#define DVB_TABLE_PMT      2
++
++struct dvb_table_pmt_prog {
++	uint8_t stream_type;
++	union {
++		uint16_t bitfield;
++		struct {
++			uint16_t elementary_pid:13;
++			uint8_t  reserved:3;
++		} __attribute__((packed));
++	};
++	union {
++		uint16_t bitfield2;
++		struct {
++			uint16_t desc_length:10;
++			uint8_t  zero:2;
++			uint8_t  reserved2:4;
++		} __attribute__((packed));
++	};
++	uint8_t  type;
++	uint8_t  info_length;
++	const char info[];
++} __attribute__((packed));
++
++struct dvb_table_pmt_entry {
++	uint16_t elementary_pid;
++	uint8_t  type;
++	const uint8_t *info;
++} __attribute__((packed));
++
++struct dvb_table_pmt_info {
++	uint16_t entries;
++};
++
++struct dvb_table_pmt {
++	struct dvb_table_pmt_info info;
++	struct dvb_table_header header;
++	union {
++		uint16_t bitfield2;
++		struct {
++			uint16_t pcr_pid:13;
++			uint8_t reserved2:3;
++		} __attribute__((packed));
++	};
++
++	union {
++		uint16_t bitfield3;
++		struct {
++			uint16_t prog_length:10;
++			uint8_t  zero3:2;
++			uint8_t  reserved3:4;
++		} __attribute__((packed));
++	};
++	struct dvb_table_pmt_entry entry[];
++} __attribute__((packed));
++
++struct dvb_v5_fe_parms;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++int  dvb_table_pmt_init(uint8_t *ptr, ssize_t size);
++void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pmt *pmt);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/lib/include/descriptors/sdt.h b/lib/include/descriptors/sdt.h
+new file mode 100644
+index 0000000..d5e2774
+--- /dev/null
++++ b/lib/include/descriptors/sdt.h
+@@ -0,0 +1,108 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _PAT_H
++#define _PAT_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++struct PAT_Prog {
++	uint16_t program_id;
++	union {
++		uint16_t bitfield;
++		struct {
++			uint16_t pid:13;
++			uint8_t  Reserved:3;
++		} __attribute__((packed));
++	};
++
++} __attribute__((packed));
++
++struct DVB_PAT {
++	uint8_t  table_id;
++	union {
++		uint16_t bitfield;
++		struct {
++			uint16_t section_length:10;
++			uint8_t  zero2:2;
++			uint8_t  one:2;
++			uint8_t  zero:1;
++			uint8_t  syntax:1;
++		} __attribute__((packed));
++	};
++	uint16_t ts_id;
++	uint8_t  current_next:1;
++	uint8_t  version:5;
++	uint8_t  one2:2;
++	uint8_t  section_id;
++	uint8_t  last_section;
++	struct PAT_Prog  prog[];
++
++} __attribute__((packed));
++
++extern int pat_init(void *ptr, ssize_t size);
++
++struct SDT
++{
++  uint8_t  TableID;
++  uint8_t  SectionSyntaxIndicator:1;
++  uint8_t  Reserved1:1;
++  uint8_t  Reserved2:2;
++  uint16_t SectionLength:12;
++  uint16_t TransportStreamID;
++  uint8_t  Reserved3:2;
++  uint8_t  VersionNumber:5;
++  uint8_t  CuurrentNextIndicator:1;
++  uint8_t  SectionNumber;
++  uint8_t  LastSectionNumber;
++  uint16_t OriginalNetworkId;
++  uint8_t  Reserved4;
++  uint8_t  data[];
++} __attribute__((packed));
++
++struct SDT_Desc
++{
++  uint16_t ServiceID;
++  uint8_t  Reserved:6;
++  uint8_t  EITScheduleFlag:1;
++  uint8_t  EITPresentFollowingFlag:1;
++  uint8_t  RunningStatus:3;
++  uint8_t  FreeCAMode:1;
++  uint16_t DescriptorsLength:12;
++  uint8_t  data[];
++} __attribute__((packed));
++
++struct SDT_Desc_Data1
++{
++  uint8_t DescriptorTag;
++  uint8_t DescriptorLength;
++  uint8_t ServiceType;
++  uint8_t ServiceProvideLength;
++  uint8_t data[];
++} __attribute__((packed));
++struct SDT_Desc_Data2
++{
++  uint8_t ServiceNameLength;
++  uint8_t data[];
++} __attribute__((packed));
++
++#endif
+diff --git a/lib/include/dvb-demux.h b/lib/include/dvb-demux.h
+index ff85bfb..999ab01 100644
+--- a/lib/include/dvb-demux.h
++++ b/lib/include/dvb-demux.h
+@@ -29,8 +29,19 @@
+ #ifndef _DVB_DEMUX_H
+ #define _DVB_DEMUX_H
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++int dvb_dmx_open(int adapter, int demux, unsigned verbose);
++void dvb_dmx_close(int dmx_fd);
++
+ int set_pesfilter(int dmxfd, int pid, int pes_type, int dvr);
+ 
+ int get_pmt_pid(char *dmxdev, int sid);
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+diff --git a/lib/include/dvb-fe.h b/lib/include/dvb-fe.h
+index 8877356..a7e0f03 100644
+--- a/lib/include/dvb-fe.h
++++ b/lib/include/dvb-fe.h
+@@ -29,20 +29,9 @@
+ #include <fcntl.h>
+ #include <sys/ioctl.h>
+ #include <string.h>
+-#include <syslog.h>
+ #include "dvb-frontend.h"
+ #include "dvb-sat.h"
+-
+-#define dvb_log(fmt, arg...) do {\
+-	parms->logfunc(LOG_INFO, fmt, ##arg); \
+-} while (0)
+-#define dvb_logerr(fmt, arg...) do {\
+-	parms->logfunc(LOG_ERR, fmt, ##arg); \
+-} while (0)
+-
+-#define dvb_perror(msg) do {\
+-	parms->logfunc(LOG_ERR, "%s: %s", msg, strerror(errno)); \
+-} while (0)
++#include "dvb-log.h"
+ 
+ #define ARRAY_SIZE(x)	(sizeof(x)/sizeof((x)[0]))
+ 
+@@ -73,7 +62,6 @@ struct dvb_v5_stats {
+ 	struct dtv_property		prop[DTV_MAX_STATS];
+ };
+ 
+-typedef void (*dvb_logfunc)(int level, const char *fmt, ...);
+ 
+ struct dvb_v5_fe_parms {
+ 	int				fd;
+@@ -119,6 +107,9 @@ void dvb_fe_close(struct dvb_v5_fe_parms *parms);
+ 
+ /* Get/set delivery system parameters */
+ 
++const char *dvb_cmd_name(int cmd);
++const char *const *dvb_attr_names(int cmd);
++
+ int dvb_fe_retrieve_parm(struct dvb_v5_fe_parms *parms,
+ 			unsigned cmd, uint32_t *value);
+ int dvb_fe_store_parm(struct dvb_v5_fe_parms *parms,
+@@ -130,7 +121,7 @@ int dvb_add_parms_for_sys(struct dtv_property *dvb_prop,
+ 			  fe_delivery_system_t sys);
+ int dvb_set_compat_delivery_system(struct dvb_v5_fe_parms *parms,
+ 				   uint32_t desired_system);
+-const char *dvb_cmd_name(int cmd);
++
+ void dvb_fe_prt_parms(FILE *fp, const struct dvb_v5_fe_parms *parms);
+ int dvb_fe_set_parms(struct dvb_v5_fe_parms *parms);
+ int dvb_fe_get_parms(struct dvb_v5_fe_parms *parms);
+diff --git a/lib/include/dvb-file.h b/lib/include/dvb-file.h
+index 7a605b3..3609c7d 100644
+--- a/lib/include/dvb-file.h
++++ b/lib/include/dvb-file.h
+@@ -79,7 +79,7 @@ enum file_formats {
+ #define PTABLE(a) .table = a, .size=ARRAY_SIZE(a)
+ 
+ 
+-struct dvb_descriptors;
++struct dvb_v5_descriptors;
+ 
+ #ifdef __cplusplus
+ extern "C" {
+@@ -130,12 +130,12 @@ struct dvb_file *read_dvb_file(const char *fname);
+ 
+ int write_dvb_file(const char *fname, struct dvb_file *dvb_file);
+ 
+-char *dvb_vchannel(struct dvb_descriptors *dvb_desc,
++char *dvb_vchannel(struct dvb_v5_descriptors *dvb_desc,
+ 	           int service);
+ 
+ int store_dvb_channel(struct dvb_file **dvb_file,
+ 		      struct dvb_v5_fe_parms *parms,
+-		      struct dvb_descriptors *dvb_desc,
++		      struct dvb_v5_descriptors *dvb_desc,
+ 		      int get_detected, int get_nit);
+ int parse_delsys(const char *name);
+ enum file_formats parse_format(const char *name);
+diff --git a/lib/include/dvb-log.h b/lib/include/dvb-log.h
+new file mode 100644
+index 0000000..5482c14
+--- /dev/null
++++ b/lib/include/dvb-log.h
+@@ -0,0 +1,42 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _LOG_H
++#define _LOG_H
++
++#include <syslog.h>
++
++typedef void (*dvb_logfunc)(int level, const char *fmt, ...);
++
++#define dvb_log(fmt, arg...) do {\
++	parms->logfunc(LOG_INFO, fmt, ##arg); \
++} while (0)
++#define dvb_logerr(fmt, arg...) do {\
++	parms->logfunc(LOG_ERR, fmt, ##arg); \
++} while (0)
++
++#define dvb_perror(msg) do {\
++	parms->logfunc(LOG_ERR, "%s: %s", msg, strerror(errno)); \
++} while (0)
++
++void dvb_default_log(int level, const char *fmt, ...);
++
++#endif
+diff --git a/lib/include/dvb-scan.h b/lib/include/dvb-scan.h
+index a2b061c..6f6374e 100644
+--- a/lib/include/dvb-scan.h
++++ b/lib/include/dvb-scan.h
+@@ -22,130 +22,24 @@
+ #include <stdint.h>
+ #include <linux/dvb/dmx.h>
+ 
+-/* According with ISO/IEC 13818-1:2007 */
+-
+-struct pmt_table {
+-	uint16_t program_number, pcr_pid;
+-	unsigned char version;
+-};
+-
+-struct el_pid {
+-	uint8_t  type;
+-	uint16_t pid;
+-};
+-
+-struct pid_table {
+-	uint16_t service_id;
+-	uint16_t pid;
+-	struct pmt_table pmt_table;
+-	unsigned video_pid_len, audio_pid_len, other_el_pid_len;
+-	uint16_t *video_pid;
+-	uint16_t *audio_pid;
+-	struct el_pid *other_el_pid;
+-};
+-
+-struct pat_table {
+-	uint16_t  ts_id;
+-	unsigned char version;
+-	struct pid_table *pid_table;
+-	unsigned pid_table_len;
+-};
+-
+-struct transport_table {
+-	uint16_t tr_id;
+-};
+-
+-struct lcn_table {
+-	uint16_t service_id;
+-	uint16_t lcn;
+-};
+-
+-struct nit_table {
+-	uint16_t network_id;
+-	unsigned char version;
+-	char *network_name, *network_alias;
+-	struct transport_table *tr_table;
+-	unsigned tr_table_len;
+-	unsigned virtual_channel;
+-	unsigned area_code;
+-
+-	/* Network Parameters */
+-	uint32_t delivery_system;
+-	uint32_t guard_interval;
+-	uint32_t fec_inner, fec_outer;
+-	uint32_t pol;
+-	uint32_t modulation;
+-	uint32_t rolloff;
+-	uint32_t symbol_rate;
+-	uint32_t bandwidth;
+-	uint32_t code_rate_hp;
+-	uint32_t code_rate_lp;
+-	uint32_t transmission_mode;
+-	uint32_t hierarchy;
+-	uint32_t plp_id;
+-	uint32_t system_id;
+-
+-	unsigned has_dvbt:1;
+-	unsigned is_hp:1;
+-	unsigned has_time_slicing:1;
+-	unsigned has_mpe_fec:1;
+-	unsigned has_other_frequency:1;
+-	unsigned is_in_depth_interleaver:1;
++#include "descriptors.h"
+ 
+-	char *orbit;
+-	uint32_t *frequency;
+-	unsigned frequency_len;
+-
+-	uint32_t *other_frequency;
+-	unsigned other_frequency_len;
+-
+-	uint16_t *partial_reception;
+-	unsigned partial_reception_len;
+-
+-	struct lcn_table *lcn;
+-	unsigned lcn_len;
+-};
+-
+-struct service_table {
+-	uint16_t service_id;
+-	char running;
+-	char scrambled;
+-	unsigned char type;
+-	char *service_name, *service_alias;
+-	char *provider_name, *provider_alias;
+-};
+-
+-struct sdt_table {
+-	unsigned char version;
+-	uint16_t ts_id;
+-	struct service_table *service_table;
+-	unsigned service_table_len;
+-};
+-
+-struct dvb_descriptors {
+-	int verbose;
+-	uint32_t delivery_system;
+-
+-	struct pat_table pat_table;
+-	struct nit_table nit_table;
+-	struct sdt_table sdt_table;
++/* According with ISO/IEC 13818-1:2007 */
+ 
+-	/* Used by descriptors to know where to update a PMT/Service/TS */
+-	unsigned cur_pmt;
+-	unsigned cur_service;
+-	unsigned cur_ts;
+-};
+ 
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+-struct dvb_descriptors *dvb_get_ts_tables(int dmx_fd,
++int dvb_read_section(int dmx_fd, unsigned char table, uint16_t pid, unsigned char **buf,
++		unsigned *length, unsigned timeout);
++
++struct dvb_v5_descriptors *dvb_get_ts_tables(int dmx_fd,
+ 					  uint32_t delivery_system,
+ 					  unsigned other_nit,
+ 					  unsigned timeout_multiply,
+ 					  int verbose);
+-void dvb_free_ts_tables(struct dvb_descriptors *dvb_desc);
++void dvb_free_ts_tables(struct dvb_v5_descriptors *dvb_desc);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
+index 660841b..e529350 100644
+--- a/lib/libdvbv5/Makefile.am
++++ b/lib/libdvbv5/Makefile.am
+@@ -11,16 +11,22 @@ endif
+ libdvbv5_la_SOURCES = \
+   dvb-demux.c ../include/dvb-demux.h \
+   dvb-fe.c ../include/dvb-fe.h \
++  dvb-log.c ../include/dvb-log.h \
+   dvb-file.c ../include/dvb-file.h \
+   ../include/dvb-frontend.h \
+   dvb-v5.h dvb-v5.c \
+   ../include/dvb-v5-std.h dvb-v5-std.c \
+   dvb-legacy-channel-format.c \
+   dvb-zap-format.c \
+-  descriptors.c descriptors.h \
+   dvb-sat.c ../include/dvb-sat.h \
+   dvb-scan.c ../include/dvb-scan.h \
+-  parse_string.c parse_string.h
++  parse_string.c parse_string.h \
++  crc32.c crc32.h \
++  descriptors.c descriptors.h \
++  descriptors/header.c ../include/descriptors/header.h \
++  descriptors/pat.c  ../include/descriptors/pat.h \
++  descriptors/pmt.c  ../include/descriptors/pmt.h
++
+ libdvbv5_la_CPPFLAGS = $(ENFORCE_LIBDVBV5_STATIC)
+ libdvbv5_la_LDFLAGS = -version-info 0 $(ENFORCE_LIBDVBV5_STATIC)
+ 
+diff --git a/lib/libdvbv5/crc32.c b/lib/libdvbv5/crc32.c
+new file mode 100644
+index 0000000..37abd78
+--- /dev/null
++++ b/lib/libdvbv5/crc32.c
+@@ -0,0 +1,76 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "crc32.h"
++
++static uint32_t crctab[256] = {
++  0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
++  0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,
++  0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd, 0x4c11db70, 0x48d0c6c7,
++  0x4593e01e, 0x4152fda9, 0x5f15adac, 0x5bd4b01b, 0x569796c2, 0x52568b75,
++  0x6a1936c8, 0x6ed82b7f, 0x639b0da6, 0x675a1011, 0x791d4014, 0x7ddc5da3,
++  0x709f7b7a, 0x745e66cd, 0x9823b6e0, 0x9ce2ab57, 0x91a18d8e, 0x95609039,
++  0x8b27c03c, 0x8fe6dd8b, 0x82a5fb52, 0x8664e6e5, 0xbe2b5b58, 0xbaea46ef,
++  0xb7a96036, 0xb3687d81, 0xad2f2d84, 0xa9ee3033, 0xa4ad16ea, 0xa06c0b5d,
++  0xd4326d90, 0xd0f37027, 0xddb056fe, 0xd9714b49, 0xc7361b4c, 0xc3f706fb,
++  0xceb42022, 0xca753d95, 0xf23a8028, 0xf6fb9d9f, 0xfbb8bb46, 0xff79a6f1,
++  0xe13ef6f4, 0xe5ffeb43, 0xe8bccd9a, 0xec7dd02d, 0x34867077, 0x30476dc0,
++  0x3d044b19, 0x39c556ae, 0x278206ab, 0x23431b1c, 0x2e003dc5, 0x2ac12072,
++  0x128e9dcf, 0x164f8078, 0x1b0ca6a1, 0x1fcdbb16, 0x018aeb13, 0x054bf6a4,
++  0x0808d07d, 0x0cc9cdca, 0x7897ab07, 0x7c56b6b0, 0x71159069, 0x75d48dde,
++  0x6b93dddb, 0x6f52c06c, 0x6211e6b5, 0x66d0fb02, 0x5e9f46bf, 0x5a5e5b08,
++  0x571d7dd1, 0x53dc6066, 0x4d9b3063, 0x495a2dd4, 0x44190b0d, 0x40d816ba,
++  0xaca5c697, 0xa864db20, 0xa527fdf9, 0xa1e6e04e, 0xbfa1b04b, 0xbb60adfc,
++  0xb6238b25, 0xb2e29692, 0x8aad2b2f, 0x8e6c3698, 0x832f1041, 0x87ee0df6,
++  0x99a95df3, 0x9d684044, 0x902b669d, 0x94ea7b2a, 0xe0b41de7, 0xe4750050,
++  0xe9362689, 0xedf73b3e, 0xf3b06b3b, 0xf771768c, 0xfa325055, 0xfef34de2,
++  0xc6bcf05f, 0xc27dede8, 0xcf3ecb31, 0xcbffd686, 0xd5b88683, 0xd1799b34,
++  0xdc3abded, 0xd8fba05a, 0x690ce0ee, 0x6dcdfd59, 0x608edb80, 0x644fc637,
++  0x7a089632, 0x7ec98b85, 0x738aad5c, 0x774bb0eb, 0x4f040d56, 0x4bc510e1,
++  0x46863638, 0x42472b8f, 0x5c007b8a, 0x58c1663d, 0x558240e4, 0x51435d53,
++  0x251d3b9e, 0x21dc2629, 0x2c9f00f0, 0x285e1d47, 0x36194d42, 0x32d850f5,
++  0x3f9b762c, 0x3b5a6b9b, 0x0315d626, 0x07d4cb91, 0x0a97ed48, 0x0e56f0ff,
++  0x1011a0fa, 0x14d0bd4d, 0x19939b94, 0x1d528623, 0xf12f560e, 0xf5ee4bb9,
++  0xf8ad6d60, 0xfc6c70d7, 0xe22b20d2, 0xe6ea3d65, 0xeba91bbc, 0xef68060b,
++  0xd727bbb6, 0xd3e6a601, 0xdea580d8, 0xda649d6f, 0xc423cd6a, 0xc0e2d0dd,
++  0xcda1f604, 0xc960ebb3, 0xbd3e8d7e, 0xb9ff90c9, 0xb4bcb610, 0xb07daba7,
++  0xae3afba2, 0xaafbe615, 0xa7b8c0cc, 0xa379dd7b, 0x9b3660c6, 0x9ff77d71,
++  0x92b45ba8, 0x9675461f, 0x8832161a, 0x8cf30bad, 0x81b02d74, 0x857130c3,
++  0x5d8a9099, 0x594b8d2e, 0x5408abf7, 0x50c9b640, 0x4e8ee645, 0x4a4ffbf2,
++  0x470cdd2b, 0x43cdc09c, 0x7b827d21, 0x7f436096, 0x7200464f, 0x76c15bf8,
++  0x68860bfd, 0x6c47164a, 0x61043093, 0x65c52d24, 0x119b4be9, 0x155a565e,
++  0x18197087, 0x1cd86d30, 0x029f3d35, 0x065e2082, 0x0b1d065b, 0x0fdc1bec,
++  0x3793a651, 0x3352bbe6, 0x3e119d3f, 0x3ad08088, 0x2497d08d, 0x2056cd3a,
++  0x2d15ebe3, 0x29d4f654, 0xc5a92679, 0xc1683bce, 0xcc2b1d17, 0xc8ea00a0,
++  0xd6ad50a5, 0xd26c4d12, 0xdf2f6bcb, 0xdbee767c, 0xe3a1cbc1, 0xe760d676,
++  0xea23f0af, 0xeee2ed18, 0xf0a5bd1d, 0xf464a0aa, 0xf9278673, 0xfde69bc4,
++  0x89b8fd09, 0x8d79e0be, 0x803ac667, 0x84fbdbd0, 0x9abc8bd5, 0x9e7d9662,
++  0x933eb0bb, 0x97ffad0c, 0xafb010b1, 0xab710d06, 0xa6322bdf, 0xa2f33668,
++  0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
++};
++
++inline uint32_t crc32(uint8_t *data, size_t len, uint32_t crc)
++{
++  while(len--)
++    crc = (crc << 8) ^ crctab[((crc >> 24) ^ *data++) & 0xff];
++  return crc;
++}
++
+diff --git a/lib/libdvbv5/crc32.h b/lib/libdvbv5/crc32.h
+new file mode 100644
+index 0000000..69af116
+--- /dev/null
++++ b/lib/libdvbv5/crc32.h
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _CRC32_H
++#define _CRC32_H
++
++#include <stdint.h>
++#include <unistd.h> /* size_t */
++
++uint32_t crc32(uint8_t *data, size_t datalen, uint32_t crc);
++
++#endif
++
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index 63c4b56..fb74c42 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -22,13 +22,21 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ 
++#include "descriptors.h"
+ #include "dvb-fe.h"
+ #include "dvb-scan.h"
+-#include "descriptors.h"
+ #include "parse_string.h"
+ #include "dvb-frontend.h"
+ #include "dvb-v5-std.h"
+ 
++#include "descriptors/pat.h"
++#include "descriptors/pmt.h"
++
++const struct dvb_table_init dvb_table_initializers[] = {
++	[DVB_TABLE_PAT] = { dvb_table_pat_init, sizeof(struct dvb_table_pat_info) },
++	[DVB_TABLE_PMT] = { dvb_table_pmt_init, sizeof(struct dvb_table_pmt_info) },
++};
++
+ static char *default_charset = "iso-8859-1";
+ static char *output_charset = "utf-8";
+ 
+@@ -39,156 +47,156 @@ static char *table[] = {
+ 	[SDT] = "SDT",
+ };
+ 
+-static const char *descriptors[] = {
+-	[0 ...255 ] = "Unknown descriptor",
+-	[video_stream_descriptor] = "video_stream_descriptor",
+-	[audio_stream_descriptor] = "audio_stream_descriptor",
+-	[hierarchy_descriptor] = "hierarchy_descriptor",
+-	[dvbpsi_registration_descriptor] = "dvbpsi_registration_descriptor",
+-	[ds_alignment_descriptor] = "ds_alignment_descriptor",
+-	[target_background_grid_descriptor] = "target_background_grid_descriptor",
+-	[video_window_descriptor] = "video_window_descriptor",
+-	[conditional_access_descriptor] = "conditional_access_descriptor",
+-	[iso639_language_descriptor] = "iso639_language_descriptor",
+-	[system_clock_descriptor] = "system_clock_descriptor",
+-	[multiplex_buffer_utilization_descriptor] = "multiplex_buffer_utilization_descriptor",
+-	[copyright_descriptor] = "copyright_descriptor",
+-	[maximum_bitrate_descriptor] = "maximum_bitrate_descriptor",
+-	[private_data_indicator_descriptor] = "private_data_indicator_descriptor",
+-	[smoothing_buffer_descriptor] = "smoothing_buffer_descriptor",
+-	[std_descriptor] = "std_descriptor",
+-	[ibp_descriptor] = "ibp_descriptor",
+-	[mpeg4_video_descriptor] = "mpeg4_video_descriptor",
+-	[mpeg4_audio_descriptor] = "mpeg4_audio_descriptor",
+-	[iod_descriptor] = "iod_descriptor",
+-	[sl_descriptor] = "sl_descriptor",
+-	[fmc_descriptor] = "fmc_descriptor",
+-	[external_es_id_descriptor] = "external_es_id_descriptor",
+-	[muxcode_descriptor] = "muxcode_descriptor",
+-	[fmxbuffersize_descriptor] = "fmxbuffersize_descriptor",
+-	[multiplexbuffer_descriptor] = "multiplexbuffer_descriptor",
+-	[content_labeling_descriptor] = "content_labeling_descriptor",
+-	[metadata_pointer_descriptor] = "metadata_pointer_descriptor",
+-	[metadata_descriptor] = "metadata_descriptor",
+-	[metadata_std_descriptor] = "metadata_std_descriptor",
+-	[AVC_video_descriptor] = "AVC_video_descriptor",
+-	[ipmp_descriptor] = "ipmp_descriptor",
+-	[AVC_timing_and_HRD_descriptor] = "AVC_timing_and_HRD_descriptor",
+-	[mpeg2_aac_audio_descriptor] = "mpeg2_aac_audio_descriptor",
+-	[flexmux_timing_descriptor] = "flexmux_timing_descriptor",
+-	[network_name_descriptor] = "network_name_descriptor",
+-	[service_list_descriptor] = "service_list_descriptor",
+-	[stuffing_descriptor] = "stuffing_descriptor",
+-	[satellite_delivery_system_descriptor] = "satellite_delivery_system_descriptor",
+-	[cable_delivery_system_descriptor] = "cable_delivery_system_descriptor",
+-	[VBI_data_descriptor] = "VBI_data_descriptor",
+-	[VBI_teletext_descriptor] = "VBI_teletext_descriptor",
+-	[bouquet_name_descriptor] = "bouquet_name_descriptor",
+-	[service_descriptor] = "service_descriptor",
+-	[country_availability_descriptor] = "country_availability_descriptor",
+-	[linkage_descriptor] = "linkage_descriptor",
+-	[NVOD_reference_descriptor] = "NVOD_reference_descriptor",
+-	[time_shifted_service_descriptor] = "time_shifted_service_descriptor",
+-	[short_event_descriptor] = "short_event_descriptor",
+-	[extended_event_descriptor] = "extended_event_descriptor",
+-	[time_shifted_event_descriptor] = "time_shifted_event_descriptor",
+-	[component_descriptor] = "component_descriptor",
+-	[mosaic_descriptor] = "mosaic_descriptor",
+-	[stream_identifier_descriptor] = "stream_identifier_descriptor",
+-	[CA_identifier_descriptor] = "CA_identifier_descriptor",
+-	[content_descriptor] = "content_descriptor",
+-	[parental_rating_descriptor] = "parental_rating_descriptor",
+-	[teletext_descriptor] = "teletext_descriptor",
+-	[telephone_descriptor] = "telephone_descriptor",
+-	[local_time_offset_descriptor] = "local_time_offset_descriptor",
+-	[subtitling_descriptor] = "subtitling_descriptor",
+-	[terrestrial_delivery_system_descriptor] = "terrestrial_delivery_system_descriptor",
+-	[multilingual_network_name_descriptor] = "multilingual_network_name_descriptor",
+-	[multilingual_bouquet_name_descriptor] = "multilingual_bouquet_name_descriptor",
+-	[multilingual_service_name_descriptor] = "multilingual_service_name_descriptor",
+-	[multilingual_component_descriptor] = "multilingual_component_descriptor",
+-	[private_data_specifier_descriptor] = "private_data_specifier_descriptor",
+-	[service_move_descriptor] = "service_move_descriptor",
+-	[short_smoothing_buffer_descriptor] = "short_smoothing_buffer_descriptor",
+-	[frequency_list_descriptor] = "frequency_list_descriptor",
+-	[partial_transport_stream_descriptor] = "partial_transport_stream_descriptor",
+-	[data_broadcast_descriptor] = "data_broadcast_descriptor",
+-	[scrambling_descriptor] = "scrambling_descriptor",
+-	[data_broadcast_id_descriptor] = "data_broadcast_id_descriptor",
+-	[transport_stream_descriptor] = "transport_stream_descriptor",
+-	[DSNG_descriptor] = "DSNG_descriptor",
+-	[PDC_descriptor] = "PDC_descriptor",
+-	[AC_3_descriptor] = "AC_3_descriptor",
+-	[ancillary_data_descriptor] = "ancillary_data_descriptor",
+-	[cell_list_descriptor] = "cell_list_descriptor",
+-	[cell_frequency_link_descriptor] = "cell_frequency_link_descriptor",
+-	[announcement_support_descriptor] = "announcement_support_descriptor",
+-	[application_signalling_descriptor] = "application_signalling_descriptor",
+-	[adaptation_field_data_descriptor] = "adaptation_field_data_descriptor",
+-	[service_identifier_descriptor] = "service_identifier_descriptor",
+-	[service_availability_descriptor] = "service_availability_descriptor",
+-	[default_authority_descriptor] = "default_authority_descriptor",
+-	[related_content_descriptor] = "related_content_descriptor",
+-	[TVA_id_descriptor] = "TVA_id_descriptor",
+-	[content_identifier_descriptor] = "content_identifier_descriptor",
+-	[time_slice_fec_identifier_descriptor] = "time_slice_fec_identifier_descriptor",
+-	[ECM_repetition_rate_descriptor] = "ECM_repetition_rate_descriptor",
+-	[S2_satellite_delivery_system_descriptor] = "S2_satellite_delivery_system_descriptor",
+-	[enhanced_AC_3_descriptor] = "enhanced_AC_3_descriptor",
+-	[DTS_descriptor] = "DTS_descriptor",
+-	[AAC_descriptor] = "AAC_descriptor",
+-	[XAIT_location_descriptor] = "XAIT_location_descriptor",
+-	[FTA_content_management_descriptor] = "FTA_content_management_descriptor",
+-	[extension_descriptor] = "extension_descriptor",
+-
+-	[CUE_identifier_descriptor] = "CUE_identifier_descriptor",
+-
+-	[component_name_descriptor] = "component_name_descriptor",
+-	[logical_channel_number_descriptor] = "logical_channel_number_descriptor",
+-
+-	[carousel_id_descriptor] = "carousel_id_descriptor",
+-	[association_tag_descriptor] = "association_tag_descriptor",
+-	[deferred_association_tags_descriptor] = "deferred_association_tags_descriptor",
+-
+-	[hierarchical_transmission_descriptor] = "hierarchical_transmission_descriptor",
+-	[digital_copy_control_descriptor] = "digital_copy_control_descriptor",
+-	[network_identifier_descriptor] = "network_identifier_descriptor",
+-	[partial_transport_stream_time_descriptor] = "partial_transport_stream_time_descriptor",
+-	[audio_component_descriptor] = "audio_component_descriptor",
+-	[hyperlink_descriptor] = "hyperlink_descriptor",
+-	[target_area_descriptor] = "target_area_descriptor",
+-	[data_contents_descriptor] = "data_contents_descriptor",
+-	[video_decode_control_descriptor] = "video_decode_control_descriptor",
+-	[download_content_descriptor] = "download_content_descriptor",
+-	[CA_EMM_TS_descriptor] = "CA_EMM_TS_descriptor",
+-	[CA_contract_information_descriptor] = "CA_contract_information_descriptor",
+-	[CA_service_descriptor] = "CA_service_descriptor",
+-	[TS_Information_descriptior] = "TS_Information_descriptior",
+-	[extended_broadcaster_descriptor] = "extended_broadcaster_descriptor",
+-	[logo_transmission_descriptor] = "logo_transmission_descriptor",
+-	[basic_local_event_descriptor] = "basic_local_event_descriptor",
+-	[reference_descriptor] = "reference_descriptor",
+-	[node_relation_descriptor] = "node_relation_descriptor",
+-	[short_node_information_descriptor] = "short_node_information_descriptor",
+-	[STC_reference_descriptor] = "STC_reference_descriptor",
+-	[series_descriptor] = "series_descriptor",
+-	[event_group_descriptor] = "event_group_descriptor",
+-	[SI_parameter_descriptor] = "SI_parameter_descriptor",
+-	[broadcaster_Name_Descriptor] = "broadcaster_Name_Descriptor",
+-	[component_group_descriptor] = "component_group_descriptor",
+-	[SI_prime_TS_descriptor] = "SI_prime_TS_descriptor",
+-	[board_information_descriptor] = "board_information_descriptor",
+-	[LDT_linkage_descriptor] = "LDT_linkage_descriptor",
+-	[connected_transmission_descriptor] = "connected_transmission_descriptor",
+-	[content_availability_descriptor] = "content_availability_descriptor",
+-	[service_group_descriptor] = "service_group_descriptor",
+-	[carousel_compatible_composite_Descriptor] = "carousel_compatible_composite_Descriptor",
+-	[conditional_playback_descriptor] = "conditional_playback_descriptor",
+-	[ISDBT_delivery_system_descriptor] = "ISDBT_delivery_system_descriptor",
+-	[partial_reception_descriptor] = "partial_reception_descriptor",
+-	[emergency_information_descriptor] = "emergency_information_descriptor",
+-	[data_component_descriptor] = "data_component_descriptor",
+-	[system_management_descriptor] = "system_management_descriptor",
++const struct dvb_descriptor dvb_descriptors[] = {
++	[0 ...255 ] = { "Unknown descriptor", NULL },
++	[video_stream_descriptor] = { "video_stream_descriptor", NULL },
++	[audio_stream_descriptor] = { "audio_stream_descriptor", NULL },
++	[hierarchy_descriptor] = { "hierarchy_descriptor", NULL },
++	[dvbpsi_registration_descriptor] = { "dvbpsi_registration_descriptor", NULL },
++	[ds_alignment_descriptor] = { "ds_alignment_descriptor", NULL },
++	[target_background_grid_descriptor] = { "target_background_grid_descriptor", NULL },
++	[video_window_descriptor] = { "video_window_descriptor", NULL },
++	[conditional_access_descriptor] = { "conditional_access_descriptor", NULL },
++	[iso639_language_descriptor] = { "iso639_language_descriptor", NULL },
++	[system_clock_descriptor] = { "system_clock_descriptor", NULL },
++	[multiplex_buffer_utilization_descriptor] = { "multiplex_buffer_utilization_descriptor", NULL },
++	[copyright_descriptor] = { "copyright_descriptor", NULL },
++	[maximum_bitrate_descriptor] = { "maximum_bitrate_descriptor", NULL },
++	[private_data_indicator_descriptor] = { "private_data_indicator_descriptor", NULL },
++	[smoothing_buffer_descriptor] = { "smoothing_buffer_descriptor", NULL },
++	[std_descriptor] = { "std_descriptor", NULL },
++	[ibp_descriptor] = { "ibp_descriptor", NULL },
++	[mpeg4_video_descriptor] = { "mpeg4_video_descriptor", NULL },
++	[mpeg4_audio_descriptor] = { "mpeg4_audio_descriptor", NULL },
++	[iod_descriptor] = { "iod_descriptor", NULL },
++	[sl_descriptor] = { "sl_descriptor", NULL },
++	[fmc_descriptor] = { "fmc_descriptor", NULL },
++	[external_es_id_descriptor] = { "external_es_id_descriptor", NULL },
++	[muxcode_descriptor] = { "muxcode_descriptor", NULL },
++	[fmxbuffersize_descriptor] = { "fmxbuffersize_descriptor", NULL },
++	[multiplexbuffer_descriptor] = { "multiplexbuffer_descriptor", NULL },
++	[content_labeling_descriptor] = { "content_labeling_descriptor", NULL },
++	[metadata_pointer_descriptor] = { "metadata_pointer_descriptor", NULL },
++	[metadata_descriptor] = { "metadata_descriptor", NULL },
++	[metadata_std_descriptor] = { "metadata_std_descriptor", NULL },
++	[AVC_video_descriptor] = { "AVC_video_descriptor", NULL },
++	[ipmp_descriptor] = { "ipmp_descriptor", NULL },
++	[AVC_timing_and_HRD_descriptor] = { "AVC_timing_and_HRD_descriptor", NULL },
++	[mpeg2_aac_audio_descriptor] = { "mpeg2_aac_audio_descriptor", NULL },
++	[flexmux_timing_descriptor] = { "flexmux_timing_descriptor", NULL },
++	[network_name_descriptor] = { "network_name_descriptor", NULL },
++	[service_list_descriptor] = { "service_list_descriptor", NULL },
++	[stuffing_descriptor] = { "stuffing_descriptor", NULL },
++	[satellite_delivery_system_descriptor] = { "satellite_delivery_system_descriptor", NULL },
++	[cable_delivery_system_descriptor] = { "cable_delivery_system_descriptor", NULL },
++	[VBI_data_descriptor] = { "VBI_data_descriptor", NULL },
++	[VBI_teletext_descriptor] = { "VBI_teletext_descriptor", NULL },
++	[bouquet_name_descriptor] = { "bouquet_name_descriptor", NULL },
++	[service_descriptor] = { "service_descriptor", NULL },
++	[country_availability_descriptor] = { "country_availability_descriptor", NULL },
++	[linkage_descriptor] = { "linkage_descriptor", NULL },
++	[NVOD_reference_descriptor] = { "NVOD_reference_descriptor", NULL },
++	[time_shifted_service_descriptor] = { "time_shifted_service_descriptor", NULL },
++	[short_event_descriptor] = { "short_event_descriptor", NULL },
++	[extended_event_descriptor] = { "extended_event_descriptor", NULL },
++	[time_shifted_event_descriptor] = { "time_shifted_event_descriptor", NULL },
++	[component_descriptor] = { "component_descriptor", NULL },
++	[mosaic_descriptor] = { "mosaic_descriptor", NULL },
++	[stream_identifier_descriptor] = { "stream_identifier_descriptor", NULL },
++	[CA_identifier_descriptor] = { "CA_identifier_descriptor", NULL },
++	[content_descriptor] = { "content_descriptor", NULL },
++	[parental_rating_descriptor] = { "parental_rating_descriptor", NULL },
++	[teletext_descriptor] = { "teletext_descriptor", NULL },
++	[telephone_descriptor] = { "telephone_descriptor", NULL },
++	[local_time_offset_descriptor] = { "local_time_offset_descriptor", NULL },
++	[subtitling_descriptor] = { "subtitling_descriptor", NULL },
++	[terrestrial_delivery_system_descriptor] = { "terrestrial_delivery_system_descriptor", NULL },
++	[multilingual_network_name_descriptor] = { "multilingual_network_name_descriptor", NULL },
++	[multilingual_bouquet_name_descriptor] = { "multilingual_bouquet_name_descriptor", NULL },
++	[multilingual_service_name_descriptor] = { "multilingual_service_name_descriptor", NULL },
++	[multilingual_component_descriptor] = { "multilingual_component_descriptor", NULL },
++	[private_data_specifier_descriptor] = { "private_data_specifier_descriptor", NULL },
++	[service_move_descriptor] = { "service_move_descriptor", NULL },
++	[short_smoothing_buffer_descriptor] = { "short_smoothing_buffer_descriptor", NULL },
++	[frequency_list_descriptor] = { "frequency_list_descriptor", NULL },
++	[partial_transport_stream_descriptor] = { "partial_transport_stream_descriptor", NULL },
++	[data_broadcast_descriptor] = { "data_broadcast_descriptor", NULL },
++	[scrambling_descriptor] = { "scrambling_descriptor", NULL },
++	[data_broadcast_id_descriptor] = { "data_broadcast_id_descriptor", NULL },
++	[transport_stream_descriptor] = { "transport_stream_descriptor", NULL },
++	[DSNG_descriptor] = { "DSNG_descriptor", NULL },
++	[PDC_descriptor] = { "PDC_descriptor", NULL },
++	[AC_3_descriptor] = { "AC_3_descriptor", NULL },
++	[ancillary_data_descriptor] = { "ancillary_data_descriptor", NULL },
++	[cell_list_descriptor] = { "cell_list_descriptor", NULL },
++	[cell_frequency_link_descriptor] = { "cell_frequency_link_descriptor", NULL },
++	[announcement_support_descriptor] = { "announcement_support_descriptor", NULL },
++	[application_signalling_descriptor] = { "application_signalling_descriptor", NULL },
++	[adaptation_field_data_descriptor] = { "adaptation_field_data_descriptor", NULL },
++	[service_identifier_descriptor] = { "service_identifier_descriptor", NULL },
++	[service_availability_descriptor] = { "service_availability_descriptor", NULL },
++	[default_authority_descriptor] = { "default_authority_descriptor", NULL },
++	[related_content_descriptor] = { "related_content_descriptor", NULL },
++	[TVA_id_descriptor] = { "TVA_id_descriptor", NULL },
++	[content_identifier_descriptor] = { "content_identifier_descriptor", NULL },
++	[time_slice_fec_identifier_descriptor] = { "time_slice_fec_identifier_descriptor", NULL },
++	[ECM_repetition_rate_descriptor] = { "ECM_repetition_rate_descriptor", NULL },
++	[S2_satellite_delivery_system_descriptor] = { "S2_satellite_delivery_system_descriptor", NULL },
++	[enhanced_AC_3_descriptor] = { "enhanced_AC_3_descriptor", NULL },
++	[DTS_descriptor] = { "DTS_descriptor", NULL },
++	[AAC_descriptor] = { "AAC_descriptor", NULL },
++	[XAIT_location_descriptor] = { "XAIT_location_descriptor", NULL },
++	[FTA_content_management_descriptor] = { "FTA_content_management_descriptor", NULL },
++	[extension_descriptor] = { "extension_descriptor", NULL },
++
++	[CUE_identifier_descriptor] = { "CUE_identifier_descriptor", NULL },
++
++	[component_name_descriptor] = { "component_name_descriptor", NULL },
++	[logical_channel_number_descriptor] = { "logical_channel_number_descriptor", NULL },
++
++	[carousel_id_descriptor] = { "carousel_id_descriptor", NULL },
++	[association_tag_descriptor] = { "association_tag_descriptor", NULL },
++	[deferred_association_tags_descriptor] = { "deferred_association_tags_descriptor", NULL },
++
++	[hierarchical_transmission_descriptor] = { "hierarchical_transmission_descriptor", NULL },
++	[digital_copy_control_descriptor] = { "digital_copy_control_descriptor", NULL },
++	[network_identifier_descriptor] = { "network_identifier_descriptor", NULL },
++	[partial_transport_stream_time_descriptor] = { "partial_transport_stream_time_descriptor", NULL },
++	[audio_component_descriptor] = { "audio_component_descriptor", NULL },
++	[hyperlink_descriptor] = { "hyperlink_descriptor", NULL },
++	[target_area_descriptor] = { "target_area_descriptor", NULL },
++	[data_contents_descriptor] = { "data_contents_descriptor", NULL },
++	[video_decode_control_descriptor] = { "video_decode_control_descriptor", NULL },
++	[download_content_descriptor] = { "download_content_descriptor", NULL },
++	[CA_EMM_TS_descriptor] = { "CA_EMM_TS_descriptor", NULL },
++	[CA_contract_information_descriptor] = { "CA_contract_information_descriptor", NULL },
++	[CA_service_descriptor] = { "CA_service_descriptor", NULL },
++	[TS_Information_descriptior] = { "TS_Information_descriptior", NULL },
++	[extended_broadcaster_descriptor] = { "extended_broadcaster_descriptor", NULL },
++	[logo_transmission_descriptor] = { "logo_transmission_descriptor", NULL },
++	[basic_local_event_descriptor] = { "basic_local_event_descriptor", NULL },
++	[reference_descriptor] = { "reference_descriptor", NULL },
++	[node_relation_descriptor] = { "node_relation_descriptor", NULL },
++	[short_node_information_descriptor] = { "short_node_information_descriptor", NULL },
++	[STC_reference_descriptor] = { "STC_reference_descriptor", NULL },
++	[series_descriptor] = { "series_descriptor", NULL },
++	[event_group_descriptor] = { "event_group_descriptor", NULL },
++	[SI_parameter_descriptor] = { "SI_parameter_descriptor", NULL },
++	[broadcaster_Name_Descriptor] = { "broadcaster_Name_Descriptor", NULL },
++	[component_group_descriptor] = { "component_group_descriptor", NULL },
++	[SI_prime_TS_descriptor] = { "SI_prime_TS_descriptor", NULL },
++	[board_information_descriptor] = { "board_information_descriptor", NULL },
++	[LDT_linkage_descriptor] = { "LDT_linkage_descriptor", NULL },
++	[connected_transmission_descriptor] = { "connected_transmission_descriptor", NULL },
++	[content_availability_descriptor] = { "content_availability_descriptor", NULL },
++	[service_group_descriptor] = { "service_group_descriptor", NULL },
++	[carousel_compatible_composite_Descriptor] = { "carousel_compatible_composite_Descriptor", NULL },
++	[conditional_playback_descriptor] = { "conditional_playback_descriptor", NULL },
++	[ISDBT_delivery_system_descriptor] = { "ISDBT_delivery_system_descriptor", NULL },
++	[partial_reception_descriptor] = { "partial_reception_descriptor", NULL },
++	[emergency_information_descriptor] = { "emergency_information_descriptor", NULL },
++	[data_component_descriptor] = { "data_component_descriptor", NULL },
++	[system_management_descriptor] = { "system_management_descriptor", NULL },
+ };
+ 
+ static const char *extension_descriptors[] = {
+@@ -580,7 +588,7 @@ static void parse_partial_reception(struct nit_table *nit_table,
+ }
+ 
+ static int parse_extension_descriptor(enum dvb_tables type,
+-				       struct dvb_descriptors *dvb_desc,
++				       struct dvb_v5_descriptors *dvb_desc,
+ 				       const unsigned char *buf, int dlen)
+ {
+ 	unsigned char ext = buf[0];
+@@ -691,7 +699,7 @@ static void parse_service(struct service_table *service_table,
+ }
+ 
+ void parse_descriptor(enum dvb_tables type,
+-			     struct dvb_descriptors *dvb_desc,
++			     struct dvb_v5_descriptors *dvb_desc,
+ 			     const unsigned char *buf, int len)
+ {
+ 	int i;
+@@ -712,7 +720,7 @@ void parse_descriptor(enum dvb_tables type,
+ 		}
+ 		if (dvb_desc->verbose) {
+ 			printf("%s (0x%02x), len %d",
+-			       descriptors[buf[0]], buf[0], buf[1]);
++			       dvb_descriptors[buf[0]].name, buf[0], buf[1]);
+ 			for (i = 0; i < dlen; i++) {
+ 				if (!(i % 16))
+ 					printf("\n\t");
+@@ -854,14 +862,14 @@ void parse_descriptor(enum dvb_tables type,
+ 		if (err) {
+ 			fprintf(stderr,
+ 				"descriptor %s is invalid on %s table\n",
+-				descriptors[buf[0]], table[type]);
++				dvb_descriptors[buf[0]].name, table[type]);
+ 		}
+ 		buf += dlen + 2;
+ 		len -= dlen + 2;
+ 	} while (len > 0);
+ }
+ 
+-int has_descriptor(struct dvb_descriptors *dvb_desc,
++int has_descriptor(struct dvb_v5_descriptors *dvb_desc,
+ 		    unsigned char needed_descriptor,
+ 	            const unsigned char *buf, int len)
+ {
+diff --git a/lib/libdvbv5/descriptors.h b/lib/libdvbv5/descriptors.h
+deleted file mode 100644
+index 0b7f787..0000000
+--- a/lib/libdvbv5/descriptors.h
++++ /dev/null
+@@ -1,214 +0,0 @@
+-/*
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation version 2
+- * of the License.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+- * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+- */
+-
+-/*
+- * Descriptors, as defined on ETSI EN 300 468 V1.11.1 (2010-04)
+- */
+-
+-enum dvb_tables {
+-	PAT,
+-	PMT,
+-	NIT,
+-	SDT,
+-};
+-
+-enum descriptors {
+-	/* ISO/IEC 13818-1 */
+-	video_stream_descriptor				= 0x02,
+-	audio_stream_descriptor				= 0x03,
+-	hierarchy_descriptor				= 0x04,
+-	dvbpsi_registration_descriptor			= 0x05,
+-	ds_alignment_descriptor				= 0x06,
+-	target_background_grid_descriptor		= 0x07,
+-	video_window_descriptor				= 0x08,
+-	conditional_access_descriptor			= 0x09,
+-	iso639_language_descriptor			= 0x0a,
+-	system_clock_descriptor				= 0x0b,
+-	multiplex_buffer_utilization_descriptor		= 0x0c,
+-	copyright_descriptor				= 0x0d,
+-	maximum_bitrate_descriptor			= 0x0e,
+-	private_data_indicator_descriptor		= 0x0f,
+-	smoothing_buffer_descriptor			= 0x10,
+-	std_descriptor					= 0x11,
+-	ibp_descriptor					= 0x12,
+-
+-	mpeg4_video_descriptor				= 0x1b,
+-	mpeg4_audio_descriptor				= 0x1c,
+-	iod_descriptor					= 0x1d,
+-	sl_descriptor					= 0x1e,
+-	fmc_descriptor					= 0x1f,
+-	external_es_id_descriptor			= 0x20,
+-	muxcode_descriptor				= 0x21,
+-	fmxbuffersize_descriptor			= 0x22,
+-	multiplexbuffer_descriptor			= 0x23,
+-	content_labeling_descriptor			= 0x24,
+-	metadata_pointer_descriptor			= 0x25,
+-	metadata_descriptor				= 0x26,
+-	metadata_std_descriptor				= 0x27,
+-	AVC_video_descriptor				= 0x28,
+-	ipmp_descriptor					= 0x29,
+-	AVC_timing_and_HRD_descriptor			= 0x2a,
+-	mpeg2_aac_audio_descriptor			= 0x2b,
+-	flexmux_timing_descriptor			= 0x2c,
+-
+-	/* ETSI EN 300 468 V1.11.1 (2010-04) */
+-
+-	network_name_descriptor				= 0x40,
+-	service_list_descriptor				= 0x41,
+-	stuffing_descriptor				= 0x42,
+-	satellite_delivery_system_descriptor		= 0x43,
+-	cable_delivery_system_descriptor		= 0x44,
+-	VBI_data_descriptor				= 0x45,
+-	VBI_teletext_descriptor				= 0x46,
+-	bouquet_name_descriptor				= 0x47,
+-	service_descriptor				= 0x48,
+-	country_availability_descriptor			= 0x49,
+-	linkage_descriptor				= 0x4a,
+-	NVOD_reference_descriptor			= 0x4b,
+-	time_shifted_service_descriptor			= 0x4c,
+-	short_event_descriptor				= 0x4d,
+-	extended_event_descriptor			= 0x4e,
+-	time_shifted_event_descriptor			= 0x4f,
+-	component_descriptor				= 0x50,
+-	mosaic_descriptor				= 0x51,
+-	stream_identifier_descriptor			= 0x52,
+-	CA_identifier_descriptor			= 0x53,
+-	content_descriptor				= 0x54,
+-	parental_rating_descriptor			= 0x55,
+-	teletext_descriptor				= 0x56,
+-	telephone_descriptor				= 0x57,
+-	local_time_offset_descriptor			= 0x58,
+-	subtitling_descriptor				= 0x59,
+-	terrestrial_delivery_system_descriptor		= 0x5a,
+-	multilingual_network_name_descriptor		= 0x5b,
+-	multilingual_bouquet_name_descriptor		= 0x5c,
+-	multilingual_service_name_descriptor		= 0x5d,
+-	multilingual_component_descriptor		= 0x5e,
+-	private_data_specifier_descriptor		= 0x5f,
+-	service_move_descriptor				= 0x60,
+-	short_smoothing_buffer_descriptor		= 0x61,
+-	frequency_list_descriptor			= 0x62,
+-	partial_transport_stream_descriptor		= 0x63,
+-	data_broadcast_descriptor			= 0x64,
+-	scrambling_descriptor				= 0x65,
+-	data_broadcast_id_descriptor			= 0x66,
+-	transport_stream_descriptor			= 0x67,
+-	DSNG_descriptor					= 0x68,
+-	PDC_descriptor					= 0x69,
+-	AC_3_descriptor					= 0x6a,
+-	ancillary_data_descriptor			= 0x6b,
+-	cell_list_descriptor				= 0x6c,
+-	cell_frequency_link_descriptor			= 0x6d,
+-	announcement_support_descriptor			= 0x6e,
+-	application_signalling_descriptor		= 0x6f,
+-	adaptation_field_data_descriptor		= 0x70,
+-	service_identifier_descriptor			= 0x71,
+-	service_availability_descriptor			= 0x72,
+-	default_authority_descriptor			= 0x73,
+-	related_content_descriptor			= 0x74,
+-	TVA_id_descriptor				= 0x75,
+-	content_identifier_descriptor			= 0x76,
+-	time_slice_fec_identifier_descriptor		= 0x77,
+-	ECM_repetition_rate_descriptor			= 0x78,
+-	S2_satellite_delivery_system_descriptor		= 0x79,
+-	enhanced_AC_3_descriptor			= 0x7a,
+-	DTS_descriptor					= 0x7b,
+-	AAC_descriptor					= 0x7c,
+-	XAIT_location_descriptor			= 0x7d,
+-	FTA_content_management_descriptor		= 0x7e,
+-	extension_descriptor				= 0x7f,
+-
+-	/* SCTE 35 2004 */
+-	CUE_identifier_descriptor			= 0x8a,
+-
+-	/* From http://www.etherguidesystems.com/Help/SDOs/ATSC/Semantics/Descriptors/Default.aspx */
+-	component_name_descriptor			= 0xa3,
+-
+-	/* From http://www.coolstf.com/tsreader/descriptors.html */
+-	logical_channel_number_descriptor		= 0x83,
+-
+-	/* ISDB Descriptors, as defined on ABNT NBR 15603-1 2007 */
+-
+-	carousel_id_descriptor				= 0x13,
+-	association_tag_descriptor			= 0x14,
+-	deferred_association_tags_descriptor		= 0x15,
+-
+-	hierarchical_transmission_descriptor		= 0xc0,
+-	digital_copy_control_descriptor			= 0xc1,
+-	network_identifier_descriptor			= 0xc2,
+-	partial_transport_stream_time_descriptor	= 0xc3,
+-	audio_component_descriptor			= 0xc4,
+-	hyperlink_descriptor				= 0xc5,
+-	target_area_descriptor				= 0xc6,
+-	data_contents_descriptor			= 0xc7,
+-	video_decode_control_descriptor			= 0xc8,
+-	download_content_descriptor			= 0xc9,
+-	CA_EMM_TS_descriptor				= 0xca,
+-	CA_contract_information_descriptor		= 0xcb,
+-	CA_service_descriptor				= 0xcc,
+-	TS_Information_descriptior			= 0xcd,
+-	extended_broadcaster_descriptor			= 0xce,
+-	logo_transmission_descriptor			= 0xcf,
+-	basic_local_event_descriptor			= 0xd0,
+-	reference_descriptor				= 0xd1,
+-	node_relation_descriptor			= 0xd2,
+-	short_node_information_descriptor		= 0xd3,
+-	STC_reference_descriptor			= 0xd4,
+-	series_descriptor				= 0xd5,
+-	event_group_descriptor				= 0xd6,
+-	SI_parameter_descriptor				= 0xd7,
+-	broadcaster_Name_Descriptor			= 0xd8,
+-	component_group_descriptor			= 0xd9,
+-	SI_prime_TS_descriptor				= 0xda,
+-	board_information_descriptor			= 0xdb,
+-	LDT_linkage_descriptor				= 0xdc,
+-	connected_transmission_descriptor		= 0xdd,
+-	content_availability_descriptor			= 0xde,
+-	service_group_descriptor			= 0xe0,
+-	carousel_compatible_composite_Descriptor	= 0xf7,
+-	conditional_playback_descriptor			= 0xf8,
+-	ISDBT_delivery_system_descriptor		= 0xfa,
+-	partial_reception_descriptor			= 0xfb,
+-	emergency_information_descriptor		= 0xfc,
+-	data_component_descriptor			= 0xfd,
+-	system_management_descriptor			= 0xfe,
+-};
+-
+-enum extension_descriptors {
+-	image_icon_descriptor				= 0x00,
+-	cpcm_delivery_signalling_descriptor		= 0x01,
+-	CP_descriptor					= 0x02,
+-	CP_identifier_descriptor			= 0x03,
+-	T2_delivery_system_descriptor			= 0x04,
+-	SH_delivery_system_descriptor			= 0x05,
+-	supplementary_audio_descriptor			= 0x06,
+-	network_change_notify_descriptor		= 0x07,
+-	message_descriptor				= 0x08,
+-	target_region_descriptor			= 0x09,
+-	target_region_name_descriptor			= 0x0a,
+-	service_relocated_descriptor			= 0x0b,
+-};
+-
+-void parse_descriptor(enum dvb_tables type,
+-		      struct dvb_descriptors *dvb_desc,
+-		      const unsigned char *buf, int len);
+-
+-int has_descriptor(struct dvb_descriptors *dvb_desc,
+-		    unsigned char needed_descriptor,
+-	            const unsigned char *buf, int len);
+diff --git a/lib/libdvbv5/descriptors/header.c b/lib/libdvbv5/descriptors/header.c
+new file mode 100644
+index 0000000..48b4cc7
+--- /dev/null
++++ b/lib/libdvbv5/descriptors/header.c
+@@ -0,0 +1,48 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "descriptors/header.h"
++#include "descriptors.h"
++#include "dvb-fe.h"
++
++int dvb_table_header_init(struct dvb_table_header *t)
++{
++	bswap16(t->bitfield);
++	bswap16(t->id);
++	return 0;
++}
++
++void dvb_table_header_print(struct dvb_v5_fe_parms *parms, struct dvb_table_header *t)
++{
++	dvb_log("| table_id       %d", t->table_id);
++	dvb_log("| section_length %d", t->section_length);
++	dvb_log("| zero           %d", t->zero);
++	dvb_log("| one            %d", t->one);
++	dvb_log("| zero2          %d", t->zero2);
++	dvb_log("| syntax         %d", t->syntax);
++	dvb_log("| id             %d", t->id);
++	dvb_log("| current_next   %d", t->current_next);
++	dvb_log("| version        %d", t->version);
++	dvb_log("| one2           %d", t->one2);
++	dvb_log("| section_id     %d", t->section_id);
++	dvb_log("| last_section   %d", t->last_section);
++}
++
+diff --git a/lib/libdvbv5/descriptors/pat.c b/lib/libdvbv5/descriptors/pat.c
+new file mode 100644
+index 0000000..4f27101
+--- /dev/null
++++ b/lib/libdvbv5/descriptors/pat.c
+@@ -0,0 +1,53 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "descriptors/pat.h"
++#include "descriptors.h"
++#include "dvb-fe.h"
++
++int dvb_table_pat_init(unsigned char *buf, ssize_t size)
++{
++	struct dvb_table_pat *t = (struct dvb_table_pat *) buf;
++	int r = dvb_table_header_init(&t->header);
++	if (r != 0)
++		return r;
++	t->info.entries = 0;
++	struct dvb_table_pat_entry *p = t->entry;
++	while((uint8_t *) p < (uint8_t *) t + size - 4) {
++		bswap16(p->program_id);
++		bswap16(p->bitfield);
++		p++;
++		t->info.entries++;
++	}
++	return 0;
++}
++
++void dvb_table_pat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pat *t)
++{
++	dvb_log("PAT" );
++	dvb_table_header_print(parms, &t->header);
++	dvb_log("|\\   pid     program_id (%d entries)", t->info.entries);
++	int i;
++	for (i = 0; i < t->info.entries; i++) {
++		dvb_log("|- %7d %7d", t->entry[i].pid, t->entry[i].program_id);
++	}
++}
++
+diff --git a/lib/libdvbv5/descriptors/pmt.c b/lib/libdvbv5/descriptors/pmt.c
+new file mode 100644
+index 0000000..1878858
+--- /dev/null
++++ b/lib/libdvbv5/descriptors/pmt.c
+@@ -0,0 +1,124 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "descriptors/pmt.h"
++#include "descriptors.h"
++#include "dvb-fe.h"
++
++#include <string.h> /* memcpy */
++#include <stdio.h>
++
++int dvb_table_pmt_init(uint8_t *ptr, ssize_t size)
++{
++	struct dvb_table_pmt *t = (struct dvb_table_pmt *) ptr;
++	int r = dvb_table_header_init(&t->header);
++	if (r != 0)
++		return r;
++	bswap16(t->bitfield2);
++	bswap16(t->bitfield3);
++
++	/* temporary mem for holding the entries */
++	/* - filled with dvb_table_pmt_entry from the beginning */
++	/* - filled with info from the end */
++	uint8_t *tmp = malloc(size);
++	struct dvb_table_pmt_entry *entries = (struct dvb_table_pmt_entry *) tmp;
++	uint8_t *infoptr = tmp + size - 1;
++
++	t->info.entries = 0;
++	uint8_t *p = ptr + sizeof(struct dvb_table_pmt);
++	p += t->prog_length;
++	while ( p < ptr + size - 4) {
++		struct dvb_table_pmt_prog *prog = (struct dvb_table_pmt_prog *) p;
++		bswap16(prog->bitfield);
++		bswap16(prog->bitfield2);
++		int len = prog->info_length;
++		if (p + prog->desc_length > ptr + size - 4) {
++			printf( "wrong descriptor length: %d\n", prog->desc_length );
++			prog->desc_length = ptr + size - 4 - p;
++		}
++		if (len > prog->desc_length - 2) // type, len
++			len = 0;
++		else {
++			infoptr -= len;
++			memcpy(infoptr, prog->info, len);
++		}
++		infoptr[len] = '\0';
++		entries[t->info.entries].type           = prog->stream_type;
++		entries[t->info.entries].elementary_pid = prog->elementary_pid;
++		entries[t->info.entries].info           = infoptr;
++
++		printf("elemenary pid %d\n", entries[t->info.entries].elementary_pid);
++		printf("desc_length   %d\n", prog->desc_length);
++		printf("type          %d (%s)\n", entries[t->info.entries].type, dvb_descriptors[entries[t->info.entries].type].name);
++		printf("info_length   %d\n", prog->info_length);
++		printf("info: '%s'\n", entries[t->info.entries].info);
++
++		infoptr -= 1;
++		t->info.entries++;
++		p += sizeof( struct dvb_table_pmt_prog ) + prog->info_length;
++	}
++
++	/* copy temp info back to original buffer */
++	int i;
++	printf( "BUFFER: %p - %p, size: %d, sizeof pmt: %d, entries: %d, sizeof pmtentry: %d\n", p, p + size, (int) size, (int)sizeof(struct dvb_table_pmt), t->info.entries, (int)sizeof(struct dvb_table_pmt_entry) );
++	infoptr = p + sizeof(struct dvb_table_pmt) +
++			t->info.entries * sizeof(struct dvb_table_pmt_entry);
++	for (i = 0; i < t->info.entries; i++ ) {
++		printf( "INFOPTR: %p\n", infoptr);
++		if (infoptr > p + size)
++		{
++			printf( "BUFFER OVERFLOW!\n" );
++		}
++		t->entry[i].elementary_pid = entries[i].elementary_pid;
++		t->entry[i].type = entries[i].type;
++		t->entry[i].info = infoptr;
++		printf( "COPYING:::::::::::::::::::\n" );
++		int j;
++		for( j = 0; ; j++ )
++		{
++			printf( "char %c (%d)\n", entries[i].info[j], (int) entries[i].info[j]);
++			if( entries[i].info[j] == '\0' )
++				break;
++		}
++		strcpy((char *) t->entry[i].info, (char *) entries[i].info);
++		infoptr += strlen((char *) t->entry[i].info) + 1;
++	}
++	free(tmp);
++	return 0;
++}
++
++void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pmt *t)
++{
++	dvb_log( "PMT" );
++	dvb_table_header_print(parms, &t->header);
++	dvb_log( "|- pcr_pid       %d", t->pcr_pid );
++	dvb_log( "|  reserved2     %d", t->reserved2 );
++	dvb_log( "|  prog length   %d", t->prog_length );
++	dvb_log( "|  zero3         %d", t->zero3 );
++	dvb_log( "|  reserved3     %d", t->reserved3 );
++	/*int i;*/
++	/*for (i = 0; i < t->info.entries; i++) {*/
++		/*dvb_log("|-  elementary_pid %d", t->entry[i].elementary_pid);*/
++		/*dvb_log("|   type           %d (%s)", t->entry[i].type, dvb_descriptor_names[t->entry[i].type]);*/
++		/*dvb_log("|   info          '%s'", t->entry[i].info);*/
++	/*}*/
++}
++
+diff --git a/lib/libdvbv5/dvb-demux.c b/lib/libdvbv5/dvb-demux.c
+index 6ff9d20..b650272 100644
+--- a/lib/libdvbv5/dvb-demux.c
++++ b/lib/libdvbv5/dvb-demux.c
+@@ -36,10 +36,26 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
++#include <stdlib.h> /* free */
+ 
+ #include <linux/dvb/dmx.h>
+ #include "dvb-demux.h"
+ 
++int dvb_dmx_open(int adapter, int demux, unsigned verbose)
++{
++  char* demux_name = NULL;
++  asprintf(&demux_name, "/dev/dvb/adapter%i/demux%i", adapter, demux );
++  int fd_demux = open( demux_name, O_RDWR );
++  free( demux_name );
++  return fd_demux;
++}
++
++void dvb_dmx_close(int dmx_fd)
++{
++  (void) ioctl( dmx_fd, DMX_STOP);
++  close( dmx_fd);
++}
++
+ int set_pesfilter(int dmxfd, int pid, int pes_type, int dvr)
+ {
+ 	struct dmx_pes_filter_params pesfilter;
+diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
+index 9078893..90ad18f 100644
+--- a/lib/libdvbv5/dvb-fe.c
++++ b/lib/libdvbv5/dvb-fe.c
+@@ -22,45 +22,7 @@
+ #include "dvb-fe.h"
+ 
+ #include <stddef.h>
+-#include <stdio.h>
+ #include <unistd.h>
+-#include <stdarg.h>
+-
+-static const struct loglevel {
+-	const char *name;
+-	const char *color;
+-	int fd;
+-} loglevels[9] = {
+-	{"EMERG   ", "\033[31m", STDERR_FILENO },
+-	{"ALERT   ", "\033[31m", STDERR_FILENO },
+-	{"CRITICAL", "\033[31m", STDERR_FILENO },
+-	{"ERROR   ", "\033[31m", STDERR_FILENO },
+-	{"WARNING ", "\033[33m", STDOUT_FILENO },
+-	{"NOTICE  ", "\033[36m", STDOUT_FILENO },
+-	{"INFO    ", "\033[36m", STDOUT_FILENO },
+-	{"DEBUG   ", "\033[32m", STDOUT_FILENO },
+-	{"",         "\033[0m",  STDOUT_FILENO },
+-};
+-#define LOG_COLOROFF 8
+-
+-void dvb_default_log(int level, const char *fmt, ...)
+-{
+-	if(level > sizeof(loglevels) / sizeof(struct loglevel) - 2) // ignore LOG_COLOROFF as well
+-		level = LOG_INFO;
+-	va_list ap;
+-	va_start(ap, fmt);
+-	FILE *out = stdout;
+-	if(STDERR_FILENO == loglevels[level].fd)
+-		out = stderr;
+-	if(isatty(loglevels[level].fd))
+-		fputs(loglevels[level].color, out);
+-	fprintf(out, "%s ", loglevels[level].name);
+-	vfprintf(out, fmt, ap);
+-	fprintf(out, "\n");
+-	if(isatty(loglevels[level].fd))
+-		fputs(loglevels[LOG_COLOROFF].color, out);
+-	va_end(ap);
+-}
+ 
+ static void dvb_v5_free(struct dvb_v5_fe_parms *parms)
+ {
+@@ -450,7 +412,7 @@ const char *dvb_cmd_name(int cmd)
+ 	return NULL;
+ }
+ 
+-const char * const *dvb_attr_names(int cmd)
++const char *const *dvb_attr_names(int cmd)
+ {
+ 	if (cmd < DTV_USER_COMMAND_START)
+ 		return dvb_v5_attr_names[cmd];
+diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
+index 5ab0d97..6431bbd 100644
+--- a/lib/libdvbv5/dvb-file.c
++++ b/lib/libdvbv5/dvb-file.c
+@@ -720,11 +720,11 @@ int write_dvb_file(const char *fname, struct dvb_file *dvb_file)
+ 
+ 			if (!attr_name || !*attr_name)
+ 				fprintf(fp, "\t%s = %u\n",
+-					dvb_v5_name[entry->props[i].cmd],
++					dvb_cmd_name(entry->props[i].cmd),
+ 					entry->props[i].u.data);
+ 			else
+ 				fprintf(fp, "\t%s = %s\n",
+-					dvb_v5_name[entry->props[i].cmd],
++					dvb_cmd_name(entry->props[i].cmd),
+ 					*attr_name);
+ 		}
+ 		fprintf(fp, "\n");
+@@ -758,7 +758,7 @@ int write_dvb_file(const char *fname, struct dvb_file *dvb_file)
+ 	return 0;
+ };
+ 
+-char *dvb_vchannel(struct dvb_descriptors *dvb_desc,
++char *dvb_vchannel(struct dvb_v5_descriptors *dvb_desc,
+ 		   int service)
+ {
+ 	struct service_table *service_table = &dvb_desc->sdt_table.service_table[service];
+@@ -812,7 +812,7 @@ static int store_entry_prop(struct dvb_entry *entry,
+ }
+ 
+ static void handle_std_specific_parms(struct dvb_entry *entry,
+-				      struct dvb_descriptors *dvb_desc)
++				      struct dvb_v5_descriptors *dvb_desc)
+ {
+ 	struct nit_table *nit_table = &dvb_desc->nit_table;
+ 	int i;
+@@ -933,7 +933,7 @@ static int sort_other_el_pid(const void *a_arg, const void *b_arg)
+ 
+ int store_dvb_channel(struct dvb_file **dvb_file,
+ 		      struct dvb_v5_fe_parms *parms,
+-		      struct dvb_descriptors *dvb_desc,
++		      struct dvb_v5_descriptors *dvb_desc,
+ 		      int get_detected, int get_nit)
+ {
+ 	struct dvb_entry *entry;
+diff --git a/lib/libdvbv5/dvb-log.c b/lib/libdvbv5/dvb-log.c
+new file mode 100644
+index 0000000..7fa811f
+--- /dev/null
++++ b/lib/libdvbv5/dvb-log.c
+@@ -0,0 +1,63 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "dvb-log.h"
++
++#include <stdio.h>
++#include <unistd.h>
++#include <stdarg.h>
++
++static const struct loglevel {
++	const char *name;
++	const char *color;
++	int fd;
++} loglevels[9] = {
++	{"EMERG   ", "\033[31m", STDERR_FILENO },
++	{"ALERT   ", "\033[31m", STDERR_FILENO },
++	{"CRITICAL", "\033[31m", STDERR_FILENO },
++	{"ERROR   ", "\033[31m", STDERR_FILENO },
++	{"WARNING ", "\033[33m", STDOUT_FILENO },
++	{"NOTICE  ", "\033[36m", STDOUT_FILENO },
++	{"INFO    ", "\033[36m", STDOUT_FILENO },
++	{"DEBUG   ", "\033[32m", STDOUT_FILENO },
++	{"",         "\033[0m",  STDOUT_FILENO },
++};
++#define LOG_COLOROFF 8
++
++void dvb_default_log(int level, const char *fmt, ...)
++{
++	if(level > sizeof(loglevels) / sizeof(struct loglevel) - 2) // ignore LOG_COLOROFF as well
++		level = LOG_INFO;
++	va_list ap;
++	va_start(ap, fmt);
++	FILE *out = stdout;
++	if(STDERR_FILENO == loglevels[level].fd)
++		out = stderr;
++	if(isatty(loglevels[level].fd))
++		fputs(loglevels[level].color, out);
++	fprintf(out, "%s ", loglevels[level].name);
++	vfprintf(out, fmt, ap);
++	fprintf(out, "\n");
++	if(isatty(loglevels[level].fd))
++		fputs(loglevels[LOG_COLOROFF].color, out);
++	va_end(ap);
++}
++
+diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
+index e0a546c..6178fb0 100644
+--- a/lib/libdvbv5/dvb-scan.c
++++ b/lib/libdvbv5/dvb-scan.c
+@@ -29,6 +29,7 @@
+ #include "dvb-frontend.h"
+ #include "descriptors.h"
+ #include "parse_string.h"
++#include "crc32.h"
+ 
+ #include <errno.h>
+ #include <fcntl.h>
+@@ -41,9 +42,9 @@
+ #include <sys/types.h>
+ #include <stdlib.h>
+ 
+-static void parse_pat(struct dvb_descriptors *dvb_desc,
+-		      const unsigned char *buf, int *section_length,
+-		      int id, int version)
++static void parse_pat(struct dvb_v5_descriptors *dvb_desc,
++		const unsigned char *buf, int *section_length,
++		int id, int version)
+ {
+ 	int service_id, pmt_pid;
+ 	int n;
+@@ -53,15 +54,15 @@ static void parse_pat(struct dvb_descriptors *dvb_desc,
+ 
+ 	n = dvb_desc->pat_table.pid_table_len;
+ 	dvb_desc->pat_table.pid_table = realloc(dvb_desc->pat_table.pid_table,
+-				sizeof(*dvb_desc->pat_table.pid_table) *
+-				(n + (*section_length / 4)));
++			sizeof(*dvb_desc->pat_table.pid_table) *
++			(n + (*section_length / 4)));
+ 
+ 	while (*section_length > 3) {
+ 		service_id = (buf[0] << 8) | buf[1];
+ 		pmt_pid = ((buf[2] & 0x1f) << 8) | buf[3];
+ 
+ 		memset(&dvb_desc->pat_table.pid_table[n], 0,
+-		       sizeof(dvb_desc->pat_table.pid_table[n]));
++				sizeof(dvb_desc->pat_table.pid_table[n]));
+ 
+ 		dvb_desc->pat_table.pid_table[n].service_id = service_id;
+ 		dvb_desc->pat_table.pid_table[n].pid = pmt_pid;
+@@ -78,48 +79,42 @@ static void parse_pat(struct dvb_descriptors *dvb_desc,
+ 
+ static void add_vpid(struct pid_table *pid_table, uint16_t pid, int verbose)
+ {
+-	int i;
+-
+ 	if (verbose)
+ 		printf("video pid 0x%04x\n", pid);
+-	i = pid_table->video_pid_len;
++	int i = pid_table->video_pid_len;
+ 	pid_table->video_pid = realloc(pid_table->video_pid,
+-		sizeof(*pid_table->video_pid) * ++pid_table->video_pid_len);
++			sizeof(*pid_table->video_pid) * ++pid_table->video_pid_len);
+ 	pid_table->video_pid[i] = pid;
+ }
+ 
+ static void add_apid(struct pid_table *pid_table, uint16_t pid, int verbose)
+ {
+-	int i;
+-
+ 	if (verbose)
+ 		printf("audio pid 0x%04x\n", pid);
+-	i = pid_table->audio_pid_len;
++	int i = pid_table->audio_pid_len;
+ 	pid_table->audio_pid = realloc(pid_table->audio_pid,
+-		sizeof(*pid_table->audio_pid) * ++pid_table->audio_pid_len);
++			sizeof(*pid_table->audio_pid) * ++pid_table->audio_pid_len);
+ 	pid_table->audio_pid[i] = pid;
+ }
+ 
+ static void add_otherpid(struct pid_table *pid_table,
+-			 uint8_t type, uint16_t pid, int verbose)
++		uint8_t type, uint16_t pid, int verbose)
+ {
+-	int i;
+-
+ 	if (verbose)
+ 		printf("pid type 0x%02x: 0x%04x\n", type, pid);
+-	i = pid_table->other_el_pid_len;
++	int i = pid_table->other_el_pid_len;
+ 	pid_table->other_el_pid = realloc(pid_table->other_el_pid,
+-		sizeof(*pid_table->other_el_pid) *
+-		++pid_table->other_el_pid_len);
++			sizeof(*pid_table->other_el_pid) *
++			++pid_table->other_el_pid_len);
+ 
+ 	pid_table->other_el_pid[i].type = type;
+ 	pid_table->other_el_pid[i].pid = pid;
+ }
+ 
+-static void parse_pmt(struct dvb_descriptors *dvb_desc,
+-		      const unsigned char *buf, int *section_length,
+-		      int id, int version,
+-		      struct pid_table *pid_table)
++static void parse_pmt(struct dvb_v5_descriptors *dvb_desc,
++		const unsigned char *buf, int *section_length,
++		int id, int version,
++		struct pid_table *pid_table)
+ {
+ 	struct pmt_table *pmt_table = &pid_table->pmt_table;
+ 	uint16_t len, pid;
+@@ -127,13 +122,13 @@ static void parse_pmt(struct dvb_descriptors *dvb_desc,
+ 	pmt_table->program_number = id;
+ 	pmt_table->version = version;
+ 
+-        pmt_table->pcr_pid = ((buf[0] & 0x1f) << 8) | buf[1];
+-        len = ((buf[2] & 0x0f) << 8) | buf[3];
++	pmt_table->pcr_pid = ((buf[0] & 0x1f) << 8) | buf[1];
++	len = ((buf[2] & 0x0f) << 8) | buf[3];
+ 
+ 	if (dvb_desc->verbose)
+ 		printf("PN 0x%04x, version %d, PCR ID 0x%04x, len %d\n",
+-			pmt_table->program_number, pmt_table->version,
+-			pmt_table->pcr_pid, len);
++				pmt_table->program_number, pmt_table->version,
++				pmt_table->pcr_pid, len);
+ 
+ 	parse_descriptor(PMT, dvb_desc, &buf[4], len);
+ 
+@@ -144,37 +139,36 @@ static void parse_pmt(struct dvb_descriptors *dvb_desc,
+ 		len = ((buf[3] & 0x0f) << 8) | buf[4];
+ 		pid = ((buf[1] & 0x1f) << 8) | buf[2];
+ 
++		printf( "PMT len: %d\n", len );
+ 		switch (buf[0]) {
+-		case 0x01: /* ISO/IEC 11172-2 Video */
+-		case 0x02: /* H.262, ISO/IEC 13818-2 or ISO/IEC 11172-2 video */
+-			add_vpid(pid_table, pid, dvb_desc->verbose);
+-			break;
+-		case 0x1b: /* H.264 AVC */
+-			add_vpid(pid_table, pid, dvb_desc->verbose);
+-			break;
+-		case 0x03: /* ISO/IEC 11172-3 Audio */
+-		case 0x04: /* ISO/IEC 13818-3 Audio */
+-		case 0x0f: /* ISO/IEC 13818-7 Audio with ADTS (AAC) */
+-		case 0x11: /* ISO/IEC 14496-3 Audio with the LATM */
+-		case 0x81: /* user private - in general ATSC Dolby - AC-3 */
+-			add_apid(pid_table, pid, dvb_desc->verbose);
+-			break;
+-		case 0x05: /* private sections */
+-		case 0x06: /* private data */
+-			/*
+-			 * Those can be used by sub-titling, teletext and/or
+-			 * DVB AC-3. So, need to seek for the AC-3 descriptors
+-			 */
+-			if (has_descriptor(dvb_desc, AC_3_descriptor, &buf[5], len) |
+-			    has_descriptor(dvb_desc, enhanced_AC_3_descriptor, &buf[5], len))
++			case 0x01: /* ISO/IEC 11172-2 Video */
++			case 0x02: /* H.262, ISO/IEC 13818-2 or ISO/IEC 11172-2 video */
++			case 0x1b: /* H.264 AVC */
++				add_vpid(pid_table, pid, dvb_desc->verbose);
++				break;
++			case 0x03: /* ISO/IEC 11172-3 Audio */
++			case 0x04: /* ISO/IEC 13818-3 Audio */
++			case 0x0f: /* ISO/IEC 13818-7 Audio with ADTS (AAC) */
++			case 0x11: /* ISO/IEC 14496-3 Audio with the LATM */
++			case 0x81: /* user private - in general ATSC Dolby - AC-3 */
+ 				add_apid(pid_table, pid, dvb_desc->verbose);
+-			else
+-				add_otherpid(pid_table, buf[0], pid,
+-					     dvb_desc->verbose);
+-
+-			break;
+-		default:
+-			add_otherpid(pid_table, buf[0], pid, dvb_desc->verbose);
++				break;
++			case 0x05: /* private sections */
++			case 0x06: /* private data */
++				/*
++				 * Those can be used by sub-titling, teletext and/or
++				 * DVB AC-3. So, need to seek for the AC-3 descriptors
++				 */
++				if (has_descriptor(dvb_desc, AC_3_descriptor, &buf[5], len) |
++						has_descriptor(dvb_desc, enhanced_AC_3_descriptor, &buf[5], len))
++					add_apid(pid_table, pid, dvb_desc->verbose);
++				else
++					add_otherpid(pid_table, buf[0], pid,
++							dvb_desc->verbose);
++				break;
++			default:
++				add_otherpid(pid_table, buf[0], pid, dvb_desc->verbose);
++				break;
+ 		};
+ 
+ 		parse_descriptor(PMT, dvb_desc, &buf[5], len);
+@@ -184,9 +178,9 @@ static void parse_pmt(struct dvb_descriptors *dvb_desc,
+ 	};
+ }
+ 
+-static void parse_nit(struct dvb_descriptors *dvb_desc,
+-		      const unsigned char *buf, int *section_length,
+-		      int id, int version)
++static void parse_nit(struct dvb_v5_descriptors *dvb_desc,
++		const unsigned char *buf, int *section_length,
++		int id, int version)
+ {
+ 	struct nit_table *nit_table = &dvb_desc->nit_table;
+ 	int len, n;
+@@ -209,20 +203,20 @@ static void parse_nit(struct dvb_descriptors *dvb_desc,
+ 	n = nit_table->tr_table_len;
+ 	while (*section_length > 6) {
+ 		nit_table->tr_table = realloc(nit_table->tr_table,
+-					sizeof(*nit_table->tr_table) * (n + 1));
++				sizeof(*nit_table->tr_table) * (n + 1));
+ 		memset(&nit_table->tr_table[n], 0,
+-		       sizeof(nit_table->tr_table[n]));
++				sizeof(nit_table->tr_table[n]));
+ 		nit_table->tr_table[n].tr_id = (buf[0] << 8) | buf[1];
+ 
+ 		len = ((buf[4] & 0x0f) << 8) | buf[5];
+ 		if (*section_length < len + 4 && len > 0) {
+ 			fprintf(stderr, "NIT section too short for Network ID 0x%04x, transport stream ID 0x%04x",
+-			       id, nit_table->tr_table[n].tr_id);
++					id, nit_table->tr_table[n].tr_id);
+ 			break;
+ 		} else if (len) {
+ 			if (dvb_desc->verbose)
+ 				printf("Transport stream #%d ID 0x%04x, len %d\n",
+-					n, nit_table->tr_table[n].tr_id, len);
++						n, nit_table->tr_table[n].tr_id, len);
+ 
+ 			parse_descriptor(NIT, dvb_desc, &buf[6], len);
+ 		}
+@@ -235,9 +229,9 @@ static void parse_nit(struct dvb_descriptors *dvb_desc,
+ 	nit_table->tr_table_len = n;
+ }
+ 
+-static void parse_sdt(struct dvb_descriptors *dvb_desc,
+-		      const unsigned char *buf, int *section_length,
+-		      int id, int version)
++static void parse_sdt(struct dvb_v5_descriptors *dvb_desc,
++		const unsigned char *buf, int *section_length,
++		int id, int version)
+ {
+ 	struct sdt_table *sdt_table = &dvb_desc->sdt_table;
+ 	int len, n;
+@@ -253,7 +247,7 @@ static void parse_sdt(struct dvb_descriptors *dvb_desc,
+ 		sdt_table->service_table = realloc(sdt_table->service_table,
+ 				sizeof(*sdt_table->service_table) * (n + 1));
+ 		memset(&sdt_table->service_table[n], 0,
+-		       sizeof(sdt_table->service_table[n]));
++				sizeof(sdt_table->service_table[n]));
+ 		sdt_table->service_table[n].service_id = (buf[0] << 8) | buf[1];
+ 		len = ((buf[3] & 0x0f) << 8) | buf[4];
+ 		sdt_table->service_table[n].running = (buf[3] >> 5) & 0x7;
+@@ -261,14 +255,14 @@ static void parse_sdt(struct dvb_descriptors *dvb_desc,
+ 
+ 		if (*section_length < len && len > 0) {
+ 			fprintf(stderr, "SDT section too short for Service ID 0x%04x\n",
+-			       sdt_table->service_table[n].service_id);
++					sdt_table->service_table[n].service_id);
+ 		} else if (len) {
+ 			if (dvb_desc->verbose)
+ 				printf("Service #%d ID 0x%04x, running %d, scrambled %d\n",
+-				n,
+-				sdt_table->service_table[n].service_id,
+-				sdt_table->service_table[n].running,
+-				sdt_table->service_table[n].scrambled);
++						n,
++						sdt_table->service_table[n].service_id,
++						sdt_table->service_table[n].running,
++						sdt_table->service_table[n].scrambled);
+ 
+ 			parse_descriptor(SDT, dvb_desc, &buf[5], len);
+ 		}
+@@ -309,18 +303,72 @@ static int poll(int filedes, unsigned int seconds)
+ 
+ 	/* `select' returns 0 if timeout, 1 if input available, -1 if error. */
+ 	return TEMP_FAILURE_RETRY (select (FD_SETSIZE,
+-						&set, NULL, NULL,
+-						&timeout));
++				&set, NULL, NULL,
++				&timeout));
+ }
+ 
+ 
+-static int read_section(int dmx_fd, struct dvb_descriptors *dvb_desc,
+-			uint16_t pid, unsigned char table, void *ptr,
+-			unsigned timeout)
++int dvb_read_section(int dmx_fd, unsigned char table, uint16_t pid, unsigned char **buf,
++		unsigned *length, unsigned timeout)
+ {
+-	int count;
++	int available;
++	ssize_t count = 0;
++	struct dmx_sct_filter_params f;
++
++	// FIXME: verify known table
++	*buf = NULL;
++
++	memset(&f, 0, sizeof(f));
++	f.pid = pid;
++	f.filter.filter[0] = table;
++	f.filter.mask[0] = 0xff;
++	f.timeout = 0;
++	f.flags = DMX_IMMEDIATE_START | DMX_CHECK_CRC;
++	if (ioctl(dmx_fd, DMX_SET_FILTER, &f) == -1) {
++		perror("ioctl DMX_SET_FILTER failed");
++		return -1;
++	}
++
++	do {
++		available = poll(dmx_fd, timeout);
++		if (available > 0) {
++			*buf = malloc(DVB_MAX_PAYLOAD_PACKET_SIZE +
++					dvb_table_initializers[table].info_length);
++			count = read(dmx_fd,
++					*buf + dvb_table_initializers[table].info_length,
++					DVB_MAX_PAYLOAD_PACKET_SIZE);
++		}
++	} while (available < 0 && errno == EOVERFLOW);
++	if (!count) {
++		printf("no data read\n" );
++		return -1;
++	}
++	if (count < 0) {
++		perror("read_sections: read error");
++		return -2;
++	}
++	/**buf = realloc(*buf, count + dvb_table_initializers[table].info_length);*/
++
++	uint32_t crc = crc32(*buf + dvb_table_initializers[table].info_length, count, 0xFFFFFFFF);
++	if (crc != 0) {
++		printf("crc error\n");
++		return -3;
++	}
++
++	//ARRAY_SIZE(vb_table_initializers) >= table
++	int r = dvb_table_initializers[table].init(*buf, count);
++	if (length)
++		*length = count;
++	return r;
++}
++
++static int read_section(int dmx_fd, struct dvb_v5_descriptors *dvb_desc,
++		uint16_t pid, unsigned char table, void *ptr,
++		unsigned timeout)
++{
++	ssize_t count;
+ 	int section_length, table_id, id, version, next = 0;
+-	unsigned char buf[4096];
++	unsigned char buf[4096]; // FIXME: define
+ 	unsigned char *p;
+ 	struct dmx_sct_filter_params f;
+ 
+@@ -366,7 +414,7 @@ static int read_section(int dmx_fd, struct dvb_descriptors *dvb_desc,
+ 
+ 		if (dvb_desc->verbose) {
+ 			printf("PID 0x%04x, TableID 0x%02x ID=0x%04x, version %d, ",
+-			pid, table_id, id, version);
++					pid, table_id, id, version);
+ 			hexdump(buf, count);
+ 			printf("\tsection_length = %d ", section_length);
+ 			printf("section %d, last section %d\n", buf[6], buf[7]);
+@@ -376,40 +424,40 @@ static int read_section(int dmx_fd, struct dvb_descriptors *dvb_desc,
+ 		section_length -= 8;
+ 
+ 		switch (table_id) {
+-		case 0x00:	/* PAT */
+-			parse_pat(dvb_desc, p, &section_length,
+-					   id, version);
+-			break;
+-		case 0x02:	/* PMT */
+-			parse_pmt(dvb_desc, p, &section_length,
+-					   id, version, ptr);
+-			break;
+-		case 0x40:	/* NIT */
+-		case 0x41:	/* NIT other */
+-			parse_nit(dvb_desc, p, &section_length,
+-					   id, version);
+-			break;
+-		case 0x42:	/* SAT */
+-		case 0x46:	/* SAT other */
+-			parse_sdt(dvb_desc, p, &section_length,
+-					   id, version);
+-			break;
++			case 0x00:	/* PAT */
++				parse_pat(dvb_desc, p, &section_length,
++						id, version);
++				break;
++			case 0x02:	/* PMT */
++				parse_pmt(dvb_desc, p, &section_length,
++						id, version, ptr);
++				break;
++			case 0x40:	/* NIT */
++			case 0x41:	/* NIT other */
++				parse_nit(dvb_desc, p, &section_length,
++						id, version);
++				break;
++			case 0x42:	/* SAT */
++			case 0x46:	/* SAT other */
++				parse_sdt(dvb_desc, p, &section_length,
++						id, version);
++				break;
+ 		}
+ 	} while (next);
+ 
+ 	return 0;
+ }
+ 
+-struct dvb_descriptors *dvb_get_ts_tables(int dmx_fd,
+-					  uint32_t delivery_system,
+-					  unsigned other_nit,
+-					  unsigned timeout_multiply,
+-					  int verbose)
++struct dvb_v5_descriptors *dvb_get_ts_tables(int dmx_fd,
++		uint32_t delivery_system,
++		unsigned other_nit,
++		unsigned timeout_multiply,
++		int verbose)
+ {
+ 	int i, rc;
+ 	int pat_pmt_time, sdt_time, nit_time;
+ 
+-	struct dvb_descriptors *dvb_desc;
++	struct dvb_v5_descriptors *dvb_desc;
+ 
+ 	dvb_desc = calloc(sizeof(*dvb_desc), 1);
+ 	if (!dvb_desc)
+@@ -423,41 +471,42 @@ struct dvb_descriptors *dvb_get_ts_tables(int dmx_fd,
+ 
+ 	/* Get standard timeouts for each table */
+ 	switch(delivery_system) {
+-	case SYS_DVBC_ANNEX_A:
+-	case SYS_DVBC_ANNEX_C:
+-	case SYS_DVBS:
+-	case SYS_DVBS2:
+-	case SYS_TURBO:
+-		pat_pmt_time = 1;
+-		sdt_time = 2;
+-		nit_time = 10;
+-		break;
+-	case SYS_DVBT:
+-	case SYS_DVBT2:
+-		pat_pmt_time = 1;
+-		sdt_time = 2;
+-		nit_time = 12;
+-		break;
+-	case SYS_ISDBT:
+-		pat_pmt_time = 1;
+-		sdt_time = 2;
+-		nit_time = 12;
+-		break;
+-	case SYS_ATSC:
+-	case SYS_DVBC_ANNEX_B:
+-		pat_pmt_time = 1;
+-		sdt_time = 5;
+-		nit_time = 5;
+-	default:
+-		pat_pmt_time = 1;
+-		sdt_time = 2;
+-		nit_time = 10;
+-		break;
++		case SYS_DVBC_ANNEX_A:
++		case SYS_DVBC_ANNEX_C:
++		case SYS_DVBS:
++		case SYS_DVBS2:
++		case SYS_TURBO:
++			pat_pmt_time = 1;
++			sdt_time = 2;
++			nit_time = 10;
++			break;
++		case SYS_DVBT:
++		case SYS_DVBT2:
++			pat_pmt_time = 1;
++			sdt_time = 2;
++			nit_time = 12;
++			break;
++		case SYS_ISDBT:
++			pat_pmt_time = 1;
++			sdt_time = 2;
++			nit_time = 12;
++			break;
++		case SYS_ATSC:
++		case SYS_DVBC_ANNEX_B:
++			pat_pmt_time = 1;
++			sdt_time = 5;
++			nit_time = 5;
++			break;
++		default:
++			pat_pmt_time = 1;
++			sdt_time = 2;
++			nit_time = 10;
++			break;
+ 	};
+ 
+ 	/* PAT table */
+ 	rc = read_section(dmx_fd, dvb_desc, 0, 0, NULL,
+-			  pat_pmt_time * timeout_multiply);
++			pat_pmt_time * timeout_multiply);
+ 	if (rc < 0) {
+ 		fprintf(stderr, "error while waiting for PAT table\n");
+ 		dvb_free_ts_tables(dvb_desc);
+@@ -472,21 +521,21 @@ struct dvb_descriptors *dvb_get_ts_tables(int dmx_fd,
+ 		if (!pn)
+ 			continue;
+ 		rc = read_section(dmx_fd, dvb_desc, pid_table->pid, 0x02,
+-			          pid_table, pat_pmt_time * timeout_multiply);
++				pid_table, pat_pmt_time * timeout_multiply);
+ 		if (rc < 0)
+ 			fprintf(stderr, "error while reading the PMT table for service 0x%04x\n",
+-				pn);
++					pn);
+ 	}
+ 
+ 	/* NIT table */
+ 	rc = read_section(dmx_fd, dvb_desc, 0x0010, 0x40, NULL,
+-		          nit_time * timeout_multiply);
++			nit_time * timeout_multiply);
+ 	if (rc < 0)
+ 		fprintf(stderr, "error while reading the NIT table\n");
+ 
+ 	/* SDT table */
+ 	rc = read_section(dmx_fd, dvb_desc, 0x0011, 0x42, NULL,
+-		          sdt_time * timeout_multiply);
++			sdt_time * timeout_multiply);
+ 	if (rc < 0)
+ 		fprintf(stderr, "error while reading the SDT table\n");
+ 
+@@ -495,16 +544,16 @@ struct dvb_descriptors *dvb_get_ts_tables(int dmx_fd,
+ 		if (verbose)
+ 			printf("Parsing other NIT/SDT\n");
+ 		rc = read_section(dmx_fd, dvb_desc, 0x0010, 0x41, NULL,
+-			          nit_time * timeout_multiply);
++				nit_time * timeout_multiply);
+ 		rc = read_section(dmx_fd, dvb_desc, 0x0011, 0x46, NULL,
+-			          sdt_time * timeout_multiply);
++				sdt_time * timeout_multiply);
+ 	}
+ 
+ 	return dvb_desc;
+ }
+ 
+ 
+-void dvb_free_ts_tables(struct dvb_descriptors *dvb_desc)
++void dvb_free_ts_tables(struct dvb_v5_descriptors *dvb_desc)
+ {
+ 	struct pat_table *pat_table = &dvb_desc->pat_table;
+ 	struct pid_table *pid_table = dvb_desc->pat_table.pid_table;
+diff --git a/utils/dvb/dvbv5-scan.c b/utils/dvb/dvbv5-scan.c
+index 7ab5edd..01cd63d 100644
+--- a/utils/dvb/dvbv5-scan.c
++++ b/utils/dvb/dvbv5-scan.c
+@@ -263,7 +263,7 @@ static int estimate_freq_shift(struct dvb_v5_fe_parms *parms)
+ 
+ static void add_other_freq_entries(struct dvb_file *dvb_file,
+ 				   struct dvb_v5_fe_parms *parms,
+-				   struct dvb_descriptors *dvb_desc)
++				   struct dvb_v5_descriptors *dvb_desc)
+ {
+ 	int i;
+ 	uint32_t freq, shift = 0;
+@@ -326,7 +326,7 @@ static int run_scan(struct arguments *args,
+ 	}
+ 
+ 	for (entry = dvb_file->first_entry; entry != NULL; entry = entry->next) {
+-		struct dvb_descriptors *dvb_desc = NULL;
++		struct dvb_v5_descriptors *dvb_desc = NULL;
+ 
+ 		/* First of all, set the delivery system */
+ 		for (i = 0; i < entry->n_props; i++)
+diff --git a/utils/v4l2-compliance/v4l2-test-formats.cpp b/utils/v4l2-compliance/v4l2-test-formats.cpp
+index c86c697..2f0269e 100644
+--- a/utils/v4l2-compliance/v4l2-test-formats.cpp
++++ b/utils/v4l2-compliance/v4l2-test-formats.cpp
+@@ -108,7 +108,7 @@ static int testEnumFrameIntervals(struct node *node, __u32 pixfmt, __u32 w, __u3
+ 		default:
+ 			return fail("frmival.type is invalid\n");
+ 		}
+-		
++
+ 		f++;
+ 	}
+ 	if (!valid)
+@@ -194,7 +194,7 @@ static int testEnumFrameSizes(struct node *node, __u32 pixfmt)
+ 		default:
+ 			return fail("frmsize.type is invalid\n");
+ 		}
+-		
++
+ 		f++;
+ 	}
+ 	info("found %d framesizes for pixel format %08x\n", f, pixfmt);
+@@ -295,7 +295,7 @@ int testEnumFormats(struct node *node)
+ 		supported = true;
+ 		warn("Buffer type PRIVATE allowed!\n");
+ 	}
+-		
++
+ 	ret = testEnumFrameSizes(node, 0x20202020);
+ 	if (ret != ENOTTY)
+ 		return fail("Accepted framesize for invalid format\n");
+@@ -364,7 +364,7 @@ static int testFormatsType(struct node *node, unsigned type)
+ 	__u32 service_set = 0;
+ 	unsigned cnt = 0;
+ 	int ret;
+-	
++
+ 	memset(&fmt, 0xff, sizeof(fmt));
+ 	fmt.type = type;
+ 	ret = doioctl(node, VIDIOC_G_FMT, &fmt);
+@@ -375,7 +375,7 @@ static int testFormatsType(struct node *node, unsigned type)
+ 	if (ret)
+ 		return fail("expected EINVAL, but got %d when getting format for buftype %d\n", ret, type);
+ 	fail_on_test(fmt.type != type);
+-	
++
+ 	switch (type) {
+ 	case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+ 	case V4L2_BUF_TYPE_VIDEO_OUTPUT:
+-- 
+1.7.2.5
+
