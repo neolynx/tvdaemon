@@ -1,5 +1,5 @@
-lib_LTLIBRARIES = libtvheadend.la
-libtvheadend_la_SOURCES = TVDaemon.cpp \
+lib_LTLIBRARIES = libtvdaemon.la
+libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  ConfigObject.cpp \
 			  Utils.cpp \
 			  Source.cpp \
@@ -21,7 +21,7 @@ libtvheadend_la_SOURCES = TVDaemon.cpp \
 			  SocketHandler.cpp \
 			  HttpServer.cpp \
 			  Log.cpp
-#libtvheadend_la_LDFLAGS = -ludev -lconfig++ -ldvbcfg -ldvbapi -ldvbsec -lucsi -lrt
-libtvheadend_la_LIBADD = -ludev -lconfig++ -lrt -lpthread ../v4l-utils/lib/libdvbv5/libdvbv5.la
+#libtvdaemon_la_LDFLAGS = -ludev -lconfig++ -ldvbcfg -ldvbapi -ldvbsec -lucsi -lrt
+libtvdaemon_la_LIBADD = -ludev -lconfig++ -lrt -lpthread ../v4l-utils/lib/libdvbv5/libdvbv5.la
 
 INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/v4l-utils/lib/include
