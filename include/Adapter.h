@@ -1,0 +1,66 @@
+/*
+ *  tvheadend
+ *
+ *  DVB Adapter class
+ *
+ *  Copyright (C) 2012 André Roth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef _Adapter_
+#define _Adapter_
+
+#include "ConfigObject.h"
+
+#include <string>
+#include <map>
+
+class TVDaemon;
+class Frontend;
+
+class Adapter : public ConfigObject
+{
+  public:
+    Adapter( TVDaemon &tvh, std::string uid, std::string name, int config_id );
+    Adapter( TVDaemon &tvh, std::string uid, int config_id );
+    Adapter( TVDaemon &tvh, std::string configfile );
+    virtual ~Adapter( );
+
+    void SetFrontend( std::string frontend, int adapterId, int frontendId );
+
+    void FindConfig( );
+
+    virtual bool SaveConfig( );
+    virtual bool LoadConfig( );
+
+    std::string GetName( ) { return name; }
+    std::string GetUID( ) { return uid; }
+    int GetFrontendCount( ) { return frontends.size( ); }
+    Frontend *GetFrontend( int id );
+    void SetPresence( bool present );
+    bool IsPresent( ) { return present; }
+
+  private:
+    TVDaemon &tvh;
+    std::string uid;
+    bool present;
+
+    std::vector<Frontend *> frontends;
+    std::vector<std::string> ftempnames;
+    std::string name;
+    std::string configdir;
+};
+
+#endif
