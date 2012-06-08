@@ -1,20 +1,20 @@
-From 36a5f5fb74cd6f535c71d7c3aa0e6657c238c16a Mon Sep 17 00:00:00 2001
+From 14331fe3464a8dc0aa7271f84461764be5980580 Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Fri, 8 Jun 2012 16:22:56 +0200
-Subject: [PATCH 1/2] add desc service list
+Subject: [PATCH] add desc service list
 
 ---
- lib/include/descriptors/desc_service_list.h  |   54 ++++++++++++++++++++++++++
+ lib/include/descriptors/desc_service_list.h  |   54 +++++++++++++++++++++++
  lib/libdvbv5/Makefile.am                     |    1 +
  lib/libdvbv5/descriptors.c                   |    3 +-
- lib/libdvbv5/descriptors/desc_service_list.c |   54 ++++++++++++++++++++++++++
- 4 files changed, 111 insertions(+), 1 deletion(-)
+ lib/libdvbv5/descriptors/desc_service_list.c |   59 ++++++++++++++++++++++++++
+ 4 files changed, 116 insertions(+), 1 deletion(-)
  create mode 100644 lib/include/descriptors/desc_service_list.h
  create mode 100644 lib/libdvbv5/descriptors/desc_service_list.c
 
 diff --git a/lib/include/descriptors/desc_service_list.h b/lib/include/descriptors/desc_service_list.h
 new file mode 100644
-index 0000000..2a007cc
+index 0000000..259dcbe
 --- /dev/null
 +++ b/lib/include/descriptors/desc_service_list.h
 @@ -0,0 +1,54 @@
@@ -48,7 +48,7 @@ index 0000000..2a007cc
 +struct dvb_desc_service_list_table {
 +	uint16_t service_id;
 +	uint8_t service_type;
-+};
++} __attribute__((packed));
 +
 +struct dvb_desc_service_list {
 +	uint8_t type;
@@ -85,7 +85,7 @@ index 7ab1bfd..dbea9b5 100644
    descriptors/sdt.c  ../include/descriptors/sdt.h
  
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index fbdcce0..0702848 100644
+index 89e8e00..21e3a28 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -35,6 +35,7 @@
@@ -96,7 +96,7 @@ index fbdcce0..0702848 100644
  #include "descriptors/nit.h"
  #include "descriptors/sdt.h"
  
-@@ -119,7 +120,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
+@@ -121,7 +122,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
  	[mpeg2_aac_audio_descriptor] = { "mpeg2_aac_audio_descriptor", NULL, NULL },
  	[flexmux_timing_descriptor] = { "flexmux_timing_descriptor", NULL, NULL },
  	[network_name_descriptor] = { "network_name_descriptor", dvb_desc_network_name_init, dvb_desc_network_name_print },
@@ -107,10 +107,10 @@ index fbdcce0..0702848 100644
  	[cable_delivery_system_descriptor] = { "cable_delivery_system_descriptor", NULL, NULL },
 diff --git a/lib/libdvbv5/descriptors/desc_service_list.c b/lib/libdvbv5/descriptors/desc_service_list.c
 new file mode 100644
-index 0000000..52abd05
+index 0000000..00dbd86
 --- /dev/null
 +++ b/lib/libdvbv5/descriptors/desc_service_list.c
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,59 @@
 +/*
 + * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
@@ -145,6 +145,11 @@ index 0000000..52abd05
 +	*buf += 2;
 +
 +	memcpy( slist->services, *buf, slist->length);
++	int i = 0;
++	while(slist->services[i].service_id != 0) {
++		bswap16(slist->services[i].service_id);
++		++i;
++	}
 +	*buf += slist->length;
 +
 +	/* close the list */
