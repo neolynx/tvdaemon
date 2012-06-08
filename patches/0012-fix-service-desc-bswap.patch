@@ -1,0 +1,28 @@
+From dacfa34f023853f84e99a0bf338bf013a03d223d Mon Sep 17 00:00:00 2001
+From: Lars Schmohl <lars.schmohl@gmail.com>
+Date: Fri, 8 Jun 2012 16:44:25 +0200
+Subject: [PATCH] fix byte swap of desc service list
+
+---
+ lib/libdvbv5/descriptors/desc_service_list.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/lib/libdvbv5/descriptors/desc_service_list.c b/lib/libdvbv5/descriptors/desc_service_list.c
+index 52abd05..00dbd86 100644
+--- a/lib/libdvbv5/descriptors/desc_service_list.c
++++ b/lib/libdvbv5/descriptors/desc_service_list.c
+@@ -32,6 +32,11 @@ ssize_t dvb_desc_service_list_init(const uint8_t **buf, struct dvb_desc *desc)
+ 	*buf += 2;
+ 
+ 	memcpy( slist->services, *buf, slist->length);
++	int i = 0;
++	while(slist->services[i].service_id != 0) {
++		bswap16(slist->services[i].service_id);
++		++i;
++	}
+ 	*buf += slist->length;
+ 
+ 	/* close the list */
+-- 
+1.7.9.5
+
