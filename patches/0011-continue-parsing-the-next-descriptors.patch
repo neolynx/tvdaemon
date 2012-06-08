@@ -1,0 +1,34 @@
+From 71d015e22e17f97d2a8739582e307494809b9a56 Mon Sep 17 00:00:00 2001
+From: Lars Schmohl <lars.schmohl@gmail.com>
+Date: Fri, 8 Jun 2012 16:23:27 +0200
+Subject: [PATCH 2/2] continue parsing the next descriptors
+
+---
+ lib/libdvbv5/descriptors.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index 0702848..21e3a28 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -67,6 +67,7 @@ ssize_t dvb_parse_descriptor(const uint8_t *buf, uint8_t *dest, uint16_t section
+ 	ssize_t length = 0;
+ 	while (length < section_length) {
+ 		uint8_t type = buf[0];
++		uint8_t len  = buf[1];
+ 		if (dvb_descriptors[type].init) {
+ 			ssize_t len = dvb_descriptors[type].init( &buf, (struct dvb_desc *) dest );
+ 			if(!*head_desc)
+@@ -76,7 +77,8 @@ ssize_t dvb_parse_descriptor(const uint8_t *buf, uint8_t *dest, uint16_t section
+ 
+ 		} else {
+ 			printf( "parsing of descriptor %s (%d) is not implemented yet\n", dvb_descriptors[type].name, type );
+-			break;
++			buf += 2 + len;     /* standard descriptor header plus descriptor length */
++			length += 2 + len;  /* standard descriptor header plus descriptor length */
+ 		}
+ 	}
+ 	return length;
+-- 
+1.7.9.5
+

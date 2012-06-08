@@ -1,0 +1,170 @@
+From 36a5f5fb74cd6f535c71d7c3aa0e6657c238c16a Mon Sep 17 00:00:00 2001
+From: Lars Schmohl <lars.schmohl@gmail.com>
+Date: Fri, 8 Jun 2012 16:22:56 +0200
+Subject: [PATCH 1/2] add desc service list
+
+---
+ lib/include/descriptors/desc_service_list.h  |   54 ++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am                     |    1 +
+ lib/libdvbv5/descriptors.c                   |    3 +-
+ lib/libdvbv5/descriptors/desc_service_list.c |   54 ++++++++++++++++++++++++++
+ 4 files changed, 111 insertions(+), 1 deletion(-)
+ create mode 100644 lib/include/descriptors/desc_service_list.h
+ create mode 100644 lib/libdvbv5/descriptors/desc_service_list.c
+
+diff --git a/lib/include/descriptors/desc_service_list.h b/lib/include/descriptors/desc_service_list.h
+new file mode 100644
+index 0000000..2a007cc
+--- /dev/null
++++ b/lib/include/descriptors/desc_service_list.h
+@@ -0,0 +1,54 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _DESC_SERVICE_LIST_H
++#define _DESC_SERVICE_LIST_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++struct dvb_desc_service_list_table {
++	uint16_t service_id;
++	uint8_t service_type;
++};
++
++struct dvb_desc_service_list {
++	uint8_t type;
++	struct dvb_desc *next;
++
++	uint8_t length;
++	struct dvb_desc_service_list_table services[];
++} __attribute__((packed));
++
++struct dvb_v5_fe_parms;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++	ssize_t dvb_desc_service_list_init(const uint8_t **buf, struct dvb_desc *desc);
++	void dvb_desc_service_list_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
+index 7ab1bfd..dbea9b5 100644
+--- a/lib/libdvbv5/Makefile.am
++++ b/lib/libdvbv5/Makefile.am
+@@ -30,6 +30,7 @@ libdvbv5_la_SOURCES = \
+   descriptors/desc_network_name.c  ../include/descriptors/desc_network_name.h \
+   descriptors/desc_sat.c  ../include/descriptors/desc_sat.h \
+   descriptors/desc_service.c  ../include/descriptors/desc_service.h \
++  descriptors/desc_service_list.c  ../include/descriptors/desc_service_list.h \
+   descriptors/nit.c  ../include/descriptors/nit.h \
+   descriptors/sdt.c  ../include/descriptors/sdt.h
+ 
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index fbdcce0..0702848 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -35,6 +35,7 @@
+ #include "descriptors/desc_network_name.h"
+ #include "descriptors/desc_sat.h"
+ #include "descriptors/desc_service.h"
++#include "descriptors/desc_service_list.h"
+ #include "descriptors/nit.h"
+ #include "descriptors/sdt.h"
+ 
+@@ -119,7 +120,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
+ 	[mpeg2_aac_audio_descriptor] = { "mpeg2_aac_audio_descriptor", NULL, NULL },
+ 	[flexmux_timing_descriptor] = { "flexmux_timing_descriptor", NULL, NULL },
+ 	[network_name_descriptor] = { "network_name_descriptor", dvb_desc_network_name_init, dvb_desc_network_name_print },
+-	[service_list_descriptor] = { "service_list_descriptor", NULL, NULL },
++	[service_list_descriptor] = { "service_list_descriptor", dvb_desc_service_list_init, dvb_desc_service_list_print },
+ 	[stuffing_descriptor] = { "stuffing_descriptor", NULL, NULL },
+ 	[satellite_delivery_system_descriptor] = { "satellite_delivery_system_descriptor", dvb_desc_sat_init, dvb_desc_sat_print },
+ 	[cable_delivery_system_descriptor] = { "cable_delivery_system_descriptor", NULL, NULL },
+diff --git a/lib/libdvbv5/descriptors/desc_service_list.c b/lib/libdvbv5/descriptors/desc_service_list.c
+new file mode 100644
+index 0000000..52abd05
+--- /dev/null
++++ b/lib/libdvbv5/descriptors/desc_service_list.c
+@@ -0,0 +1,54 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "descriptors/desc_service_list.h"
++#include "descriptors.h"
++#include "dvb-fe.h"
++
++ssize_t dvb_desc_service_list_init(const uint8_t **buf, struct dvb_desc *desc)
++{
++	dvb_desc_init(buf, desc);
++	struct dvb_desc_service_list *slist = (struct dvb_desc_service_list *) desc;
++
++	slist->length = (*buf)[1];
++	*buf += 2;
++
++	memcpy( slist->services, *buf, slist->length);
++	*buf += slist->length;
++
++	/* close the list */
++	slist->services[slist->length + sizeof(struct dvb_desc_service_list_table)].service_id = 0;
++	slist->services[slist->length + sizeof(struct dvb_desc_service_list_table)].service_type = 0;
++
++	return sizeof(struct dvb_desc_service_list) + slist->length + sizeof(struct dvb_desc_service_list_table);
++}
++
++void dvb_desc_service_list_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
++{
++	const struct dvb_desc_service_list *slist = (const struct dvb_desc_service_list *) desc;
++	int i = 0;
++	while(slist->services[i].service_id != 0) {
++		dvb_log("|           service id   : '%d'", slist->services[i].service_id);
++		dvb_log("|           service type : '%d'", slist->services[i].service_type);
++		++i;
++	}
++}
++
+-- 
+1.7.9.5
+
