@@ -1,7 +1,7 @@
 From 0f3c8d7b41c4338c92c2574afb3d359df01929b5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 20 May 2012 14:50:53 +0200
-Subject: [PATCH 01/12] table tests
+Subject: [PATCH 01/13] table tests
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

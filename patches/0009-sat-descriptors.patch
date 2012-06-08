@@ -1,7 +1,7 @@
 From c84a5f25c94c8c949aa92d861056f15dfb03d3eb Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 8 Jun 2012 02:54:26 +0200
-Subject: [PATCH 09/12] sat descriptors
+Subject: [PATCH 09/13] sat descriptors
 
 ---
  lib/include/descriptors.h                |    6 +++

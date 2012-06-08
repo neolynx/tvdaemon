@@ -1,7 +1,7 @@
 From 8fef8b0e968050f0dc40ee0e1d398fc6b9aee76a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 4 Jun 2012 21:50:54 +0200
-Subject: [PATCH 02/12] Fix dvb-file USER CMD
+Subject: [PATCH 02/13] Fix dvb-file USER CMD
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

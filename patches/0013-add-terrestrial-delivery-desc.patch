@@ -1,0 +1,183 @@
+From 6976395232b7cce8a8ac38a1178db52b4ad37eb3 Mon Sep 17 00:00:00 2001
+From: Lars Schmohl <lars.schmohl@gmail.com>
+Date: Sat, 9 Jun 2012 00:10:15 +0200
+Subject: [PATCH 13/13] add terrestrial delivery desc
+
+---
+ .../descriptors/desc_terrestrial_delivery.h        |   62 ++++++++++++++++++++
+ lib/libdvbv5/Makefile.am                           |    1 +
+ lib/libdvbv5/descriptors.c                         |    3 +-
+ .../descriptors/desc_terrestrial_delivery.c        |   59 +++++++++++++++++++
+ 4 files changed, 124 insertions(+), 1 deletion(-)
+ create mode 100644 lib/include/descriptors/desc_terrestrial_delivery.h
+ create mode 100644 lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
+
+diff --git a/lib/include/descriptors/desc_terrestrial_delivery.h b/lib/include/descriptors/desc_terrestrial_delivery.h
+new file mode 100644
+index 0000000..e4798a8
+--- /dev/null
++++ b/lib/include/descriptors/desc_terrestrial_delivery.h
+@@ -0,0 +1,62 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _TERRESTRIAL_DELIVERY_H
++#define _TERRESTRIAL_DELIVERY_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++struct dvb_desc_terrestrial_delivery {
++	uint8_t type;
++	struct dvb_desc *next;
++
++	uint8_t length;
++	uint32_t centre_frequency;
++	uint8_t reserved_future_use1:2;
++	uint8_t mpe_fec_indicator:1;
++	uint8_t time_slice_indicator:1;
++	uint8_t priority:1;
++	uint8_t bandwidth:3;
++	uint8_t code_rate_hp_stream:3;
++	uint8_t hierarchy_information:3;
++	uint8_t constellation:2;
++	uint8_t other_frequency_flag:1;
++	uint8_t transmission_mode:2;
++	uint8_t guard_interval:2;
++	uint8_t code_rate_lp_stream:3;
++	uint32_t reserved_future_use2;
++} __attribute__((packed));
++
++struct dvb_v5_fe_parms;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++	ssize_t dvb_desc_terrestrial_delivery_init(const uint8_t **buf, struct dvb_desc *desc);
++	void dvb_desc_terrestrial_delivery_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
+index e18b161..4013bb9 100644
+--- a/lib/libdvbv5/Makefile.am
++++ b/lib/libdvbv5/Makefile.am
+@@ -30,6 +30,7 @@ libdvbv5_la_SOURCES = \
+   descriptors/desc_network_name.c  ../include/descriptors/desc_network_name.h \
+   descriptors/desc_cable_delivery.c  ../include/descriptors/desc_cable_delivery.h \
+   descriptors/desc_sat.c  ../include/descriptors/desc_sat.h \
++  descriptors/desc_terrestrial_delivery.c  ../include/descriptors/desc_terrestrial_delivery.h \
+   descriptors/desc_service.c  ../include/descriptors/desc_service.h \
+   descriptors/desc_service_list.c  ../include/descriptors/desc_service_list.h \
+   descriptors/nit.c  ../include/descriptors/nit.h \
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index 1151de6..59b7ce8 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -35,6 +35,7 @@
+ #include "descriptors/desc_network_name.h"
+ #include "descriptors/desc_cable_delivery.h"
+ #include "descriptors/desc_sat.h"
++#include "descriptors/desc_terrestrial_delivery.h"
+ #include "descriptors/desc_service.h"
+ #include "descriptors/desc_service_list.h"
+ #include "descriptors/nit.h"
+@@ -152,7 +153,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
+ 	[telephone_descriptor] = { "telephone_descriptor", NULL, NULL },
+ 	[local_time_offset_descriptor] = { "local_time_offset_descriptor", NULL, NULL },
+ 	[subtitling_descriptor] = { "subtitling_descriptor", NULL, NULL },
+-	[terrestrial_delivery_system_descriptor] = { "terrestrial_delivery_system_descriptor", NULL, NULL },
++	[terrestrial_delivery_system_descriptor] = { "terrestrial_delivery_system_descriptor", dvb_desc_terrestrial_delivery_init, dvb_desc_terrestrial_delivery_print },
+ 	[multilingual_network_name_descriptor] = { "multilingual_network_name_descriptor", NULL, NULL },
+ 	[multilingual_bouquet_name_descriptor] = { "multilingual_bouquet_name_descriptor", NULL, NULL },
+ 	[multilingual_service_name_descriptor] = { "multilingual_service_name_descriptor", NULL, NULL },
+diff --git a/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
+new file mode 100644
+index 0000000..a04c542
+--- /dev/null
++++ b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "descriptors/desc_terrestrial_delivery.h"
++#include "descriptors.h"
++#include "dvb-fe.h"
++
++ssize_t dvb_desc_terrestrial_delivery_init(const uint8_t **buf, struct dvb_desc *desc)
++{
++	dvb_desc_init(buf, desc);
++	struct dvb_desc_terrestrial_delivery *tdel = (struct dvb_desc_terrestrial_delivery *) desc;
++	/* copy from .length */
++	memcpy(((uint8_t *) tdel ) + sizeof(tdel->type) + sizeof(tdel->next),
++			(*buf) + sizeof(tdel->type),
++			sizeof(struct dvb_desc_terrestrial_delivery) - sizeof(tdel->type) - sizeof(tdel->next));
++	bswap32(tdel->centre_frequency);
++	bswap32(tdel->reserved_future_use2);
++
++	*buf += sizeof(struct dvb_desc_terrestrial_delivery) - sizeof(tdel->next);
++	return sizeof(struct dvb_desc_terrestrial_delivery);
++}
++
++void dvb_desc_terrestrial_delivery_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
++{
++	const struct dvb_desc_terrestrial_delivery *tdel = (const struct dvb_desc_terrestrial_delivery *) desc;
++	dvb_log("|       terrestrial delivery");
++	dvb_log("|           length                %d", tdel->length);
++	dvb_log("|           centre frequency      %d", tdel->centre_frequency);
++	dvb_log("|           mpe_fec_indicator     %d", tdel->mpe_fec_indicator);
++	dvb_log("|           time_slice_indicator  %d", tdel->time_slice_indicator);
++	dvb_log("|           priority              %d", tdel->priority);
++	dvb_log("|           bandwidth             %d", tdel->bandwidth);
++	dvb_log("|           code_rate_hp_stream   %d", tdel->code_rate_hp_stream);
++	dvb_log("|           hierarchy_information %d", tdel->hierarchy_information);
++	dvb_log("|           constellation         %d", tdel->constellation);
++	dvb_log("|           other_frequency_flag  %d", tdel->other_frequency_flag);
++	dvb_log("|           transmission_mode     %d", tdel->transmission_mode);
++	dvb_log("|           guard_interval        %d", tdel->guard_interval);
++	dvb_log("|           code_rate_lp_stream   %d", tdel->code_rate_lp_stream);
++}
++
+-- 
+1.7.9.5
+

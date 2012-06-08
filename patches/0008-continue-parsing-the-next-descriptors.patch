@@ -1,7 +1,7 @@
 From 1db26ec19ea867c05d0aff25af189699a2b7c289 Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Fri, 8 Jun 2012 16:23:27 +0200
-Subject: [PATCH 08/12] continue parsing the next descriptors
+Subject: [PATCH 08/13] continue parsing the next descriptors
 
 ---
  lib/libdvbv5/descriptors.c |    8 +++++++-
