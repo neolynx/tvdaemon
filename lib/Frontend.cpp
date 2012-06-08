@@ -44,6 +44,7 @@
 #include "descriptors/pat.h"
 #include "descriptors/pmt.h"
 #include "descriptors/nit.h"
+#include "descriptors/sdt.h"
 
 #include <errno.h> // ETIMEDOUT
 
@@ -524,6 +525,14 @@ void Frontend::Thread( )
   {
     dvb_table_nit_print( fe, nit );
     free( nit );
+  }
+
+  struct dvb_table_sdt *sdt;
+  dvb_read_section( fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, &length, 5 );
+  if( sdt )
+  {
+    dvb_table_sdt_print( fe, sdt );
+    free( sdt );
   }
 
   dvb_dmx_close( fd_demux );
