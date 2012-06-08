@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB-S Transponder class
  *
@@ -48,6 +48,7 @@ void Transponder_DVBS::AddProperty( const struct dtv_property &prop )
       break;
     case DTV_INNER_FEC:
       fec_inner = prop.u.data;
+      break;
   }
 }
 

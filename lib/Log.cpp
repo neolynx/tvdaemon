@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  Logging
  *
@@ -43,7 +43,7 @@ static const struct loglevel
 };
 #define LOG_COLOROFF 8
 
-void TVH_Log( int level, const char *fmt, ... )
+void TVD_Log( int level, const char *fmt, ... )
 {
   if( level > sizeof( loglevels ) / sizeof( struct loglevel ) - 2 )
     level = LOG_INFO;

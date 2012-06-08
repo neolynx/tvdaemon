@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Service class
  *

@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Source class
  *
@@ -31,16 +31,16 @@
 
 #include "dvb-file.h"
 
-Source::Source( TVDaemon &tvh, std::string name, int config_id ) :
-  ConfigObject( tvh, "source", config_id ),
-  tvh(tvh), name(name),
+Source::Source( TVDaemon &tvd, std::string name, int config_id ) :
+  ConfigObject( tvd, "source", config_id ),
+  tvd(tvd), name(name),
   type(TVDaemon::Source_ANY)
 {
 }
 
-Source::Source( TVDaemon &tvh, std::string configfile ) :
-  ConfigObject( tvh, configfile ),
-  tvh(tvh)
+Source::Source( TVDaemon &tvd, std::string configfile ) :
+  ConfigObject( tvd, configfile ),
+  tvd(tvd)
 {
 }
 
@@ -88,7 +88,7 @@ bool Source::LoadConfig( )
       LogError( "Error in port path: should be [adapter, frontend, port] in %s", GetConfigFile( ).c_str( ));
       continue;
     }
-    Adapter  *a = tvh.GetAdapter( n2[0] );
+    Adapter  *a = tvd.GetAdapter( n2[0] );
     if( !a )
     {
       LogError( "Error in port path: adapter %d not found in %s", (int) n2[0], GetConfigFile( ).c_str( ));
@@ -217,7 +217,11 @@ bool Source::ScanTransponder( int id )
 
 bool Source::Tune( Transponder &transponder, uint16_t pno )
 {
-  // FIXME: verify transponder is in this source
+  if( this != &transponder.GetSource() )
+  {
+    LogError("Transponder '%d' not in this source '%s'", transponder.GetFrequency(), name.c_str());
+    return false;
+  }
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {
     if( (*it)->Tune( transponder, pno ))

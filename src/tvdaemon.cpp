@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  TVDaemon main
  *
@@ -42,10 +42,10 @@ void termination_handler( int signum )
   }
 }
 
-int create_stuff( TVDaemon &tvh )
+int create_stuff( TVDaemon &tvd )
 {
-  tvh.CreateSource( "DVB-T", "dvb-t/ch-All" );
-  tvh.CreateSource( "Astra 19.2E", "dvb-s/Astra-19.2E" );
+  tvd.CreateSource( "DVB-T", "dvb-t/ch-All" );
+  tvd.CreateSource( "Astra 19.2E", "dvb-s/Astra-19.2E" );
 
   printf( "-------------------------\n" );
   // Test tuning/scanning
@@ -60,7 +60,7 @@ int create_stuff( TVDaemon &tvh )
   frontend_id = 0;
   transponder_id = -1;
 
-  Source *s = tvh.GetSource( source_id );
+  Source *s = tvd.GetSource( source_id );
   if( s == NULL )
   {
     printf( "Source %d not found\n", source_id );
@@ -68,7 +68,7 @@ int create_stuff( TVDaemon &tvh )
   }
   printf( "Got Source %s\n", s->GetName( ).c_str( ));
 
-  Adapter *a = tvh.GetAdapter( adapter_id );
+  Adapter *a = tvd.GetAdapter( adapter_id );
   if( !a )
   {
     printf( "Adapter %d not found\n", adapter_id );
@@ -135,38 +135,48 @@ int main( int argc, char *argv[] )
 
   printf( "TVDaemon starting ...\n" );
 
-  TVDaemon tvh( "~/.tvheadend" );
-  if( !tvh.Start( ))
+  TVDaemon tvd( "~/.tvdaemon" );
+  if( !tvd.Start( ))
   {
-    printf( "Unable to start tvheadend\n" );
+    printf( "Unable to start tvdaemon\n" );
     return -1;
   }
 
-  std::vector<std::string> list = tvh.GetScanfileList( TVDaemon::Source_DVB_T, "ch" );
+  std::vector<std::string> list = tvd.GetScanfileList( TVDaemon::Source_DVB_C, "ch" );
+  printf( "\nKnown transponder lists for DVB-C in .ch:\n" );
+  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    printf( "  %s\n", it->c_str( ));
+  printf( "\n" );
+  list = tvd.GetScanfileList( TVDaemon::Source_DVB_T, "ch" );
   printf( "\nKnown transponder lists for DVB-T in .ch:\n" );
   for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
     printf( "  %s\n", it->c_str( ));
   printf( "\n" );
+  list = tvd.GetScanfileList( TVDaemon::Source_DVB_S, "ch" );
+  printf( "\nKnown transponder lists for DVB-S in .ch:\n" );
+  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    printf( "  %s\n", it->c_str( ));
+  printf( "\n" );
 
-  list = tvh.GetAdapterList( );
+  list = tvd.GetAdapterList( );
   printf( "\nFound Adapters:\n" );
   for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
     printf( "  %s\n", it->c_str( ));
   printf( "\n" );
 
-  list = tvh.GetSourceList( );
+  list = tvd.GetSourceList( );
   printf( "\nFound Sources:\n" );
   for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
     printf( "  %s\n", it->c_str( ));
   printf( "\n" );
 
-  list = tvh.GetChannelList( );
+  list = tvd.GetChannelList( );
   printf( "\nFound Channels:\n" );
   for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
     printf( "  %s\n", it->c_str( ));
   printf( "\n" );
 
-  create_stuff( tvh );
+  create_stuff( tvd );
 
   while( up )
   {

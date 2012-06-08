@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  ATSC Transponder class
  *
@@ -37,6 +37,8 @@ class Transponder_ATSC : public Transponder
     virtual void AddProperty( const struct dtv_property &prop );
 
   private:
+
+    uint32_t modulation;
 };
 
 #endif

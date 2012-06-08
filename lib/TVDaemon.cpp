@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  TVDaemon main class
  *
@@ -55,7 +55,7 @@ TVDaemon::TVDaemon( std::string confdir ) :
   SetConfigFile( d + "config" );
   if( !Utils::IsFile( GetConfigFile( )))
     SaveConfig( );
-  Log( "TVHconfig: %s", GetConfigFile( ).c_str( ));
+  Log( "TVDconfig: %s", GetConfigFile( ).c_str( ));
 }
 
 bool TVDaemon::Start( )
@@ -75,7 +75,7 @@ bool TVDaemon::Start( )
 
   MonitorAdapters( );
 
-  httpd.SetLogFunc( TVH_Log );
+  httpd.SetLogFunc( TVD_Log );
 
   if( !httpd.CreateServerTCP( HTTPDPORT ))
   {

@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Source class
  *
@@ -34,8 +34,8 @@ class Port;
 class Source : public ConfigObject
 {
   public:
-    Source( TVDaemon &tvh, std::string name, int config_id );
-    Source( TVDaemon &tvh, std::string configfile );
+    Source( TVDaemon &tvd, std::string name, int config_id );
+    Source( TVDaemon &tvd, std::string configfile );
     virtual ~Source( );
 
     std::string GetName( ) { return name; }
@@ -56,7 +56,7 @@ class Source : public ConfigObject
     bool Tune( Transponder &transponder, uint16_t pno );
 
   private:
-    TVDaemon &tvh;
+    TVDaemon &tvd;
     std::string name;
 
     static int ScanfileLoadCallback( struct dvbcfg_scanfile *channel, void *private_data );

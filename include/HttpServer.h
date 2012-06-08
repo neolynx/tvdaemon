@@ -1,5 +1,5 @@
 /*
- * tvheadend
+ * tvdaemon
  *
  * author     Andre Roth <neolynx@gmail.com>
  * copyright  GNU General Public License, see COPYING file
@@ -17,7 +17,7 @@
 #include <stdint.h>
 
 #define HTTP_VERSION  "HTTP 1.0"
-#define HTDOCS_ROOT   "~/.tvheadend"
+#define HTDOCS_ROOT   "~/.tvdaemon"
 
 typedef enum {
   HEAD,

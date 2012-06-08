@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Adapter class
  *
@@ -33,9 +33,9 @@ class Frontend;
 class Adapter : public ConfigObject
 {
   public:
-    Adapter( TVDaemon &tvh, std::string uid, std::string name, int config_id );
-    Adapter( TVDaemon &tvh, std::string uid, int config_id );
-    Adapter( TVDaemon &tvh, std::string configfile );
+    Adapter( TVDaemon &tvd, std::string uid, std::string name, int config_id );
+    Adapter( TVDaemon &tvd, std::string uid, int config_id );
+    Adapter( TVDaemon &tvd, std::string configfile );
     virtual ~Adapter( );
 
     void SetFrontend( std::string frontend, int adapterId, int frontendId );
@@ -53,7 +53,7 @@ class Adapter : public ConfigObject
     bool IsPresent( ) { return present; }
 
   private:
-    TVDaemon &tvh;
+    TVDaemon &tvd;
     std::string uid;
     bool present;
 

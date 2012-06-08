@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Frontend class
  *
@@ -155,7 +155,7 @@ bool Frontend::Open()
   if( fe )
     return true;
 
-  fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVH_Log );
+  fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
   if( !fe )
   {
     LogError( "Error opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
@@ -257,7 +257,12 @@ bool Frontend::Tune( const Transponder &t, int timeoutms )
   if( !Open( ))
     return false;
 
-  dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
+  int setSysReturn = dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
+  if( setSysReturn != 0 )
+  {
+    LogError( "dvb_set_compat_delivery_system return %d", setSysReturn );
+    return false;
+  }
   t.GetParams( fe );
 
   dvb_fe_prt_parms( fe );
@@ -265,7 +270,7 @@ bool Frontend::Tune( const Transponder &t, int timeoutms )
   int r = dvb_fe_set_parms( fe );
   if( r < 0 )
   {
-    LogError( "dvb_fe_set_parms failed." );
+    LogError( "dvb_fe_set_parms failed with %d.", r );
     return false;
   }
 

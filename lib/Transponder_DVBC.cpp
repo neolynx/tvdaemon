@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB-C Transponder class
  *
@@ -23,11 +23,19 @@
 
 #include "dvb-file.h"
 
-Transponder_DVBC::Transponder_DVBC( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
+Transponder_DVBC::Transponder_DVBC( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id ),
+  inner_fec(FEC_AUTO),
+  modulation(QAM_AUTO),
+  symbol_rate(0),
+  inversion(INVERSION_AUTO)
 {
 }
 
-Transponder_DVBC::Transponder_DVBC( Source &source, std::string configfile ) : Transponder( source, configfile )
+Transponder_DVBC::Transponder_DVBC( Source &source, std::string configfile ) : Transponder( source, configfile ),
+  inner_fec(FEC_AUTO),
+  modulation(QAM_AUTO),
+  symbol_rate(0),
+  inversion(INVERSION_AUTO)
 {
 }
 
@@ -40,14 +48,27 @@ void Transponder_DVBC::AddProperty( const struct dtv_property &prop )
   Transponder::AddProperty( prop );
   switch( prop.cmd )
   {
+    case DTV_SYMBOL_RATE:
+      symbol_rate = prop.u.data;
+      break;
+    case DTV_MODULATION:
+      modulation = prop.u.data;
+      break;
+    case DTV_INNER_FEC:
+      inner_fec = prop.u.data;
+      break;
+    case DTV_INVERSION:
+      inversion = prop.u.data;
+      break;
   }
 }
 
 bool Transponder_DVBC::SaveConfig( )
 {
-  Lookup( "Symbol-Rate", Setting::TypeInt ) = dvbc_symbol_rate;
-  Lookup( "FEC-Inner",   Setting::TypeInt ) = dvbc_fec_inner;
-  Lookup( "Modulation",  Setting::TypeInt ) = dvbc_modulation;
+  Lookup( "Symbol-Rate", Setting::TypeInt ) = (int) symbol_rate;
+  Lookup( "FEC-Inner",   Setting::TypeInt ) = (int) inner_fec;
+  Lookup( "Modulation",  Setting::TypeInt ) = (int) modulation;
+  Lookup( "Inversion",   Setting::TypeInt ) = (int) inversion;
 
   return Transponder::SaveConfig( );
 }
@@ -57,9 +78,21 @@ bool Transponder_DVBC::LoadConfig( )
   if( !Transponder::LoadConfig( ))
     return false;
 
-  dvbc_symbol_rate = (int) Lookup( "Symbol-Rate",  Setting::TypeInt );
-  dvbc_fec_inner   = (int) Lookup( "FEC-Inner",    Setting::TypeInt );
-  dvbc_modulation  = (int) Lookup( "Modulation",   Setting::TypeInt );
+  symbol_rate = (uint32_t) Lookup( "Symbol-Rate", Setting::TypeInt );
+  inner_fec   = (uint32_t) Lookup( "FEC-Inner",   Setting::TypeInt );
+  modulation  = (uint32_t) Lookup( "Modulation",  Setting::TypeInt );
+  inversion   = (uint32_t) Lookup( "Inversion",   Setting::TypeInt );
   return true;
 }
 
+bool Transponder_DVBC::GetParams( struct dvb_v5_fe_parms* params ) const
+{
+  if ( !Transponder::GetParams(params))
+    return false;
+
+  dvb_fe_store_parm( params, DTV_SYMBOL_RATE, symbol_rate );
+  dvb_fe_store_parm( params, DTV_INNER_FEC, inner_fec );
+  dvb_fe_store_parm( params, DTV_MODULATION, modulation );
+  dvb_fe_store_parm( params, DTV_INVERSION, inversion );
+  return true;
+}

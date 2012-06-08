@@ -1,5 +1,5 @@
 /*
- * tvheadend
+ * tvdaemon
  *
  * author     Andre Roth <neolynx@gmail.com>
  * copyright  GNU General Public License, see COPYING file

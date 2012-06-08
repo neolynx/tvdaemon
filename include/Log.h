@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  Logging
  *
@@ -24,16 +24,16 @@
 
 #include <syslog.h>
 
-void TVH_Log( int level, const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
+void TVD_Log( int level, const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
 
 #define Log( fmt, arg... ) do {\
-  TVH_Log( LOG_INFO, fmt, ##arg ); \
+  TVD_Log( LOG_INFO, fmt, ##arg ); \
   } while (0)
 #define LogWarn( fmt, arg... ) do {\
-  TVH_Log( LOG_WARNING, fmt, ##arg ); \
+  TVD_Log( LOG_WARNING, fmt, ##arg ); \
   } while (0)
 #define LogError( fmt, arg... ) do {\
-  TVH_Log( LOG_ERR, fmt, ##arg ); \
+  TVD_Log( LOG_ERR, fmt, ##arg ); \
   } while (0)
 
 #endif

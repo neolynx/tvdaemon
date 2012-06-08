@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Adapter class
  *
@@ -28,9 +28,9 @@
 
 #include <algorithm> // find
 
-Adapter::Adapter( TVDaemon &tvh, std::string uid, std::string name, int config_id ) :
-  ConfigObject( tvh, "adapter", config_id ),
-  tvh(tvh),
+Adapter::Adapter( TVDaemon &tvd, std::string uid, std::string name, int config_id ) :
+  ConfigObject( tvd, "adapter", config_id ),
+  tvd(tvd),
   uid(uid),
   name(name),
   present(false)
@@ -38,9 +38,9 @@ Adapter::Adapter( TVDaemon &tvh, std::string uid, std::string name, int config_i
   Log( "Creating new Adapter: %s", uid.c_str( ));
 }
 
-Adapter::Adapter( TVDaemon &tvh, std::string configfile ) :
-  ConfigObject( tvh, configfile ),
-  tvh(tvh),
+Adapter::Adapter( TVDaemon &tvd, std::string configfile ) :
+  ConfigObject( tvd, configfile ),
+  tvd(tvd),
   present(false)
 {
 }

@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  Channel class
  *
@@ -29,16 +29,16 @@
 #include "Service.h"
 #include "Log.h"
 
-Channel::Channel( TVDaemon &tvh, std::string name, int config_id ) :
-  ConfigObject( tvh, "channel", config_id ),
-  tvh(tvh),
+Channel::Channel( TVDaemon &tvd, std::string name, int config_id ) :
+  ConfigObject( tvd, "channel", config_id ),
+  tvd(tvd),
   name(name)
 {
 }
 
-Channel::Channel( TVDaemon &tvh, std::string configfile ) :
-  ConfigObject( tvh, configfile ),
-  tvh(tvh)
+Channel::Channel( TVDaemon &tvd, std::string configfile ) :
+  ConfigObject( tvd, configfile ),
+  tvd(tvd)
 {
 }
 
@@ -71,7 +71,7 @@ bool Channel::LoadConfig( )
       LogError( "Error in service path: should be [source, transponder, service] in %s", GetConfigFile( ).c_str( ));
       continue;
     }
-    Source      *s = tvh.GetSource( n2[0] );
+    Source      *s = tvd.GetSource( n2[0] );
     if( !s )
     {
       LogError( "Error in service path: source %d not found in %s", (int) n2[0], GetConfigFile( ).c_str( ));

@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB-C Transponder class
  *
@@ -36,7 +36,15 @@ class Transponder_DVBC : public Transponder
 
     virtual void AddProperty( const struct dtv_property &prop );
 
+    virtual bool GetParams( struct dvb_v5_fe_parms *params ) const;
+
   private:
+
+    uint32_t symbol_rate;
+    uint32_t inner_fec;
+    uint32_t modulation;
+    uint32_t inversion;
+
 };
 
 #endif

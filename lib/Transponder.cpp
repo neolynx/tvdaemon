@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Transponder class
  *
@@ -160,12 +160,12 @@ bool Transponder::LoadConfig( )
   if( !ReadConfig( ))
     return false;
 
-  delsys            = (fe_delivery_system_t) (int) Lookup( "DelSys",      Setting::TypeInt );
-  frequency         = (uint32_t) (int) Lookup( "Frequency", Setting::TypeInt );
-  TransportStreamID =            (int) Lookup( "TransportStreamID", Setting::TypeInt );
-  VersionNumber     =            (int) Lookup( "VersionNumber",     Setting::TypeInt );
-  enabled           = (bool)     (int) Lookup( "Enabled",           Setting::TypeInt );
-  state             = (State)    (int) Lookup( "State",             Setting::TypeInt );
+  delsys            = (fe_delivery_system_t) (int) Lookup( "DelSys", Setting::TypeInt );
+  frequency         = (uint32_t) (int) Lookup( "Frequency",          Setting::TypeInt );
+  TransportStreamID =            (int) Lookup( "TransportStreamID",  Setting::TypeInt );
+  VersionNumber     =            (int) Lookup( "VersionNumber",      Setting::TypeInt );
+  enabled           = (bool)     (int) Lookup( "Enabled",            Setting::TypeInt );
+  state             = (State)    (int) Lookup( "State",              Setting::TypeInt );
 
   if( !CreateFromConfig<Service, uint16_t, Transponder>( *this, "service", services ))
     return false;

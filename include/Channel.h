@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Channel class
  *
@@ -33,8 +33,8 @@ class Service;
 class Channel : public ConfigObject
 {
   public:
-    Channel( TVDaemon &tvh, std::string name, int config_id );
-    Channel( TVDaemon &tvh, std::string configfile );
+    Channel( TVDaemon &tvd, std::string name, int config_id );
+    Channel( TVDaemon &tvd, std::string configfile );
     virtual ~Channel( );
 
     std::string GetName( ) { return name; }
@@ -47,7 +47,7 @@ class Channel : public ConfigObject
     bool Tune( );
 
   private:
-    TVDaemon &tvh;
+    TVDaemon &tvd;
     std::string name;
     std::vector<Service *> services;
 };

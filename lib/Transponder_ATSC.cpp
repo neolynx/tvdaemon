@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  ATSC Transponder class
  *
@@ -43,7 +43,7 @@ void Transponder_ATSC::AddProperty( const struct dtv_property &prop )
 
 bool Transponder_ATSC::SaveConfig( )
 {
-  Lookup( "Modulation", Setting::TypeInt ) = atsc_modulation;
+  Lookup( "Modulation", Setting::TypeInt ) = (int) modulation;
 
   return Transponder::SaveConfig( );
 }
@@ -53,7 +53,7 @@ bool Transponder_ATSC::LoadConfig( )
   if( !Transponder::LoadConfig( ))
     return false;
 
-  atsc_modulation = (int) Lookup( "Modulation", Setting::TypeInt );
+  modulation = (uint32_t) Lookup( "Modulation", Setting::TypeInt );
   return true;
 }
 

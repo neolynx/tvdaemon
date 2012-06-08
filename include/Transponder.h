@@ -1,5 +1,5 @@
 /*
- *  tvheadend
+ *  tvdaemon
  *
  *  DVB Transponder class
  *
@@ -82,11 +82,6 @@ class Transponder : public ConfigObject
 
     fe_delivery_system_t delsys;
     uint32_t frequency;
-
-    int dvbc_symbol_rate;
-    int dvbc_fec_inner;
-    int dvbc_modulation;
-    int atsc_modulation;
 
     std::map<uint16_t, Service *> services;
 
