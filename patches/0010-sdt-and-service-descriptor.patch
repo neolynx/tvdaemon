@@ -1,7 +1,7 @@
-From 9c2851f99f994960e719b1727c1b44ed5a3eab01 Mon Sep 17 00:00:00 2001
+From e900d15d5381877843c1115a5bbf59d68596dac0 Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Fri, 8 Jun 2012 10:41:11 +0200
-Subject: [PATCH] sdt and service descriptor
+Subject: [PATCH 10/12] sdt and service descriptor
 
 ---
  lib/include/descriptors.h               |    9 +-
@@ -244,7 +244,7 @@ index 7fe0c22..7ab1bfd 100644
  libdvbv5_la_CPPFLAGS = $(ENFORCE_LIBDVBV5_STATIC)
  libdvbv5_la_LDFLAGS = -version-info 0 $(ENFORCE_LIBDVBV5_STATIC)
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 390bb27..fbdcce0 100644
+index 798f877..36a171b 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -34,7 +34,9 @@
@@ -265,7 +265,7 @@ index 390bb27..fbdcce0 100644
  };
  
  static char *default_charset = "iso-8859-1";
-@@ -123,7 +126,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
+@@ -129,7 +132,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
  	[VBI_data_descriptor] = { "VBI_data_descriptor", NULL, NULL },
  	[VBI_teletext_descriptor] = { "VBI_teletext_descriptor", NULL, NULL },
  	[bouquet_name_descriptor] = { "bouquet_name_descriptor", NULL, NULL },
@@ -274,7 +274,7 @@ index 390bb27..fbdcce0 100644
  	[country_availability_descriptor] = { "country_availability_descriptor", NULL, NULL },
  	[linkage_descriptor] = { "linkage_descriptor", NULL, NULL },
  	[NVOD_reference_descriptor] = { "NVOD_reference_descriptor", NULL, NULL },
-@@ -281,7 +284,7 @@ static int add_frequency(struct nit_table *nit_table, uint32_t freq)
+@@ -287,7 +290,7 @@ static int add_frequency(struct nit_table *nit_table, uint32_t freq)
  	unsigned n = nit_table->frequency_len;
  
  	nit_table->frequency = realloc(nit_table->frequency,
@@ -283,7 +283,7 @@ index 390bb27..fbdcce0 100644
  
  	if (!nit_table->frequency)
  		return -ENOMEM;
-@@ -293,8 +296,8 @@ static int add_frequency(struct nit_table *nit_table, uint32_t freq)
+@@ -299,8 +302,8 @@ static int add_frequency(struct nit_table *nit_table, uint32_t freq)
  }
  
  static void parse_NIT_ISDBT(struct nit_table *nit_table,
@@ -294,7 +294,7 @@ index 390bb27..fbdcce0 100644
  {
  	uint64_t freq;
  	static const uint32_t interval[] = {
-@@ -332,10 +335,10 @@ static void parse_NIT_ISDBT(struct nit_table *nit_table,
+@@ -338,10 +341,10 @@ static void parse_NIT_ISDBT(struct nit_table *nit_table,
  	nit_table->transmission_mode = mode[isdbt_mode];
  	if (verbose)
  		printf("Area code: %d, mode %d (%s), guard interval: %s\n",
@@ -309,7 +309,7 @@ index 390bb27..fbdcce0 100644
  	for (i = 2; i < dlen; i += 2) {
  		buf += 2;
  		/*
-@@ -366,8 +369,8 @@ static const unsigned dvbc_dvbs_freq_inner[] = {
+@@ -372,8 +375,8 @@ static const unsigned dvbc_dvbs_freq_inner[] = {
  };
  
  static void parse_NIT_DVBS(struct nit_table *nit_table,
@@ -320,7 +320,7 @@ index 390bb27..fbdcce0 100644
  {
  	unsigned orbit, west;
  	uint32_t freq;
-@@ -412,18 +415,18 @@ static void parse_NIT_DVBS(struct nit_table *nit_table,
+@@ -418,18 +421,18 @@ static void parse_NIT_DVBS(struct nit_table *nit_table,
  
  	if (verbose) {
  		printf("DVB-%s orbit %s, freq %d, pol %d, modulation %d, rolloff %d\n",
@@ -346,7 +346,7 @@ index 390bb27..fbdcce0 100644
  {
  	uint32_t freq;
  	static const unsigned modulation[] = {
-@@ -448,17 +451,17 @@ static void parse_NIT_DVBC(struct nit_table *nit_table,
+@@ -454,17 +457,17 @@ static void parse_NIT_DVBC(struct nit_table *nit_table,
  
  	if (verbose) {
  		printf("DVB-C freq %d, modulation %d, Symbol rate %d\n",
@@ -370,7 +370,7 @@ index 390bb27..fbdcce0 100644
  {
  	uint32_t freq;
  	static const unsigned bw[] = {
-@@ -524,21 +527,21 @@ static void parse_NIT_DVBT(struct nit_table *nit_table,
+@@ -530,21 +533,21 @@ static void parse_NIT_DVBT(struct nit_table *nit_table,
  
  	if (verbose) {
  		printf("DVB-T freq %d, bandwidth %d modulation %d\n",
@@ -401,7 +401,7 @@ index 390bb27..fbdcce0 100644
  {
  	static const unsigned bw[] = {
  		[0] =  8000000,
-@@ -591,8 +594,8 @@ static void parse_NIT_DVBT2(struct nit_table *nit_table,
+@@ -597,8 +600,8 @@ static void parse_NIT_DVBT2(struct nit_table *nit_table,
  }
  
  static void parse_freq_list(struct nit_table *nit_table,
@@ -412,7 +412,7 @@ index 390bb27..fbdcce0 100644
  {
  	int i;
  	uint32_t freq;
-@@ -610,8 +613,8 @@ static void parse_freq_list(struct nit_table *nit_table,
+@@ -616,8 +619,8 @@ static void parse_freq_list(struct nit_table *nit_table,
  }
  
  static void parse_partial_reception(struct nit_table *nit_table,
@@ -423,7 +423,7 @@ index 390bb27..fbdcce0 100644
  {
  	int i;
  	uint16_t **pid = &nit_table->partial_reception;
-@@ -623,15 +626,15 @@ static void parse_partial_reception(struct nit_table *nit_table,
+@@ -629,15 +632,15 @@ static void parse_partial_reception(struct nit_table *nit_table,
  		nit_table->partial_reception[*n] = buf[i] << 8 | buf[i + 1];
  		if (verbose)
  			printf("Service 0x%04x has partial reception\n",
@@ -442,7 +442,7 @@ index 390bb27..fbdcce0 100644
  {
  	unsigned char ext = buf[0];
  	int i;
-@@ -645,7 +648,7 @@ static int parse_extension_descriptor(enum dvb_tables type,
+@@ -651,7 +654,7 @@ static int parse_extension_descriptor(enum dvb_tables type,
  
  	if (dvb_desc->verbose) {
  		printf("Extension descriptor %s (0x%02x), len %d",
@@ -451,7 +451,7 @@ index 390bb27..fbdcce0 100644
  		for (i = 0; i < dlen; i++) {
  			if (!(i % 16))
  				printf("\n\t");
-@@ -654,23 +657,23 @@ static int parse_extension_descriptor(enum dvb_tables type,
+@@ -660,23 +663,23 @@ static int parse_extension_descriptor(enum dvb_tables type,
  		printf("\n");
  	}
  	switch(ext) {
@@ -483,7 +483,7 @@ index 390bb27..fbdcce0 100644
  	if (verbose) {
  		printf("Network");
  		if (nit_table->network_name)
-@@ -685,7 +688,7 @@ static void parse_net_name(struct nit_table *nit_table,
+@@ -691,7 +694,7 @@ static void parse_net_name(struct nit_table *nit_table,
  
  
  static void parse_lcn(struct nit_table *nit_table,
@@ -492,7 +492,7 @@ index 390bb27..fbdcce0 100644
  {
  	int i, n = nit_table->lcn_len;
  	const unsigned char *p = &buf[2];
-@@ -702,24 +705,24 @@ static void parse_lcn(struct nit_table *nit_table,
+@@ -708,24 +711,24 @@ static void parse_lcn(struct nit_table *nit_table,
  
  		if (verbose)
  			printf("Service ID: 0x%04x, LCN: %d\n",
@@ -526,7 +526,7 @@ index 390bb27..fbdcce0 100644
  	if (verbose) {
  		if (service_table->provider_name)
  			printf("Provider %s", service_table->provider_name);
-@@ -732,17 +735,17 @@ static void parse_service(struct service_table *service_table,
+@@ -738,17 +741,17 @@ static void parse_service(struct service_table *service_table,
  		if (service_table->service_alias)
  			printf("(%s)", service_table->service_alias);
  		if (!service_table->provider_name &&
@@ -549,7 +549,7 @@ index 390bb27..fbdcce0 100644
  {
  	int i;
  
-@@ -757,12 +760,12 @@ void parse_descriptor(enum dvb_tables type,
+@@ -763,12 +766,12 @@ void parse_descriptor(enum dvb_tables type,
  
  		if (dlen > len) {
  			fprintf(stderr, "descriptor size %d is longer than %d!\n",
@@ -564,7 +564,7 @@ index 390bb27..fbdcce0 100644
  			for (i = 0; i < dlen; i++) {
  				if (!(i % 16))
  					printf("\n\t");
-@@ -771,140 +774,140 @@ void parse_descriptor(enum dvb_tables type,
+@@ -777,140 +780,140 @@ void parse_descriptor(enum dvb_tables type,
  			printf("\n");
  		}
  		switch(buf[0]) {
@@ -820,7 +820,7 @@ index 390bb27..fbdcce0 100644
  		}
  		buf += dlen + 2;
  		len -= dlen + 2;
-@@ -912,8 +915,8 @@ void parse_descriptor(enum dvb_tables type,
+@@ -918,8 +921,8 @@ void parse_descriptor(enum dvb_tables type,
  }
  
  int has_descriptor(struct dvb_v5_descriptors *dvb_desc,
@@ -831,7 +831,7 @@ index 390bb27..fbdcce0 100644
  {
  	if (len == 0)
  		return 0;
-@@ -932,110 +935,110 @@ int has_descriptor(struct dvb_v5_descriptors *dvb_desc,
+@@ -938,110 +941,110 @@ int has_descriptor(struct dvb_v5_descriptors *dvb_desc,
  }
  
  #if 0

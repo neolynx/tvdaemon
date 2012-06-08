@@ -1,11 +1,11 @@
-From 6ffbe9cb9e951b94aa9173722cb64006ebbb2743 Mon Sep 17 00:00:00 2001
+From 3c19d92780263712794a2ed79ea7f152d44e4a88 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 8 Jun 2012 00:33:13 +0200
-Subject: [PATCH] vimrc
+Subject: [PATCH 07/12] vimrc
 
 ---
  .lvimrc |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ 1 file changed, 8 insertions(+)
  create mode 100644 .lvimrc
 
 diff --git a/.lvimrc b/.lvimrc
@@ -23,5 +23,5 @@ index 0000000..0da05a7
 +set softtabstop=8
 +
 -- 
-1.7.2.5
+1.7.9.5
 

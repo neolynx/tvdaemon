@@ -1,7 +1,7 @@
-From 62dfa3e7677422896f254678440b558bdb631f0b Mon Sep 17 00:00:00 2001
+From c84a5f25c94c8c949aa92d861056f15dfb03d3eb Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 8 Jun 2012 02:54:26 +0200
-Subject: [PATCH] sat descriptors
+Subject: [PATCH 09/12] sat descriptors
 
 ---
  lib/include/descriptors.h                |    6 +++
@@ -9,11 +9,11 @@ Subject: [PATCH] sat descriptors
  lib/include/descriptors/desc_sat.h       |   62 ++++++++++++++++++++++++++++++
  lib/include/descriptors/language.h       |   49 -----------------------
  lib/libdvbv5/Makefile.am                 |    3 +-
- lib/libdvbv5/descriptors.c               |   18 +++++++-
+ lib/libdvbv5/descriptors.c               |   18 +++++++--
  lib/libdvbv5/descriptors/desc_language.c |   44 +++++++++++++++++++++
  lib/libdvbv5/descriptors/desc_sat.c      |   58 ++++++++++++++++++++++++++++
  lib/libdvbv5/descriptors/language.c      |   44 ---------------------
- lib/libdvbv5/descriptors/nit.c           |   13 +-----
+ lib/libdvbv5/descriptors/nit.c           |   13 +------
  10 files changed, 238 insertions(+), 108 deletions(-)
  create mode 100644 lib/include/descriptors/desc_language.h
  create mode 100644 lib/include/descriptors/desc_sat.h
@@ -240,7 +240,7 @@ index f95d322..7fe0c22 100644
  
  libdvbv5_la_CPPFLAGS = $(ENFORCE_LIBDVBV5_STATIC)
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index c333c7b..390bb27 100644
+index dd5992b..798f877 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -31,8 +31,9 @@
@@ -254,7 +254,7 @@ index c333c7b..390bb27 100644
  #include "descriptors/nit.h"
  
  void dvb_desc_init(const uint8_t **buf, struct dvb_desc *desc)
-@@ -117,7 +118,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
+@@ -123,7 +124,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
  	[network_name_descriptor] = { "network_name_descriptor", dvb_desc_network_name_init, dvb_desc_network_name_print },
  	[service_list_descriptor] = { "service_list_descriptor", NULL, NULL },
  	[stuffing_descriptor] = { "stuffing_descriptor", NULL, NULL },
@@ -263,7 +263,7 @@ index c333c7b..390bb27 100644
  	[cable_delivery_system_descriptor] = { "cable_delivery_system_descriptor", NULL, NULL },
  	[VBI_data_descriptor] = { "VBI_data_descriptor", NULL, NULL },
  	[VBI_teletext_descriptor] = { "VBI_teletext_descriptor", NULL, NULL },
-@@ -245,7 +246,18 @@ static const char *extension_descriptors[] = {
+@@ -251,7 +252,18 @@ static const char *extension_descriptors[] = {
  };
  
  
@@ -491,5 +491,5 @@ index 8d1e431..1a322dd 100644
  		while (desc) {
  			if (dvb_descriptors[desc->type].print)
 -- 
-1.7.2.5
+1.7.9.5
 

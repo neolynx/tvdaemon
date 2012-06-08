@@ -1,23 +1,23 @@
-From dd8869fcf54d45a3432eae3a760d7defa3655be9 Mon Sep 17 00:00:00 2001
+From ff2d8c337461cbc98841dd6b58573975c67216e8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 7 Jun 2012 16:17:44 +0200
-Subject: [PATCH 4/4] table parsing
+Subject: [PATCH 04/12] table parsing
 
 ---
- lib/include/descriptors.h           |   19 ++-
+ lib/include/descriptors.h           |   19 +-
  lib/include/descriptors/header.h    |    2 +-
  lib/include/descriptors/language.h  |   48 +++++
  lib/include/descriptors/nit.h       |   80 +++++++++
  lib/include/descriptors/pat.h       |   13 +-
- lib/include/descriptors/pmt.h       |   53 +++----
+ lib/include/descriptors/pmt.h       |   53 +++---
  lib/libdvbv5/Makefile.am            |    4 +-
- lib/libdvbv5/descriptors.c          |  323 +++++++++++++++++++----------------
+ lib/libdvbv5/descriptors.c          |  331 +++++++++++++++++++----------------
  lib/libdvbv5/descriptors/header.c   |    2 +-
  lib/libdvbv5/descriptors/language.c |   43 +++++
  lib/libdvbv5/descriptors/nit.c      |   69 ++++++++
- lib/libdvbv5/descriptors/pat.c      |   36 +++--
+ lib/libdvbv5/descriptors/pat.c      |   36 ++--
  lib/libdvbv5/descriptors/pmt.c      |  149 +++++++---------
- 13 files changed, 543 insertions(+), 298 deletions(-)
+ 13 files changed, 547 insertions(+), 302 deletions(-)
  create mode 100644 lib/include/descriptors/language.h
  create mode 100644 lib/include/descriptors/nit.h
  create mode 100644 lib/libdvbv5/descriptors/language.c
@@ -1097,5 +1097,5 @@ index 1878858..fe0ae6b 100644
  }
  
 -- 
-1.7.2.5
+1.7.9.5
 

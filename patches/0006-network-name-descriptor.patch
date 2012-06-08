@@ -1,7 +1,7 @@
-From 071edd286f00554d022a4bf2d798e24ecebde12b Mon Sep 17 00:00:00 2001
+From 785ffe231007656bef619a527f3d002228dc61e4 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 7 Jun 2012 22:21:26 +0200
-Subject: [PATCH] network name descriptor
+Subject: [PATCH 06/12] network name descriptor
 
 ---
  lib/include/descriptors/desc_network_name.h  |   48 ++++++++++++++++++++++++++
@@ -11,7 +11,7 @@ Subject: [PATCH] network name descriptor
  lib/libdvbv5/descriptors.c                   |    3 +-
  lib/libdvbv5/descriptors/desc_network_name.c |   42 ++++++++++++++++++++++
  lib/libdvbv5/descriptors/language.c          |    2 +-
- lib/libdvbv5/descriptors/nit.c               |   16 ++++++--
+ lib/libdvbv5/descriptors/nit.c               |   16 ++++++---
  lib/libdvbv5/descriptors/pmt.c               |   15 ++++----
  9 files changed, 116 insertions(+), 14 deletions(-)
  create mode 100644 lib/include/descriptors/desc_network_name.h
@@ -282,5 +282,5 @@ index 379dd86..eda0f45 100644
  
  	// FIXME: realloc
 -- 
-1.7.2.5
+1.7.9.5
 

@@ -1,7 +1,7 @@
-From 555185ccb41e9875cfcd0b8ad378821a47326e05 Mon Sep 17 00:00:00 2001
+From 8fef8b0e968050f0dc40ee0e1d398fc6b9aee76a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 4 Jun 2012 21:50:54 +0200
-Subject: [PATCH 2/4] Fix dvb-file USER CMD
+Subject: [PATCH 02/12] Fix dvb-file USER CMD
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -9,7 +9,7 @@ Content-Transfer-Encoding: 8bit
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
  lib/libdvbv5/dvb-file.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
 index 6431bbd..2c8905e 100644
@@ -34,5 +34,5 @@ index 6431bbd..2c8905e 100644
  		entry->props[n_prop].cmd = i + DTV_USER_COMMAND_START;
  		if (!attr_name || !*attr_name)
 -- 
-1.7.2.5
+1.7.9.5
 
