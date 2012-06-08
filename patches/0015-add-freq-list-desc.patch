@@ -1,0 +1,170 @@
+From b3e03e59a97c5f2c6d8872d3ca6e5da36d40ae5b Mon Sep 17 00:00:00 2001
+From: Lars Schmohl <lars.schmohl@gmail.com>
+Date: Sat, 9 Jun 2012 01:30:56 +0200
+Subject: [PATCH 15/15] add freq list desc
+
+---
+ lib/include/descriptors/desc_frequency_list.h  |   51 +++++++++++++++++++++
+ lib/libdvbv5/Makefile.am                       |    1 +
+ lib/libdvbv5/descriptors.c                     |    3 +-
+ lib/libdvbv5/descriptors/desc_frequency_list.c |   57 ++++++++++++++++++++++++
+ 4 files changed, 111 insertions(+), 1 deletion(-)
+ create mode 100644 lib/include/descriptors/desc_frequency_list.h
+ create mode 100644 lib/libdvbv5/descriptors/desc_frequency_list.c
+
+diff --git a/lib/include/descriptors/desc_frequency_list.h b/lib/include/descriptors/desc_frequency_list.h
+new file mode 100644
+index 0000000..ffeae32
+--- /dev/null
++++ b/lib/include/descriptors/desc_frequency_list.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _DESC_FREQUENCY_LIST_H
++#define _DESC_FREQUENCY_LIST_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++struct dvb_desc_frequency_list {
++	uint8_t type;
++	struct dvb_desc *next;
++
++	uint8_t length;
++	uint8_t coding_type:2;
++	uint8_t reserved_future_use:6;
++	uint32_t frequency[];
++} __attribute__((packed));
++
++struct dvb_v5_fe_parms;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++	ssize_t dvb_desc_frequency_list_init(const uint8_t **buf, struct dvb_desc *desc);
++	void dvb_desc_frequency_list_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
+index 4013bb9..b818ea4 100644
+--- a/lib/libdvbv5/Makefile.am
++++ b/lib/libdvbv5/Makefile.am
+@@ -32,6 +32,7 @@ libdvbv5_la_SOURCES = \
+   descriptors/desc_sat.c  ../include/descriptors/desc_sat.h \
+   descriptors/desc_terrestrial_delivery.c  ../include/descriptors/desc_terrestrial_delivery.h \
+   descriptors/desc_service.c  ../include/descriptors/desc_service.h \
++  descriptors/desc_frequency_list.c  ../include/descriptors/desc_frequency_list.h \
+   descriptors/desc_service_list.c  ../include/descriptors/desc_service_list.h \
+   descriptors/nit.c  ../include/descriptors/nit.h \
+   descriptors/sdt.c  ../include/descriptors/sdt.h
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index 59b7ce8..ce91a74 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -38,6 +38,7 @@
+ #include "descriptors/desc_terrestrial_delivery.h"
+ #include "descriptors/desc_service.h"
+ #include "descriptors/desc_service_list.h"
++#include "descriptors/desc_frequency_list.h"
+ #include "descriptors/nit.h"
+ #include "descriptors/sdt.h"
+ 
+@@ -161,7 +162,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
+ 	[private_data_specifier_descriptor] = { "private_data_specifier_descriptor", NULL, NULL },
+ 	[service_move_descriptor] = { "service_move_descriptor", NULL, NULL },
+ 	[short_smoothing_buffer_descriptor] = { "short_smoothing_buffer_descriptor", NULL, NULL },
+-	[frequency_list_descriptor] = { "frequency_list_descriptor", NULL, NULL },
++	[frequency_list_descriptor] = { "frequency_list_descriptor", dvb_desc_frequency_list_init, dvb_desc_frequency_list_print },
+ 	[partial_transport_stream_descriptor] = { "partial_transport_stream_descriptor", NULL, NULL },
+ 	[data_broadcast_descriptor] = { "data_broadcast_descriptor", NULL, NULL },
+ 	[scrambling_descriptor] = { "scrambling_descriptor", NULL, NULL },
+diff --git a/lib/libdvbv5/descriptors/desc_frequency_list.c b/lib/libdvbv5/descriptors/desc_frequency_list.c
+new file mode 100644
+index 0000000..46176b4
+--- /dev/null
++++ b/lib/libdvbv5/descriptors/desc_frequency_list.c
+@@ -0,0 +1,57 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "descriptors/desc_frequency_list.h"
++#include "descriptors.h"
++#include "dvb-fe.h"
++
++ssize_t dvb_desc_frequency_list_init(const uint8_t **buf, struct dvb_desc *desc)
++{
++	dvb_desc_init(buf, desc);
++	struct dvb_desc_frequency_list *flist = (struct dvb_desc_frequency_list *) desc;
++
++	memcpy(((uint8_t *) flist ) + sizeof(flist->type) + sizeof(flist->next),
++			(*buf) + sizeof(flist->type),
++			sizeof(struct dvb_desc_frequency_list) - sizeof(flist->type) - sizeof(flist->next));
++	/* close the list */
++	flist->frequency[(flist->length - 1) / sizeof(*(flist->frequency))] = 0;
++	/* swap the data*/
++	int i = 0;
++	while(flist->frequency[i] != 0) {
++		bswap32(flist->frequency[i]);
++		++i;
++	}
++	*buf += flist->length + 1;
++
++	return sizeof(struct dvb_desc_frequency_list) + flist->length + 3;
++}
++
++void dvb_desc_frequency_list_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
++{
++	const struct dvb_desc_frequency_list *flist = (const struct dvb_desc_frequency_list *) desc;
++	int i = 0;
++	dvb_log("|       frequency list");
++	while(flist->frequency[i] != 0) {
++		dvb_log("|           service type : '%d'", flist->frequency[i]);
++		++i;
++	}
++}
++
+-- 
+1.7.9.5
+

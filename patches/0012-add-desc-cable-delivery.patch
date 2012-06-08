@@ -1,7 +1,7 @@
 From cb5bf58e5f4ef12278f9b4647d45fa1177a0dd99 Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Fri, 8 Jun 2012 19:46:13 +0200
-Subject: [PATCH 12/13] add desc cable delivery
+Subject: [PATCH 12/15] add desc cable delivery
 
 ---
  lib/include/descriptors/desc_cable_delivery.h  |   64 ++++++++++++++++++++++++
