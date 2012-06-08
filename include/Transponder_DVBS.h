@@ -29,8 +29,15 @@
 class Transponder_DVBS : public Transponder
 {
   public:
-    Transponder_DVBS( Source &src, const fe_delivery_system_t delsys, int config_id );
-    Transponder_DVBS( Source &src, std::string configfile );
+    Transponder_DVBS( Source &source, const fe_delivery_system_t delsys, int config_id );
+    Transponder_DVBS( Source &source,
+		    fe_delivery_system_t delsys, uint32_t frequency,
+		    dvb_sat_polarization polarization,
+		    uint32_t symbol_rate,
+		    fe_code_rate fec,
+		    int roll_off,
+		    int config_id );
+    Transponder_DVBS( Source &source, std::string configfile );
     virtual ~Transponder_DVBS( );
 
     virtual bool SaveConfig( );
@@ -40,11 +47,15 @@ class Transponder_DVBS : public Transponder
 
     virtual bool GetParams( struct dvb_v5_fe_parms *params ) const;
 
+    virtual std::string toString( );
+
+    bool IsSame( const Transponder &transponder );
+
   private:
     dvb_sat_polarization polarization;
 
     uint32_t symbol_rate;
-    int fec_inner;
+    int fec;
     int modulation;
     int roll_off;
 

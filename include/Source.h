@@ -45,13 +45,15 @@ class Source : public ConfigObject
 
     bool ReadScanfile( std::string scanfile );
 
-    Transponder *CreateTransponder( const struct dvb_entry &entry );
+    Transponder *CreateTransponder( const struct dvb_entry &info );
     Transponder *GetTransponder( int id );
     bool TuneTransponder( int id );
     bool ScanTransponder( int id );
     uint GetTransponderCount() { return transponders.size(); }
+    TVDaemon::SourceType GetType( ) const { return type; }
 
     bool AddPort( Port *port );
+    bool AddTransponder( Transponder *t );
 
     bool Tune( Transponder &transponder, uint16_t pno );
 

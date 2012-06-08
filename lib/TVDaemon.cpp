@@ -419,7 +419,7 @@ std::vector<std::string> TVDaemon::GetSourceList( )
   return result;
 }
 
-Source *TVDaemon::GetSource( int id )
+Source *TVDaemon::GetSource( int id ) const
 {
   if( id >= sources.size( ))
     return NULL;

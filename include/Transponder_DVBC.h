@@ -38,6 +38,10 @@ class Transponder_DVBC : public Transponder
 
     virtual bool GetParams( struct dvb_v5_fe_parms *params ) const;
 
+    virtual std::string toString( );
+
+    bool IsSame( const Transponder &transponder );
+
   private:
 
     uint32_t symbol_rate;

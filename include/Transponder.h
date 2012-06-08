@@ -43,11 +43,17 @@ class Transponder : public ConfigObject
     virtual bool LoadConfig( );
 
     static Transponder *Create( Source &source, const fe_delivery_system_t delsys, int config_id );
+    static Transponder *Create( Source &source, const struct dvb_desc &info, int config_id );
     static Transponder *Create( Source &source, std::string configfile );
-    virtual bool IsSame( const struct dvb_entry &info );
+
+    static bool IsSame( const Transponder &transponder, const struct dvb_entry &info );
+    virtual bool IsSame( const Transponder &transponder ) = 0;
+
     virtual void AddProperty( const struct dtv_property &prop );
 
     virtual bool GetParams( struct dvb_v5_fe_parms *params ) const;
+
+    virtual std::string toString( ) = 0;
 
     fe_delivery_system_t GetDelSys( ) const { return delsys; }
     uint32_t GetFrequency( ) const { return frequency; }
@@ -61,7 +67,7 @@ class Transponder : public ConfigObject
     uint16_t GetVersionNumber( ) {  return VersionNumber; }
 
     Service *GetService( uint16_t id );
-    Source &GetSource( ) { return source; }
+    Source &GetSource( ) const { return source; }
 
     enum State
     {

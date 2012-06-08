@@ -30,6 +30,7 @@
 #include "Log.h"
 
 #include "dvb-file.h"
+#include "descriptors.h"
 
 Source::Source( TVDaemon &tvd, std::string name, int config_id ) :
   ConfigObject( tvd, "source", config_id ),
@@ -55,6 +56,7 @@ Source::~Source( )
 bool Source::SaveConfig( )
 {
   Lookup( "Name", Setting::TypeString ) = name;
+  Lookup( "Type", Setting::TypeInt )    = type;
 
   SaveReferences<Port, Source>( *this, "Ports", ports );
 
@@ -72,7 +74,8 @@ bool Source::LoadConfig( )
   if( !ReadConfig( ))
     return false;
 
-  name = (const char *) Lookup( "Name", Setting::TypeString );
+  name =               (const char *) Lookup( "Name", Setting::TypeString );
+  type = (TVDaemon::SourceType) (int) Lookup( "Type", Setting::TypeInt );
 
   Log( "Found configured Source '%s'", name.c_str( ));
 
@@ -131,6 +134,20 @@ bool Source::ReadScanfile( std::string scanfile )
   return true;
 }
 
+bool Source::AddTransponder( Transponder *t )
+{
+  for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  {
+    if( (*it)->IsSame( *t ))
+    {
+      LogWarn( "Already known transponder: %s", t->toString( ).c_str( ));
+      return false;
+    }
+  }
+  transponders.push_back( t );
+  return true;
+}
+
 Transponder *Source::CreateTransponder( const struct dvb_entry &info )
 {
   fe_delivery_system_t delsys;
@@ -145,9 +162,31 @@ Transponder *Source::CreateTransponder( const struct dvb_entry &info )
         frequency = info.props[i].u.data;
         break;
     }
+  switch( delsys )
+  {
+    case SYS_DVBC_ANNEX_A:
+    case SYS_DVBC_ANNEX_B:
+    case SYS_DVBC_ANNEX_C:
+      type = TVDaemon::Source_DVB_C;
+      break;
+    case SYS_DVBT:
+    case SYS_DVBT2:
+      type = TVDaemon::Source_DVB_T;
+      break;
+    case SYS_DSS:
+    case SYS_DVBS:
+    case SYS_DVBS2:
+      type = TVDaemon::Source_DVB_S;
+      break;
+    case SYS_ATSC:
+    case SYS_ATSCMH:
+      type = TVDaemon::Source_ATSC;
+      break;
+  }
+
   for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
-    if( (*it)->IsSame( info ))
+    if( Transponder::IsSame( **it, info ))
     {
       LogWarn( "Already known transponder: %s %d", delivery_system_name[delsys], frequency );
       return NULL;

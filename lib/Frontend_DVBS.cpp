@@ -22,10 +22,15 @@
 #include "Frontend_DVBS.h"
 
 #include "Port.h"
-#include "Transponder.h"
+#include "Transponder_DVBS.h"
 #include "Log.h"
+#include "Source.h"
 
 #include "dvb-fe.h"
+#include "dvb-frontend.h"
+#include "descriptors/nit.h"
+#include "descriptors/desc_network_name.h"
+#include "descriptors/desc_sat.h"
 
 Frontend_DVBS::Frontend_DVBS( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   Frontend( adapter, adapter_id, frontend_id, config_id )
@@ -84,7 +89,7 @@ bool Frontend_DVBS::Tune( const Transponder &t, int timeout )
   dvb_fe_prt_parms( fe );
 
   int r = dvb_fe_set_parms( fe );
-  if( r < 0 )
+  if( r != 0 )
   {
     LogError( "dvb_fe_set_parms failed." );
     return false;
@@ -97,168 +102,96 @@ bool Frontend_DVBS::Tune( const Transponder &t, int timeout )
   if( !GetLockStatus( ))
     return false;
 
+  transponder = &t;
   return true;
 }
 
-bool Frontend_DVBS::HandleNIT( struct section *section )
+
+
+
+bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
 {
-  //struct section_ext *section_ext = NULL;
-  //if(( section_ext = section_ext_decode( section, 1 )) == NULL )
-  //{
-  //printf( "unable to extract section_ext of nit\n" );
-  //return false;
-  //}
-  //struct dvb_nit_section *nit = dvb_nit_section_codec(section_ext);
-  //if( nit == NULL )
-  //{
-  //printf( "NIT section decode error\n" );
-  //return false;
-  //}
-  //struct descriptor *curd = NULL;
-  //struct dvb_nit_section_part2 *part2 = dvb_nit_section_part2(nit);
-  //struct dvb_nit_transport *cur_transport = NULL;
-  //dvb_nit_section_transports_for_each(nit, part2, cur_transport)
-  //{
-  //dvb_nit_transport_descriptors_for_each(cur_transport, curd)
-  //{
-  //switch( curd->tag )
-  //{
-  //case dtag_dvb_satellite_delivery_system:
-  //{
-  //struct dvb_satellite_delivery_descriptor *dx = dvb_satellite_delivery_descriptor_codec(curd);
-  //if( dx == NULL )
-  //return false;
+  dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
+  if( desc )
+  {
+    Log( "got network name %s", desc->network_name );
+    //transponder.SetNetwork( desc->network_name );
+  }
+  dvb_nit_transport_foreach( tr, nit )
+  {
+    dvb_desc_find( struct dvb_desc_sat, desc, tr, satellite_delivery_system_descriptor )
+    {
+      fe_delivery_system delsys = desc->modulation_system ? SYS_DVBS2 : SYS_DVBS;
 
-  //dx->frequency = Utils::decihex( dx->frequency ) * 10;
-  //dx->symbol_rate = Utils::decihex( dx->symbol_rate ) * 100;
+      fe_code_rate fec = FEC_NONE;
+      switch( desc->fec )
+      {
+        case 0:
+          break;
+        case 1:
+          fec = FEC_1_2;
+          break;
+        case 2:
+          fec = FEC_2_3;
+          break;
+        case 3:
+          fec = FEC_3_4;
+          break;
+        case 4:
+          fec = FEC_5_6;
+          break;
+        case 5:
+          fec = FEC_7_8;
+          break;
+        case 6:
+          fec = FEC_8_9;
+          break;
+        case 7:
+          fec = FEC_3_5;
+          break;
+        case 8:
+          fec = FEC_4_5;
+          break;
+        case 9:
+          fec = FEC_9_10;
+          break;
+        default:
+          LogWarn( "got unknown fec: %d", desc->fec );
+          break;
+      }
 
-  //char pol;
-  //switch( dx->polarization )
-  //{
-  //case 0:
-  //pol = 'h';
-  //break;
-  //case 1:
-  //pol = 'v';
-  //break;
-  //default:
-  //printf( "unknown polarization %d\n", dx->polarization );
-  //break;
-  //}
+      dvb_sat_polarization polarization = POLARIZATION_OFF;
+      switch( desc->polarization )
+      {
+        case 0:
+          polarization = POLARIZATION_H;
+          break;
+        case 1:
+          polarization = POLARIZATION_V;
+          break;
+        case 2:
+          polarization = POLARIZATION_L;
+          break;
+        case 3:
+          polarization = POLARIZATION_R;
+          break;
+      }
 
-  //enum ModType
-  //{
-  //MOD_NONE = 0,
-  //MOD_QPSK,
-  //MOD_8PSK,
-  //MOD_16QAM
-  //} modulation;
+      Source &source = transponder->GetSource( );
+      Transponder_DVBS *t = new Transponder_DVBS( source,
+						  delsys,
+						  desc->frequency,
+						  polarization,
+						  desc->symbol_rate,
+						  fec,
+						  desc->roll_off,
+						  source.GetTransponderCount( ));
+      if( !source.AddTransponder( t ))
+        delete t;
 
-  //modulation = (ModType) dx->modulation_type;
+    }
+  }
 
-  //const char *mod;
-  //switch( modulation )
-  //{
-  //case MOD_NONE:
-  //mod = "NONE";
-  //break;
-  //case MOD_QPSK:
-  //mod = "QPSK";
-  //break;
-  //case MOD_8PSK:
-  //mod = "8PSK";
-  //break;
-  //case MOD_16QAM:
-  //mod = "16QAM";
-  //break;
-  //}
-
-  ////printf( "  Got Transponder %d %c roll_off:%i %s modulation: %s symbol_rate:%d fec_inner:%i\n",
-  ////dx->frequency,
-  ////pol,
-  ////dx->roll_off,
-  ////dx->modulation_system == 1 ? "DVB-S2" : "DVB-S ",
-  ////mod,
-  ////dx->symbol_rate,
-  ////dx->fec_inner);
-
-  //if( dx->modulation_system == 1 )
-  //{
-  //printf( "Warning: DVB-S2 not supported yet\n" );
-  //break;
-  //}
-  //if( modulation == MOD_NONE )
-  //{
-  //printf( "Warning: unknown modulation\n" );
-  //break;
-  //}
-
-  ////dvbfe_fec fec;
-  ////switch( dx->fec_inner )
-  ////{
-  ////case 0:
-  ////fec = DVBFE_FEC_NONE;
-  ////break;
-  ////case 1:
-  ////fec = DVBFE_FEC_1_2;
-  ////break;
-  ////case 2:
-  ////fec = DVBFE_FEC_2_3;
-  ////break;
-  ////case 3:
-  ////fec = DVBFE_FEC_3_4;
-  ////break;
-  ////// not used: fec = DVBFE_FEC_4_5;
-  ////case 4:
-  ////fec = DVBFE_FEC_5_6;
-  ////break;
-  ////// not used: fec = DVBFE_FEC_6_7;
-  ////case 5:
-  ////fec = DVBFE_FEC_7_8;
-  ////break;
-  ////case 6:
-  ////fec = DVBFE_FEC_8_9;
-  ////break;
-  ////case 7:
-  ////fec = DVBFE_FEC_AUTO; // no fec auto ?
-  ////break;
-  ////default:
-  ////printf( "Warning: unknown fec %d\n", dx->fec_inner );
-  ////break;
-  ////}
-
-  ////struct dvbcfg_scanfile info;
-  ////info.fe_type                      = (dvbfe_type) ( dx->modulation_system == 1 ? Transponder::Type_DVB_S2 : Transponder::Type_DVB_S );
-  ////info.fe_params.frequency          = dx->frequency;
-  ////info.fe_params.inversion          = (dvbfe_spectral_inversion) DVBFE_INVERSION_AUTO;
-  ////info.fe_params.u.dvbs.symbol_rate = dx->symbol_rate;
-  ////info.fe_params.u.dvbs.fec_inner   = fec;
-  ////info.polarization                 = pol;
-  ////transponder->GetSource( ).CreateTransponder( &info, dx->modulation_type, dx->roll_off );
-
-  //}
-  //break;
-  //case dtag_dvb_s2_satellite_delivery_descriptor:
-  //{
-  //printf( "Warning: dtag_dvb_s2_satellite_delivery_descriptor not implemented\n" );
-  //struct dvb_s2_satellite_delivery_descriptor *dx = dvb_s2_satellite_delivery_descriptor_codec(curd);
-  //if( dx == NULL )
-  //continue;
-
-  //}
-  //break; ///FIXME: needs full implementation of libucsi
-  //}
-  //}
-  //}
-
-  //// switch to the SDT table
-  //filter[0] = stag_dvb_service_description_actual;
-  //if( dvbdemux_set_section_filter( fd_demux, TRANSPORT_SDT_PID, filter, mask, 1, 1 ))
-  //{
-  //printf( "failed to set demux filter for sdt\n" );
-  //up = false;
-  //return false;
-  //}
   return true;
 }
 

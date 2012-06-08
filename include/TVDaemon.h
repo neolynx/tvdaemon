@@ -63,7 +63,7 @@ class TVDaemon : public ConfigObject
     Adapter *GetAdapter( int id );
 
     std::vector<std::string> GetSourceList( );
-    Source *GetSource( int id );
+    Source *GetSource( int id ) const;
     Source *CreateSource( std::string name, std::string scanfile = "" );
 
     Channel *CreateChannel( std::string name );

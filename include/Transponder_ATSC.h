@@ -36,6 +36,10 @@ class Transponder_ATSC : public Transponder
 
     virtual void AddProperty( const struct dtv_property &prop );
 
+    virtual std::string toString( );
+
+    bool IsSame( const Transponder &transponder );
+
   private:
 
     uint32_t modulation;

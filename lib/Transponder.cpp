@@ -106,7 +106,15 @@ Transponder *Transponder::Create( Source &source, std::string configfile )
   return NULL;
 }
 
-bool Transponder::IsSame( const struct dvb_entry &info )
+/**
+ * @brief check whether a Transponder and a record from a scan file are the same
+ *
+ * @param transponder
+ * @param info
+ *
+ * @return true if same
+ */
+bool Transponder::IsSame( const Transponder &transponder, const struct dvb_entry &info )
 {
   fe_delivery_system_t delsys;
   uint32_t frequency;
@@ -120,9 +128,12 @@ bool Transponder::IsSame( const struct dvb_entry &info )
         frequency = info.props[i].u.data;
         break;
     }
-  if( this->delsys == delsys && this->frequency == frequency )
-    return true;
-  return false;
+  if( transponder.delsys != delsys ||
+      transponder.frequency != frequency )
+    return false;
+
+  //FIXME: call virtual IsSame
+  return true;
 }
 
 void Transponder::AddProperty( const struct dtv_property &prop )

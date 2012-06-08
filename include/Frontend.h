@@ -93,12 +93,12 @@ class Frontend : public ConfigObject
 
     std::vector<Port *> ports;
 
-    Transponder *transponder; // current tuned transponder
+    const Transponder *transponder; // current tuned transponder
 
     TVDaemon::SourceType type;
 
     bool HandlePAT( struct section *section );
-    virtual bool HandleNIT( struct section *section ) = 0;
+    virtual bool HandleNIT( struct dvb_table_nit *nit ) = 0;
     bool HandleSDT( struct section *section );
     bool HandlePMT( struct section *section, uint16_t pid );
 

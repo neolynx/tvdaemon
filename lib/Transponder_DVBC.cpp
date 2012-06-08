@@ -96,3 +96,16 @@ bool Transponder_DVBC::GetParams( struct dvb_v5_fe_parms* params ) const
   dvb_fe_store_parm( params, DTV_INVERSION, inversion );
   return true;
 }
+
+std::string Transponder_DVBC::toString( )
+{
+  char tmp[256];
+  snprintf(tmp, sizeof(tmp), "%d", frequency );
+  return tmp;
+}
+
+bool Transponder_DVBC::IsSame( const Transponder &t )
+{
+  return true;
+}
+

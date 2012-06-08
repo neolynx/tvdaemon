@@ -20,8 +20,10 @@
  */
 
 #include "Transponder_DVBS.h"
+#include "Log.h"
 
 #include "dvb-fe.h"
+#include "descriptors/desc_sat.h"
 
 Transponder_DVBS::Transponder_DVBS( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
 {
@@ -29,6 +31,18 @@ Transponder_DVBS::Transponder_DVBS( Source &source, const fe_delivery_system_t d
 
 Transponder_DVBS::Transponder_DVBS( Source &source, std::string configfile ) : Transponder( source, configfile )
 {
+}
+
+Transponder_DVBS::Transponder_DVBS( Source &source,
+		    fe_delivery_system_t delsys, uint32_t frequency,
+		    dvb_sat_polarization polarization,
+		    uint32_t symbol_rate,
+		    fe_code_rate fec,
+		    int roll_off,
+		    int config_id ) :
+  Transponder( source, delsys, config_id ), polarization(polarization), symbol_rate(symbol_rate), fec(fec)
+{
+  this->frequency = frequency;
 }
 
 Transponder_DVBS::~Transponder_DVBS( )
@@ -47,7 +61,7 @@ void Transponder_DVBS::AddProperty( const struct dtv_property &prop )
       symbol_rate = prop.u.data;
       break;
     case DTV_INNER_FEC:
-      fec_inner = prop.u.data;
+      fec = prop.u.data;
       break;
   }
 }
@@ -62,7 +76,7 @@ bool Transponder_DVBS::SaveConfig( )
       // fall through
     case SYS_DVBS:
       Lookup( "Symbol-Rate",  Setting::TypeInt ) = (int) symbol_rate;
-      Lookup( "FEC-Inner",    Setting::TypeInt ) = fec_inner;
+      Lookup( "FEC",          Setting::TypeInt ) = fec;
       Lookup( "Polarization", Setting::TypeInt ) = polarization;
       break;
   }
@@ -83,7 +97,7 @@ bool Transponder_DVBS::LoadConfig( )
       // fall through
     case SYS_DVBS:
       symbol_rate  =             (uint32_t) (int) Lookup( "Symbol-Rate",  Setting::TypeInt );
-      fec_inner    =                        (int) Lookup( "FEC-Inner",    Setting::TypeInt );
+      fec          =                        (int) Lookup( "FEC",          Setting::TypeInt );
       polarization = (dvb_sat_polarization) (int) Lookup( "Polarization", Setting::TypeInt );
       break;
   }
@@ -96,7 +110,45 @@ bool Transponder_DVBS::GetParams( struct dvb_v5_fe_parms *params ) const
   Transponder::GetParams( params );
   dvb_fe_store_parm( params, DTV_POLARIZATION, polarization );
   dvb_fe_store_parm( params, DTV_SYMBOL_RATE, symbol_rate );
-  dvb_fe_store_parm( params, DTV_INNER_FEC, fec_inner );
+  dvb_fe_store_parm( params, DTV_INNER_FEC, fec );
+  return true;
+}
+
+std::string Transponder_DVBS::toString( )
+{
+  char tmp[256];
+  const char *sys;
+  switch( delsys )
+  {
+    case SYS_DVBS2:
+      sys = "DVB-S2";
+      break;
+    case SYS_DVBS:
+      sys = "DVB-S";
+      break;
+    default:
+      sys = "???";
+      break;
+  }
+  snprintf( tmp, sizeof(tmp), "%s %d %C %d %d", sys, frequency, dvb_sat_pol_name[polarization][0], symbol_rate, roll_off );
+  return tmp;
+}
+
+bool Transponder_DVBS::IsSame( const Transponder &t )
+{
+  if( t.GetDelSys( ) != delsys )
+    return false;
+  if( t.GetFrequency( ) != frequency )
+    return false;
+  const Transponder_DVBS &t2 = (const Transponder_DVBS &) t;
+  if( t2.polarization != polarization )
+    return false;
+  if( t2.symbol_rate != symbol_rate )
+    return false;
+  if( t2.fec != fec )
+    return false;
+  if( t2.roll_off != roll_off )
+    return false;
   return true;
 }
 

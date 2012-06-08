@@ -51,7 +51,7 @@ bool Frontend_DVBC::LoadConfig( )
   return true;
 }
 
-bool Frontend_DVBC::HandleNIT( struct section *section )
+bool Frontend_DVBC::HandleNIT( struct dvb_table_nit *nit )
 {
   //struct section_ext *section_ext = NULL;
   //if(( section_ext = section_ext_decode( section, 1 )) == NULL )

@@ -38,7 +38,7 @@ class Frontend_DVBS : public Frontend
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
-    virtual bool HandleNIT( struct section *section );
+    virtual bool HandleNIT( struct dvb_table_nit *nit );
 
   private:
     std::string LNB;

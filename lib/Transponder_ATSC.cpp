@@ -57,3 +57,15 @@ bool Transponder_ATSC::LoadConfig( )
   return true;
 }
 
+std::string Transponder_ATSC::toString( )
+{
+  char tmp[256];
+  snprintf(tmp, sizeof(tmp), "%d", frequency );
+  return tmp;
+}
+
+bool Transponder_ATSC::IsSame( const Transponder &t )
+{
+  return true;
+}
+

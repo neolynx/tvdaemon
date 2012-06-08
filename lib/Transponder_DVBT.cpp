@@ -113,3 +113,16 @@ bool Transponder_DVBT::GetParams( struct dvb_v5_fe_parms *params ) const
     dvb_fe_store_parm( params, DTV_DVBT2_PLP_ID, plp_id );
   return true;
 }
+
+std::string Transponder_DVBT::toString( )
+{
+  char tmp[256];
+  snprintf(tmp, sizeof(tmp), "%d", frequency );
+  return tmp;
+}
+
+bool Transponder_DVBT::IsSame( const Transponder &t )
+{
+  return true;
+}
+

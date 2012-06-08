@@ -57,6 +57,7 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , present(false)
   , transponder(NULL)
   , current_port(0)
+  , up(false)
 {
   ports.push_back( new Port( *this, 0 ));
   pthread_mutex_init( &mutex, NULL );
@@ -69,6 +70,7 @@ Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   , present(false)
   , transponder(NULL)
   , current_port(0)
+  , up(false)
 {
   pthread_mutex_init( &mutex, NULL );
   pthread_cond_init( &cond, NULL );
@@ -155,6 +157,7 @@ bool Frontend::Open()
   if( fe )
     return true;
 
+  printf( "%s: opening /dev/dvb/adapter%d/frontend%d\n", adapter.GetName( ).c_str( ), adapter_id, frontend_id );
   fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
   if( !fe )
   {
@@ -221,6 +224,7 @@ bool Frontend::LoadConfig( )
 
 void Frontend::SetIDs( int adapter_id, int frontend_id )
 {
+  Log( "%s: frontend on /dev/dvb/adapter%d/frontend%d", adapter.GetName( ).c_str( ), adapter_id, frontend_id );
   this->adapter_id  = adapter_id;
   this->frontend_id = frontend_id;
 }
@@ -489,11 +493,12 @@ void Frontend::Thread( )
     return;
   }
 
+  int time = 5;
   Log( "Reading PAT" );
 
   uint32_t length;
   struct dvb_table_pat *pat;
-  dvb_read_section( fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, &length, 1 );
+  dvb_read_section( fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, &length, time );
   if( !pat )
   {
     LogError( "Error reading PAT table" );
@@ -501,7 +506,7 @@ void Frontend::Thread( )
     return;
   }
 
-  dvb_table_pat_print( fe, pat );
+  //dvb_table_pat_print( fe, pat );
 
   for( int i = 0; ( i < pat->programs ) && up; i++)
   {
@@ -510,7 +515,7 @@ void Frontend::Thread( )
     Log( "Reading PMT for pid %d", pat->program[i].pid );
     struct dvb_table_pmt *pmt;
 
-    dvb_read_section(fd_demux, DVB_TABLE_PMT, pat->program[i].pid, (uint8_t **) &pmt, &length, 1 );
+    dvb_read_section(fd_demux, DVB_TABLE_PMT, pat->program[i].pid, (uint8_t **) &pmt, &length, time );
 
     if( !pmt )
     {
@@ -518,17 +523,18 @@ void Frontend::Thread( )
       continue;
     }
 
-    dvb_table_pmt_print( fe, pmt );
+    //dvb_table_pmt_print( fe, pmt );
     free( pmt );
   }
   if( pat )
     free( pat );
 
   struct dvb_table_nit *nit;
-  dvb_read_section( fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, &length, 5 );
+  dvb_read_section( fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, &length, time );
   if( nit )
   {
     dvb_table_nit_print( fe, nit );
+    HandleNIT( nit );
     free( nit );
   }
 
@@ -545,265 +551,4 @@ void Frontend::Thread( )
   return;
 }
 
-    //printf( "\n" );
-    //uint8_t data[DVB_MAX_SECTION_BYTES];
-    //struct section *section = NULL;
-    //int bytes = read( fd_demux, data, sizeof(data) );
-    //if( bytes < 0 )
-    //{
-    //printf( "read error\n" );
-    //up = false;
-    //continue;
-    //}
-
-    //if(( section = section_codec( data, bytes )) == NULL )
-    //{
-    //printf( "unable to extract section header\n" );
-    //continue;
-    //}
-
-    //switch( section->table_id )
-    //{
-    //case stag_mpeg_program_association:       // PAT
-    //if( !HandlePAT( section ))
-    //continue;
-    //break;
-
-    //case stag_dvb_network_information_actual: // NIT
-    //case stag_dvb_network_information_other:
-    //if( !HandleNIT( section ))
-    //continue;
-    //break;
-
-    //case stag_dvb_service_description_actual: // SDT
-    //case stag_dvb_service_description_other:
-    //if( !HandleSDT( section ))
-    //continue;
-    //break;
-
-    //case stag_mpeg_program_map:               // PMT
-    //if( !HandlePMT( section, curPid ))
-    //continue;
-    //break;
-
-    //default:
-    //printf( "unknown section received\n" );
-    //break;
-    //}
-  //} // while( up )
-
-  //printf( "Stopping demuxer\n" );
-  //pthread_mutex_lock( &mutex );
-  //pthread_cond_signal( &cond );
-  //pthread_mutex_unlock( &mutex );
-
-  //dvbdemux_stop( fd_demux );
-
-//bool Frontend::HandlePAT( struct section *section )
-//{
-//struct section_ext *section_ext = NULL;
-//if(( section_ext = section_ext_decode( section, 1 )) == NULL )
-//{
-//printf( "unable to extract section_ext of pat\n" );
-//return false;
-//}
-
-//struct mpeg_pat_section *pat = mpeg_pat_section_codec( section_ext );
-//if( NULL == pat )
-//{
-//printf( "mpeg_pat_section codec error\n" );
-//return false;
-//}
-//struct mpeg_pat_program *cur = NULL;
-//mpeg_pat_section_programs_for_each( pat, cur )
-//{
-//if (0 != cur->program_number)
-//transponder->UpdateProgram( cur->program_number, cur->pid ); // FIXME: do not create service here, only in SDT with correct type
-//pid_map[cur->program_number] = cur->pid;
-//}
-
-//std::map<uint16_t, uint16_t>::iterator iter = pid_map.find(0);
-//if( iter != pid_map.end( ))
-//{
-//// switch to the NIT table
-//filter[0] = stag_dvb_network_information_actual;
-////if( dvbdemux_set_section_filter( fd_demux, TRANSPORT_NIT_PID, filter, mask, 1, 1 ))   //FIXME: NIT id or the id define in the pat?
-//if( dvbdemux_set_section_filter( fd_demux, (*iter).second, filter, mask, 1, 1 ))
-//{
-//printf( "failed to set demux filter for nit\n" );
-//up = false;
-//return false;
-//}
-//pid_map.erase(iter);
-//}
-//else
-//{
-//// switch to the SDT table
-//filter[0] = stag_dvb_service_description_actual;
-//if( dvbdemux_set_section_filter( fd_demux, TRANSPORT_SDT_PID, filter, mask, 1, 1 ))
-//{
-//printf( "failed to set demux filter for sdt\n" );
-//up = false;
-//return false;
-//}
-//}
-//return true;
-//}
-
-//bool Frontend::HandleSDT( struct section *section )
-//{
-//struct section_ext *section_ext = NULL;
-//if(( section_ext = section_ext_decode( section, 1 )) == NULL )
-//{
-//printf( "unable to extract section_ext of sdt\n" );
-//return false;
-//}
-
-//struct dvb_sdt_section *sdt = dvb_sdt_section_codec( section_ext );
-//if( NULL == sdt )
-//{
-//printf( "sdt_section codec error\n" );
-//return false;
-//}
-//struct dvb_sdt_service *service = NULL;
-//dvb_sdt_section_services_for_each( sdt, service )
-//{
-//struct descriptor *descriptor = NULL;
-//struct dvb_service_list_descriptor *dx = NULL;
-//dvb_sdt_service_descriptors_for_each( service, descriptor )
-//{
-//if( descriptor->tag == dtag_dvb_service )
-//{
-//struct dvb_service_descriptor *dx          = dvb_service_descriptor_codec( descriptor );
-//switch( dx->service_type )
-//{
-//case DVB_SERVICE_TYPE_DIGITAL_TV:
-//case DVB_SERVICE_TYPE_DIGITAL_RADIO:
-//case DVB_SERVICE_TYPE_TELETEXT:
-//break;
-
-//case DVB_SERVICE_TYPE_DATA_BCAST:
-//default:
-//continue;
-//}
-
-//struct dvb_service_descriptor_part2 *part2 = dvb_service_descriptor_part2( dx );
-//char *tmpName     = new char[part2->service_name_length + 1];
-//char *tmpProvider = new char[dx->service_provider_name_length + 1];
-//memcpy( tmpName,     dvb_service_descriptor_service_name( part2 ), part2->service_name_length );
-//memcpy( tmpProvider, dvb_service_descriptor_service_provider_name( dx ), dx->service_provider_name_length );
-//tmpName[part2->service_name_length] = 0;
-//tmpProvider[dx->service_provider_name_length] = 0;
-
-////printf( "pno %d service '%s' provider '%s'\n", service->service_id, tmpName, tmpProvider );
-//transponder->UpdateProgram( service->service_id, tmpName, tmpProvider );
-////printf( "pno %d service %s provider %s\n", service->service_id, tmpName, tmpProvider );
-//pno_list.push_back( service->service_id );
-
-//delete [] tmpName;
-//delete [] tmpProvider;
-//}
-//}
-//}
-
-//// switch to the PMT table
-//filter[0] = stag_mpeg_program_map;
-//if( 0 == pno_list.size( ))
-//{
-//up = false;
-//return false;
-//}
-//curPid = pid_map[pno_list.front( )]; // FIXME: verify existing
-//pno_list.pop_front();
-//if( dvbdemux_set_section_filter( fd_demux, curPid, filter, mask, 1, 1 ) )
-//{
-//printf( "failed to set demux filter for pmt %d\n", curPid );
-//up = false;
-//return false;
-//}
-////printf( "filtering for PMT pid %d\n", curPid );
-//return true;
-//}
-
-
-
-//bool Frontend::HandlePMT( struct section *section, uint16_t pid )
-//{
-//struct section_ext *section_ext = NULL;
-////printf( "   found pmt for pid %d\n", pid );
-//if(( section_ext = section_ext_decode( section, 1 )) == NULL )
-//{
-//printf( "unable to extract section_ext of pmt for %d\n", pid );
-//return false;
-//}
-
-//struct mpeg_pmt_section *pmt = mpeg_pmt_section_codec( section_ext );
-//if( NULL == pmt )
-//{
-//printf( "pmt_section codec error for %d\n", pid );
-//return false;
-//}
-//struct mpeg_pmt_stream *cur_stream = NULL;
-//mpeg_pmt_section_streams_for_each( pmt, cur_stream )
-//{
-//switch( cur_stream->stream_type )
-//{
-//case dtag_mpeg_video_stream:
-//case dtag_mpeg_4_video:
-////printf( "PMT ID %d: video stream with id %d found\n", pid, cur_stream->pid );
-//transponder->UpdateStream( pid, cur_stream->pid, cur_stream->stream_type );
-//break;
-//case dtag_mpeg_audio_stream:
-//case dtag_mpeg_4_audio:
-////printf( "PMT ID %d: audio stream with id %d found\n", pid, cur_stream->pid );
-//transponder->UpdateStream( pid, cur_stream->pid, cur_stream->stream_type );
-//break;
-//case dtag_mpeg_data_stream_alignment:
-//case dtag_mpeg_private_data_indicator:
-//{
-//struct descriptor *curd = NULL;
-//mpeg_pmt_stream_descriptors_for_each(cur_stream, curd)
-//{
-//switch( curd->tag )
-//{
-//case dtag_dvb_ac3:
-////printf( "PMT ID %d: AC3 audio stream with id %d found\n", pid, cur_stream->pid );
-//transponder->UpdateStream( pid, cur_stream->pid, curd->tag );
-//break;
-//case dtag_dvb_enhanced_ac3_descriptor:
-////printf( "PMT ID %d: enhanced AC3 audio stream with id %d found\n", pid, cur_stream->pid );
-//transponder->UpdateStream( pid, cur_stream->pid, curd->tag );
-//break;
-//case dtag_dvb_aac_descriptor:
-////printf( "PMT ID %d: AAC audio stream with id %d found\n", pid, cur_stream->pid );
-//transponder->UpdateStream( pid, cur_stream->pid, curd->tag );
-//break;
-//case dtag_dvb_dts_descriptor:
-////printf( "PMT ID %d: DTS audio stream with id %d found\n", pid, cur_stream->pid );
-//transponder->UpdateStream( pid, cur_stream->pid, curd->tag );
-//break;
-//}
-//}
-//}
-//}
-//}
-
-//// switch to the next PMT
-//filter[0] = stag_mpeg_program_map;
-//if( 0 == pno_list.size( ))
-//{
-//up = false;
-//return false;
-//}
-//curPid = pid_map[pno_list.front( )]; // FIXME: verify existing
-//pno_list.pop_front();
-//if( dvbdemux_set_section_filter( fd_demux, curPid, filter, mask, 1, 1 ))
-//{
-//printf( "failed to set demux filter for pmt %d\n", curPid );
-//up = false;
-//return false;
-//}
-////printf( "filtering for PMT pid %d\n", curPid );
-//return true;
-//}
 

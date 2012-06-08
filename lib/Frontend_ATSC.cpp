@@ -52,7 +52,7 @@ bool Frontend_ATSC::LoadConfig( )
   return true;
 }
 
-bool Frontend_ATSC::HandleNIT( struct section *section )
+bool Frontend_ATSC::HandleNIT( struct dvb_table_nit *nit )
 {
   //struct section_ext *section_ext = NULL;
   //if(( section_ext = section_ext_decode( section, 1 )) == NULL )
