@@ -1,4 +1,4 @@
-From 785ffe231007656bef619a527f3d002228dc61e4 Mon Sep 17 00:00:00 2001
+From f56bda2f06dcda39acb9122e697f5ae488aca6c7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 7 Jun 2012 22:21:26 +0200
 Subject: [PATCH 06/15] network name descriptor

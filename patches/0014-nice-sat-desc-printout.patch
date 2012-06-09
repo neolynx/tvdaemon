@@ -1,4 +1,4 @@
-From ee136d13af50a0e98af76a5571268b94a81c22b2 Mon Sep 17 00:00:00 2001
+From 5ca75cf468d2269d1ed24bf0ab7fd3224381b7c9 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 9 Jun 2012 01:00:45 +0200
 Subject: [PATCH 14/15] nice sat desc printout
