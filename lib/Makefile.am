@@ -19,7 +19,7 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Channel.cpp \
 			  Stream.cpp \
 			  SocketHandler.cpp \
-			  HttpServer.cpp \
+			  HTTPServer.cpp \
 			  Log.cpp
 #libtvdaemon_la_LDFLAGS = -ludev -lconfig++ -ldvbcfg -ldvbapi -ldvbsec -lucsi -lrt
 libtvdaemon_la_LIBADD = -ludev -lconfig++ -lrt -lpthread ../v4l-utils/lib/libdvbv5/libdvbv5.la

@@ -505,7 +505,6 @@ void Frontend::Thread( )
 
     transponder->UpdateProgram( pat->program[i].program_id, pat->program[i].pid );
 
-    Log( "Reading PMT for pid %d", pat->program[i].pid );
     struct dvb_table_pmt *pmt;
 
     dvb_read_section( fe, fd_demux, DVB_TABLE_PMT, pat->program[i].pid, (uint8_t **) &pmt, &length, time );

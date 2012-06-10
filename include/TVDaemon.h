@@ -28,7 +28,6 @@
 #include <vector>
 #include <libudev.h>
 #include <pthread.h>
-#include "HttpServer.h"
 
 #define SCANFILE_DIR "/usr/share/dvb/"
 
@@ -37,6 +36,7 @@
 class Adapter;
 class Source;
 class Channel;
+class HTTPServer;
 
 class TVDaemon : public ConfigObject
 {
@@ -90,8 +90,7 @@ class TVDaemon : public ConfigObject
     static void *run_udev( void *ptr );
     void Thread_udev( );
 
-    HttpServer httpd;
-
+    HTTPServer *httpd;
 };
 
 #endif
