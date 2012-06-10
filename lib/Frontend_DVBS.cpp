@@ -65,7 +65,7 @@ bool Frontend_DVBS::LoadConfig( )
   return true;
 }
 
-bool Frontend_DVBS::Tune( const Transponder &t, int timeout )
+bool Frontend_DVBS::Tune( Transponder &t, int timeout )
 {
   if( !Open( ))
     return false;
@@ -86,18 +86,15 @@ bool Frontend_DVBS::Tune( const Transponder &t, int timeout )
   dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
   t.GetParams( fe );
 
-  dvb_fe_prt_parms( fe );
-
   int r = dvb_fe_set_parms( fe );
   if( r != 0 )
   {
     LogError( "dvb_fe_set_parms failed." );
+    dvb_fe_prt_parms( fe );
     return false;
   }
 
-  uint32_t freq;
-  dvb_fe_retrieve_parm( fe, DTV_FREQUENCY, &freq );
-  Log( "tuning to %d", freq );
+  state = Tuning;
 
   if( !GetLockStatus( ))
     return false;
@@ -122,6 +119,40 @@ bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
     dvb_desc_find( struct dvb_desc_sat, desc, tr, satellite_delivery_system_descriptor )
     {
       fe_delivery_system delsys = desc->modulation_system ? SYS_DVBS2 : SYS_DVBS;
+
+      fe_rolloff rolloff = ROLLOFF_AUTO;
+      switch( desc->roll_off )
+      {
+        case 0:
+          rolloff = ROLLOFF_35;
+          break;
+        case 1:
+          rolloff = ROLLOFF_25;
+          break;
+        case 2:
+          rolloff = ROLLOFF_20;
+          break;
+        case 3:
+          LogWarn( "Unknown Roll Off: 3" );
+          break;
+      }
+
+      fe_modulation modulation = QPSK;
+      switch( desc->modulation_type )
+      {
+        case 0:
+          modulation = QPSK; // FIXME: should be AUTO
+          break;
+        case 1:
+          modulation = QPSK;
+          break;
+        case 2:
+          modulation = PSK_8;
+          break;
+        case 3:
+          modulation = QAM_16;
+          break;
+      }
 
       fe_code_rate fec = FEC_NONE;
       switch( desc->fec )
@@ -184,7 +215,8 @@ bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
 						  polarization,
 						  desc->symbol_rate,
 						  fec,
-						  desc->roll_off,
+                                                  modulation,
+						  rolloff,
 						  source.GetTransponderCount( ));
       if( !source.AddTransponder( t ))
         delete t;

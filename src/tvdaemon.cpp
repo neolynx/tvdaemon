@@ -47,16 +47,16 @@ int create_stuff( TVDaemon &tvd )
   tvd.CreateSource( "DVB-T", "dvb-t/ch-All" );
   tvd.CreateSource( "Astra 19.2E", "dvb-s/Astra-19.2E" );
 
-  printf( "-------------------------\n" );
+  printf( "-------------------------\n\n" );
   // Test tuning/scanning
   int source_id = 0;
-  int adapter_id = 2;
+  int adapter_id = 0;
   int frontend_id = 0;
   int transponder_id = 4; // -1 for all
 
   // sat
   source_id = 1;
-  adapter_id = 0;
+  adapter_id = 1;
   frontend_id = 0;
   transponder_id = -1;
 
@@ -74,7 +74,7 @@ int create_stuff( TVDaemon &tvd )
     printf( "Adapter %d not found\n", adapter_id );
     return -1;
   }
-  printf( "Got Adapter %s\n", a->GetName( ).c_str( ));
+  printf( "Got Adapter %d: %s\n", adapter_id, a->GetName( ).c_str( ));
 
   Frontend *f = a->GetFrontend( frontend_id );
   if( !f )
@@ -86,25 +86,28 @@ int create_stuff( TVDaemon &tvd )
 
   s->AddPort( f->GetPort( 0 ));
 
-  int count = 0;
+  int count = 0, total = 0;
   if( transponder_id == -1 )
   {
-    for( uint nCount = 0; up && nCount < s->GetTransponderCount(); ++nCount )
+    for( int id = 0; up && id < s->GetTransponderCount(); ++id )
     {
-      printf( "Scanning Transponder %d/%d ...\n", nCount, s->GetTransponderCount( ));
-      if( !s->ScanTransponder( nCount ))
-        printf( "Scanning failed\n" );
-      count++;
+      printf( "Scanning Transponder %d/%d\n", id + 1, s->GetTransponderCount( ));
+      if( !s->ScanTransponder( id ))
+        printf( "Scan failed\n\n" );
+      else
+        count++;
+      total++;
     }
   }
   else
   {
     printf( "Scanning Transponder %d ...\n", transponder_id );
-    count++;
+    total++;
     if( !s->ScanTransponder( transponder_id ))
       printf( "Scanning failed\n" );
     else
     {
+      count++;
       Transponder *t = s->GetTransponder( transponder_id );
       if( !t )
       {
@@ -121,7 +124,7 @@ int create_stuff( TVDaemon &tvd )
           f->Untune();
     }
   }
-  printf( "Scanned %d transponder%s\n", count, count == 1 ? "" : "s" );
+  printf( "Scanned %d/%d transponder%s\n", count, total, count == 1 ? "" : "s" );
 }
 
 int main( int argc, char *argv[] )
@@ -142,21 +145,21 @@ int main( int argc, char *argv[] )
     return -1;
   }
 
-  std::vector<std::string> list = tvd.GetScanfileList( TVDaemon::Source_DVB_C, "ch" );
-  printf( "\nKnown transponder lists for DVB-C in .ch:\n" );
-  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
-    printf( "  %s\n", it->c_str( ));
-  printf( "\n" );
-  list = tvd.GetScanfileList( TVDaemon::Source_DVB_T, "ch" );
-  printf( "\nKnown transponder lists for DVB-T in .ch:\n" );
-  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
-    printf( "  %s\n", it->c_str( ));
-  printf( "\n" );
-  list = tvd.GetScanfileList( TVDaemon::Source_DVB_S, "ch" );
-  printf( "\nKnown transponder lists for DVB-S in .ch:\n" );
-  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
-    printf( "  %s\n", it->c_str( ));
-  printf( "\n" );
+  std::vector<std::string> list;// = tvd.GetScanfileList( TVDaemon::Source_DVB_C, "ch" );
+  //printf( "\nKnown transponder lists for DVB-C in .ch:\n" );
+  //for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    //printf( "  %s\n", it->c_str( ));
+  //printf( "\n" );
+  //list = tvd.GetScanfileList( TVDaemon::Source_DVB_T, "ch" );
+  //printf( "\nKnown transponder lists for DVB-T in .ch:\n" );
+  //for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    //printf( "  %s\n", it->c_str( ));
+  //printf( "\n" );
+  //list = tvd.GetScanfileList( TVDaemon::Source_DVB_S, "ch" );
+  //printf( "\nKnown transponder lists for DVB-S in .ch:\n" );
+  //for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    //printf( "  %s\n", it->c_str( ));
+  //printf( "\n" );
 
   list = tvd.GetAdapterList( );
   printf( "\nFound Adapters:\n" );

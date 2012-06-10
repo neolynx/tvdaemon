@@ -245,6 +245,7 @@ bool Source::ScanTransponder( int id )
   if( !t )
     return false;
 
+  Log( "Scanning %s", t->toString( ).c_str( ));
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {
     if( (*it)->Scan( *t ))

@@ -38,9 +38,15 @@ Transponder_DVBS::Transponder_DVBS( Source &source,
 		    dvb_sat_polarization polarization,
 		    uint32_t symbol_rate,
 		    fe_code_rate fec,
+		    int modulation,
 		    int roll_off,
 		    int config_id ) :
-  Transponder( source, delsys, config_id ), polarization(polarization), symbol_rate(symbol_rate), fec(fec)
+  Transponder( source, delsys, config_id ),
+  polarization(polarization),
+  symbol_rate(symbol_rate),
+  fec(fec),
+  modulation(modulation),
+  roll_off(roll_off)
 {
   this->frequency = frequency;
 }
@@ -111,26 +117,29 @@ bool Transponder_DVBS::GetParams( struct dvb_v5_fe_parms *params ) const
   dvb_fe_store_parm( params, DTV_POLARIZATION, polarization );
   dvb_fe_store_parm( params, DTV_SYMBOL_RATE, symbol_rate );
   dvb_fe_store_parm( params, DTV_INNER_FEC, fec );
+  if( delsys == SYS_DVBS2 )
+  {
+    dvb_fe_store_parm( params, DTV_MODULATION, modulation );
+    dvb_fe_store_parm( params, DTV_ROLLOFF, roll_off );
+  }
   return true;
 }
 
 std::string Transponder_DVBS::toString( )
 {
   char tmp[256];
-  const char *sys;
   switch( delsys )
   {
     case SYS_DVBS2:
-      sys = "DVB-S2";
+      snprintf( tmp, sizeof(tmp), "DVB-S2 %d %C %d %s %s roll off: %s", frequency, dvb_sat_pol_name[polarization][0], symbol_rate, fe_code_rate_name[fec], fe_modulation_name[modulation], fe_rolloff_name[roll_off] );
       break;
     case SYS_DVBS:
-      sys = "DVB-S";
+      snprintf( tmp, sizeof(tmp), "DVB-S  %d %C %d %s", frequency, dvb_sat_pol_name[polarization][0], symbol_rate, fe_code_rate_name[fec] );
       break;
     default:
-      sys = "???";
+      strcpy( tmp, "Unknown Transponder type" );
       break;
   }
-  snprintf( tmp, sizeof(tmp), "%s %d %C %d %d", sys, frequency, dvb_sat_pol_name[polarization][0], symbol_rate, roll_off );
   return tmp;
 }
 

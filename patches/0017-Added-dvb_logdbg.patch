@@ -1,0 +1,27 @@
+From 605aad1155f65dd40c5478ea49f5b5effb5954db Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 10 Jun 2012 13:17:17 +0200
+Subject: [PATCH 17/18] Added dvb_logdbg
+
+---
+ lib/include/dvb-log.h |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/lib/include/dvb-log.h b/lib/include/dvb-log.h
+index 5482c14..1eb73f2 100644
+--- a/lib/include/dvb-log.h
++++ b/lib/include/dvb-log.h
+@@ -32,6 +32,10 @@ typedef void (*dvb_logfunc)(int level, const char *fmt, ...);
+ #define dvb_logerr(fmt, arg...) do {\
+ 	parms->logfunc(LOG_ERR, fmt, ##arg); \
+ } while (0)
++#define dvb_logdbg(fmt, arg...) do {\
++	parms->logfunc(LOG_DEBUG, fmt, ##arg); \
++} while (0)
++
+ 
+ #define dvb_perror(msg) do {\
+ 	parms->logfunc(LOG_ERR, "%s: %s", msg, strerror(errno)); \
+-- 
+1.7.2.5
+

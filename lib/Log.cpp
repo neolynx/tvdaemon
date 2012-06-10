@@ -53,9 +53,9 @@ void TVD_Log( int level, const char *fmt, ... )
     fprintf(  loglevels[level].io, loglevels[level].color );
   fprintf(    loglevels[level].io, "%s ", loglevels[level].name );
   vfprintf(   loglevels[level].io, fmt, ap );
-  fprintf(    loglevels[level].io, "\n" );
   if( isatty( loglevels[level].io->_fileno ))
     fprintf(  loglevels[level].io, loglevels[LOG_COLOROFF].color );
+  fprintf(    loglevels[level].io, "\n" );
   va_end( ap );
 }
 

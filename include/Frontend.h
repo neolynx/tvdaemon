@@ -53,9 +53,9 @@ class Frontend : public ConfigObject
 
     static bool GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name = NULL );
     virtual bool SetPort( int port_id );
-    virtual bool Tune( const Transponder &transponder, int timeout = 7000 );
+    virtual bool Tune( Transponder &transponder, int timeout = 1000 );
     virtual void Untune();
-    virtual bool Scan( Transponder &transponder, int timeout = 7000 );
+    virtual bool Scan( Transponder &transponder, int timeout = 1000 );
     virtual bool GetLockStatus( int timeout = 10 );
     bool Open( );
     void Close( );
@@ -68,7 +68,9 @@ class Frontend : public ConfigObject
       New,
       Opened,
       Closed,
-      Tuned
+      Tuning,
+      Tuned,
+      TuningFailed,
     };
 
     bool TunePID( Transponder &t, uint16_t pno );
@@ -86,14 +88,12 @@ class Frontend : public ConfigObject
 
     struct dvb_v5_fe_parms *fe;
 
-    //struct dvbfe_handle *fehandle;
-    //
     int config_id;
     int current_port;
 
     std::vector<Port *> ports;
 
-    const Transponder *transponder; // current tuned transponder
+    Transponder *transponder; // current tuned transponder
 
     TVDaemon::SourceType type;
 

@@ -1,0 +1,26 @@
+From ba40b8f1ce7e7b14f22fec2c25c45a6d827ba4cf Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 10 Jun 2012 13:16:30 +0200
+Subject: [PATCH 16/18] Fix set delsys other than current
+
+---
+ lib/libdvbv5/dvb-fe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
+index 12acf82..6bfdc96 100644
+--- a/lib/libdvbv5/dvb-fe.c
++++ b/lib/libdvbv5/dvb-fe.c
+@@ -353,8 +353,8 @@ int dvb_set_compat_delivery_system(struct dvb_v5_fe_parms *parms,
+ 	for (i = 0; i < parms->num_systems; i++) {
+ 		if (parms->systems[i] == desired_system) {
+ 			dvb_set_sys(parms, desired_system);
++			return 0;
+ 		}
+-		return 0;
+ 	}
+ 
+ 	/*
+-- 
+1.7.2.5
+
