@@ -1,0 +1,144 @@
+From 466e730e5175419864582c6acbd8b75d9d4ec76c Mon Sep 17 00:00:00 2001
+From: Lars Schmohl <lars.schmohl@gmail.com>
+Date: Sun, 10 Jun 2012 16:11:22 +0200
+Subject: [PATCH] desc stuffing
+
+---
+ lib/include/descriptors/desc_stuffing.h  |   42 ++++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am                 |    1 +
+ lib/libdvbv5/descriptors.c               |    3 ++-
+ lib/libdvbv5/descriptors/desc_stuffing.c |   40 ++++++++++++++++++++++++++++
+ 4 files changed, 85 insertions(+), 1 deletion(-)
+ create mode 100644 lib/include/descriptors/desc_stuffing.h
+ create mode 100644 lib/libdvbv5/descriptors/desc_stuffing.c
+
+diff --git a/lib/include/descriptors/desc_stuffing.h b/lib/include/descriptors/desc_stuffing.h
+new file mode 100644
+index 0000000..5923304
+--- /dev/null
++++ b/lib/include/descriptors/desc_stuffing.h
+@@ -0,0 +1,42 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _DESC_STUFFING_H
++#define _DESC_STUFFING_H
++
++#include <stdint.h>
++#include <unistd.h> /* ssize_t */
++
++struct dvb_v5_fe_parms;
++struct dvb_desc;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++ssize_t dvb_desc_stuffing_init(struct dvb_v5_fe_parms *parms, const uint8_t **buf, struct dvb_desc *desc);
++void dvb_desc_stuffing_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
+index b818ea4..ff7e668 100644
+--- a/lib/libdvbv5/Makefile.am
++++ b/lib/libdvbv5/Makefile.am
+@@ -34,6 +34,7 @@ libdvbv5_la_SOURCES = \
+   descriptors/desc_service.c  ../include/descriptors/desc_service.h \
+   descriptors/desc_frequency_list.c  ../include/descriptors/desc_frequency_list.h \
+   descriptors/desc_service_list.c  ../include/descriptors/desc_service_list.h \
++  descriptors/desc_stuffing.c  ../include/descriptors/desc_stuffing.h \
+   descriptors/nit.c  ../include/descriptors/nit.h \
+   descriptors/sdt.c  ../include/descriptors/sdt.h
+ 
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index dc79753..b0ab5ae 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -40,6 +40,7 @@
+ #include "descriptors/desc_service.h"
+ #include "descriptors/desc_service_list.h"
+ #include "descriptors/desc_frequency_list.h"
++#include "descriptors/desc_stuffing.h"
+ #include "descriptors/nit.h"
+ #include "descriptors/sdt.h"
+ 
+@@ -131,7 +132,7 @@ const struct dvb_descriptor dvb_descriptors[] = {
+ 	[flexmux_timing_descriptor] = { "flexmux_timing_descriptor", NULL, NULL },
+ 	[network_name_descriptor] = { "network_name_descriptor", dvb_desc_network_name_init, dvb_desc_network_name_print },
+ 	[service_list_descriptor] = { "service_list_descriptor", dvb_desc_service_list_init, dvb_desc_service_list_print },
+-	[stuffing_descriptor] = { "stuffing_descriptor", NULL, NULL },
++	[stuffing_descriptor] = { "stuffing_descriptor", dvb_desc_stuffing_init, dvb_desc_stuffing_print },
+ 	[satellite_delivery_system_descriptor] = { "satellite_delivery_system_descriptor", dvb_desc_sat_init, dvb_desc_sat_print },
+ 	[cable_delivery_system_descriptor] = { "cable_delivery_system_descriptor", dvb_desc_cable_delivery_init, dvb_desc_cable_delivery_print },
+ 	[VBI_data_descriptor] = { "VBI_data_descriptor", NULL, NULL },
+diff --git a/lib/libdvbv5/descriptors/desc_stuffing.c b/lib/libdvbv5/descriptors/desc_stuffing.c
+new file mode 100644
+index 0000000..2b6654e
+--- /dev/null
++++ b/lib/libdvbv5/descriptors/desc_stuffing.c
+@@ -0,0 +1,40 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#include "descriptors/desc_stuffing.h"
++#include "descriptors.h"
++#include "dvb-fe.h"
++
++ssize_t dvb_desc_stuffing_init(struct dvb_v5_fe_parms *parms, const uint8_t **buf, struct dvb_desc *desc)
++{
++	dvb_desc_init(buf, desc);
++
++	uint32_t length   = (*buf)[1];
++	*buf += 2;
++
++	*buf += length;
++	return sizeof(struct dvb_desc);
++}
++
++void dvb_desc_stuffing_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
++{
++}
++
+-- 
+1.7.9.5
+
