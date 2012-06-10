@@ -1,0 +1,5 @@
+
+GDB
+---
+In order to launch the application with gdb, use libtool from the root folder:
+  libtool --mode=execute gdb src/tvdaemon
