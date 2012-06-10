@@ -34,11 +34,12 @@
 #include "Frontend.h"
 
 #include "SocketHandler.h"
-#include "HttpServer.h"
+#include "HTTPServer.h"
 #include "Log.h"
 
 TVDaemon::TVDaemon( std::string confdir ) :
   ConfigObject( ),
+  httpd(NULL),
   up(false)
 {
   // Setup config directory
@@ -75,15 +76,16 @@ bool TVDaemon::Start( )
 
   MonitorAdapters( );
 
-  httpd.SetLogFunc( TVD_Log );
+  httpd = new HTTPServer( "www" );
+  httpd->SetLogFunc( TVD_Log );
 
-  if( !httpd.CreateServerTCP( HTTPDPORT ))
+  if( !httpd->CreateServerTCP( HTTPDPORT ))
   {
     //LogError( "unable to create server" );
     return false;
   }
-  Log( "CREATING HTTP SERVER IN PORT %d", HTTPDPORT );
-  httpd.Start( );
+  httpd->Start( );
+  Log( "HTTP Server listening on port %d", HTTPDPORT );
   return true;
 }
 
@@ -91,7 +93,11 @@ TVDaemon::~TVDaemon( )
 {
   SaveConfig( );
 
-  httpd.Stop( );
+  if( httpd )
+  {
+    httpd->Stop( );
+    delete httpd;
+  }
 
   if( up )
   {

@@ -37,8 +37,6 @@ class Utils
     static std::string BaseName( std::string path );
     static void EnsureSlash( std::string &dir );
 
-    //static uint32_t decihex( uint32_t value );
-    static int StringSplit( const std::string& input, const std::string& delimiter, std::vector<std::string>& results, bool includeEmpties = true );
     static std::string GetExtension( std::string &filename );
 
     static void dump( const unsigned char *data, int length );

@@ -140,7 +140,7 @@ bool Source::AddTransponder( Transponder *t )
   {
     if( (*it)->IsSame( *t ))
     {
-      LogWarn( "Already known transponder: %s", t->toString( ).c_str( ));
+      //LogWarn( "Already known transponder: %s", t->toString( ).c_str( ));
       return false;
     }
   }
@@ -188,7 +188,7 @@ Transponder *Source::CreateTransponder( const struct dvb_entry &info )
   {
     if( Transponder::IsSame( **it, info ))
     {
-      LogWarn( "Already known transponder: %s %d", delivery_system_name[delsys], frequency );
+      //LogWarn( "Already known transponder: %s %d", delivery_system_name[delsys], frequency );
       return NULL;
     }
   }

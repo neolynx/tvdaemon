@@ -199,7 +199,7 @@ bool Transponder::UpdateProgram( uint16_t pno, uint16_t pid )
     s->SetPID( pid );
     return false;
   }
-  LogWarn( "Already known Service with pno %d, pid %d", pno, pid );
+  //LogWarn( "Already known Service with pno %d, pid %d", pno, pid );
   return true;
 }
 
