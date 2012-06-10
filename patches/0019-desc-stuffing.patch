@@ -1,7 +1,7 @@
 From 466e730e5175419864582c6acbd8b75d9d4ec76c Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Sun, 10 Jun 2012 16:11:22 +0200
-Subject: [PATCH] desc stuffing
+Subject: [PATCH 19/20] desc stuffing
 
 ---
  lib/include/descriptors/desc_stuffing.h  |   42 ++++++++++++++++++++++++++++++

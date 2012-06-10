@@ -1,7 +1,7 @@
-From 48cd22f76bd33c5e8bca9ceaee215001817aa83e Mon Sep 17 00:00:00 2001
+From f7c28c3aeaaedfe9a1e4d4f68290b908eaee9157 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 7 Jun 2012 16:17:44 +0200
-Subject: [PATCH 04/15] table parsing
+Subject: [PATCH 04/20] table parsing
 
 ---
  lib/include/descriptors.h           |   19 +-

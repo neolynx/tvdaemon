@@ -1,7 +1,7 @@
-From 16347da5292c5659d8b567e700e98deee2a78009 Mon Sep 17 00:00:00 2001
+From 546042cc91114ed94c5ebe89b528fd1b0ec869e2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 7 Jun 2012 18:45:59 +0200
-Subject: [PATCH 05/15] nit descriptors
+Subject: [PATCH 05/20] nit descriptors
 
 ---
  lib/include/descriptors.h           |    4 +-

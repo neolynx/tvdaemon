@@ -1,14 +1,14 @@
-From 8ccb146c9c965d404fb90d08dbc773d029e1dddd Mon Sep 17 00:00:00 2001
+From e4b2fe9fcebf07c879714549f85b08f9b73e89fb Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
-Date: Sun, 10 Jun 2012 10:45:38 +0200
-Subject: [PATCH 15/15] add freq list desc
+Date: Sun, 10 Jun 2012 14:00:32 +0200
+Subject: [PATCH 15/20] add freq list desc
 
 ---
  lib/include/descriptors/desc_frequency_list.h  |   57 ++++++++++++++++++++
  lib/libdvbv5/Makefile.am                       |    1 +
  lib/libdvbv5/descriptors.c                     |    3 +-
- lib/libdvbv5/descriptors/desc_frequency_list.c |   69 ++++++++++++++++++++++++
- 4 files changed, 129 insertions(+), 1 deletion(-)
+ lib/libdvbv5/descriptors/desc_frequency_list.c |   67 ++++++++++++++++++++++++
+ 4 files changed, 127 insertions(+), 1 deletion(-)
  create mode 100644 lib/include/descriptors/desc_frequency_list.h
  create mode 100644 lib/libdvbv5/descriptors/desc_frequency_list.c
 
@@ -110,10 +110,10 @@ index 59b7ce8..ce91a74 100644
  	[scrambling_descriptor] = { "scrambling_descriptor", NULL, NULL },
 diff --git a/lib/libdvbv5/descriptors/desc_frequency_list.c b/lib/libdvbv5/descriptors/desc_frequency_list.c
 new file mode 100644
-index 0000000..f87a641
+index 0000000..4cc97b5
 --- /dev/null
 +++ b/lib/libdvbv5/descriptors/desc_frequency_list.c
-@@ -0,0 +1,69 @@
+@@ -0,0 +1,67 @@
 +/*
 + * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
@@ -154,18 +154,16 @@ index 0000000..f87a641
 +		flist->frequency[i] = ((uint32_t *) *buf)[i];
 +		bswap32(flist->frequency[i]);
 +		switch (flist->freq_type) {
-+		  case 1: /* satellite - to get kHz*/
-+		    flist->frequency[i] *= 10;
-+		    break;
-+		  case 2: /* cable - to get Hz */
-+		    flist->frequency[i] *= 100;
-+		    break;
-+		  case 3: /* terrestrial - to get Hz*/
-+		    flist->frequency[i] *= 10;
-+		    break;
-+		  case 0: /* not defined */
-+		  default:
-+		    break;
++			case 1: /* satellite - to get kHz*/
++			case 3: /* terrestrial - to get Hz*/
++				flist->frequency[i] *= 10;
++				break;
++			case 2: /* cable - to get Hz */
++				flist->frequency[i] *= 100;
++				break;
++			case 0: /* not defined */
++			default:
++				break;
 +		}
 +	}
 +

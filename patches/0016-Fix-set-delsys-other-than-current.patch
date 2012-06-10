@@ -1,11 +1,11 @@
-From ba40b8f1ce7e7b14f22fec2c25c45a6d827ba4cf Mon Sep 17 00:00:00 2001
+From 882b3f5bdc10186a6ad4676d57f5441d1e8b18ed Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 10 Jun 2012 13:16:30 +0200
-Subject: [PATCH 16/18] Fix set delsys other than current
+Subject: [PATCH 16/20] Fix set delsys other than current
 
 ---
  lib/libdvbv5/dvb-fe.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
 index 12acf82..6bfdc96 100644
@@ -22,5 +22,5 @@ index 12acf82..6bfdc96 100644
  
  	/*
 -- 
-1.7.2.5
+1.7.9.5
 

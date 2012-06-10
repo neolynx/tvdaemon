@@ -1,7 +1,7 @@
-From 63cb6410e253db354b8ab9ccdb5ba9b93027aec7 Mon Sep 17 00:00:00 2001
+From a0504e7240d451d3b34bc2857de205efb074c398 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 7 Jun 2012 22:21:26 +0200
-Subject: [PATCH 06/15] network name descriptor
+Subject: [PATCH 06/20] network name descriptor
 
 ---
  lib/include/descriptors/desc_network_name.h  |   48 ++++++++++++++++++++++++++

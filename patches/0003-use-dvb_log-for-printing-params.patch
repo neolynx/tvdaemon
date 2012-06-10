@@ -1,7 +1,7 @@
-From 875a0c54e88d76b08d713ce5357f6a27dc89ad16 Mon Sep 17 00:00:00 2001
+From 4e5aafb776bf875316127cb380321939f3191da6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 7 Jun 2012 16:17:29 +0200
-Subject: [PATCH 03/15] use dvb_log for printing params
+Subject: [PATCH 03/20] use dvb_log for printing params
 
 ---
  lib/include/dvb-fe.h    |    2 +-

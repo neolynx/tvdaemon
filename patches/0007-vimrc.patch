@@ -1,7 +1,7 @@
-From 74963c1a4ea88762cd4e0d0766a6e6ddecb47c9e Mon Sep 17 00:00:00 2001
+From 3b347b74b9d771db4853487862195d9eec92cac7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 8 Jun 2012 00:33:13 +0200
-Subject: [PATCH 07/15] vimrc
+Subject: [PATCH 07/20] vimrc
 
 ---
  .lvimrc |    8 ++++++++

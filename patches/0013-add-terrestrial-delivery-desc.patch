@@ -1,7 +1,7 @@
-From e35fae7ebf62d1378aaa4ed8a52addc443725ae6 Mon Sep 17 00:00:00 2001
+From 4d9b2ad474b6ddb9c41699b83d48a2eb83c0e96b Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Sat, 9 Jun 2012 00:10:15 +0200
-Subject: [PATCH 13/15] add terrestrial delivery desc
+Subject: [PATCH 13/20] add terrestrial delivery desc
 
 ---
  .../descriptors/desc_terrestrial_delivery.h        |   62 ++++++++++++++++++++

@@ -1,7 +1,7 @@
-From ec286390e24b4f0f2fb1a242ddfdec684d74913c Mon Sep 17 00:00:00 2001
+From dcf28e78be7e401a6889b2d937b89a2fb96c4186 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 9 Jun 2012 01:00:45 +0200
-Subject: [PATCH 14/15] nice sat desc printout
+Subject: [PATCH 14/20] nice sat desc printout
 
 ---
  lib/include/descriptors.h           |    9 ++++++++-

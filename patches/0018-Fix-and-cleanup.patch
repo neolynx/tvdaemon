@@ -1,38 +1,38 @@
-From a4e7a1b7fe0dbfa2cdefc6ae84b40a19bbc20ba1 Mon Sep 17 00:00:00 2001
+From c02b3a8197c81ae8b2498cbb4cca97bdaf4d91c2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 10 Jun 2012 13:17:42 +0200
-Subject: [PATCH 18/18] Fix and cleanup
+Subject: [PATCH 18/20] Fix and cleanup
 
 ---
- lib/include/descriptors.h                          |   20 ++++++++------
- lib/include/descriptors/desc_cable_delivery.h      |    4 +-
- lib/include/descriptors/desc_frequency_list.h      |    4 +-
- lib/include/descriptors/desc_language.h            |    4 +-
- lib/include/descriptors/desc_network_name.h        |    4 +-
- lib/include/descriptors/desc_sat.h                 |    4 +-
+ lib/include/descriptors.h                          |   20 +++++++-------
+ lib/include/descriptors/desc_cable_delivery.h      |    4 +--
+ lib/include/descriptors/desc_frequency_list.h      |    4 +--
+ lib/include/descriptors/desc_language.h            |    4 +--
+ lib/include/descriptors/desc_network_name.h        |    4 +--
+ lib/include/descriptors/desc_sat.h                 |    4 +--
  lib/include/descriptors/desc_service.h             |    8 +++---
- lib/include/descriptors/desc_service_list.h        |    4 +-
- .../descriptors/desc_terrestrial_delivery.h        |    4 +-
+ lib/include/descriptors/desc_service_list.h        |    4 +--
+ .../descriptors/desc_terrestrial_delivery.h        |    4 +--
  lib/include/descriptors/nit.h                      |    2 +-
  lib/include/descriptors/pat.h                      |    2 +-
- lib/include/descriptors/pmt.h                      |    6 +++-
- lib/include/descriptors/sdt.h                      |    7 +++-
+ lib/include/descriptors/pmt.h                      |    6 +++--
+ lib/include/descriptors/sdt.h                      |    7 +++--
  lib/include/dvb-fe.h                               |   11 ++++++++
  lib/include/dvb-scan.h                             |    2 +-
  lib/libdvbv5/descriptors.c                         |   23 ++++++++--------
- lib/libdvbv5/descriptors/desc_cable_delivery.c     |    3 +-
- lib/libdvbv5/descriptors/desc_frequency_list.c     |    3 +-
- lib/libdvbv5/descriptors/desc_language.c           |    3 +-
- lib/libdvbv5/descriptors/desc_network_name.c       |    3 +-
- lib/libdvbv5/descriptors/desc_sat.c                |    3 +-
+ lib/libdvbv5/descriptors/desc_cable_delivery.c     |    3 +--
+ lib/libdvbv5/descriptors/desc_frequency_list.c     |    3 +--
+ lib/libdvbv5/descriptors/desc_language.c           |    3 +--
+ lib/libdvbv5/descriptors/desc_network_name.c       |    3 +--
+ lib/libdvbv5/descriptors/desc_sat.c                |    3 +--
  lib/libdvbv5/descriptors/desc_service.c            |   28 ++++++++++----------
- lib/libdvbv5/descriptors/desc_service_list.c       |    3 +-
- .../descriptors/desc_terrestrial_delivery.c        |    3 +-
- lib/libdvbv5/descriptors/nit.c                     |    6 ++--
+ lib/libdvbv5/descriptors/desc_service_list.c       |    3 +--
+ .../descriptors/desc_terrestrial_delivery.c        |    3 +--
+ lib/libdvbv5/descriptors/nit.c                     |    6 ++---
  lib/libdvbv5/descriptors/pat.c                     |    2 +-
- lib/libdvbv5/descriptors/pmt.c                     |    4 +-
- lib/libdvbv5/descriptors/sdt.c                     |    4 +-
- lib/libdvbv5/dvb-scan.c                            |    4 +-
+ lib/libdvbv5/descriptors/pmt.c                     |    4 +--
+ lib/libdvbv5/descriptors/sdt.c                     |    4 +--
+ lib/libdvbv5/dvb-scan.c                            |    4 +--
  29 files changed, 95 insertions(+), 83 deletions(-)
 
 diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
@@ -403,7 +403,7 @@ index 1bb9158..a68a02a 100644
  	/* copy from .length */
  	memcpy(((uint8_t *) cable ) + sizeof(cable->type) + sizeof(cable->next),
 diff --git a/lib/libdvbv5/descriptors/desc_frequency_list.c b/lib/libdvbv5/descriptors/desc_frequency_list.c
-index f87a641..2576585 100644
+index 4cc97b5..2faff0b 100644
 --- a/lib/libdvbv5/descriptors/desc_frequency_list.c
 +++ b/lib/libdvbv5/descriptors/desc_frequency_list.c
 @@ -23,9 +23,8 @@
@@ -655,5 +655,5 @@ index 836ec8f..470e38b 100644
  		*length = count;
  	return 0;
 -- 
-1.7.2.5
+1.7.9.5
 

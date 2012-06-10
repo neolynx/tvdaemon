@@ -1,7 +1,7 @@
 From be65861b164cb2f353133fb5dab896632e3082da Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Sun, 10 Jun 2012 17:55:14 +0200
-Subject: [PATCH] dvb_desc cleanup, common length parameter
+Subject: [PATCH 20/20] dvb_desc cleanup, common length parameter
 
 ---
  lib/include/descriptors.h                          |    7 ++---
