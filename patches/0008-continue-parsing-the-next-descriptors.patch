@@ -1,4 +1,4 @@
-From fbd0b55e685f596f0be10be3a00f307835140f5b Mon Sep 17 00:00:00 2001
+From be48ee466452e6ac097d841cd8c8e41ff8102695 Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Fri, 8 Jun 2012 16:23:27 +0200
 Subject: [PATCH 08/15] continue parsing the next descriptors

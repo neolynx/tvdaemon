@@ -1,4 +1,4 @@
-From 0b526133ba286284dfd156c907ad138f924e473d Mon Sep 17 00:00:00 2001
+From c876e2910ff78369398cfb11099c927157908bb7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 20 May 2012 14:50:53 +0200
 Subject: [PATCH 01/15] table tests

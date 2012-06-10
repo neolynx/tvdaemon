@@ -1,4 +1,4 @@
-From 9edfe50eb62c1a2469819a126b52eeb9f31d2de2 Mon Sep 17 00:00:00 2001
+From 0386dbe9ac2aa7ab7cc348c253eb56cf47f1b310 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 4 Jun 2012 21:50:54 +0200
 Subject: [PATCH 02/15] Fix dvb-file USER CMD

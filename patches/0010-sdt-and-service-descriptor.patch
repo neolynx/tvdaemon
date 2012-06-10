@@ -1,4 +1,4 @@
-From 7668d898267468e05328b2f874e9d80fe334073e Mon Sep 17 00:00:00 2001
+From ee078be9aa710553a6c0fc44e8dc6a01da8feb71 Mon Sep 17 00:00:00 2001
 From: Lars Schmohl <lars.schmohl@gmail.com>
 Date: Fri, 8 Jun 2012 10:41:11 +0200
 Subject: [PATCH 10/15] sdt and service descriptor
