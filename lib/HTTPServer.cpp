@@ -29,9 +29,13 @@ static const struct http_status response_status[] = {
 };
 
 static const struct mime_type mime_types[] = {
+  { "html", "text/html", false },
+  { "js", "text/javascript", false },
+  { "css", "text/css", false },
   { "jpg", "image/jpeg", true },
   { "jpeg", "image/jpeg", true },
-  { "html", "text/html", false },
+  { "gif", "image/gif", true },
+  { "png", "image/png", true },
 };
 
 HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root)
@@ -70,15 +74,14 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
 
 bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
 {
-  std::vector<const char *> tokens;
-  Tokenize((char *) request.front( ).c_str( ), " ", tokens );
-
-  if( tokens.empty( ))
+  if( request.empty( ))
     return false;
 
-  if( strcmp( tokens[0], "GET" ) == 0 )
+  const char *method = request.front( ).c_str( );
+
+  if( strncmp( method, "GET ", 4 ) == 0 )
   {
-    HandleMethodGET( client, tokens );
+    HandleMethodGET( client, request );
   }
   else
   {
@@ -94,32 +97,39 @@ bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
 
 #define DYNAMIC_URL "/tvd?"
 
-bool HTTPServer::HandleMethodGET( const int client, const std::vector<const char *> &tokens )
+bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
 {
+  std::vector<const char *> tokens;
+  Tokenize((char *) request.front( ).c_str( ), " ", tokens );
+
   if( tokens.size( ) < 3 )
   {
+    // FIXME: http error
     return false;
   }
+
 
   if( strncmp( tokens[1], DYNAMIC_URL, sizeof( DYNAMIC_URL ) - 1 ) == 0 )
   {
     return HandleDynamicGET( client, tokens );
   }
-  std::string path = _root;
-  path += tokens[1];
-  path = Utils::Expand( path.c_str( ));
+  std::string url = _root;
+  if( tokens[1][0] != '/' )
+    url += "/";
+  url += tokens[1];
+  url = Utils::Expand( url.c_str( ));
 
-  if( Utils::IsDir( path ))
+  if( Utils::IsDir( url ))
   {
-    Utils::EnsureSlash( path );
-    path += "index.html";
+    Utils::EnsureSlash( url );
+    url += "index.html";
   }
-  Log( "HTTPServer: opening: %s", path.c_str( ));
 
   std::ifstream file;
-  file.open( path.c_str( ), std::ifstream::in );
+  file.open( url.c_str( ), std::ifstream::in );
   if( !file.is_open( ))
   {
+    LogError( "HTTPServer: file not found: %s", url.c_str( ));
     HTTPResponse *err_response = new HTTPResponse( );
     err_response->AddStatus( HTTP_NOT_FOUND );
     err_response->AddTimeStamp( );
@@ -130,6 +140,7 @@ bool HTTPServer::HandleMethodGET( const int client, const std::vector<const char
     return false;
   }
 
+  Log( "HTTPServer: serving: %s", url.c_str( ));
   std::string file_contents;
 
   file.seekg( 0, std::ios::end );
@@ -139,7 +150,7 @@ bool HTTPServer::HandleMethodGET( const int client, const std::vector<const char
   file_contents.assign((std::istreambuf_iterator<char>( file )), std::istreambuf_iterator<char>( ));
   file.close( );
 
-  std::string basename = Utils::BaseName( path.c_str( ));
+  std::string basename = Utils::BaseName( url.c_str( ));
   std::string extension = Utils::GetExtension( basename );
 
   HTTPResponse *response = new HTTPResponse( );
@@ -220,18 +231,21 @@ std::string HTTPServer::HTTPResponse::GetBuffer( )
 void HTTPServer::HTTPResponse::AddMime( const char *mime )
 {
   int i = -1;
-  for( i = 0; i < ( sizeof( mime_types ) / sizeof( mime_type )); i++ )
+  for( i = 0; i < sizeof( mime_types ) / sizeof( mime_type ); i++ )
     if( strcmp( mime, mime_types[i].extension ) == 0 )
       break;
-  if( i < 0 )
+  if( i >= sizeof( mime_types ) / sizeof( mime_type ))
+  {
+    LogError( "HTTPServer: unknown mime '%s'", mime );
     return;
+  }
 
   _buffer.append( "Content-Type: " );
   _buffer += mime_types[i].type;
   _buffer.append( "\r\n" );
 }
 
-int HTTPServer::Tokenize( char *string, const char delims[], std::vector<const char *> &tokens )
+int HTTPServer::Tokenize( char *string, const char delims[], std::vector<const char *> &tokens, int count )
 {
   int len = strlen( string );
   int dlen = strlen( delims );
@@ -275,6 +289,10 @@ int HTTPServer::Tokenize( char *string, const char delims[], std::vector<const c
       break;
 
     string[i] = '\0';
+
+    if( count )
+      if( --count == 0 )
+        break;
   }
 }
 

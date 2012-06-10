@@ -78,12 +78,12 @@ class HTTPServer : public SocketHandler
     bool HandleHTTPRequest( const int client, HTTPRequest &request );
 
     // Handle HTTP methods
-    bool HandleMethodGET( const int client, const std::vector<const char *> &tokens );
+    bool HandleMethodGET( const int client, HTTPRequest &request );
     //bool HandleMethodPOST( const int client, const std::vector<std::string> &tokens );
 
     bool HandleDynamicGET( const int client, const std::vector<const char *> &tokens );
 
-    static int Tokenize( char *string, const char delims[], std::vector<const char *> &tokens );
+    static int Tokenize( char *string, const char delims[], std::vector<const char *> &tokens, int count = 0 );
 
   private:
     class HTTPResponse
