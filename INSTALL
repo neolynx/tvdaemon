@@ -12,6 +12,7 @@ autoreconf -i
 make
 cd -
 
+libtoolize
 autoreconf -i
 ./configure
 make
