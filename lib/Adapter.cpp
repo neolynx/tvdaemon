@@ -96,7 +96,8 @@ void Adapter::SetFrontend( std::string frontend, int adapter_id, int frontend_id
   {
     // create frontend
     f = Frontend::Create( *this, adapter_id, frontend_id, frontends.size( ));
-    frontends.push_back( f );
+    if( f )
+        frontends.push_back( f );
   }
   else
   {
