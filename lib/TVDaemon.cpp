@@ -25,6 +25,12 @@
 #include <stdlib.h> // atof, atoi
 #include <string>
 #include <dirent.h>
+#include <sstream> // ostringstream
+#include <jaula/jaula_value_object.h>
+#include <jaula/jaula_value_array.h>
+#include <jaula/jaula_value_string.h>
+#include <jaula/jaula_value_number_int.h>
+
 
 #include "config.h"
 #include "Utils.h"
@@ -34,7 +40,6 @@
 #include "Frontend.h"
 
 #include "SocketHandler.h"
-#include "HTTPServer.h"
 #include "Log.h"
 
 TVDaemon::TVDaemon( std::string confdir ) :
@@ -77,6 +82,7 @@ bool TVDaemon::Start( )
   MonitorAdapters( );
 
   httpd = new HTTPServer( "www" );
+  httpd->AddDynamicHandler( "tvd", this );
   httpd->SetLogFunc( TVD_Log );
 
   if( !httpd->CreateServerTCP( HTTPDPORT ))
@@ -464,3 +470,32 @@ Channel *TVDaemon::GetChannel( int id )
   return channels[id];
 }
 
+bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters )
+{
+  JAULA::Value_Object h;
+  h.insertItem( "total", JAULA::Value_Number_Int( sources.size( )));
+  JAULA::Value_Array a;
+
+  for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+  {
+    JAULA::Value_Object entry;
+  //entry.insertItem( "name", JAULA::Value_String( "Source \"1\"" ));
+  //entry.insertItem( "id", JAULA::Value_Number_Int( 1 ));
+  //entry.insertItem( "type", JAULA::Value_Number_Int( 5 ));
+    (*it)->json( entry );
+    a.addItem( entry );
+  }
+
+  h.insertItem( "data", a );
+
+  std::ostringstream o;
+  h.repr( o );
+  Log( "json: %s", o.str( ).c_str( ));
+
+  HTTPServer::HTTPResponse *err_response = new HTTPServer::HTTPResponse( );
+  err_response->AddStatus( HTTP_OK );
+  err_response->AddTimeStamp( );
+  err_response->AddMime( "json" );
+  err_response->AddContents( o.str( ).c_str( ) );
+  httpd->SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
+}

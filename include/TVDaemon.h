@@ -23,6 +23,7 @@
 #define _TVDaemon_
 
 #include "ConfigObject.h"
+#include "HTTPServer.h"
 
 #include <map>
 #include <vector>
@@ -38,7 +39,7 @@ class Source;
 class Channel;
 class HTTPServer;
 
-class TVDaemon : public ConfigObject
+class TVDaemon : public ConfigObject, public HTTPDynamicHandler
 {
   public:
     TVDaemon( std::string configdir );
@@ -69,6 +70,8 @@ class TVDaemon : public ConfigObject
     Channel *CreateChannel( std::string name );
     std::vector<std::string> GetChannelList( );
     Channel *GetChannel( int id );
+
+    virtual bool HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters );
 
   private:
     int FindAdapters( );

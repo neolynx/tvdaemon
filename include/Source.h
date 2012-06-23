@@ -23,6 +23,7 @@
 #define _Source_
 
 #include "ConfigObject.h"
+#include "JsonObject.h"
 #include "TVDaemon.h"
 #include "Transponder.h"
 
@@ -31,7 +32,7 @@
 
 class Port;
 
-class Source : public ConfigObject
+class Source : public ConfigObject, public JsonObject
 {
   public:
     Source( TVDaemon &tvd, std::string name, int config_id );
@@ -42,6 +43,7 @@ class Source : public ConfigObject
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
+    virtual void json( JAULA::Value_Object &entry ) const;
 
     bool ReadScanfile( std::string scanfile );
 

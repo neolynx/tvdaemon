@@ -435,7 +435,7 @@ bool Frontend::GetLockStatus( int timeout )
 
       return true;
     }
-    usleep( 100000 );
+    usleep( 1000000 );
   }
   return false;
 }
@@ -484,7 +484,6 @@ void Frontend::Thread( )
   }
 
   int time = 5;
-  Log( "Reading PAT" );
 
   uint32_t length;
   struct dvb_table_pat *pat;
@@ -511,7 +510,7 @@ void Frontend::Thread( )
 
     if( !pmt )
     {
-      Log( "No PMT for pid %d", pat->program[i].pid );
+      LogWarn( "No PMT for pid %d", pat->program[i].pid );
       continue;
     }
 

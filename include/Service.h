@@ -39,7 +39,7 @@ class Service : public ConfigObject
     Service( Transponder &transponder, std::string configfile );
     virtual ~Service( );
 
-    virtual int GetKey( ) { return pno; }
+    virtual int GetKey( ) const { return pno; }
     uint16_t GetPID( ) { return pid; }
     void     SetPID( uint16_t pid ) { this->pid = pid; }
     std::string GetName( ) { return name; }

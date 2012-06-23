@@ -116,6 +116,12 @@ bool Source::LoadConfig( )
   return true;
 }
 
+void Source::json( JAULA::Value_Object &entry ) const
+{
+  entry.insertItem( "name", JAULA::Value_String( name ));
+  entry.insertItem( "id", JAULA::Value_Number_Int( GetKey( )));
+  entry.insertItem( "type", JAULA::Value_Number_Int( type ));
+}
 
 bool Source::ReadScanfile( std::string scanfile )
 {

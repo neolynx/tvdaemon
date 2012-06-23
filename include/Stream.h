@@ -50,7 +50,7 @@ class Stream : public ConfigObject
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
-    virtual int GetKey( ) { return id; }
+    virtual int GetKey( ) const { return id; }
 
     bool Update( Type type );
     Type GetType() { return type; }

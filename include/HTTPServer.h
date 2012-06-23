@@ -59,33 +59,20 @@ struct mime_type
 
 typedef std::list<std::string> HTTPRequest;
 
+class HTTPDynamicHandler
+{
+  public:
+    virtual bool HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters ) = 0;
+};
+
 class HTTPServer : public SocketHandler
 {
   public:
     HTTPServer( const char *root );
     virtual ~HTTPServer( );
 
-  protected:
-    // Callbacks
-    virtual void Connected   ( int client );
-    virtual void Disconnected( int client, bool error );
-    virtual void HandleMessage( const int client, const SocketHandler::Message &msg );
+    void AddDynamicHandler( std::string url, HTTPDynamicHandler *handler );
 
-  private:
-    std::string _root;
-    std::map<int, HTTPRequest> _requests;
-
-    bool HandleHTTPRequest( const int client, HTTPRequest &request );
-
-    // Handle HTTP methods
-    bool HandleMethodGET( const int client, HTTPRequest &request );
-    //bool HandleMethodPOST( const int client, const std::vector<std::string> &tokens );
-
-    bool HandleDynamicGET( const int client, const std::vector<const char *> &tokens );
-
-    static int Tokenize( char *string, const char delims[], std::vector<const char *> &tokens, int count = 0 );
-
-  private:
     class HTTPResponse
     {
       public:
@@ -103,6 +90,27 @@ class HTTPServer : public SocketHandler
       private:
         std::string _buffer;
     };
+
+  protected:
+    // Callbacks
+    virtual void Connected   ( int client );
+    virtual void Disconnected( int client, bool error );
+    virtual void HandleMessage( const int client, const SocketHandler::Message &msg );
+
+  private:
+    std::string _root;
+    std::map<int, HTTPRequest> _requests;
+
+    std::map<std::string, HTTPDynamicHandler *> dynamic_handlers;
+
+    bool HandleHTTPRequest( const int client, HTTPRequest &request );
+
+    // Handle HTTP methods
+    bool HandleMethodGET( const int client, HTTPRequest &request );
+    //bool HandleMethodPOST( const int client, const std::vector<std::string> &tokens );
+
+    static int Tokenize( char *string, const char delims[], std::vector<const char *> &tokens, int count = 0 );
+
 };
 
 #endif

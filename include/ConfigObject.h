@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  DVB ConfigObject class
+ *  ConfigObject class
  *
  *  Copyright (C) 2012 André Roth
  *
@@ -43,7 +43,7 @@ class ConfigObject
 
     virtual bool SaveConfig( ) { return true; }
     virtual bool LoadConfig( ) { return true; }
-    virtual int GetKey( ) { return config_id; }
+    virtual int GetKey( ) const { return config_id; }
 
     template <class Class, class Parent> static bool CreateFromConfig( Parent &parent, std::string configname, std::vector<Class *> &list )
     {

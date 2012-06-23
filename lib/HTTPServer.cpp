@@ -18,6 +18,8 @@
 #include <streambuf>
 #include <string.h>
 
+#include <sstream>
+
 static const struct http_status response_status[] = {
   { HTTP_OK, "OK" },
   { HTTP_REDIRECT, "Redirect" },
@@ -36,6 +38,7 @@ static const struct mime_type mime_types[] = {
   { "jpeg", "image/jpeg", true },
   { "gif", "image/gif", true },
   { "png", "image/png", true },
+  { "json", "application/json", false },
 };
 
 HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root)
@@ -70,6 +73,12 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
   {
     _requests[client].push_back( msg.getLine( ));
   }
+}
+
+void HTTPServer::AddDynamicHandler( std::string url, HTTPDynamicHandler *handler )
+{
+  url = "/" + url + "?";
+  dynamic_handlers[url] = handler;
 }
 
 bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
@@ -108,11 +117,30 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
     return false;
   }
 
+  for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
+    if( strncmp( tokens[1], it->first.c_str( ), it->first.length( )) == 0 )
+    {
+      Log( "dynamic get: %s", tokens[1] );
+      std::vector<const char *> params;
+      std::map<std::string, std::string> parameters;
+      Tokenize((char *) tokens[1], "?&", params );
+      for( int i = 1; i < params.size( ); i++ )
+      {
+        std::vector<const char *> p;
+        Tokenize((char *) params[i], "=", p );
+        if( p.size( ) != 2 )
+        {
+          LogWarn( "Ignoring strange parameter: '%s'", params[i] );
+          continue;
+        }
+        parameters[p[0]] = p[1];
 
-  if( strncmp( tokens[1], DYNAMIC_URL, sizeof( DYNAMIC_URL ) - 1 ) == 0 )
-  {
-    return HandleDynamicGET( client, tokens );
-  }
+        Log( "Param: %s => %s", p[0], p[1] );
+      }
+
+      return it->second->HandleDynamicHTTP( client, parameters );
+    }
+
   std::string url = _root;
   if( tokens[1][0] != '/' )
     url += "/";
@@ -296,31 +324,4 @@ int HTTPServer::Tokenize( char *string, const char delims[], std::vector<const c
   }
 }
 
-bool HTTPServer::HandleDynamicGET( const int client, const std::vector<const char *> &tokens )
-{
-  Log( "dynamic get: %s", tokens[1] );
-  std::vector<const char *> params;
-  std::map<const char *, const char *> parameters;
-  Tokenize((char *) tokens[1], "?&", params );
-  for( int i = 1; i < params.size( ); i++ )
-  {
-    std::vector<const char *> p;
-    Tokenize((char *) params[i], "=", p );
-    if( p.size( ) != 2 )
-    {
-      LogWarn( "Ignoring strange parameter: '%s'", params[i] );
-      continue;
-    }
-    parameters[p[0]] = p[1];
-
-    Log( "Param: %s => %s", p[0], p[1] );
-  }
-
-  HTTPResponse *err_response = new HTTPResponse( );
-  err_response->AddStatus( HTTP_OK );
-  err_response->AddTimeStamp( );
-  err_response->AddMime( "html" );
-  err_response->AddContents( "<html><body>comming soon</body></html>" );
-  SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
-}
 
