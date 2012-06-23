@@ -26,11 +26,7 @@
 #include <string>
 #include <dirent.h>
 #include <sstream> // ostringstream
-#include <jaula/jaula_value_object.h>
-#include <jaula/jaula_value_array.h>
-#include <jaula/jaula_value_string.h>
-#include <jaula/jaula_value_number_int.h>
-
+#include <json/json.h>
 
 #include "config.h"
 #include "Utils.h"
@@ -472,30 +468,28 @@ Channel *TVDaemon::GetChannel( int id )
 
 bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters )
 {
-  JAULA::Value_Object h;
-  h.insertItem( "total", JAULA::Value_Number_Int( sources.size( )));
-  JAULA::Value_Array a;
+  json_object *h = json_object_new_object();
+  json_object_object_add( h, "total", json_object_new_int( sources.size( )));
+  json_object *a = json_object_new_array();
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
-    JAULA::Value_Object entry;
-  //entry.insertItem( "name", JAULA::Value_String( "Source \"1\"" ));
-  //entry.insertItem( "id", JAULA::Value_Number_Int( 1 ));
-  //entry.insertItem( "type", JAULA::Value_Number_Int( 5 ));
+    json_object *entry = json_object_new_object( );
     (*it)->json( entry );
-    a.addItem( entry );
+    json_object_array_add( a, entry );
   }
 
-  h.insertItem( "data", a );
+  json_object_object_add( h, "data", a );
 
-  std::ostringstream o;
-  h.repr( o );
-  Log( "json: %s", o.str( ).c_str( ));
+  const char *json = json_object_to_json_string( h );
+  Log( "json: %s", json );
 
   HTTPServer::HTTPResponse *err_response = new HTTPServer::HTTPResponse( );
   err_response->AddStatus( HTTP_OK );
   err_response->AddTimeStamp( );
   err_response->AddMime( "json" );
-  err_response->AddContents( o.str( ).c_str( ) );
+  err_response->AddContents( json );
   httpd->SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
+  json_object_put( h ); // this should delete it
 }
+

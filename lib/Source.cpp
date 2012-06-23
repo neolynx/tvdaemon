@@ -22,6 +22,7 @@
 #include "Source.h"
 
 #include <algorithm> // find
+#include <json/json.h>
 
 #include "Transponder.h"
 #include "Adapter.h"
@@ -116,11 +117,11 @@ bool Source::LoadConfig( )
   return true;
 }
 
-void Source::json( JAULA::Value_Object &entry ) const
+void Source::json( json_object *entry ) const
 {
-  entry.insertItem( "name", JAULA::Value_String( name ));
-  entry.insertItem( "id", JAULA::Value_Number_Int( GetKey( )));
-  entry.insertItem( "type", JAULA::Value_Number_Int( type ));
+  json_object_object_add( entry, "name", json_object_new_string( name.c_str( )));
+  json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "type", json_object_new_int( type ));
 }
 
 bool Source::ReadScanfile( std::string scanfile )

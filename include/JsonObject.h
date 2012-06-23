@@ -22,14 +22,12 @@
 #ifndef _JsonObject_
 #define _JsonObject_
 
-#include <jaula/jaula_value_object.h>
-#include <jaula/jaula_value_string.h>
-#include <jaula/jaula_value_number_int.h>
+struct json_object;
 
 class JsonObject
 {
   public:
-    virtual void json( JAULA::Value_Object &entry ) const = 0;
+    virtual void json( json_object *j ) const = 0;
 };
 
 #endif

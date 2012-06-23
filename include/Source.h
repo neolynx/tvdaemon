@@ -43,7 +43,7 @@ class Source : public ConfigObject, public JsonObject
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
-    virtual void json( JAULA::Value_Object &entry ) const;
+    virtual void json( json_object *entry ) const;
 
     bool ReadScanfile( std::string scanfile );
 
