@@ -153,8 +153,16 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
     url += "index.html";
   }
 
+  std::string filename;
+
+  size_t p = url.find_first_of("#?");
+  if( p != std::string::npos )
+    filename = url.substr( 0, p );
+  else
+    filename = url;
+
   std::ifstream file;
-  file.open( url.c_str( ), std::ifstream::in );
+  file.open( filename.c_str( ), std::ifstream::in );
   if( !file.is_open( ))
   {
     LogError( "HTTPServer: file not found: %s", url.c_str( ));
@@ -178,7 +186,7 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   file_contents.assign((std::istreambuf_iterator<char>( file )), std::istreambuf_iterator<char>( ));
   file.close( );
 
-  std::string basename = Utils::BaseName( url.c_str( ));
+  std::string basename = Utils::BaseName( filename.c_str( ));
   std::string extension = Utils::GetExtension( basename );
 
   HTTPResponse *response = new HTTPResponse( );
