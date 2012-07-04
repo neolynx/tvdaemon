@@ -347,14 +347,14 @@ bool Frontend::TunePID( Transponder &t, uint16_t pno )
   std::map<uint16_t, Stream *> streams = s->GetStreams();
   std::map<uint16_t, Stream *>::iterator iter = streams.begin();
   uint16_t streamid = 0;
-  for( ; iter != streams.end(); iter++)
-  {
-    if (iter->second->GetType() == Stream::Video)
-    {
-      streamid = iter->first;
-      break;
-    }
-  }
+  //for( ; iter != streams.end(); iter++)
+  //{
+    //if (iter->second->GetType() == Stream::Video)
+    //{
+      //streamid = iter->first;
+      //break;
+    //}
+  //}
   if( streamid == 0)
   {
     LogError( "no video stream found for pno %d", pno );

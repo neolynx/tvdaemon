@@ -25,8 +25,6 @@
 #include "ConfigObject.h"
 
 #include <stdint.h>
-#include <libucsi/dvb/descriptor.h>
-#include <libucsi/mpeg/descriptor.h>
 
 class Service;
 
@@ -35,12 +33,12 @@ class Stream : public ConfigObject
   public:
     enum Type
     {
-      Video      = dtag_mpeg_video_stream,
-      VideoMPEG4 = dtag_mpeg_4_video,
-      Audio      = dtag_mpeg_audio_stream,
-      AudioMPEG  = dtag_mpeg_4_audio,
-      AudioAC3   = dtag_dvb_ac3,
-      AudioAAC   = dtag_dvb_aac_descriptor
+      //Video      = dtag_mpeg_video_stream,
+      //VideoMPEG4 = dtag_mpeg_4_video,
+      //Audio      = dtag_mpeg_audio_stream,
+      //AudioMPEG  = dtag_mpeg_4_audio,
+      //AudioAC3   = dtag_dvb_ac3,
+      //AudioAAC   = dtag_dvb_aac_descriptor
     };
 
     Stream( Service &service, uint16_t id, enum Type type, int config_id );

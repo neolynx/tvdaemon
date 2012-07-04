@@ -21,8 +21,6 @@
 
 #include "Service.h"
 
-#include <libdvbcfg/dvbcfg_scanfile.h>
-#include <libucsi/mpeg/section.h>
 #include <algorithm> // find
 
 #include "Transponder.h"
