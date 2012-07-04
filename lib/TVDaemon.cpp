@@ -23,10 +23,11 @@
 
 #include <string.h>
 #include <stdlib.h> // atof, atoi
-#include <string>
 #include <dirent.h>
-#include <sstream> // ostringstream
+#include <sstream>  // ostringstream
+#include <unistd.h> // usleep
 #include <json/json.h>
+#include <string>
 
 #include "config.h"
 #include "Utils.h"
