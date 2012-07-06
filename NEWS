@@ -1,5 +1,27 @@
 
+Thu, 07 Jun 2012 16:06:26 +0100
+===============================
+
+* TVHeadend sees us as a fork
+* forking TVDaemon ...
+
+
+Sun, 20 Mai 2012 14:50:53 +0100
+===============================
+
+* New DVB table and descriptor parser started
+
+
+Sun, 13 Mai 2012 13:17:24 +0100
+===============================
+
+* Using DVBv5 API from v4l-utils
+
+
 Thu, 21 Mar 2012 21:13:39 +0100
 ===============================
 
 * Starting tvheadend 3
+
+
+
