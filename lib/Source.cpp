@@ -78,7 +78,7 @@ bool Source::LoadConfig( )
   name =               (const char *) Lookup( "Name", Setting::TypeString );
   type = (TVDaemon::SourceType) (int) Lookup( "Type", Setting::TypeInt );
 
-  Log( "Found configured Source '%s'", name.c_str( ));
+  Log( "Loading Source '%s'", name.c_str( ));
 
   if( !CreateFromConfigFactory<Transponder, Source>( *this, "transponder", transponders ))
     return false;
@@ -111,7 +111,7 @@ bool Source::LoadConfig( )
       continue;
     }
     // FIXME: verify frontend type
-    Log( "Adding configured port [%d, %d, %d] to source %s", (int) n2[0], (int) n2[1], (int) n2[2], name.c_str( ));
+    Log( "  Adding configured port [%d, %d, %d] to source %s", (int) n2[0], (int) n2[1], (int) n2[2], name.c_str( ));
     ports.push_back( p );
   }
   return true;
@@ -253,10 +253,13 @@ bool Source::ScanTransponder( int id )
     return false;
 
   Log( "Scanning %s", t->toString( ).c_str( ));
+  // FIXME: support scanning on next free transponder
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {
-    if( (*it)->Scan( *t ))
-      return true;
+    if( !(*it)->Scan( *t ))
+      return false;
+    t->SaveConfig( );
+    return true;
   }
   return false;
 }
