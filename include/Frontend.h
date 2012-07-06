@@ -43,6 +43,8 @@ class Frontend : public ConfigObject
     static Frontend *Create( Adapter &adapter, std::string configfile );
     virtual ~Frontend( );
 
+    Port *AddPort( std::string name, int port_id );
+
     void SetPresence( bool present ) { this->present = present; }
     bool IsPresent( ) { return present; }
 
@@ -68,9 +70,11 @@ class Frontend : public ConfigObject
       New,
       Opened,
       Closed,
+      Closing,
       Tuning,
       Tuned,
       TuningFailed,
+      Scanning,
     };
 
     bool TunePID( Transponder &t, uint16_t pno );

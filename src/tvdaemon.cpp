@@ -46,19 +46,22 @@ int create_stuff( TVDaemon &tvd )
 {
   tvd.CreateSource( "DVB-T", "dvb-t/ch-All" );
   tvd.CreateSource( "Astra 19.2E", "dvb-s/Astra-19.2E" );
+  tvd.CreateSource( "Hotbird 13E", "dvb-s/Hotbird-13.0E" );
 
   printf( "-------------------------\n\n" );
   // Test tuning/scanning
   int source_id = 0;
   int adapter_id = 0;
   int frontend_id = 0;
+  int port_id = 0;
   int transponder_id = 4; // -1 for all
 
   // sat
-  source_id = 1;
-  adapter_id = 1;
-  frontend_id = 0;
-  transponder_id = -1;
+  //source_id = 2;
+  //adapter_id = 1;
+  //frontend_id = 0;
+  //port_id = 1;
+  //transponder_id = -1;
 
   Source *s = tvd.GetSource( source_id );
   if( s == NULL )
@@ -84,7 +87,9 @@ int create_stuff( TVDaemon &tvd )
   }
   printf( "Got Frontend %d\n", frontend_id );
 
-  s->AddPort( f->GetPort( 0 ));
+  if( port_id != 0 )
+    f->AddPort( "Hotbird", port_id );
+  s->AddPort( f->GetPort( port_id ));
 
   int count = 0, total = 0;
   if( transponder_id == -1 )

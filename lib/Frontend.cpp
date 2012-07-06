@@ -33,7 +33,7 @@
 #include "Service.h"
 #include "Log.h"
 
-#include <sys/ioctl.h>
+//#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,6 +153,21 @@ Frontend *Frontend::Create( Adapter &adapter, int adapter_id, int frontend_id, i
   return NULL;
 }
 
+Port *Frontend::AddPort( std::string name, int port_id )
+{
+  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+  {
+    if( (*it)->GetID( ) == port_id )
+    {
+      LogError( "Port %d already exists", port_id );
+      return NULL;
+    }
+  }
+  Port *port = new Port( *this, ports.size( ), name, port_id );
+  ports.push_back( port );
+  return port;
+}
+
 bool Frontend::Open()
 {
   if( fe )
@@ -224,7 +239,7 @@ bool Frontend::LoadConfig( )
 
 void Frontend::SetIDs( int adapter_id, int frontend_id )
 {
-  Log( "%s: frontend on /dev/dvb/adapter%d/frontend%d", adapter.GetName( ).c_str( ), adapter_id, frontend_id );
+  Log( "  Frontend on /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
   this->adapter_id  = adapter_id;
   this->frontend_id = frontend_id;
 }
@@ -269,6 +284,8 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   }
   t.GetParams( fe );
 
+  dvb_fe_prt_parms( fe );
+
   r = dvb_fe_set_parms( fe );
   if( r != 0 )
   {
@@ -302,6 +319,7 @@ bool Frontend::Scan( Transponder &transponder, int timeoutms )
 {
   if( !CreateDemuxThread( ))
     return false;
+  state = Scanning;
   struct timespec abstime;
   int ret, count = 0;
   do
@@ -311,7 +329,7 @@ bool Frontend::Scan( Transponder &transponder, int timeoutms )
     pthread_mutex_lock( &mutex );
     ret = pthread_cond_timedwait( &cond, &mutex, &abstime );
     pthread_mutex_unlock( &mutex );
-  } while( up & ret == ETIMEDOUT && ++count < 60 );
+  } while( state == Scanning & ret == ETIMEDOUT && ++count < 60 );
   if( ret == 0 || !up )
     return true;
   if( ret == ETIMEDOUT )
@@ -349,11 +367,11 @@ bool Frontend::TunePID( Transponder &t, uint16_t pno )
   uint16_t streamid = 0;
   //for( ; iter != streams.end(); iter++)
   //{
-    //if (iter->second->GetType() == Stream::Video)
-    //{
-      //streamid = iter->first;
-      //break;
-    //}
+  //if (iter->second->GetType() == Stream::Video)
+  //{
+  //streamid = iter->first;
+  //break;
+  //}
   //}
   if( streamid == 0)
   {
@@ -485,29 +503,30 @@ void Frontend::Thread( )
 
   int time = 5;
 
+  Log( "Reading PAT" );
+
   uint32_t length;
-  struct dvb_table_pat *pat;
+  struct dvb_table_pat *pat = NULL;
   dvb_read_section( fe, fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, &length, time );
   if( !pat )
   {
     LogError( "Error reading PAT table" );
     up = false;
-    return;
   }
+  if( !up )
+    return;
 
   //dvb_table_pat_print( fe, pat );
 
+  Log( "Reading PMT's" );
   for( int i = 0; ( i < pat->programs ) && up; i++)
   {
     if( pat->program[i].program_id == 0 )
       continue;
-
     transponder->UpdateProgram( pat->program[i].program_id, pat->program[i].pid );
 
     struct dvb_table_pmt *pmt;
-
     dvb_read_section( fe, fd_demux, DVB_TABLE_PMT, pat->program[i].pid, (uint8_t **) &pmt, &length, time );
-
     if( !pmt )
     {
       LogWarn( "No PMT for pid %d", pat->program[i].pid );
@@ -516,6 +535,8 @@ void Frontend::Thread( )
 
     dvb_pmt_stream_foreach( stream, pmt )
     {
+      if( !up )
+        break;
       if( stream->type == audio_stream_descriptor )
       {
         //transponder.UpdateStream(pmt->elementary_pid,
@@ -527,16 +548,23 @@ void Frontend::Thread( )
   }
   if( pat )
     free( pat );
+  if( !up )
+    return;
 
+  Log( "Reading NIT" );
   struct dvb_table_nit *nit;
   dvb_read_section( fe, fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, &length, time );
   if( nit && up )
   {
     //dvb_table_nit_print( fe, nit );
     HandleNIT( nit );
-    free( nit );
   }
+  if( nit )
+    free( nit );
+  if( !up )
+    return;
 
+  Log( "Reading SDT" );
   struct dvb_table_sdt *sdt;
   dvb_read_section( fe, fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, &length, 5 );
   if( sdt && up )
@@ -553,6 +581,7 @@ void Frontend::Thread( )
         provider = desc->provider;
         break;
       }
+      Log( "Found Service: '%s'", name );
       transponder->UpdateProgram( service->service_id, name, provider );
     }
 
@@ -562,6 +591,7 @@ void Frontend::Thread( )
     free( sdt );
 
   dvb_dmx_close( fd_demux );
+  state = Closing;
   up = false;
   return;
 }
