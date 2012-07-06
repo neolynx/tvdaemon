@@ -74,7 +74,7 @@ bool Adapter::LoadConfig( )
   name = (const char *) Lookup( "Name", Setting::TypeString );
   uid  = (const char *) Lookup( "UDev-ID", Setting::TypeString );
 
-  Log( "Found configured Adapter '%s'", name.c_str( ));
+  Log( "Loading Adapter '%s'", name.c_str( ));
 
   if( !CreateFromConfigFactory<Frontend, Adapter>( *this, "frontend", frontends ))
     return false;

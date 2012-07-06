@@ -90,8 +90,6 @@ bool Service::LoadConfig( )
   t =             Lookup( "Provider", Setting::TypeString );
   if( t ) provider = t;
 
-  Log( "Found configured Service '%s' with pno %d", name.c_str( ), pno );
-
   if( !CreateFromConfig<Stream, uint16_t, Service>( *this, "stream", streams ))
     return false;
 

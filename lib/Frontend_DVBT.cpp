@@ -45,9 +45,9 @@ bool Frontend_DVBT::SaveConfig( )
 
 bool Frontend_DVBT::LoadConfig( )
 {
+  Log( "  Loading Frontend DVB-T" );
   if( !Frontend::LoadConfig( ))
     return false;
-  Log( "  Found configured Frontend DVB-T" );
   return true;
 }
 

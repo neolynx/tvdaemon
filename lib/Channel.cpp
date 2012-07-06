@@ -60,7 +60,7 @@ bool Channel::LoadConfig( )
     return false;
   name = (const char *) Lookup( "Name", Setting::TypeString );
 
-  Log( "Found configured Channel '%s'", name.c_str( ));
+  Log( "Loading Channel '%s'", name.c_str( ));
 
   Setting &n = Lookup( "Services", Setting::TypeList );
   for( int i = 0; i < n.getLength( ); i++ )

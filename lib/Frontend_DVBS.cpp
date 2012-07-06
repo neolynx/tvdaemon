@@ -56,12 +56,12 @@ bool Frontend_DVBS::SaveConfig( )
 
 bool Frontend_DVBS::LoadConfig( )
 {
+  Log( "  Loading Frontend DVB-S" );
   if( !Frontend::LoadConfig( ))
     return false;
   const char *t = Lookup( "LNB", Setting::TypeString );
   if( t )
     LNB = t;
-  Log( "  Found configured Frontend DVB-S" );
   return true;
 }
 
@@ -85,6 +85,10 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
 
   dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
   t.GetParams( fe );
+
+  //dvb_fe_prt_parms( fe );
+
+  //fe->verbose = 1;
 
   int r = dvb_fe_set_parms( fe );
   if( r != 0 )
@@ -111,8 +115,8 @@ bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
   dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
   if( desc )
   {
-    Log( "got network name %s", desc->network_name );
-    //transponder.SetNetwork( desc->network_name );
+    Log( "Network Name: %s", desc->network_name );
+    //transponder->SetNetwork( desc->network_name );
   }
   dvb_nit_transport_foreach( tr, nit )
   {

@@ -58,7 +58,7 @@ bool Port::LoadConfig( )
   name = (const char *) Lookup( "Name", Setting::TypeString );
   id   = (int)          Lookup( "ID",   Setting::TypeInt );
 
-  Log( "    Found configured port '%s'", name.c_str( ));
+  Log( "    Loading Port '%s'", name.c_str( ));
   return true;
 }
 

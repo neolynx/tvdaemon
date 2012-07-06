@@ -39,7 +39,7 @@ static const struct loglevel
   {"NOTICE  ", "\033[36m", stdout },
   {"INFO    ", "\033[36m", stdout },
   {"DEBUG   ", "\033[32m", stdout },
-  {"",         "\033[0m", stdout },
+  {"",         "\033[0m",  stdout },
 };
 #define LOG_COLOROFF 8
 

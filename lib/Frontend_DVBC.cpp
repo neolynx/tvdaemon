@@ -45,9 +45,9 @@ bool Frontend_DVBC::SaveConfig( )
 
 bool Frontend_DVBC::LoadConfig( )
 {
+  Log( "  Loading Frontend DVB-C" );
   if( !Frontend::LoadConfig( ))
     return false;
-  Log( "  Found configured Frontend DVB-C" );
   return true;
 }
 

@@ -46,9 +46,9 @@ bool Frontend_ATSC::SaveConfig( )
 
 bool Frontend_ATSC::LoadConfig( )
 {
+  Log( "  Loading Frontend ATSC" );
   if( !Frontend::LoadConfig( ))
     return false;
-  Log( "  Found configured Frontend ATSC" );
   return true;
 }
 
