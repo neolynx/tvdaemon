@@ -1,0 +1,45 @@
+From 172fbf129134f9e1c6dfd682930512ddfe0168d1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Thu, 26 Jul 2012 22:03:09 +0200
+Subject: [PATCH 4/6] libdvbv5: added dmx stop function
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/include/dvb-demux.h  |    1 +
+ lib/libdvbv5/dvb-demux.c |    5 +++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/lib/include/dvb-demux.h b/lib/include/dvb-demux.h
+index afd6840..923016e 100644
+--- a/lib/include/dvb-demux.h
++++ b/lib/include/dvb-demux.h
+@@ -37,6 +37,7 @@ extern "C" {
+ 
+ int dvb_dmx_open(int adapter, int demux);
+ void dvb_dmx_close(int dmx_fd);
++void dvb_dmx_stop(int dmx_fd);
+ 
+ int dvb_set_pesfilter(int dmxfd, int pid, dmx_pes_type_t type, dmx_output_t output, int buffersize);
+ 
+diff --git a/lib/libdvbv5/dvb-demux.c b/lib/libdvbv5/dvb-demux.c
+index d07e6cf..6ed2dcd 100644
+--- a/lib/libdvbv5/dvb-demux.c
++++ b/lib/libdvbv5/dvb-demux.c
+@@ -55,6 +55,11 @@ void dvb_dmx_close(int dmx_fd)
+   close( dmx_fd);
+ }
+ 
++void dvb_dmx_stop(int dmx_fd)
++{
++  (void) ioctl( dmx_fd, DMX_STOP);
++}
++
+ int dvb_set_pesfilter(int dmxfd, int pid, dmx_pes_type_t type, dmx_output_t output, int buffersize)
+ {
+ 	struct dmx_pes_filter_params pesfilter;
+-- 
+1.7.2.5
+
