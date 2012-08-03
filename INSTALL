@@ -1,4 +1,10 @@
 
+Checkout TVDaemon
+==================
+
+git clone https://github.com/neolynx/tvdaemon.git
+cd tvdaemon
+
 Build tvdaemon
 ===============
 
@@ -6,6 +12,7 @@ git submodule init
 git submodule update
 
 cd v4l-utils
+git checkout master
 git am ../patches/*
 autoreconf -i
 ./configure

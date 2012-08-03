@@ -119,9 +119,9 @@ bool Source::LoadConfig( )
 
 void Source::json( json_object *entry ) const
 {
-  json_object_object_add( entry, "name", json_object_new_string( name.c_str( )));
-  json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
-  json_object_object_add( entry, "type", json_object_new_int( type ));
+  json_object_array_add( entry, json_object_new_string( name.c_str( )));
+  json_object_array_add( entry, json_object_new_int( GetKey( )));
+  json_object_array_add( entry, json_object_new_int( type ));
 }
 
 bool Source::ReadScanfile( std::string scanfile )
@@ -252,7 +252,6 @@ bool Source::ScanTransponder( int id )
   if( !t )
     return false;
 
-  Log( "Scanning %s", t->toString( ).c_str( ));
   // FIXME: support scanning on next free transponder
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {

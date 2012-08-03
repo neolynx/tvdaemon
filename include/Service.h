@@ -35,11 +35,11 @@ class Transponder;
 class Service : public ConfigObject
 {
   public:
-    Service( Transponder &transponder, uint16_t pno, uint16_t pid, int config_id );
+    Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id );
     Service( Transponder &transponder, std::string configfile );
     virtual ~Service( );
 
-    virtual int GetKey( ) const { return pno; }
+    virtual int GetKey( ) const { return service_id; }
     uint16_t GetPID( ) { return pid; }
     void     SetPID( uint16_t pid ) { this->pid = pid; }
     std::string GetName( ) { return name; }
@@ -48,7 +48,7 @@ class Service : public ConfigObject
     void        SetProvider( std::string provider ) { this->provider = provider; }
 
     bool UpdateStream( int pid, Stream::Type type );
-    std::map<uint16_t, Stream *> GetStreams();
+    std::map<uint16_t, Stream *> &GetStreams();
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
@@ -57,7 +57,7 @@ class Service : public ConfigObject
 
   private:
     Transponder &transponder;
-    uint16_t pno;
+    uint16_t service_id;
     uint16_t pid;
     std::string name;
     std::string provider;

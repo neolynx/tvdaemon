@@ -29,7 +29,6 @@
 #include "dvb-fe.h"
 #include "dvb-frontend.h"
 #include "descriptors/nit.h"
-#include "descriptors/desc_network_name.h"
 #include "descriptors/desc_sat.h"
 
 Frontend_DVBS::Frontend_DVBS( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
@@ -69,6 +68,8 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
 {
   if( !Open( ))
     return false;
+
+  Log( "Tuning %s", t.toString( ).c_str( ));
 
   int satpos = GetCurrentPort( )->GetID( );
   int lnb = dvb_sat_search_lnb( LNB.c_str( ));
@@ -112,16 +113,16 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
 
 bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
 {
-  dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
-  if( desc )
-  {
-    Log( "Network Name: %s", desc->network_name );
-    //transponder->SetNetwork( desc->network_name );
-  }
   dvb_nit_transport_foreach( tr, nit )
   {
     dvb_desc_find( struct dvb_desc_sat, desc, tr, satellite_delivery_system_descriptor )
     {
+      if( desc->frequency == 0 )
+      {
+        LogWarn( "  NIT sat descriptor frequency 0 ignored" );
+        continue;
+      }
+
       fe_delivery_system delsys = desc->modulation_system ? SYS_DVBS2 : SYS_DVBS;
 
       fe_rolloff rolloff = ROLLOFF_AUTO;

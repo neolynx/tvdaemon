@@ -128,14 +128,19 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
       {
         std::vector<const char *> p;
         Tokenize((char *) params[i], "=", p );
-        if( p.size( ) != 2 )
+        const char *val;
+        if( p.size( ) == 1 )
+          val = "1";
+        else if( p.size( ) == 2 )
+          val = p[1];
+        else
         {
           LogWarn( "Ignoring strange parameter: '%s'", params[i] );
           continue;
         }
-        parameters[p[0]] = p[1];
+        parameters[p[0]] = val;
 
-        Log( "Param: %s => %s", p[0], p[1] );
+        Log( "Param: %s => %s", p[0], val );
       }
 
       return it->second->HandleDynamicHTTP( client, parameters );

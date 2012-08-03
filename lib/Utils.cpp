@@ -110,7 +110,7 @@ void Utils::dump( const unsigned char *data, int length )
     return;
   Log( "Dump %d bytes:", length );
   char ascii[17];
-  char hex[128];
+  char hex[50];
   int j = 0;
   hex[0] = '\0';
   for( int i = 0; i < length; i++ )
@@ -135,7 +135,7 @@ void Utils::dump( const unsigned char *data, int length )
   }
   if( j > 0 && j < 16 )
   {
-    char spaces[128];
+    char spaces[47];
     spaces[0] = '\0';
     for( int i = strlen(hex); i < 49; i++ )
       strncat( spaces, " ", sizeof( spaces ));

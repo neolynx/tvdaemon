@@ -54,14 +54,24 @@ int create_stuff( TVDaemon &tvd )
   int adapter_id = 0;
   int frontend_id = 0;
   int port_id = 0;
-  int transponder_id = 4; // -1 for all
+  int transponder_id = 4;
+  int service_id = 1;
 
-  // sat
+  // sat hotbird
   //source_id = 2;
   //adapter_id = 1;
   //frontend_id = 0;
   //port_id = 1;
-  //transponder_id = -1;
+  //transponder_id = 17;
+  //service_id = 8003;
+
+  // sat astra
+  //source_id = 1;
+  //adapter_id = 1;
+  //frontend_id = 0;
+  //port_id = 0;
+  //transponder_id = 72; //34;
+  //service_id = 28722;
 
   Source *s = tvd.GetSource( source_id );
   if( s == NULL )
@@ -103,6 +113,7 @@ int create_stuff( TVDaemon &tvd )
         count++;
       total++;
     }
+    printf( "Scanned %d/%d transponder%s\n", count, total, count == 1 ? "" : "s" );
   }
   else
   {
@@ -113,23 +124,27 @@ int create_stuff( TVDaemon &tvd )
     else
     {
       count++;
-      Transponder *t = s->GetTransponder( transponder_id );
-      if( !t )
+      printf( "Scanned %d transponder\n", count );
+
+      if( service_id != -1 )
       {
-        printf( "Error: transponder %d not found\n", transponder_id );
-        return -1;
-      }
-      Service *v = t->GetService( 901 );
-      if( !v )
-        printf( "no channel to tune\n" );
-      else
-        if( !v->Tune( ))
-          printf( "tuning service failed\n" );
+        Transponder *t = s->GetTransponder( transponder_id );
+        if( !t )
+        {
+          printf( "Error: transponder %d not found\n", transponder_id );
+          return -1;
+        }
+        Service *v = t->GetService( service_id );
+        if( !v )
+          printf( "no channel to tune\n" );
         else
-          f->Untune();
+          if( !v->Tune( ))
+            printf( "tuning service failed\n" );
+          else
+            f->Untune();
+      }
     }
   }
-  printf( "Scanned %d/%d transponder%s\n", count, total, count == 1 ? "" : "s" );
 }
 
 int main( int argc, char *argv[] )

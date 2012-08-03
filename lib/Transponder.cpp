@@ -183,19 +183,20 @@ bool Transponder::LoadConfig( )
   return true;
 }
 
-bool Transponder::UpdateProgram( uint16_t pno, uint16_t pid )
+bool Transponder::UpdateProgram( uint16_t service_id, uint16_t pid )
 {
-  std::map<uint16_t, Service *>::iterator it = services.find( pno );
+  std::map<uint16_t, Service *>::iterator it = services.find( service_id );
   if( it == services.end( ))
   {
-    Service *s = new Service( *this, pno, pid, services.size( ));
-    services[pno] = s;
+    Service *s = new Service( *this, service_id, pid, services.size( ));
+    services[service_id] = s;
     return true;
   }
   Service *s = it->second;
   if( s->GetPID( ) != pid )
   {
-    LogError( "pid mismatch in service %d: %d != %d", pno, s->GetPID( ), pid );
+    if( s->GetPID( ) != 0 )
+      LogError( "pid mismatch in service %d: %d != %d", service_id, s->GetPID( ), pid );
     s->SetPID( pid );
     return false;
   }
@@ -203,14 +204,14 @@ bool Transponder::UpdateProgram( uint16_t pno, uint16_t pid )
   return true;
 }
 
-bool Transponder::UpdateProgram( uint16_t pno, std::string name, std::string provider )
+bool Transponder::UpdateProgram( uint16_t service_id, std::string name, std::string provider )
 {
   Service *s = NULL;
-  std::map<uint16_t, Service *>::iterator it = services.find( pno );
+  std::map<uint16_t, Service *>::iterator it = services.find( service_id );
   if( it == services.end( ))
   {
-    s = new Service( *this, pno, 0, services.size( ));
-    services[pno] = s;
+    s = new Service( *this, service_id, 0, services.size( ));
+    services[service_id] = s;
   }
   else
     s = it->second;
@@ -219,17 +220,16 @@ bool Transponder::UpdateProgram( uint16_t pno, std::string name, std::string pro
   return true;
 }
 
-bool Transponder::UpdateStream( uint16_t sid, int id, int type )
+bool Transponder::UpdateStream( uint16_t service_id, int id, int type )
 {
-  for( std::map<uint16_t, Service *>::iterator it = services.begin( ); it != services.end( ); it++ )
-    if( it->second->GetPID( ) == sid )
-    {
-      it->second->UpdateStream( id, (Stream::Type) type );
-      return true;
-    }
-
-  LogError( "Service with id %d not found", sid );
-  return false;
+  std::map<uint16_t, Service *>::iterator it = services.find( service_id );
+  if( it == services.end( ))
+  {
+    LogError( "Service with id %d not found", service_id );
+    return false;
+  }
+  it->second->UpdateStream( id, (Stream::Type) type );
+  return true;
 }
 
 Service *Transponder::GetService( uint16_t id )

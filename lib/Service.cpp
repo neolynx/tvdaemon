@@ -27,13 +27,13 @@
 #include "Stream.h"
 #include "Log.h"
 
-Service::Service( Transponder &transponder, uint16_t pno, uint16_t pid, int config_id ) :
+Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id ) :
   ConfigObject( transponder, "service", config_id ),
   transponder(transponder),
-  pno(pno),
+  service_id(service_id),
   pid(pid)
 {
-  Log( "Created Service with pno %d", pno );
+  //Log( "Created Service with pno %d", pno );
 }
 
 Service::Service( Transponder &transponder, std::string configfile ) :
@@ -52,7 +52,7 @@ Service::~Service( )
 
 bool Service::SaveConfig( )
 {
-  Lookup( "PNo",          Setting::TypeInt )    = pno;
+  Lookup( "ServiceID",    Setting::TypeInt )    = service_id;
   Lookup( "PID",          Setting::TypeInt )    = pid;
   Lookup( "Name",         Setting::TypeString ) = name;
   Lookup( "Provider",     Setting::TypeString ) = provider;
@@ -83,8 +83,8 @@ bool Service::LoadConfig( )
   if( !ReadConfig( ))
     return false;
 
-  pno =     (int) Lookup( "PNo", Setting::TypeInt );
-  pid =     (int) Lookup( "PID", Setting::TypeInt );
+  service_id = (int) Lookup( "ServiceID", Setting::TypeInt );
+  pid        = (int) Lookup( "PID", Setting::TypeInt );
   const char *t = Lookup( "Name", Setting::TypeString );
   if( t ) name = t;
   t =             Lookup( "Provider", Setting::TypeString );
@@ -154,13 +154,13 @@ bool Service::UpdateStream( int id, Stream::Type type )
   //}
 }
 
-std::map<uint16_t, Stream *> Service::GetStreams()
+std::map<uint16_t, Stream *> &Service::GetStreams() // FIXME: const
 {
   return streams;
 }
 
 bool Service::Tune( )
 {
-  return transponder.Tune( pno );
+  return transponder.Tune( service_id );
 }
 

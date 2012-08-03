@@ -58,8 +58,8 @@ class Transponder : public ConfigObject
     fe_delivery_system_t GetDelSys( ) const { return delsys; }
     uint32_t GetFrequency( ) const { return frequency; }
 
-    bool UpdateProgram( uint16_t pno, uint16_t pid );
-    bool UpdateProgram( uint16_t pno, std::string name, std::string provider );
+    bool UpdateProgram( uint16_t service_id, uint16_t pid );
+    bool UpdateProgram( uint16_t service_id, std::string name, std::string provider );
     bool UpdateStream( uint16_t pid, int id, int type );
 
     Service *CreateService( std::string  name );

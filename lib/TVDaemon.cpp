@@ -470,17 +470,21 @@ Channel *TVDaemon::GetChannel( int id )
 bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters )
 {
   json_object *h = json_object_new_object();
-  json_object_object_add( h, "total", json_object_new_int( sources.size( )));
+  //std::string echo =  parameters["sEcho"];
+  int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+  json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+  json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
+  json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( sources.size( )));
   json_object *a = json_object_new_array();
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
-    json_object *entry = json_object_new_object( );
+    json_object *entry = json_object_new_array( );
     (*it)->json( entry );
     json_object_array_add( a, entry );
   }
 
-  json_object_object_add( h, "data", a );
+  json_object_object_add( h, "aaData", a );
 
   const char *json = json_object_to_json_string( h );
   Log( "json: %s", json );
