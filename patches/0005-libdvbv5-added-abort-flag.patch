@@ -1,7 +1,7 @@
 From 11c32fba8dcd621835f7c67df5d3d1b9fb36518e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 26 Jul 2012 22:04:52 +0200
-Subject: [PATCH 5/6] libdvbv5: added abort flag
+Subject: [PATCH 5/8] libdvbv5: added abort flag
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

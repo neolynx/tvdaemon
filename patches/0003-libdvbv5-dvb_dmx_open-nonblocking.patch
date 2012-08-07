@@ -1,7 +1,7 @@
 From 361a3b9caf9e6f170e002710c58c09a9b88f9e95 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 15 Jul 2012 14:59:23 +0200
-Subject: [PATCH 3/6] libdvbv5: dvb_dmx_open nonblocking
+Subject: [PATCH 3/8] libdvbv5: dvb_dmx_open nonblocking
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,7 +1,7 @@
 From 172fbf129134f9e1c6dfd682930512ddfe0168d1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 26 Jul 2012 22:03:09 +0200
-Subject: [PATCH 4/6] libdvbv5: added dmx stop function
+Subject: [PATCH 4/8] libdvbv5: added dmx stop function
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
