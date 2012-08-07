@@ -46,6 +46,7 @@ class Service : public ConfigObject
     void        SetName( std::string name ) { this->name = name; }
     std::string GetProvider( ) { return provider; }
     void        SetProvider( std::string provider ) { this->provider = provider; }
+    void        SetEncrypted( bool encrypted ) { this->encrypted = encrypted; }
 
     bool UpdateStream( int pid, Stream::Type type );
     std::map<uint16_t, Stream *> &GetStreams();
@@ -61,6 +62,7 @@ class Service : public ConfigObject
     uint16_t pid;
     std::string name;
     std::string provider;
+    bool encrypted;
 
     std::map<uint16_t, Stream *> streams;
 };

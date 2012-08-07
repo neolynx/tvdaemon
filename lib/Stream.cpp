@@ -30,7 +30,7 @@ Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
   id(id),
   type(type)
 {
-  Log( "Created Stream with id %d", id );
+  Log( "Created %s Stream with id %d", GetTypeName( type ), id );
 }
 
 Stream::Stream( Service &service, std::string configfile ) :
@@ -59,6 +59,34 @@ bool Stream::LoadConfig( )
   type = (Type) (int) Lookup( "Type", Setting::TypeInt );
 
   return true;
+}
+
+const char *Stream::GetTypeName( Type type )
+{
+  switch( type )
+  {
+    case Type_Video:
+    case Type_Video_H262:
+      return "Video";
+
+    case Type_Video_H264:
+      return "Video MPEG4";
+
+    case Type_Audio:
+    case Type_Audio_13818_3:
+    case Type_Audio_ADTS:
+    case Type_Audio_LATM:
+      return "Audio";
+
+    case Type_Audio_AC3:
+      return "Audio AC3";
+
+    case Type_Audio_AAC:
+      return "Audio AAC";
+
+    default:
+      return "Unknown";
+  }
 }
 
 bool Stream::Update( Type type )

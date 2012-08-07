@@ -66,12 +66,12 @@ int create_stuff( TVDaemon &tvd )
   //service_id = 8003;
 
   // sat astra
-  //source_id = 1;
-  //adapter_id = 1;
-  //frontend_id = 0;
-  //port_id = 0;
-  //transponder_id = 72; //34;
-  //service_id = 28722;
+  source_id = 1;
+  adapter_id = 1;
+  frontend_id = 0;
+  port_id = 0;
+  transponder_id = 20;
+  service_id = 5400;
 
   Source *s = tvd.GetSource( source_id );
   if( s == NULL )

@@ -35,12 +35,17 @@ class Stream : public ConfigObject
   public:
     enum Type
     {
-      Video      = video_stream_descriptor,
-      VideoMPEG4 = mpeg4_video_descriptor,
-      Audio      = audio_stream_descriptor,
-      AudioMPEG4 = mpeg4_audio_descriptor,
-      //AudioAC3   = ,
-      //AudioAAC   =
+      Type_Unknown,
+      Type_Video,
+      Type_Video_H262,
+      Type_Video_H264,
+      start_audio_types,
+      Type_Audio,
+      Type_Audio_13818_3,
+      Type_Audio_ADTS,
+      Type_Audio_LATM,
+      Type_Audio_AC3,
+      Type_Audio_AAC
     };
 
     Stream( Service &service, uint16_t id, enum Type type, int config_id );
@@ -54,6 +59,11 @@ class Stream : public ConfigObject
 
     bool Update( Type type );
     Type GetType() { return type; }
+    const char *GetTypeName( ) { return GetTypeName( type ); };
+    bool IsVideo( ) { return type < start_audio_types; }
+    bool IsAudio( ) { return type > start_audio_types; }
+
+    static const char *GetTypeName( Type type );
 
   private:
     Service &service;

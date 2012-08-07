@@ -31,9 +31,9 @@ Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, i
   ConfigObject( transponder, "service", config_id ),
   transponder(transponder),
   service_id(service_id),
-  pid(pid)
+  pid(pid),
+  encrypted(false)
 {
-  //Log( "Created Service with pno %d", pno );
 }
 
 Service::Service( Transponder &transponder, std::string configfile ) :
@@ -56,19 +56,7 @@ bool Service::SaveConfig( )
   Lookup( "PID",          Setting::TypeInt )    = pid;
   Lookup( "Name",         Setting::TypeString ) = name;
   Lookup( "Provider",     Setting::TypeString ) = provider;
-
-  //DeleteConfig( "Audio-Streams" );
-  //Setting &n = Lookup( "Audio-Streams", Setting::TypeArray );
-  //for( std::vector<uint16_t>::iterator it = audiostreams.begin( ); it != audiostreams.end( ); it++ )
-  //{
-    //n.add( Setting::TypeInt ) = *it;
-  //}
-  //DeleteConfig( "Video-Streams" );
-  //Setting &n2 = Lookup( "Video-Streams", Setting::TypeArray );
-  //for( std::vector<uint16_t>::iterator it = videostreams.begin( ); it != videostreams.end( ); it++ )
-  //{
-    //n2.add( Setting::TypeInt ) = *it;
-  //}
+  Lookup( "Encrypted",    Setting::TypeInt )    = (int) encrypted;
 
   for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++ )
   {
@@ -89,22 +77,11 @@ bool Service::LoadConfig( )
   if( t ) name = t;
   t =             Lookup( "Provider", Setting::TypeString );
   if( t ) provider = t;
+  encrypted    = (int) Lookup( "Encrypted", Setting::TypeInt );
 
   if( !CreateFromConfig<Stream, uint16_t, Service>( *this, "stream", streams ))
     return false;
 
-  //Setting &n = Lookup( "Audio-Streams", Setting::TypeArray );
-  //for( int i = 0; i < n.getLength( ); i++ )
-  //{
-    //audiostreams.push_back((int) n[i] );
-    //printf( "  Found configured audio stream %d\n", (int) n[i]);
-  //}
-  //Setting &n2 = Lookup( "Video-Streams", Setting::TypeArray );
-  //for( int i = 0; i < n2.getLength( ); i++ )
-  //{
-    //videostreams.push_back((int) n2[i] );
-    //printf( "  Found configured video stream %d\n", (int) n2[i]);
-  //}
   return true;
 }
 
@@ -116,42 +93,12 @@ bool Service::UpdateStream( int id, Stream::Type type )
   {
     s = new Stream( *this, id, type, streams.size( ));
     streams[id] = s;
-  }
-  else
-  {
-    LogWarn( "Already known Stream %d", id );
-    s = it->second;
+    return true;
   }
 
+  //LogWarn( "Already known Stream %d", id );
+  s = it->second;
   return s->Update( type );
-
-  //switch( type )
-  //{
-    //case dtag_mpeg_video_stream:
-    //case dtag_mpeg_4_video:
-      //if( std::find( videostreams.begin( ), videostreams.end( ), pid ) != videostreams.end( ))
-        //printf( "Already known video stream %d\n", pid );
-      //else
-      //{
-        //printf( "Creating video stream %d\n", pid );
-        //videostreams.push_back( pid );
-      //}
-      //break;
-    //case dtag_mpeg_audio_stream:
-    //case dtag_mpeg_4_audio:
-    //case dtag_dvb_ac3:
-    //case dtag_dvb_aac_descriptor:
-      //if( std::find( audiostreams.begin( ), audiostreams.end( ), pid ) != audiostreams.end( ))
-        //printf( "Already known audio stream %d\n", pid );
-      //else
-      //{
-        //printf( "Creating audio stream %d\n", pid );
-        //audiostreams.push_back( pid );
-      //}
-      //break;
-    //default:
-      //break;
-  //}
 }
 
 std::map<uint16_t, Stream *> &Service::GetStreams() // FIXME: const

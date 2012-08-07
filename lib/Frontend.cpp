@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm> // replace
 
 #include "dvb-demux.h"
 #include "dvb-fe.h"
@@ -48,6 +49,7 @@
 #include "descriptors/desc_service.h"
 #include "descriptors/desc_network_name.h"
 #include "descriptors/desc_event_short.h"
+#include "descriptors/desc_hierarchy.h"
 
 #include <errno.h> // ETIMEDOUT
 
@@ -372,8 +374,9 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   uint16_t vpid = 0;
   for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++)
   {
-    if( it->second->GetType( ) == Stream::Video )
+    if( it->second->IsVideo( ))
     {
+      Log( "Video Stream: %s", it->second->GetTypeName( ));
       vpid = it->first;
       break;
     }
@@ -387,8 +390,9 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   uint16_t apid = 0;
   for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++)
   {
-    if( it->second->GetType( ) == Stream::Audio )
+    if( it->second->IsAudio( ))
     {
+      Log( "Audio Stream: %s", it->second->GetTypeName( ));
       apid = it->first;
       break;
     }
@@ -469,6 +473,11 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 
   if( dumpfile.empty( ))
     dumpfile = "dump.pes";
+  else
+  {
+    std::replace( dumpfile.begin(), dumpfile.end(), '/', '_');
+    std::replace( dumpfile.begin(), dumpfile.end(), '`', '_');
+  }
 
   Log( "Setting PES filter for vpid %d", vpid );
   if( 0 != dvb_set_pesfilter( fd_v, vpid, DMX_PES_OTHER, DMX_OUT_TSDEMUX_TAP, bufsize ))
@@ -485,8 +494,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   }
 
   {
-    Log( "Recording %s ...", dumpfile.c_str( ));
-
     char file[256];
 
     dumpfile = "/home/bay/tv/" + dumpfile;
@@ -494,7 +501,16 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 #ifdef O_LARGEFILE
         O_LARGEFILE |
 #endif
-        O_WRONLY | O_CREAT, 0644);
+        O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+    if( file_fd < 0 )
+    {
+      LogError( "Cannot open file '%s'", dumpfile.c_str( ));
+      // FIXME: cleanup
+      return false;
+    }
+
+    Log( "Recording '%s' ...", dumpfile.c_str( ));
 
     fd_set tmp_fds;
     fd_set fds;
@@ -522,32 +538,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 
       //printf( "available a:%d v:%d\n", FD_ISSET( fd_a, &tmp_fds ), FD_ISSET( fd_v, &tmp_fds ));
 
-      if( FD_ISSET( fd_v, &tmp_fds ))
-      {
-        len = read( fd_v, data, bufsize << 1 );
-        if( len < 0 )
-        {
-          LogError( "Video: Error receiving data... %d", errno );
-          //up = false;
-          continue;
-        }
-
-        if( len == 0 )
-        {
-          Log( "Video: no data received" );
-          //up = false;
-          continue;
-        }
-
-        write( file_fd, data, len );
-
-        if( vc++ % 100 == 0 )
-        {
-          printf( "v" );
-          fflush( stdout );
-        }
-      }
-
       if( FD_ISSET( fd_a, &tmp_fds ))
       {
         len = read( fd_a, data, bufsize << 1 );
@@ -570,6 +560,32 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
         if( ac++ % 100 == 0 )
         {
           printf( "a" );
+          fflush( stdout );
+        }
+      }
+
+      if( FD_ISSET( fd_v, &tmp_fds ))
+      {
+        len = read( fd_v, data, bufsize << 1 );
+        if( len < 0 )
+        {
+          LogError( "Video: Error receiving data... %d", errno );
+          //up = false;
+          continue;
+        }
+
+        if( len == 0 )
+        {
+          Log( "Video: no data received" );
+          //up = false;
+          continue;
+        }
+
+        write( file_fd, data, len );
+
+        if( vc++ % 100 == 0 )
+        {
+          printf( "v" );
           fflush( stdout );
         }
       }
@@ -681,8 +697,10 @@ void Frontend::Thread( )
       dvb_desc_find( struct dvb_desc_service, desc, service, service_descriptor )
       {
         service_type = desc->service_type;
-        name = desc->name;
-        provider = desc->provider;
+        if( desc->name )
+          name = desc->name;
+        if( desc->provider )
+          provider = desc->provider;
         break;
       }
       if( service_type == -1 )
@@ -717,7 +735,7 @@ void Frontend::Thread( )
       }
 
       Log( "  Found %s service %5d%s: '%s'", type, service->service_id, service->free_CA_mode ? " §" : "", name );
-      transponder->UpdateProgram( service->service_id, name, provider );
+      transponder->UpdateService( service->service_id, name, provider, service->free_CA_mode );
       services.push_back( service->service_id );
     }
 
@@ -767,18 +785,56 @@ void Frontend::Thread( )
         {
           if( !up )
             break;
+          Stream::Type type = Stream::Type_Unknown;
           switch( stream->type )
           {
-            case video_stream_descriptor:
-            case mpeg4_video_descriptor:
-            case audio_stream_descriptor:
-            case mpeg4_audio_descriptor:
-              transponder->UpdateStream(program->service_id, stream->elementary_pid, stream->type );
+            case stream_video:            // 0x01
+              type = Stream::Type_Video;
               break;
+            case stream_video_h262:       // 0x02
+              type = Stream::Type_Video_H262;
+              break;
+            case 0x1b:                    // 0x1b H.264 AVC
+              type = Stream::Type_Video_H264;
+              break;
+
+            case stream_audio:            // 0x03
+              type = Stream::Type_Audio;
+              break;
+            case stream_audio_13818_3:    // 0x04
+              type = Stream::Type_Audio_13818_3;
+              break;
+            case stream_audio_adts:       // 0x0F
+              type = Stream::Type_Audio_ADTS;
+              break;
+            case stream_audio_latm:       // 0x11
+              type = Stream::Type_Audio_LATM;
+              break;
+            case stream_private + 1:      // 0x81  user private - in general ATSC Dolby - AC-3
+              type = Stream::Type_Audio_AC3;
+              break;
+
+            case stream_private_sections: // 0x05
+            case stream_private_data:     // 0x06
+              dvb_desc_find( struct dvb_desc, desc, stream, AC_3_descriptor )
+              {
+              type = Stream::Type_Audio_AC3;
+                break;
+              }
+              dvb_desc_find( struct dvb_desc, desc, stream, enhanced_AC_3_descriptor )
+              {
+                type = Stream::Type_Audio_AC3;
+                LogWarn( "Found AC3 enhanced" );
+                break;
+              }
+              break;
+
             default:
-              LogWarn( "Ignoring stream type %s", dvb_descriptors[stream->type].name );
+              LogWarn( "Ignoring stream type %d: %s", stream->type, pmt_stream_name[stream->type] );
               break;
           }
+          if( type != Stream::Type_Unknown )
+            transponder->UpdateStream( program->service_id, stream->elementary_pid, type );
         }
 
         dvb_table_pmt_free( pmt );
@@ -797,11 +853,11 @@ void Frontend::Thread( )
   if( nit && up )
   {
     dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
-      if( desc )
-      {
-        Log( "  Network Name: %s", desc->network_name );
-        //transponder->SetNetwork( desc->network_name );
-      }
+    {
+      Log( "  Network Name: %s", desc->network_name );
+      //transponder->SetNetwork( desc->network_name );
+      break;
+    }
     //dvb_table_nit_print( fe, nit );
     HandleNIT( nit );
   }
