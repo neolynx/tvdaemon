@@ -30,7 +30,12 @@ git am ../patches/*
 autoreconf -i
 ./configure
 make
-cd -
+cd ..
+
+cd cli-core
+git submodule init
+git submodule update
+cd ..
 
 libtoolize
 autoreconf -i
