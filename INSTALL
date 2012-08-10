@@ -1,4 +1,17 @@
 
+Prerequisites
+==============
+
+the following tools are needed:
+   autoconf libtool automake autopoint pkg-config
+
+the following headers are needed:
+   libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev
+
+for initial scan files:
+   dvb-apps
+
+
 Checkout TVDaemon
 ==================
 
