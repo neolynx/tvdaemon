@@ -1,0 +1,50 @@
+#!/usr/bin/python
+
+import urllib2
+import json
+import sys, os
+
+# Need for the CLI core files
+sys.path.insert( 0, os.path.join( os.path.dirname( os.path.abspath( __file__ )), "../cli-core/src/" ))
+from CLI         import *
+
+class TVDCLI( CLI ):
+  def __init__( self ):
+    CLI.__init__( self, "~/.tvdaemon/history" )
+    self.SetWelcomeText( "TVDaemon - Command Line Interface" )
+    self.SetPrompt( "TVD:%s> " )
+
+    self.RegisterItem( CLIItem( "test", self.cmd_test ))
+    self.RegisterItem( CLIItem( "undoc", self.cmd_undoc ))
+    self.RegisterItem( CLIItem( "get", self.cmd_get ))
+    self._location.AppendLocation( "sources", "s" );
+
+  def cmd_about( self, item, args = "", line = "" ):
+    cf.out.white( "This is just a smart test class to test the cli-core" )
+
+  def cmd_test( self, item, args = "", line = "" ):
+    """just a test function"""
+    cf.out.blue( "bla bla bla bla bla bla bla" )
+
+  def cmd_undoc( self, item, args = "", line = "" ):
+    cf.out.white( "undocumented function" )
+
+  def cmd_get( self, item, args = "", line = "" ):
+    data = self.get( )
+    if data:
+      cf.out.white( data )
+
+  def get( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?bla=12')
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.URLError:
+      print "Connection refused"
+      return None
+    return json.loads( response.read( ))
+
+if __name__ == "__main__":
+  test = TVDCLI( )
+  test.Start( )
+  test.Stop( )
+
