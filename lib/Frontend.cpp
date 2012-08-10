@@ -67,6 +67,7 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   ports.push_back( new Port( *this, 0 ));
   pthread_mutex_init( &mutex, NULL );
   pthread_cond_init( &cond, NULL );
+
 }
 
 Frontend::Frontend( Adapter &adapter, std::string configfile ) :
@@ -179,7 +180,7 @@ bool Frontend::Open()
 {
   if( fe )
     return true;
-
+// FIXME: handle adapter_id == -1
   fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
   if( !fe )
   {
@@ -202,6 +203,7 @@ void Frontend::Close()
 
 bool Frontend::GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name )
 {
+  //FIXME: verify this->fe not open
   struct dvb_v5_fe_parms *fe = dvb_fe_open( adapter_id, frontend_id, 0, 0 );
   if( !fe )
   {
@@ -555,7 +557,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
           continue;
         }
 
-        write( file_fd, data, len );
+        int ret = write( file_fd, data, len );
 
         if( ac++ % 100 == 0 )
         {
@@ -581,7 +583,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
           continue;
         }
 
-        write( file_fd, data, len );
+        int ret = write( file_fd, data, len );
 
         if( vc++ % 100 == 0 )
         {
@@ -626,7 +628,7 @@ bool Frontend::GetLockStatus( int timeout )
       dvb_fe_retrieve_stats( fe, DTV_UNCORRECTED_BLOCKS, &uncorrected_blocks );
       dvb_fe_retrieve_stats( fe, DTV_SNR, &snr );
 
-      Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", status, (_signal * 100) / 0xffff, (snr * 100) / 0xffff, ber, uncorrected_blocks );
+      Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", (_signal * 100) / 0xffff, (snr * 100) / 0xffff, ber, uncorrected_blocks );
 
       return true;
     }

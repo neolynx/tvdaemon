@@ -496,5 +496,7 @@ bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, 
   err_response->AddContents( json );
   httpd->SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
   json_object_put( h ); // this should delete it
+
+  return true;
 }
 

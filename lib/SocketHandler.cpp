@@ -597,7 +597,7 @@ void SocketHandler::StdLog( int level, const char *fmt, ... )
   va_list ap;
   va_start( ap, fmt );
   if( isatty( loglevels[level].io->_fileno ))
-    fprintf(  loglevels[level].io, loglevels[level].color );
+    fputs( loglevels[level].color, loglevels[level].io );
   fprintf(    loglevels[level].io, "%s ", loglevels[level].name );
   vfprintf(   loglevels[level].io, fmt, ap );
   fprintf(    loglevels[level].io, "\n" );
