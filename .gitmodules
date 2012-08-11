@@ -1,6 +1,3 @@
 [submodule "v4l-utils"]
 	path = v4l-utils
 	url = git://git.linuxtv.org/v4l-utils.git
-[submodule "cli-core"]
-	path = cli-core
-	url = https://github.com/timofurrer/cli-core.git
