@@ -1,0 +1,40 @@
+From 791e8f257fdd572231f4974d646d654bf069f569 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Fri, 10 Aug 2012 20:50:38 +0200
+Subject: [PATCH 1/2] confirm exit flag
+
+---
+ src/CLI.py |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/src/CLI.py b/src/CLI.py
+index 8d1c6a4..7df8b81 100644
+--- a/src/CLI.py
++++ b/src/CLI.py
+@@ -24,6 +24,7 @@ class CLI:
+   _tab_delimiters = []   # Available tab delimiters - if you want to complete an item the delimiter have to be in this list
+ 
+   def __init__( self, history_file = None, welcome_text = None, enable_location = True ):
++    self.confirm_exit = True
+     readline.set_completer( self._Complete )
+     readline.parse_and_bind( "tab: complete" )
+ 
+@@ -65,9 +66,13 @@ class CLI:
+       try:
+         line_input = raw_input( self.GetPrompt( ))
+       except EOFError:          # Occures when Ctrl+D is pressed in shell
+-        y = raw_input( "\nDo you really want to exit ([y]/n)? " )
+-        if y == "y" or y == "":
++        if self.confirm_exit:
++          y = raw_input( "\nDo you really want to exit ([y]/n)? " )
++          if y == "y" or y == "":
++            self.Stop( )
++        else:
+           self.Stop( )
++          print
+       except KeyboardInterrupt: # Occures when Ctrl+C is pressed in shell
+         self.Stop( )
+         print( )                # To break shell prompt to a new line
+-- 
+1.7.2.5
+
