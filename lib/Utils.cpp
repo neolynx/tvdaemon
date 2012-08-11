@@ -30,9 +30,6 @@
 
 #include "Log.h"
 
-#include "descriptors/pat.h"
-#include "descriptors/pmt.h"
-
 std::string Utils::Expand( std::string path )
 {
   wordexp_t p;

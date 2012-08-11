@@ -279,3 +279,58 @@ bool Source::Tune( Transponder &transponder, uint16_t pno )
   return false;
 }
 
+bool Source::RPC_Transponder( HTTPServer *httpd, const int client, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  if( action->second == "list" )
+  {
+    json_object *h = json_object_new_object();
+    //std::string echo =  parameters["sEcho"];
+    int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+    json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+    json_object_object_add( h, "iTotalRecords", json_object_new_int( transponders.size( )));
+    json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( transponders.size( )));
+    json_object *a = json_object_new_array();
+
+    for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+    {
+      json_object *entry = json_object_new_array( );
+      (*it)->json( entry );
+      json_object_array_add( a, entry );
+    }
+
+    json_object_object_add( h, "aaData", a );
+
+    const char *json = json_object_to_json_string( h );
+    Log( "json: %s", json );
+
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_OK );
+    response->AddTimeStamp( );
+    response->AddMime( "json" );
+    response->AddContents( json );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    json_object_put( h ); // this should delete it
+    return true;
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC transponder: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
+

@@ -22,6 +22,7 @@
 #include "Transponder.h"
 
 #include "dvb-file.h"
+#include <json/json.h>
 
 #include "Source.h"
 #include "Service.h"
@@ -252,3 +253,10 @@ bool Transponder::GetParams( struct dvb_v5_fe_parms *params ) const
   dvb_fe_store_parm( params, DTV_INVERSION, INVERSION_AUTO );
   return true;
 }
+
+void Transponder::json( json_object *entry ) const
+{
+  json_object_array_add( entry, json_object_new_string( toString( ).c_str( )));
+  json_object_array_add( entry, json_object_new_int( GetKey( )));
+}
+

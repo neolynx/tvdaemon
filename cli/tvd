@@ -5,43 +5,251 @@ import json
 import sys, os
 
 # Need for the CLI core files
-sys.path.insert( 0, os.path.join( os.path.dirname( os.path.abspath( __file__ )), "../cli-core/src/" ))
+sys.path.insert( 0, os.path.join( os.path.dirname( os.path.abspath( __file__ )), "cli-core/src/" ))
 from CLI         import *
+
+class Root( ):
+  def __init__( self, cli ):
+    self.category = "root"
+    self.cli = cli
+
+  def cd( self, path = None ):
+    if not path:
+      self.cli.cd.ClearItems( )
+      self.cli.cd.AppendItem( CLIItem( "sources", value = self.cli.sources, category = "root" ))
+      #self.cli.cd.AppendItem( CLIItem( "channels", value = "channels", category = "root" ))
+      return
+
+    print "root cd '%s'"%path
+    if path == "sources":
+      self.cli._location.AppendLocation( path, self.cli.sources )
+      loc = self.cli._location.GetCurrentLocationValue( )
+      if hasattr( loc, "cd" ):
+        loc.cd( )
+    else:
+      print "path: %s"%path
+
+  def ls( self ):
+    print "sources"
+
+class Sources( ):
+  def __init__( self, cli ):
+    self.category = "sources"
+    self.cli = cli
+    self.types = { }
+    self.get_types( )
+
+    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+
+  def get( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=source&a=list')
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return None
+    except urllib2.URLError, e:
+      print e.args
+      return None
+    return json.loads( response.read( ))
+
+  def get_types( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=source&a=types')
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return
+    except urllib2.URLError, e:
+      print e.args
+      return
+    types = json.loads( response.read( ))
+    for t in types:
+      self.types[int(t)] = types[t]
+
+  def ls( self ):
+    sources = self.get( )
+    if sources:
+      count = sources["iTotalDisplayRecords"]
+      for i in range( count ):
+        source = sources["aaData"][i][0]
+        source_id = sources["aaData"][i][1]
+        source_type = sources["aaData"][i][2]
+
+        sys.stdout.write( cf.bold_white( source ))
+        sys.stdout.write( " " * ( 30 - len( source )))
+        if self.types.has_key( source_type ):
+          sys.stdout.write( self.types[source_type] )
+        else:
+          sys.stdout.write( "Unknown (%d)"%source_type )
+        sys.stdout.write( "\n" )
+
+  def cd( self, path = None ):
+    sources = self.get( )
+    if not sources:
+      return
+    count = sources["iTotalDisplayRecords"]
+    if not path:
+      self.cli.cd.ClearItems( )
+      for i in range( count ):
+        source = sources["aaData"][i][0]
+        source_id = sources["aaData"][i][1]
+        self.cli.cd.AppendItem( CLIItem( source, value = source_id, category = "default" ))
+      self.cli.SetItemsEnabledByCategories( self.category )
+      self.cli._UpdateHelpItem( )
+      return
+
+    print "sources cd '%s'"%path
+    found = False
+    for i in range( count ):
+      if path == sources["aaData"][i][0]:
+        self.cli._location.AppendLocation( path, Source( self.cli, sources["aaData"][i] ))
+        loc = self.cli._location.GetCurrentLocationValue( )
+        if hasattr( loc, "cd" ):
+          loc.cd( )
+        found = True
+        break
+
+    if not found:
+      print "Unknown source"
+
+  def cmd_delete( self, item, args, rawline ):
+    """source||delete source"""
+    print "delete"
+
+class Source( ):
+  def __init__( self, cli, source ):
+    self.category = "source"
+    self.cli = cli
+    self.source_id = source[1]
+
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+
+  def get( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=transponder&a=list&source=%d'%self.source_id )
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return None
+    except urllib2.URLError, e:
+      print e.args
+      return None
+    return json.loads( response.read( ))
+
+  def cd( self, path = None ):
+    transponders = self.get( )
+    if not transponders:
+      return
+    count = transponders["iTotalDisplayRecords"]
+    if not path:
+      self.cli.cd.ClearItems( )
+      for i in range( count ):
+        transponder = transponders["aaData"][i][0]
+        transponder_id = transponders["aaData"][i][1]
+        self.cli.cd.AppendItem( CLIItem( transponder, value = transponder_id, category = "transponder" ))
+      self.cli.SetItemsEnabledByCategories( self.category )
+      self.cli._UpdateHelpItem( )
+      return
+
+    print "source cd '%s'"%path
+    found = False
+    for i in range( count ):
+      if path == transponders["aaData"][i][0]:
+        self.cli._location.AppendLocation( path, Source( self.cli, transponders["aaData"][i] ))
+        loc = self.cli._location.GetCurrentLocationValue( )
+        if hasattr( loc, "cd" ):
+          loc.cd( )
+        found = True
+        break
+
+    if not found:
+      print "Unknown source"
+
+  def ls( self ):
+    transponders = self.get( )
+    if not transponders:
+      return
+    count = transponders["iTotalDisplayRecords"]
+    for i in range( count ):
+      transponder = transponders["aaData"][i][0]
+      transponder_id = transponders["aaData"][i][1]
+
+      sys.stdout.write( cf.bold_white( transponder ))
+      sys.stdout.write( "\n" )
+    print "total: %d"%count
 
 class TVDCLI( CLI ):
   def __init__( self ):
     CLI.__init__( self, "~/.tvdaemon/history" )
+    self.confirm_exit = False
     self.SetWelcomeText( "TVDaemon - Command Line Interface" )
     self.SetPrompt( "TVD:%s> " )
 
-    self.RegisterItem( CLIItem( "test", self.cmd_test ))
-    self.RegisterItem( CLIItem( "undoc", self.cmd_undoc ))
-    self.RegisterItem( CLIItem( "get", self.cmd_get ))
-    self._location.AppendLocation( "sources", "s" );
+    self.cd = self.GetItemByName( "cd" )
 
-  def cmd_about( self, item, args = "", line = "" ):
-    cf.out.white( "This is just a smart test class to test the cli-core" )
+    self.root = Root( self )
+    self.sources = Sources( self )
 
-  def cmd_test( self, item, args = "", line = "" ):
-    """just a test function"""
-    cf.out.blue( "bla bla bla bla bla bla bla" )
+    self.root.cd( )
 
-  def cmd_undoc( self, item, args = "", line = "" ):
-    cf.out.white( "undocumented function" )
+    self.SetItemsEnabled( False )
+#    self.SetItemsEnabledByCategories( "root" )
+#    self._UpdateHelpItem( )
 
-  def cmd_get( self, item, args = "", line = "" ):
-    data = self.get( )
-    if data:
-      cf.out.white( data )
 
-  def get( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?bla=12')
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.URLError:
-      print "Connection refused"
-      return None
-    return json.loads( response.read( ))
+
+  def cmd_cd( self, item, args, rawline ):
+    """[location|..]||change current location"""
+    index = self._location.GetHierarchyIndex( )
+    args = args.strip( )
+    handled = False
+    if args == "" or args == "/":
+      self._location.GoToRoot( )
+      handled = True
+    elif args == "..":
+      self._location.GoOneBack( )
+      handled = True
+    elif args == "-":
+      self._location.GoToLastLocation( )
+      handled = True
+    #else:
+      #if args.split( self._location.Delimiter )[0] == "/":
+        #self._location.GoToRoot( )
+      #stations = [s for s in args.split( self._location.Delimiter ) if s != ""]
+      #for station in stations:
+        #if station == "..":
+          #self._location.GoOneBack( )
+        #elif station == ".":
+          #pass
+        #else:
+          #index = self._location.GetHierarchyIndex( )
+          #if index == 0:
+            #if station == "sources":
+              #self._location.AppendLocation( station, self.sources )
+          #else:
+            #print "index: %d"%index
+
+    if handled:
+      args = None
+
+    loc = self._location.GetCurrentLocationValue( )
+    if not loc:
+      loc = self.root
+    if hasattr( loc, "cd" ):
+      loc.cd( args )
+    cat = "root"
+    if hasattr( loc, "category" ):
+      cat = loc.category
+    self.SetItemsEnabledByCategories( cat, other_inverse = True )
+    self._UpdateHelpItem( )
+
+  def cmd_ls( self, item, args = "", line = "" ):
+    loc = self._location.GetCurrentLocationValue( )
+    if loc:
+      loc.ls( )
+    else:
+      self.root.ls( )
 
 if __name__ == "__main__":
   test = TVDCLI( )

@@ -97,7 +97,7 @@ bool Transponder_DVBC::GetParams( struct dvb_v5_fe_parms* params ) const
   return true;
 }
 
-std::string Transponder_DVBC::toString( )
+std::string Transponder_DVBC::toString( ) const
 {
   char tmp[256];
   snprintf(tmp, sizeof(tmp), "%d", frequency );

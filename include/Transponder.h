@@ -23,6 +23,7 @@
 #define _Transponder_
 
 #include "ConfigObject.h"
+#include "JsonObject.h"
 
 #include <map>
 
@@ -32,7 +33,7 @@ class Source;
 class Service;
 struct PAT;
 
-class Transponder : public ConfigObject
+class Transponder : public ConfigObject, public JsonObject
 {
   public:
     Transponder( Source &src, const fe_delivery_system_t delsys, int config_id );
@@ -53,7 +54,7 @@ class Transponder : public ConfigObject
 
     virtual bool GetParams( struct dvb_v5_fe_parms *params ) const;
 
-    virtual std::string toString( ) = 0;
+    virtual std::string toString( ) const = 0;
 
     fe_delivery_system_t GetDelSys( ) const { return delsys; }
     uint32_t GetFrequency( ) const { return frequency; }
@@ -80,6 +81,8 @@ class Transponder : public ConfigObject
     };
 
     bool Tune( uint16_t pno );
+
+    void json( json_object *entry ) const;
 
   protected:
     bool enabled;

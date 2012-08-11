@@ -38,7 +38,7 @@ class Transponder_DVBC : public Transponder
 
     virtual bool GetParams( struct dvb_v5_fe_parms *params ) const;
 
-    virtual std::string toString( );
+    virtual std::string toString( ) const;
 
     bool IsSame( const Transponder &transponder );
 

@@ -73,6 +73,9 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
 
     virtual bool HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters );
 
+    bool RPC_Source( const int client, const std::map<std::string, std::string> &parameters );
+    bool RPC_Transponder( const int client, const std::map<std::string, std::string> &parameters );
+
   private:
     int FindAdapters( );
     void MonitorAdapters( );

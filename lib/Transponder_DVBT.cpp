@@ -114,7 +114,7 @@ bool Transponder_DVBT::GetParams( struct dvb_v5_fe_parms *params ) const
   return true;
 }
 
-std::string Transponder_DVBT::toString( )
+std::string Transponder_DVBT::toString( ) const
 {
   char tmp[256];
   snprintf(tmp, sizeof(tmp), "DVB-T  %d %s %s %s %s", frequency, fe_code_rate_name[code_rate_HP],

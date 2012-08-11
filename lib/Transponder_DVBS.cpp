@@ -125,7 +125,7 @@ bool Transponder_DVBS::GetParams( struct dvb_v5_fe_parms *params ) const
   return true;
 }
 
-std::string Transponder_DVBS::toString( )
+std::string Transponder_DVBS::toString( ) const
 {
   char tmp[256];
   switch( delsys )

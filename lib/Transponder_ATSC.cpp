@@ -57,7 +57,7 @@ bool Transponder_ATSC::LoadConfig( )
   return true;
 }
 
-std::string Transponder_ATSC::toString( )
+std::string Transponder_ATSC::toString( ) const
 {
   char tmp[256];
   snprintf(tmp, sizeof(tmp), "%d", frequency );

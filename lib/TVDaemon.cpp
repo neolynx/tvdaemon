@@ -469,34 +469,133 @@ Channel *TVDaemon::GetChannel( int id )
 
 bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters )
 {
-  json_object *h = json_object_new_object();
-  //std::string echo =  parameters["sEcho"];
-  int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-  json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-  json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
-  json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( sources.size( )));
-  json_object *a = json_object_new_array();
-
-  for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+  const std::map<std::string, std::string>::const_iterator cat = parameters.find( "c" );
+  if( cat == parameters.end( ))
   {
-    json_object *entry = json_object_new_array( );
-    (*it)->json( entry );
-    json_object_array_add( a, entry );
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC category not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
   }
 
-  json_object_object_add( h, "aaData", a );
+  if( cat->second == "source" )
+    return RPC_Source( client, parameters );
+  if( cat->second == "transponder" )
+    return RPC_Transponder( client, parameters );
 
-  const char *json = json_object_to_json_string( h );
-  Log( "json: %s", json );
-
-  HTTPServer::HTTPResponse *err_response = new HTTPServer::HTTPResponse( );
-  err_response->AddStatus( HTTP_OK );
-  err_response->AddTimeStamp( );
-  err_response->AddMime( "json" );
-  err_response->AddContents( json );
-  httpd->SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
-  json_object_put( h ); // this should delete it
-
-  return true;
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC unknown category" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
 }
 
+bool TVDaemon::RPC_Source( const int client, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  if( action->second == "list" )
+  {
+    json_object *h = json_object_new_object();
+    //std::string echo =  parameters["sEcho"];
+    int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+    json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+    json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
+    json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( sources.size( )));
+    json_object *a = json_object_new_array();
+
+    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    {
+      json_object *entry = json_object_new_array( );
+      (*it)->json( entry );
+      json_object_array_add( a, entry );
+    }
+
+    json_object_object_add( h, "aaData", a );
+
+    const char *json = json_object_to_json_string( h );
+    Log( "json: %s", json );
+
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_OK );
+    response->AddTimeStamp( );
+    response->AddMime( "json" );
+    response->AddContents( json );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    json_object_put( h ); // this should delete it
+    return true;
+  }
+
+  if( action->second == "types" )
+  {
+    json_object *h = json_object_new_object();
+    json_object_object_add( h, "0", json_object_new_string( "DVB-S" ));
+    json_object_object_add( h, "1", json_object_new_string( "DVB-C" ));
+    json_object_object_add( h, "2", json_object_new_string( "DVB-T" ));
+    json_object_object_add( h, "3", json_object_new_string( "ATSC" ));
+    const char *json = json_object_to_json_string( h );
+    Log( "json: %s", json );
+
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_OK );
+    response->AddTimeStamp( );
+    response->AddMime( "json" );
+    response->AddContents( json );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    json_object_put( h ); // this should delete it
+    return true;
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC source: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
+
+bool TVDaemon::RPC_Transponder( const int client, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator source = parameters.find( "source" );
+  if( source == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC transponder: source not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  int source_id = atoi( source->second.c_str( ));
+
+  if( source_id >= 0 && source_id < sources.size( ))
+  {
+    return sources[source_id]->RPC_Transponder( httpd, client, parameters );
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC source: unknown source" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
