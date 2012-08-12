@@ -54,6 +54,7 @@ bool Service::SaveConfig( )
 {
   Lookup( "ServiceID",    Setting::TypeInt )    = service_id;
   Lookup( "PID",          Setting::TypeInt )    = pid;
+  Lookup( "Type",         Setting::TypeInt )    = (int) type;
   Lookup( "Name",         Setting::TypeString ) = name;
   Lookup( "Provider",     Setting::TypeString ) = provider;
   Lookup( "Encrypted",    Setting::TypeInt )    = (int) encrypted;
@@ -73,6 +74,7 @@ bool Service::LoadConfig( )
 
   service_id = (int) Lookup( "ServiceID", Setting::TypeInt );
   pid        = (int) Lookup( "PID", Setting::TypeInt );
+  type       = (Type) (int) Lookup( "Type", Setting::TypeInt );
   const char *t = Lookup( "Name", Setting::TypeString );
   if( t ) name = t;
   t =             Lookup( "Provider", Setting::TypeString );

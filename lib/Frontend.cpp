@@ -429,6 +429,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   }
 
   std::string dumpfile;
+  std::string upcoming;
 
   Log( "Reading EIT" );
   struct dvb_table_eit *eit;
@@ -447,12 +448,22 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
           break;
         }
       }
+      if( event->running_status == 2 ) // starts in a few seconds
+      {
+        dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
+        {
+          upcoming = desc->name;
+          upcoming += ".pes";
+        }
+      }
     }
     dvb_table_eit_free(eit);
   }
 
-  //if( dumpfile.empty( ))
-  //{
+  if( dumpfile.empty( ) && !upcoming.empty( ))
+  {
+    dumpfile = upcoming;
+  }
     //dvb_read_section_with_id( fe, fd_v, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, &eitlen, 5 );
     //if( eit )
     //{
@@ -711,18 +722,18 @@ void Frontend::Thread( )
         continue;
       }
 
-      const char *type = NULL;
+      Service::Type type;
       switch( service_type )
       {
         case 0x01:
         case 0x16:
-          type = "TV";
+          type = Service::Type_TV;
           break;
         case 0x02:
-          type = "Radio";
+          type = Service::Type_Radio;
           break;
         case 0x19:
-          type = "HD TV";
+          type = Service::Type_TVHD;
           break;
         case 0x0c:
           // Data ignored
@@ -737,7 +748,7 @@ void Frontend::Thread( )
       }
 
       Log( "  Found %s service %5d%s: '%s'", type, service->service_id, service->free_CA_mode ? " §" : "", name );
-      transponder->UpdateService( service->service_id, name, provider, service->free_CA_mode );
+      transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
       services.push_back( service->service_id );
     }
 

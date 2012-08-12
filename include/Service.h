@@ -39,9 +39,17 @@ class Service : public ConfigObject
     Service( Transponder &transponder, std::string configfile );
     virtual ~Service( );
 
+    enum Type
+    {
+      Type_Radio,
+      Type_TV,
+      Type_TVHD,
+    };
+
     virtual int GetKey( ) const { return service_id; }
     uint16_t GetPID( ) { return pid; }
     void     SetPID( uint16_t pid ) { this->pid = pid; }
+    void        SetType( Type type ) { this->type = type; }
     std::string GetName( ) { return name; }
     void        SetName( std::string name ) { this->name = name; }
     std::string GetProvider( ) { return provider; }
@@ -60,6 +68,7 @@ class Service : public ConfigObject
     Transponder &transponder;
     uint16_t service_id;
     uint16_t pid;
+    Type type;
     std::string name;
     std::string provider;
     bool encrypted;

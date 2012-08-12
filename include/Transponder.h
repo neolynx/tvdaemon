@@ -24,13 +24,13 @@
 
 #include "ConfigObject.h"
 #include "JsonObject.h"
+#include "Service.h"
 
 #include <map>
 
 #include "dvb-frontend.h"
 
 class Source;
-class Service;
 struct PAT;
 
 class Transponder : public ConfigObject, public JsonObject
@@ -60,7 +60,7 @@ class Transponder : public ConfigObject, public JsonObject
     uint32_t GetFrequency( ) const { return frequency; }
 
     bool UpdateProgram( uint16_t service_id, uint16_t pid );
-    bool UpdateService( uint16_t service_id, std::string name, std::string provider, bool encrypted );
+    bool UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider, bool encrypted );
     bool UpdateStream( uint16_t pid, int id, int type );
 
     Service *CreateService( std::string  name );
