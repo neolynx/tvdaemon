@@ -14,25 +14,9 @@ class Root( ):
     self.cli = cli
 
     self.sources = Sources( cli )
-
-  def cd( self, path = None ):
-    if not path:
-      self.cli.cd.ClearItems( )
-      self.cli.cd.AppendItem( CLIItem( "sources", value = self.sources, category = "root" ))
-      self.cli.cd.AppendItem( CLIItem( "channels", value = "channels", category = "root" ))
-      self.cli.cd.AppendItem( CLIItem( "recorder", value = "recorder", category = "root" ))
-      return
-
-    if path == "sources":
-      self.cli._location.AppendLocation( path, self.sources )
-      loc = self.cli._location.GetCurrentLocationValue( )
-      if hasattr( loc, "cd" ):
-        loc.cd( )
-    else:
-      print "path: %s"%path
-
-  def ls( self ):
-    print "sources"
+    self.path_items = { "sources": self.sources,
+                        "channels": None,
+                        "adapters": None }
 
 class Sources( ):
   def __init__( self, cli ):
@@ -42,6 +26,15 @@ class Sources( ):
     self.get_types( )
 
     self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+    self.cli.RegisterItem( CLIItem( "add", self.cmd_add, category = self.category ))
+
+  def update( self ):
+    self.path_items = { }
+    sources = self.get( )
+    if sources:
+      count = sources["iTotalDisplayRecords"]
+      for i in range( count ):
+        self.path_items[sources["aaData"][i][0]] = Source( self.cli, sources["aaData"][i] )
 
   def get( self ):
     req = urllib2.Request('http://localhost:7777/tvd?c=source&a=list')
@@ -69,7 +62,7 @@ class Sources( ):
     for t in types:
       self.types[int(t)] = types[t]
 
-  def ls( self ):
+  def cmd_ls( self ):
     sources = self.get( )
     if sources:
       count = sources["iTotalDisplayRecords"]
@@ -86,35 +79,14 @@ class Sources( ):
           sys.stdout.write( "Unknown (%d)"%source_type )
         sys.stdout.write( "\n" )
 
-  def cd( self, path = None ):
-    sources = self.get( )
-    if not sources:
-      return
-    count = sources["iTotalDisplayRecords"]
-    if not path:
-      self.cli.cd.ClearItems( )
-      for i in range( count ):
-        source = sources["aaData"][i][0]
-        source_id = sources["aaData"][i][1]
-        self.cli.cd.AppendItem( CLIItem( source, value = source_id, category = "default" ))
-      return
-
-    found = False
-    for i in range( count ):
-      if path == sources["aaData"][i][0]:
-        self.cli._location.AppendLocation( path, Source( self.cli, sources["aaData"][i] ))
-        loc = self.cli._location.GetCurrentLocationValue( )
-        if hasattr( loc, "cd" ):
-          loc.cd( )
-        found = True
-        break
-
-    if not found:
-      print "Unknown source"
-
   def cmd_delete( self, item, args, rawline ):
     """source||delete source"""
-    print "delete"
+    print "not implemented"
+
+  def cmd_add( self, item, args, rawline ):
+    """source||add source"""
+    print "not implemented"
+
 
 class Source( ):
   def __init__( self, cli, source ):
@@ -125,27 +97,9 @@ class Source( ):
     self.transponders = Transponders( cli, source )
     self.services = Services( cli, source )
 
-  def cd( self, path = None ):
-    if not path:
-      self.cli.cd.ClearItems( )
-      self.cli.cd.AppendItem( CLIItem( "transponders", value = self.transponders, category = self.category ))
-      self.cli.cd.AppendItem( CLIItem( "services", value = self.services, category = self.category ))
-
-    if path == "transponders":
-      self.cli._location.AppendLocation( path, self.transponders )
-      loc = self.cli._location.GetCurrentLocationValue( )
-      if hasattr( loc, "cd" ):
-        loc.cd( )
-    elif path == "services":
-      self.cli._location.AppendLocation( path, self.services )
-      loc = self.cli._location.GetCurrentLocationValue( )
-      if hasattr( loc, "cd" ):
-        loc.cd( )
-    else:
-      print "path: %s"%path
-
-  def ls( self ):
-    print "transponders"
+  def update( self ):
+    self.path_items = { "transponders": self.transponders,
+                        "services":     self.services }
 
 class Transponders( ):
   def __init__( self, cli, source ):
@@ -154,6 +108,8 @@ class Transponders( ):
     self.source_id = source[1]
 
     self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+
+    self.path_items = { }
 
   def get( self ):
     req = urllib2.Request('http://localhost:7777/tvd?c=transponder&a=list&source=%d'%self.source_id )
@@ -167,36 +123,7 @@ class Transponders( ):
       return None
     return json.loads( response.read( ))
 
-  def cd( self, path = None ):
-    transponders = self.get( )
-    if not transponders:
-      return
-    count = transponders["iTotalDisplayRecords"]
-    if not path:
-      self.cli.cd.ClearItems( )
-      for i in range( count ):
-        transponder = transponders["aaData"][i][0]
-        transponder_id = transponders["aaData"][i][1]
-        self.cli.cd.AppendItem( CLIItem( transponder, value = transponder_id, category = "transponder" ))
-      self.cli.SetItemsEnabledByCategories( self.category )
-      self.cli._UpdateHelpItem( )
-      return
-
-    print "source cd '%s'"%path
-    found = False
-    for i in range( count ):
-      if path == transponders["aaData"][i][0]:
-        self.cli._location.AppendLocation( path, Source( self.cli, transponders["aaData"][i] ))
-        loc = self.cli._location.GetCurrentLocationValue( )
-        if hasattr( loc, "cd" ):
-          loc.cd( )
-        found = True
-        break
-
-    if not found:
-      print "Unknown source"
-
-  def ls( self ):
+  def cmd_ls( self ):
     transponders = self.get( )
     if not transponders:
       return
@@ -233,35 +160,7 @@ class Services( ):
       return None
     return json.loads( response.read( ))
 
-  def cd( self, path = None ):
-    transponders = self.get( )
-    if not transponders:
-      return
-    count = transponders["iTotalDisplayRecords"]
-    if not path:
-      self.cli.cd.ClearItems( )
-      for i in range( count ):
-        transponder = transponders["aaData"][i][0]
-        transponder_id = transponders["aaData"][i][1]
-        self.cli.cd.AppendItem( CLIItem( transponder, value = transponder_id, category = "transponder" ))
-      self.cli.SetItemsEnabledByCategories( self.category )
-      self.cli._UpdateHelpItem( )
-      return
-
-    found = False
-    for i in range( count ):
-      if path == transponders["aaData"][i][0]:
-        self.cli._location.AppendLocation( path, Source( self.cli, transponders["aaData"][i] ))
-        loc = self.cli._location.GetCurrentLocationValue( )
-        if hasattr( loc, "cd" ):
-          loc.cd( )
-        found = True
-        break
-
-    if not found:
-      print "Unknown source"
-
-  def ls( self ):
+  def cmd_ls( self ):
     transponders = self.get( )
     if not transponders:
       return
@@ -286,73 +185,77 @@ class TVDCLI( CLI ):
     self.SetPrompt( "TVD:%s> " )
 
     self.cd = self.GetItemByName( "cd" )
-
     self.root = Root( self )
-
-    self.root.cd( )
-
     self.SetItemsEnabled( False )
-#    self.SetItemsEnabledByCategories( "root" )
-#    self._UpdateHelpItem( )
+    self.relocate( )
 
-
+  def relocate( self ):
+    loc = self._location.GetCurrentLocationValue( )
+    if not loc:
+      loc = self.root
+    cat = "root"
+    if hasattr( loc, "category" ):
+      cat = loc.category
+    if hasattr( loc, "update" ):
+      loc.update( )
+    self.cd.ClearItems( )
+    if hasattr( loc, "path_items" ):
+      for path in loc.path_items:
+        self.cd.AppendItem( CLIItem( path, value = loc.path_items[path], tab_delimiter = "/" ))
+        self.SetItemsEnabledByCategories( cat, other_inverse = True )
+        self._UpdateHelpItem( )
+    else:
+      print "object has no path items:", loc
 
   def cmd_cd( self, item, args, rawline ):
     """[location|..]||change current location"""
     index = self._location.GetHierarchyIndex( )
     args = args.strip( )
-    handled = False
-    if args == "" or args == "/":
+    changed = False
+    if args == "":
       self._location.GoToRoot( )
-      handled = True
-    elif args == "..":
-      self._location.GoOneBack( )
-      handled = True
+      changed = True
     elif args == "-":
       self._location.GoToLastLocation( )
-      handled = True
-    #else:
-      #if args.split( self._location.Delimiter )[0] == "/":
-        #self._location.GoToRoot( )
-      #stations = [s for s in args.split( self._location.Delimiter ) if s != ""]
-      #for station in stations:
-        #if station == "..":
-          #self._location.GoOneBack( )
-        #elif station == ".":
-          #pass
-        #else:
-          #index = self._location.GetHierarchyIndex( )
-          #if index == 0:
-            #if station == "sources":
-              #self._location.AppendLocation( station, self.sources )
-          #else:
-            #print "index: %d"%index
+      changed = True
+    elif args[0] == "/":
+      self._location.GoToRoot( )
+      changed = True
 
-    if handled:
-      args = None
+    if changed:
+      self.relocate( )
 
-    loc = self._location.GetCurrentLocationValue( )
-    if not loc:
-      loc = self.root
-    if hasattr( loc, "cd" ):
-      loc.cd( args )
+    paths = [s for s in args.split( self._location.Delimiter ) if s != ""]
+    for path in paths:
+      if path == "..":
+        self._location.GoOneBack( )
+        self.relocate( )
+      elif path == ".":
+        continue
+      else:
+        #index = self._location.GetHierarchyIndex( )
+        loc = self._location.GetCurrentLocationValue( )
+        if not loc:
+          loc = self.root
 
-    loc = self._location.GetCurrentLocationValue( )
-    if not loc:
-      loc = self.root
-
-    cat = "root"
-    if hasattr( loc, "category" ):
-      cat = loc.category
-    self.SetItemsEnabledByCategories( cat, other_inverse = True )
-    self._UpdateHelpItem( )
+        if hasattr( loc, "path_items" ):
+          if path in loc.path_items:
+            self._location.AppendLocation( path, loc.path_items[path] )
+            self.relocate( )
+          else:
+            print "not such directory"
+        else:
+          print "object has no path_items"
 
   def cmd_ls( self, item, args = "", line = "" ):
     loc = self._location.GetCurrentLocationValue( )
-    if loc:
-      loc.ls( )
-    else:
-      self.root.ls( )
+    if not loc:
+      loc = self.root
+    if hasattr( loc, "cmd_ls" ):
+      loc.cmd_ls( )
+    elif hasattr( loc, "path_items" ):
+      for path in loc.path_items:
+        print "%s/"%path
 
 if __name__ == "__main__":
   test = TVDCLI( )
