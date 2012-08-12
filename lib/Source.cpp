@@ -279,7 +279,7 @@ bool Source::Tune( Transponder &transponder, uint16_t pno )
   return false;
 }
 
-bool Source::RPC_Transponder( HTTPServer *httpd, const int client, const std::map<std::string, std::string> &parameters )
+bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
 {
   const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
   if( action == parameters.end( ))

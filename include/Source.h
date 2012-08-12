@@ -60,7 +60,7 @@ class Source : public ConfigObject, public JsonObject
 
     bool Tune( Transponder &transponder, uint16_t pno );
 
-    bool RPC_Transponder( HTTPServer *httpd, const int client, const std::map<std::string, std::string> &parameters );
+    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
 
   private:
     TVDaemon &tvd;
