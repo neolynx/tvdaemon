@@ -482,9 +482,11 @@ bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, 
   }
 
   if( cat->second == "source" )
-    return RPC_Source( client, parameters );
+    return RPC( client, cat->second, parameters );
   if( cat->second == "transponder" )
-    return RPC_Transponder( client, parameters );
+    return RPC_Source( client, cat->second, parameters );
+  if( cat->second == "service" )
+    return RPC_Source( client, cat->second, parameters );
 
   HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
   response->AddStatus( HTTP_NOT_FOUND );
@@ -495,7 +497,7 @@ bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, 
   return false;
 }
 
-bool TVDaemon::RPC_Source( const int client, const std::map<std::string, std::string> &parameters )
+bool TVDaemon::RPC( const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
 {
   const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
   if( action == parameters.end( ))
@@ -570,7 +572,7 @@ bool TVDaemon::RPC_Source( const int client, const std::map<std::string, std::st
   return false;
 }
 
-bool TVDaemon::RPC_Transponder( const int client, const std::map<std::string, std::string> &parameters )
+bool TVDaemon::RPC_Source( const int client, const std::map<std::string, std::string> &parameters )
 {
   const std::map<std::string, std::string>::const_iterator source = parameters.find( "source" );
   if( source == parameters.end( ))
@@ -588,7 +590,7 @@ bool TVDaemon::RPC_Transponder( const int client, const std::map<std::string, st
 
   if( source_id >= 0 && source_id < sources.size( ))
   {
-    return sources[source_id]->RPC_Transponder( httpd, client, parameters );
+    return sources[source_id]->RPC( httpd, client, parameters );
   }
 
   HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
