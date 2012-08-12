@@ -3,13 +3,16 @@ Prerequisites
 ==============
 
 the following tools are needed:
-   autoconf libtool automake autopoint pkg-config
+
+    apt-get install autoconf libtool automake autopoint pkg-config
 
 the following headers are needed:
-   libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev
+
+    apt-get install libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev
 
 for initial scan files:
-   dvb-apps
+
+    apt-get install dvb-apps
 
 
 Checkout TVDaemon
@@ -18,30 +21,35 @@ Checkout TVDaemon
 git clone https://github.com/neolynx/tvdaemon.git
 cd tvdaemon
 
-Build tvdaemon
-===============
-
 git submodule init
 git submodule update
 
 cd v4l-utils
 git checkout master
 git am ../patches/*
-autoreconf -i
-./configure
-make
 cd ..
 
-cd cli-core
+cd cli/cli-core
 git co master
 git submodule init
 git submodule update
 cd src/colorful
 git co master
-cd ../../..
+cd ../..
+cd ../..
 
-libtoolize
-autoreconf -i
+
+Build tvdaemon
+===============
+
+cd v4l-utils
+autoreconf -vfis
 ./configure
 make
+cd ..
+
+autoreconf -vfis
+./configure
+make
+
 
