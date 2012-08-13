@@ -74,6 +74,7 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
 Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   ConfigObject( adapter, configfile )
   , adapter(adapter)
+  , fe(NULL)
   , present(false)
   , transponder(NULL)
   , current_port(0)
@@ -182,6 +183,7 @@ bool Frontend::Open()
   if( fe )
     return true;
 // FIXME: handle adapter_id == -1
+  Log( "Opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
   fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
   if( !fe )
   {
