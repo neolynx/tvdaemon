@@ -293,7 +293,7 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
     return false;
   }
 
-  if( cat == "source" )
+  if( cat == "transponder" )
   {
     if( action->second == "list" )
     {
