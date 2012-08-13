@@ -9,6 +9,22 @@ import sys, os
 sys.path.insert( 0, os.path.join( os.path.dirname( os.path.abspath( __file__ )), "cli-core/src/" ))
 from CLI         import *
 
+server = "localhost"
+port   = 7777
+
+def rpc( url ):
+  global server, port
+  req = urllib2.Request( 'http://%s:%d'%( server, port ) + '/' + url )
+  try:
+    response = urllib2.urlopen(req)
+  except urllib2.HTTPError, e:
+    print e.code, url
+    return None
+  except urllib2.URLError, e:
+    print e.args
+    return None
+  return json.loads( response.read( ))
+
 class Root( ):
   def __init__( self, cli ):
     self.category = "root"
@@ -37,16 +53,7 @@ class Adapters( ):
         self.path_items[data["aaData"][i][0]] = Adapter( self.cli, data["aaData"][i] )
 
   def get( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=adapter&a=list')
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return None
-    except urllib2.URLError, e:
-      print e.args
-      return None
-    return json.loads( response.read( ))
+    return rpc( 'tvd?c=adapter&a=list' )
 
   def cmd_ls( self ):
     data = self.get( )
@@ -80,16 +87,7 @@ class Adapter( ):
         self.path_items[data["aaData"][i][0]] = Frontend( self.cli, self.adapter_id, data["aaData"][i] )
 
   def get( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=frontend&a=list&adapter=%d'%self.adapter_id)
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return None
-    except urllib2.URLError, e:
-      print e.args
-      return None
-    return json.loads( response.read( ))
+    return rpc( 'tvd?c=frontend&a=list&adapter=%d'%self.adapter_id )
 
   def cmd_ls( self ):
     data = self.get( )
@@ -124,16 +122,7 @@ class Frontend( ):
         self.path_items[data["aaData"][i][0]] = Port( self.cli, self.adapter_id, self.frontend_id, data["aaData"][i] )
 
   def get( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=port&a=list&adapter=%d&frontend=%d'%( self.adapter_id, self.frontend_id ))
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return None
-    except urllib2.URLError, e:
-      print e.args
-      return None
-    return json.loads( response.read( ))
+    return rpc( 'tvd?c=port&a=list&adapter=%d&frontend=%d'%( self.adapter_id, self.frontend_id ))
 
   def cmd_ls( self ):
     data = self.get( )
@@ -185,30 +174,14 @@ class Channels( ):
         self.path_items[sources["aaData"][i][0]] = Source( self.cli, sources["aaData"][i] )
 
   def get( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=adapter&a=list')
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return None
-    except urllib2.URLError, e:
-      print e.args
-      return None
-    return json.loads( response.read( ))
+    return rpc( 'tvd?c=adapter&a=list' )
 
   def get_types( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=adapter&a=types')
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return
-    except urllib2.URLError, e:
-      print e.args
-      return
-    types = json.loads( response.read( ))
-    for t in types:
-      self.types[int(t)] = types[t]
+    self.types = { }
+    types = rpc( 'tvd?c=adapter&a=types' )
+    if types:
+      for t in types:
+        self.types[int(t)] = types[t]
 
   def cmd_ls( self ):
     sources = self.get( )
@@ -250,30 +223,13 @@ class Sources( ):
         self.path_items[sources["aaData"][i][0]] = Source( self.cli, sources["aaData"][i] )
 
   def get( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=source&a=list')
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return None
-    except urllib2.URLError, e:
-      print e.args
-      return None
-    return json.loads( response.read( ))
+    return rpc( 'tvd?c=source&a=list' )
 
   def get_types( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=source&a=types')
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return
-    except urllib2.URLError, e:
-      print e.args
-      return
-    types = json.loads( response.read( ))
-    for t in types:
-      self.types[int(t)] = types[t]
+    types = rpc( 'tvd?c=source&a=types' )
+    if types:
+      for t in types:
+        self.types[int(t)] = types[t]
 
   def cmd_ls( self ):
     sources = self.get( )
@@ -325,16 +281,7 @@ class Transponders( ):
     self.path_items = { }
 
   def get( self ):
-    req = urllib2.Request('http://localhost:7777/tvd?c=transponder&a=list&source=%d'%self.source_id )
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return None
-    except urllib2.URLError, e:
-      print e.args
-      return None
-    return json.loads( response.read( ))
+    return rpc( 'tvd?c=transponder&a=list&source=%d'%self.source_id )
 
   def cmd_ls( self ):
     transponders = self.get( )
@@ -371,21 +318,13 @@ class Services( ):
         #self.path_items[data["aaData"][i][0]] = Service( self.cli, self.source_id, data["aaData"][i] )
 
   def get( self ):
-    req = urllib2.Request( 'http://localhost:7777/tvd?c=service&a=list&source=%d'%self.source_id )
-    try:
-      response = urllib2.urlopen(req)
-    except urllib2.HTTPError, e:
-      print e.code
-      return None
-    except urllib2.URLError, e:
-      print e.args
-      return None
-    return json.loads( response.read( ))
+    return rpc( 'tvd?c=service&a=list&source=%d'%self.source_id )
 
   def cmd_ls( self ):
     data = self.get( )
     if not data:
       return
+    transponders = self.source.transponders.get( )
     count = data["iTotalDisplayRecords"]
     for i in range( count ):
       name = data["aaData"][i][0]
@@ -398,14 +337,10 @@ class Services( ):
       sys.stdout.write( " " * ( 40 - len( name )))
       sys.stdout.write( "%5d"%id )
       sys.stdout.write( "   %d"%type )
-      sys.stdout.write( "   %6d"%transponder_id )
-      transponders = self.source.transponders.get( )
-      print transponders
       if transponders:
         transponder = None
-        count = transponders["iTotalDisplayRecords"]
-        for i in range( count ):
-          print transponder_id, " == ", transponders["aaData"][i][1]
+        count2 = transponders["iTotalDisplayRecords"]
+        for i in range( count2 ):
           if transponder_id == transponders["aaData"][i][1]:
             transponder = transponders["aaData"][i][0]
             break
