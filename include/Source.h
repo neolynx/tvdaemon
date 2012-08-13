@@ -23,7 +23,7 @@
 #define _Source_
 
 #include "ConfigObject.h"
-#include "JsonObject.h"
+#include "RPCObject.h"
 #include "TVDaemon.h"
 #include "Transponder.h"
 
@@ -33,7 +33,7 @@
 class Port;
 class HTTPServer;
 
-class Source : public ConfigObject, public JsonObject
+class Source : public ConfigObject, public RPCObject
 {
   public:
     Source( TVDaemon &tvd, std::string name, int config_id );
@@ -44,7 +44,6 @@ class Source : public ConfigObject, public JsonObject
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
-    virtual void json( json_object *entry ) const;
 
     bool ReadScanfile( std::string scanfile );
 
@@ -60,6 +59,8 @@ class Source : public ConfigObject, public JsonObject
 
     bool Tune( Transponder &transponder, uint16_t pno );
 
+    // RPC
+    void json( json_object *entry ) const;
     bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
 
   private:

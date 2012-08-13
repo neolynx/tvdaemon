@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import urllib2
 import json
@@ -13,10 +14,222 @@ class Root( ):
     self.category = "root"
     self.cli = cli
 
-    self.sources = Sources( cli )
+    self.sources  = Sources ( cli )
+    self.channels = Channels( cli )
+    self.adapters = Adapters( cli )
     self.path_items = { "sources": self.sources,
-                        "channels": None,
-                        "adapters": None }
+                        "channels": self.channels,
+                        "adapters": self.adapters }
+
+class Adapters( ):
+  def __init__( self, cli ):
+    self.category = "adapters"
+    self.cli = cli
+
+    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+
+  def update( self ):
+    self.path_items = { }
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
+      for i in range( count ):
+        self.path_items[data["aaData"][i][0]] = Adapter( self.cli, data["aaData"][i] )
+
+  def get( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=adapter&a=list')
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return None
+    except urllib2.URLError, e:
+      print e.args
+      return None
+    return json.loads( response.read( ))
+
+  def cmd_ls( self ):
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
+      for i in range( count ):
+        name = data["aaData"][i][0]
+
+        sys.stdout.write( cf.bold_white( name ))
+        sys.stdout.write( " " * ( 30 - len( name )))
+        sys.stdout.write( "\n" )
+
+  def cmd_delete( self, item, args, rawline ):
+    """adapter||delete adapter"""
+    print "not implemented"
+
+class Adapter( ):
+  def __init__( self, cli, data ):
+    self.category = "adapter"
+    self.cli = cli
+    self.adapter_id = data[1]
+
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+
+  def update( self ):
+    self.path_items = { }
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
+      for i in range( count ):
+        self.path_items[data["aaData"][i][0]] = Frontend( self.cli, self.adapter_id, data["aaData"][i] )
+
+  def get( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=frontend&a=list&adapter=%d'%self.adapter_id)
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return None
+    except urllib2.URLError, e:
+      print e.args
+      return None
+    return json.loads( response.read( ))
+
+  def cmd_ls( self ):
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
+      for i in range( count ):
+        name = data["aaData"][i][0]
+
+        sys.stdout.write( cf.bold_white( name ))
+        sys.stdout.write( " " * ( 30 - len( name )))
+        sys.stdout.write( "\n" )
+
+  def cmd_delete( self, item, args, rawline ):
+    """adapter||delete adapter"""
+    print "not implemented"
+
+class Frontend( ):
+  def __init__( self, cli, adapter_id, data ):
+    self.category = "frontend"
+    self.cli = cli
+    self.adapter_id  = adapter_id
+    self.frontend_id = data[1]
+
+    self.cli.RegisterItem( CLIItem( "addport", self.cmd_addport, category = self.category ))
+
+  def update( self ):
+    self.path_items = { }
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
+      for i in range( count ):
+        self.path_items[data["aaData"][i][0]] = Port( self.cli, self.adapter_id, self.frontend_id, data["aaData"][i] )
+
+  def get( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=port&a=list&adapter=%d&frontend=%d'%( self.adapter_id, self.frontend_id ))
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return None
+    except urllib2.URLError, e:
+      print e.args
+      return None
+    return json.loads( response.read( ))
+
+  def cmd_ls( self ):
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
+      for i in range( count ):
+        name = data["aaData"][i][0]
+
+        sys.stdout.write( cf.bold_white( name ))
+        sys.stdout.write( " " * ( 30 - len( name )))
+        sys.stdout.write( "\n" )
+
+  def cmd_addport( self, item, args, rawline ):
+    """adapter||delete adapter"""
+    print "not implemented"
+
+class Port( ):
+  def __init__( self, cli, adapter_id, frontend_id, data ):
+    self.category = "port"
+    self.cli = cli
+    self.adapter_id  = adapter_id
+    self.frontend_id = frontend_id
+    self.port_id     = data[1]
+
+    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+
+  def update( self ):
+    self.path_items = { }
+
+  def cmd_delete( self, item, args, rawline ):
+    """port||delete port"""
+    print "not implemented"
+
+class Channels( ):
+  def __init__( self, cli ):
+    self.category = "adapters"
+    self.cli = cli
+    self.types = { }
+    self.get_types( )
+
+    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+
+  def update( self ):
+    self.path_items = { }
+    sources = self.get( )
+    if sources:
+      count = sources["iTotalDisplayRecords"]
+      for i in range( count ):
+        self.path_items[sources["aaData"][i][0]] = Source( self.cli, sources["aaData"][i] )
+
+  def get( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=adapter&a=list')
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return None
+    except urllib2.URLError, e:
+      print e.args
+      return None
+    return json.loads( response.read( ))
+
+  def get_types( self ):
+    req = urllib2.Request('http://localhost:7777/tvd?c=adapter&a=types')
+    try:
+      response = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+      print e.code
+      return
+    except urllib2.URLError, e:
+      print e.args
+      return
+    types = json.loads( response.read( ))
+    for t in types:
+      self.types[int(t)] = types[t]
+
+  def cmd_ls( self ):
+    sources = self.get( )
+    if sources:
+      count = sources["iTotalDisplayRecords"]
+      for i in range( count ):
+        source = sources["aaData"][i][0]
+        source_id = sources["aaData"][i][1]
+        source_type = sources["aaData"][i][2]
+
+        sys.stdout.write( cf.bold_white( source ))
+        sys.stdout.write( " " * ( 30 - len( source )))
+        if self.types.has_key( source_type ):
+          sys.stdout.write( self.types[source_type] )
+        else:
+          sys.stdout.write( "Unknown (%d)"%source_type )
+        sys.stdout.write( "\n" )
+
+  def cmd_delete( self, item, args, rawline ):
+    """source||delete source"""
+    print "not implemented"
 
 class Sources( ):
   def __init__( self, cli ):
@@ -71,7 +284,7 @@ class Sources( ):
         source_id = sources["aaData"][i][1]
         source_type = sources["aaData"][i][2]
 
-        sys.stdout.write( cf.bold_white( source ))
+        sys.stdout.write( cf.bold_white( source.encode( 'utf8' )))
         sys.stdout.write( " " * ( 30 - len( source )))
         if self.types.has_key( source_type ):
           sys.stdout.write( self.types[source_type] )
@@ -89,23 +302,23 @@ class Sources( ):
 
 
 class Source( ):
-  def __init__( self, cli, source ):
+  def __init__( self, cli, data ):
     self.category = "source"
     self.cli = cli
-    self.source_id = source[1]
+    self.source_id = data[1]
 
-    self.transponders = Transponders( cli, source )
-    self.services = Services( cli, source )
+    self.transponders = Transponders( cli, data )
+    self.services = Services( cli, self, data )
 
   def update( self ):
     self.path_items = { "transponders": self.transponders,
                         "services":     self.services }
 
 class Transponders( ):
-  def __init__( self, cli, source ):
+  def __init__( self, cli, data ):
     self.category = "transponders"
     self.cli = cli
-    self.source_id = source[1]
+    self.source_id = data[1]
 
     self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
@@ -141,15 +354,24 @@ class Transponders( ):
     print "delete"
 
 class Services( ):
-  def __init__( self, cli, source ):
+  def __init__( self, cli, source, data ):
     self.category = "services"
     self.cli = cli
-    self.source_id = source[1]
+    self.source_id = data[1]
+    self.source = source
 
     self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
+  #def update( self ):
+    #self.path_items = { }
+    #data = self.get( )
+    #if data:
+      #count = data["iTotalDisplayRecords"]
+      #for i in range( count ):
+        #self.path_items[data["aaData"][i][0]] = Service( self.cli, self.source_id, data["aaData"][i] )
+
   def get( self ):
-    req = urllib2.Request( 'http://localhost:7777/tvd?c=services&a=list&source=%d'%self.source_id )
+    req = urllib2.Request( 'http://localhost:7777/tvd?c=service&a=list&source=%d'%self.source_id )
     try:
       response = urllib2.urlopen(req)
     except urllib2.HTTPError, e:
@@ -161,15 +383,33 @@ class Services( ):
     return json.loads( response.read( ))
 
   def cmd_ls( self ):
-    transponders = self.get( )
-    if not transponders:
+    data = self.get( )
+    if not data:
       return
-    count = transponders["iTotalDisplayRecords"]
+    count = data["iTotalDisplayRecords"]
     for i in range( count ):
-      transponder = transponders["aaData"][i][0]
-      transponder_id = transponders["aaData"][i][1]
+      name = data["aaData"][i][0]
+      id = data["aaData"][i][1]
+      type = data["aaData"][i][2]
+      transponder_id = data["aaData"][i][3]
 
-      sys.stdout.write( cf.bold_white( transponder ))
+      sys.stdout.write( "   " )
+      sys.stdout.write( cf.bold_white( name.encode('utf8')))
+      sys.stdout.write( " " * ( 40 - len( name )))
+      sys.stdout.write( "%5d"%id )
+      sys.stdout.write( "   %d"%type )
+      sys.stdout.write( "   %6d"%transponder_id )
+      transponders = self.source.transponders.get( )
+      print transponders
+      if transponders:
+        transponder = None
+        count = transponders["iTotalDisplayRecords"]
+        for i in range( count ):
+          print transponder_id, " == ", transponders["aaData"][i][1]
+          if transponder_id == transponders["aaData"][i][1]:
+            transponder = transponders["aaData"][i][0]
+            break
+        sys.stdout.write( "   %s"%transponder )
       sys.stdout.write( "\n" )
     print "total: %d"%count
 
@@ -196,14 +436,14 @@ class TVDCLI( CLI ):
     cat = "root"
     if hasattr( loc, "category" ):
       cat = loc.category
+    self.SetItemsEnabledByCategories( cat, other_inverse = True )
+    self._UpdateHelpItem( )
     if hasattr( loc, "update" ):
       loc.update( )
     self.cd.ClearItems( )
     if hasattr( loc, "path_items" ):
       for path in loc.path_items:
         self.cd.AppendItem( CLIItem( path, value = loc.path_items[path], tab_delimiter = "/" ))
-        self.SetItemsEnabledByCategories( cat, other_inverse = True )
-        self._UpdateHelpItem( )
     else:
       print "object has no path items:", loc
 

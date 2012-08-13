@@ -483,10 +483,20 @@ bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, 
 
   if( cat->second == "source" )
     return RPC( client, cat->second, parameters );
+  if( cat->second == "adapter" )
+    return RPC( client, cat->second, parameters );
+  if( cat->second == "channel" )
+    return RPC( client, cat->second, parameters );
+
   if( cat->second == "transponder" )
     return RPC_Source( client, cat->second, parameters );
   if( cat->second == "service" )
     return RPC_Source( client, cat->second, parameters );
+
+  if( cat->second == "frontend" )
+    return RPC_Adapter( client, cat->second, parameters );
+  if( cat->second == "port" )
+    return RPC_Adapter( client, cat->second, parameters );
 
   HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
   response->AddStatus( HTTP_NOT_FOUND );
@@ -511,71 +521,110 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
     return false;
   }
 
-  if( action->second == "list" )
+  if( cat == "source" )
   {
-    json_object *h = json_object_new_object();
-    //std::string echo =  parameters["sEcho"];
-    int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-    json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-    json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
-    json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( sources.size( )));
-    json_object *a = json_object_new_array();
-
-    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    if( action->second == "list" )
     {
-      json_object *entry = json_object_new_array( );
-      (*it)->json( entry );
-      json_object_array_add( a, entry );
+      json_object *h = json_object_new_object();
+      //std::string echo =  parameters["sEcho"];
+      int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+      json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+      json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
+      json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( sources.size( )));
+      json_object *a = json_object_new_array();
+
+      for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+      {
+        json_object *entry = json_object_new_array( );
+        (*it)->json( entry );
+        json_object_array_add( a, entry );
+      }
+
+      json_object_object_add( h, "aaData", a );
+
+      const char *json = json_object_to_json_string( h );
+      Log( "json: %s", json );
+
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_OK );
+      response->AddTimeStamp( );
+      response->AddMime( "json" );
+      response->AddContents( json );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      json_object_put( h ); // this should delete it
+      return true;
     }
 
-    json_object_object_add( h, "aaData", a );
+    if( action->second == "types" )
+    {
+      json_object *h = json_object_new_object();
+      json_object_object_add( h, "0", json_object_new_string( "DVB-S" ));
+      json_object_object_add( h, "1", json_object_new_string( "DVB-C" ));
+      json_object_object_add( h, "2", json_object_new_string( "DVB-T" ));
+      json_object_object_add( h, "3", json_object_new_string( "ATSC" ));
+      const char *json = json_object_to_json_string( h );
+      Log( "json: %s", json );
 
-    const char *json = json_object_to_json_string( h );
-    Log( "json: %s", json );
-
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    json_object_put( h ); // this should delete it
-    return true;
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_OK );
+      response->AddTimeStamp( );
+      response->AddMime( "json" );
+      response->AddContents( json );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      json_object_put( h ); // this should delete it
+      return true;
+    }
   }
 
-  if( action->second == "types" )
+  if( cat == "adapter" )
   {
-    json_object *h = json_object_new_object();
-    json_object_object_add( h, "0", json_object_new_string( "DVB-S" ));
-    json_object_object_add( h, "1", json_object_new_string( "DVB-C" ));
-    json_object_object_add( h, "2", json_object_new_string( "DVB-T" ));
-    json_object_object_add( h, "3", json_object_new_string( "ATSC" ));
-    const char *json = json_object_to_json_string( h );
-    Log( "json: %s", json );
+    if( action->second == "list" )
+    {
+      int count = adapters.size( );
+      json_object *h = json_object_new_object();
+      //std::string echo =  parameters["sEcho"];
+      int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+      json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+      json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
+      json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+      json_object *a = json_object_new_array();
 
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    json_object_put( h ); // this should delete it
-    return true;
+      for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+      {
+        json_object *entry = json_object_new_array( );
+        (*it)->json( entry );
+        json_object_array_add( a, entry );
+      }
+
+      json_object_object_add( h, "aaData", a );
+
+      const char *json = json_object_to_json_string( h );
+      Log( "json: %s", json );
+
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_OK );
+      response->AddTimeStamp( );
+      response->AddMime( "json" );
+      response->AddContents( json );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      json_object_put( h ); // this should delete it
+      return true;
+    }
   }
 
   HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
   response->AddStatus( HTTP_NOT_FOUND );
   response->AddTimeStamp( );
   response->AddMime( "html" );
-  response->AddContents( "RPC source: unknown action" );
+  response->AddContents( "RPC: unknown action" );
   httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
   return false;
 }
 
 bool TVDaemon::RPC_Source( const int client, std::string cat, const std::map<std::string, std::string> &parameters )
 {
-  const std::map<std::string, std::string>::const_iterator source = parameters.find( "source" );
-  if( source == parameters.end( ))
+  const std::map<std::string, std::string>::const_iterator obj = parameters.find( "source" );
+  if( obj == parameters.end( ))
   {
     HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
     response->AddStatus( HTTP_NOT_FOUND );
@@ -586,11 +635,10 @@ bool TVDaemon::RPC_Source( const int client, std::string cat, const std::map<std
     return false;
   }
 
-  int source_id = atoi( source->second.c_str( ));
-
-  if( source_id >= 0 && source_id < sources.size( ))
+  int obj_id = atoi( obj->second.c_str( ));
+  if( obj_id >= 0 && obj_id < sources.size( ))
   {
-    return sources[source_id]->RPC( httpd, client, cat, parameters );
+    return sources[obj_id]->RPC( httpd, client, cat, parameters );
   }
 
   HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
@@ -601,3 +649,33 @@ bool TVDaemon::RPC_Source( const int client, std::string cat, const std::map<std
   httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
   return false;
 }
+
+bool TVDaemon::RPC_Adapter( const int client, std::string cat, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator data = parameters.find( "adapter" );
+  if( data == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC: adapter not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  int id = atoi( data->second.c_str( ));
+  if( id >= 0 && id < adapters.size( ))
+  {
+    return adapters[id]->RPC( httpd, client, cat, parameters );
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC: unknwon adapter" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
+

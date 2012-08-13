@@ -24,6 +24,8 @@
 #include "Frontend.h"
 #include "Log.h"
 
+#include <json/json.h>
+
 Port::Port( Frontend &frontend, int config_id, std::string name, int id ) :
   ConfigObject( frontend, "port", config_id ),
   frontend(frontend),
@@ -101,3 +103,35 @@ void Port::Untune( )
 {
   frontend.Untune();
 }
+
+void Port::json( json_object *entry ) const
+{
+  char name[32];
+  snprintf( name, sizeof( name ), "Port%d", GetKey( ));
+  json_object_array_add( entry, json_object_new_string( name ));
+  json_object_array_add( entry, json_object_new_int( GetKey( )));
+}
+
+bool Port::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC transponder: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
+

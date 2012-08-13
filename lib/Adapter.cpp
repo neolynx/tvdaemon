@@ -27,6 +27,7 @@
 #include "Log.h"
 
 #include <algorithm> // find
+#include <json/json.h>
 
 Adapter::Adapter( TVDaemon &tvd, std::string uid, std::string name, int config_id ) :
   ConfigObject( tvd, "adapter", config_id ),
@@ -97,7 +98,7 @@ void Adapter::SetFrontend( std::string frontend, int adapter_id, int frontend_id
     // create frontend
     f = Frontend::Create( *this, adapter_id, frontend_id, frontends.size( ));
     if( f )
-        frontends.push_back( f );
+      frontends.push_back( f );
   }
   else
   {
@@ -132,5 +133,92 @@ Frontend *Adapter::GetFrontend( int id )
   if( id >= frontends.size( ))
     return NULL;
   return frontends[id];
+}
+
+void Adapter::json( json_object *entry ) const
+{
+  json_object_array_add( entry, json_object_new_string( name.c_str( )));
+  json_object_array_add( entry, json_object_new_int( GetKey( )));
+}
+
+bool Adapter::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  if( cat == "frontend" )
+  {
+    if( action->second == "list" )
+    {
+      int count = frontends.size( );
+      json_object *h = json_object_new_object();
+      //std::string echo =  parameters["sEcho"];
+      int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+      json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+      json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
+      json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+      json_object *a = json_object_new_array();
+
+      for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+      {
+        json_object *entry = json_object_new_array( );
+        (*it)->json( entry );
+        json_object_array_add( a, entry );
+      }
+
+      json_object_object_add( h, "aaData", a );
+
+      const char *json = json_object_to_json_string( h );
+      Log( "json: %s", json );
+
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_OK );
+      response->AddTimeStamp( );
+      response->AddMime( "json" );
+      response->AddContents( json );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      json_object_put( h ); // this should delete it
+      return true;
+    }
+  }
+
+  if( cat == "port" )
+  {
+    const std::map<std::string, std::string>::const_iterator data = parameters.find( "frontend" );
+    if( data == parameters.end( ))
+    {
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_NOT_FOUND );
+      response->AddTimeStamp( );
+      response->AddMime( "html" );
+      response->AddContents( "RPC: adapter not found" );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      return false;
+    }
+
+    int id = atoi( data->second.c_str( ));
+
+    if( id >= 0 && id < frontends.size( ))
+    {
+      return frontends[id]->RPC( httpd, client, cat, parameters );
+    }
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC transponder: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
 }
 

@@ -261,3 +261,26 @@ void Transponder::json( json_object *entry ) const
   json_object_array_add( entry, json_object_new_int( GetKey( )));
 }
 
+bool Transponder::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC transponder: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
+

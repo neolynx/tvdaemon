@@ -22,12 +22,17 @@
 #ifndef _JsonObject_
 #define _JsonObject_
 
-struct json_object;
+#include <string>
+#include <map>
 
-class JsonObject
+struct json_object;
+class HTTPServer;
+
+class RPCObject
 {
   public:
     virtual void json( json_object *j ) const = 0;
+    virtual bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters ) = 0;
 };
 
 #endif

@@ -23,6 +23,7 @@
 #define _Frontend_
 
 #include "ConfigObject.h"
+#include "RPCObject.h"
 
 #include <string>
 #include <vector>
@@ -36,7 +37,7 @@ class Adapter;
 class Transponder;
 class Port;
 
-class Frontend : public ConfigObject
+class Frontend : public ConfigObject, public RPCObject
 {
   public:
     static Frontend *Create( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
@@ -78,6 +79,10 @@ class Frontend : public ConfigObject
     };
 
     bool TunePID( Transponder &t, uint16_t pno );
+
+    // RPC
+    void json( json_object *entry ) const;
+    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
 
   protected:
     Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id );

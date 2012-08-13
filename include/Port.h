@@ -23,13 +23,14 @@
 #define _Port_
 
 #include "ConfigObject.h"
+#include "RPCObject.h"
 
 #include <stdint.h>
 
 class Frontend;
 class Transponder;
 
-class Port : public ConfigObject
+class Port : public ConfigObject, public RPCObject
 {
   public:
     Port( Frontend &frontend, int config_id, std::string name = "Default Port", int id = 0 );
@@ -46,6 +47,10 @@ class Port : public ConfigObject
 
     bool Tune( Transponder &transponder, uint16_t pno );
     void Untune( );
+
+    // RPC
+    void json( json_object *entry ) const;
+    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
 
   private:
     Frontend &frontend;

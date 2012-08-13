@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm> // replace
+#include <json/json.h>
 
 #include "dvb-demux.h"
 #include "dvb-fe.h"
@@ -722,7 +723,7 @@ void Frontend::Thread( )
         continue;
       }
 
-      Service::Type type;
+      Service::Type type = Service::Type_Unknown;
       switch( service_type )
       {
         case 0x01:
@@ -741,13 +742,13 @@ void Frontend::Thread( )
 
       }
 
-      if( type == NULL )
+      if( type == Service::Type_Unknown )
       {
         LogWarn( "  Unknown Service %d type %d", service->service_id, service_type );
         continue;
       }
 
-      Log( "  Found %s service %5d%s: '%s'", type, service->service_id, service->free_CA_mode ? " §" : "", name );
+      Log( "  %6s service %5d%s: '%s'", Service::GetTypeName( type ), service->service_id, service->free_CA_mode ? " §" : "", name );
       transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
       services.push_back( service->service_id );
     }
@@ -895,4 +896,71 @@ void Frontend::Thread( )
   return;
 }
 
+
+void Frontend::json( json_object *entry ) const
+{
+  char name[32];
+  snprintf( name, sizeof( name ), "Frontend%d", GetKey( ));
+  json_object_array_add( entry, json_object_new_string( name ));
+  json_object_array_add( entry, json_object_new_int( GetKey( )));
+}
+
+bool Frontend::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  if( cat == "port" )
+  {
+    if( action->second == "list" )
+    {
+      int count = ports.size( );
+      json_object *h = json_object_new_object();
+      //std::string echo =  parameters["sEcho"];
+      int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+      json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+      json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
+      json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+      json_object *a = json_object_new_array();
+
+      for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+      {
+        json_object *entry = json_object_new_array( );
+        (*it)->json( entry );
+        json_object_array_add( a, entry );
+      }
+
+      json_object_object_add( h, "aaData", a );
+
+      const char *json = json_object_to_json_string( h );
+      Log( "json: %s", json );
+
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_OK );
+      response->AddTimeStamp( );
+      response->AddMime( "json" );
+      response->AddContents( json );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      json_object_put( h ); // this should delete it
+      return true;
+    }
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC transponder: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
 

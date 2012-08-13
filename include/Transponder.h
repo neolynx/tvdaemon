@@ -23,7 +23,7 @@
 #define _Transponder_
 
 #include "ConfigObject.h"
-#include "JsonObject.h"
+#include "RPCObject.h"
 #include "Service.h"
 
 #include <map>
@@ -33,7 +33,7 @@
 class Source;
 struct PAT;
 
-class Transponder : public ConfigObject, public JsonObject
+class Transponder : public ConfigObject, public RPCObject
 {
   public:
     Transponder( Source &src, const fe_delivery_system_t delsys, int config_id );
@@ -67,6 +67,7 @@ class Transponder : public ConfigObject, public JsonObject
     uint16_t GetTransportStreamID( ) { return TransportStreamID; }
     uint16_t GetVersionNumber( ) {  return VersionNumber; }
 
+    const std::map<uint16_t, Service *> &GetServices( ) const { return services; };
     Service *GetService( uint16_t id );
     Source &GetSource( ) const { return source; }
 
@@ -82,7 +83,9 @@ class Transponder : public ConfigObject, public JsonObject
 
     bool Tune( uint16_t pno );
 
+    // RPC
     void json( json_object *entry ) const;
+    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
 
   protected:
     bool enabled;

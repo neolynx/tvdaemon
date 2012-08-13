@@ -22,8 +22,10 @@
 #include "Service.h"
 
 #include <algorithm> // find
+#include <json/json.h>
 
 #include "Transponder.h"
+#include "HTTPServer.h"
 #include "Stream.h"
 #include "Log.h"
 
@@ -111,5 +113,56 @@ std::map<uint16_t, Stream *> &Service::GetStreams() // FIXME: const
 bool Service::Tune( )
 {
   return transponder.Tune( service_id );
+}
+
+const char *Service::GetTypeName( Type type )
+{
+  switch( type )
+  {
+    case Type_TV:
+      return "TV";
+    case Type_TVHD:
+      return "HD TV";
+    case Type_Radio:
+      return "Radio";
+  }
+}
+
+void Service::json( json_object *entry ) const
+{
+  json_object_array_add( entry, json_object_new_string( name.c_str( )));
+  json_object_array_add( entry, json_object_new_int( GetKey( )));
+  json_object_array_add( entry, json_object_new_int( type ));
+  json_object_array_add( entry, json_object_new_int( transponder.GetKey( )));
+}
+
+bool Service::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC transponder: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  return false;
+}
+
+bool Service::SortTypeName( Service *s1, Service *s2 )
+{
+  if( s1->type != s2->type )
+    return s1->type < s2->type;
+  return s1->name < s2->name;
 }
 

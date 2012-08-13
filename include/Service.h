@@ -23,6 +23,7 @@
 #define _Service_
 
 #include "ConfigObject.h"
+#include "RPCObject.h"
 
 #include <string>
 #include <map>
@@ -32,7 +33,7 @@
 
 class Transponder;
 
-class Service : public ConfigObject
+class Service : public ConfigObject, public RPCObject
 {
   public:
     Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id );
@@ -41,10 +42,12 @@ class Service : public ConfigObject
 
     enum Type
     {
-      Type_Radio,
+      Type_Unknown,
       Type_TV,
       Type_TVHD,
+      Type_Radio,
     };
+    static const char *GetTypeName( Type type );
 
     virtual int GetKey( ) const { return service_id; }
     uint16_t GetPID( ) { return pid; }
@@ -63,6 +66,12 @@ class Service : public ConfigObject
     virtual bool LoadConfig( );
 
     bool Tune( );
+
+    // RPC
+    void json( json_object *entry ) const;
+    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
+
+    static bool SortTypeName( Service *s1, Service *s2 );
 
   private:
     Transponder &transponder;

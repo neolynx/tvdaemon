@@ -23,14 +23,16 @@
 #define _Adapter_
 
 #include "ConfigObject.h"
+#include "RPCObject.h"
 
 #include <string>
 #include <map>
 
 class TVDaemon;
 class Frontend;
+class HTTPServer;
 
-class Adapter : public ConfigObject
+class Adapter : public ConfigObject, public RPCObject
 {
   public:
     Adapter( TVDaemon &tvd, std::string uid, std::string name, int config_id );
@@ -51,6 +53,9 @@ class Adapter : public ConfigObject
     Frontend *GetFrontend( int id );
     void SetPresence( bool present );
     bool IsPresent( ) { return present; }
+
+    void json( json_object *entry ) const;
+    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
 
   private:
     TVDaemon &tvd;

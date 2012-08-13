@@ -120,7 +120,7 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
     if( strncmp( tokens[1], it->first.c_str( ), it->first.length( )) == 0 )
     {
-      Log( "dynamic get: %s", tokens[1] );
+      //Log( "dynamic get: %s", tokens[1] );
       std::vector<const char *> params;
       std::map<std::string, std::string> parameters;
       Tokenize((char *) tokens[1], "?&", params );
@@ -140,7 +140,7 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
         }
         parameters[p[0]] = val;
 
-        Log( "Param: %s => %s", p[0], val );
+        //Log( "Param: %s => %s", p[0], val );
       }
 
       return it->second->HandleDynamicHTTP( client, parameters );
