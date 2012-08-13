@@ -543,7 +543,6 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
       json_object_object_add( h, "aaData", a );
 
       const char *json = json_object_to_json_string( h );
-      Log( "json: %s", json );
 
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
       response->AddStatus( HTTP_OK );
@@ -563,7 +562,6 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
       json_object_object_add( h, "2", json_object_new_string( "DVB-T" ));
       json_object_object_add( h, "3", json_object_new_string( "ATSC" ));
       const char *json = json_object_to_json_string( h );
-      Log( "json: %s", json );
 
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
       response->AddStatus( HTTP_OK );
@@ -599,7 +597,6 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
       json_object_object_add( h, "aaData", a );
 
       const char *json = json_object_to_json_string( h );
-      Log( "json: %s", json );
 
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
       response->AddStatus( HTTP_OK );

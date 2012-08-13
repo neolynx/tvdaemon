@@ -316,7 +316,6 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
       json_object_object_add( h, "aaData", a );
 
       const char *json = json_object_to_json_string( h );
-      Log( "json: %s", json );
 
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
       response->AddStatus( HTTP_OK );
