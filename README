@@ -1,5 +1,61 @@
 
+Prerequisites
+==============
+
+the following tools are needed:
+
+    apt-get install autoconf libtool automake autopoint pkg-config
+
+the following headers are needed:
+
+    apt-get install libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev
+
+for initial scan files:
+
+    apt-get install dvb-apps
+
+
+Checkout TVDaemon
+==================
+
+git clone https://github.com/neolynx/tvdaemon.git
+cd tvdaemon
+
+git submodule init
+git submodule update
+
+cd v4l-utils
+git checkout master
+git am ../patches/*
+cd ..
+
+cd cli/cli-core
+git co master
+git submodule init
+git submodule update
+cd src/colorful
+git co master
+cd ../..
+cd ../..
+
+
+Build tvdaemon
+===============
+
+cd v4l-utils
+autoreconf -vfis
+./configure
+make
+cd ..
+
+autoreconf -vfis
+./configure
+make
+
+
 GDB
----
-In order to launch the application with gdb without a make install, 
+====
+
+In order to launch the application with gdb without a make install,
 use libtool from the root folder: libtool --mode=execute gdb src/tvdaemon
+
