@@ -23,6 +23,9 @@ def rpc( url ):
   except urllib2.URLError, e:
     print "%s: http://%s:%d"%( e.reason.args[1], server, port )
     return None
+  except Exception, e:
+    print "Error: RPC failed"
+    return None
   return json.loads( response.read( ))
 
 class Root( ):
@@ -306,6 +309,8 @@ class Services( ):
     self.cli = cli
     self.source_id = data[1]
     self.source = source
+    self.types = { }
+    self.get_types( )
 
     self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
@@ -320,23 +325,47 @@ class Services( ):
   def get( self ):
     return rpc( 'tvd?c=service&a=list&source=%d'%self.source_id )
 
+  def get_types( self ):
+    self.types = { }
+    types = rpc( 'tvd?c=service&a=types&source=%d'%self.source_id )
+    if types:
+      for t in types:
+        self.types[int(t)] = types[t]
+
   def cmd_ls( self ):
     data = self.get( )
     if not data:
       return
     transponders = self.source.transponders.get( )
     count = data["iTotalDisplayRecords"]
+    tvs = 0
+    hds = 0
+    radios = 0
     for i in range( count ):
       name = data["aaData"][i][0]
       id = data["aaData"][i][1]
       type = data["aaData"][i][2]
       transponder_id = data["aaData"][i][3]
+      scrambled = data["aaData"][i][4]
 
+      if type == 1:
+        tvs += 1
+      if type == 2:
+        hds += 1
+      if type == 3:
+        radios += 1
       sys.stdout.write( "   " )
       sys.stdout.write( cf.bold_white( name.encode('utf8')))
-      sys.stdout.write( " " * ( 40 - len( name )))
-      sys.stdout.write( "%5d"%id )
-      sys.stdout.write( "   %d"%type )
+      sys.stdout.write( " " * ( 30 - len( name )))
+      if scrambled:
+        sys.stdout.write( "§ " )
+      else:
+        sys.stdout.write( "  " )
+      typename = "Unknown"
+      if self.types.has_key( type ):
+        typename = self.types[type]
+      sys.stdout.write( "%-5s "%typename )
+      sys.stdout.write( "%5d "%id )
       if transponders:
         transponder = None
         count2 = transponders["iTotalDisplayRecords"]
@@ -346,7 +375,7 @@ class Services( ):
             break
         sys.stdout.write( "   %s"%transponder )
       sys.stdout.write( "\n" )
-    print "total: %d"%count
+    print "total: %d   TV: %d HDTV: %d Radio: %d"%( count, tvs, hds, radios )
 
   def cmd_delete( self, item, args, rawline ):
     """service||delete transponder"""

@@ -205,7 +205,7 @@ bool Transponder::UpdateProgram( uint16_t service_id, uint16_t pid )
   return true;
 }
 
-bool Transponder::UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider, bool encrypted )
+bool Transponder::UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider, bool scrambled )
 {
   Service *s = NULL;
   std::map<uint16_t, Service *>::iterator it = services.find( service_id );
@@ -219,7 +219,7 @@ bool Transponder::UpdateService( uint16_t service_id, Service::Type type, std::s
   s->SetType( type );
   s->SetName( name );
   s->SetProvider( provider );
-  s->SetEncrypted( encrypted );
+  s->SetScrambled( scrambled );
   return true;
 }
 

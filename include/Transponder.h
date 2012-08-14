@@ -60,7 +60,7 @@ class Transponder : public ConfigObject, public RPCObject
     uint32_t GetFrequency( ) const { return frequency; }
 
     bool UpdateProgram( uint16_t service_id, uint16_t pid );
-    bool UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider, bool encrypted );
+    bool UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider, bool scrambled );
     bool UpdateStream( uint16_t pid, int id, int type );
 
     Service *CreateService( std::string  name );

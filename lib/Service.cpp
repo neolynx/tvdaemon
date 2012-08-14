@@ -35,7 +35,7 @@ Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, i
   transponder(transponder),
   service_id(service_id),
   pid(pid),
-  encrypted(false)
+  scrambled(false)
 {
 }
 
@@ -60,7 +60,7 @@ bool Service::SaveConfig( )
   Lookup( "Type",         Setting::TypeInt )    = (int) type;
   Lookup( "Name",         Setting::TypeString ) = name;
   Lookup( "Provider",     Setting::TypeString ) = provider;
-  Lookup( "Encrypted",    Setting::TypeInt )    = (int) encrypted;
+  Lookup( "Scrambled",    Setting::TypeInt )    = (int) scrambled;
 
   for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++ )
   {
@@ -82,7 +82,7 @@ bool Service::LoadConfig( )
   if( t ) name = t;
   t =             Lookup( "Provider", Setting::TypeString );
   if( t ) provider = t;
-  encrypted    = (int) Lookup( "Encrypted", Setting::TypeInt );
+  scrambled    = (int) Lookup( "Scrambled", Setting::TypeInt );
 
   if( !CreateFromConfig<Stream, uint16_t, Service>( *this, "stream", streams ))
     return false;
@@ -127,6 +127,7 @@ const char *Service::GetTypeName( Type type )
     case Type_Radio:
       return "Radio";
   }
+  return "Unknown";
 }
 
 void Service::json( json_object *entry ) const
@@ -135,6 +136,7 @@ void Service::json( json_object *entry ) const
   json_object_array_add( entry, json_object_new_int( GetKey( )));
   json_object_array_add( entry, json_object_new_int( type ));
   json_object_array_add( entry, json_object_new_int( transponder.GetKey( )));
+  json_object_array_add( entry, json_object_new_int( scrambled ));
 }
 
 bool Service::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
