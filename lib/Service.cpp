@@ -23,6 +23,7 @@
 
 #include <algorithm> // find
 #include <json/json.h>
+#include <strings.h> // strcasecmp
 
 #include "Transponder.h"
 #include "HTTPServer.h"
@@ -163,6 +164,6 @@ bool Service::SortTypeName( Service *s1, Service *s2 )
 {
   if( s1->type != s2->type )
     return s1->type < s2->type;
-  return s1->name < s2->name;
+  return strcasecmp( s1->name.c_str( ), s2->name.c_str( )) < 0;
 }
 

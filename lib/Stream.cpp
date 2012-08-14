@@ -93,7 +93,7 @@ bool Stream::Update( Type type )
 {
   if( type != this->type )
   {
-    LogWarn( "Warning: Stream %d type changed from %d to %d", id, this->type, type );
+    LogWarn( "Stream %d type changed from %s (%d) to %s (%d)", id, GetTypeName( this->type ), this->type, GetTypeName( type ), type );
     this->type = type;
     return false;
   }
