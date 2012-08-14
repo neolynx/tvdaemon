@@ -54,6 +54,8 @@ class Source : public ConfigObject, public RPCObject
     uint GetTransponderCount() { return transponders.size(); }
     TVDaemon::SourceType GetType( ) const { return type; }
 
+    const std::vector<Transponder *> &GetTransponders( ) { return transponders; }
+
     bool AddPort( Port *port );
     bool AddTransponder( Transponder *t );
 

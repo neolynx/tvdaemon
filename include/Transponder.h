@@ -64,12 +64,19 @@ class Transponder : public ConfigObject, public RPCObject
     bool UpdateStream( uint16_t pid, int id, int type );
 
     Service *CreateService( std::string  name );
-    uint16_t GetTransportStreamID( ) { return TransportStreamID; }
-    uint16_t GetVersionNumber( ) {  return VersionNumber; }
+    //uint16_t GetTransportStreamID( ) { return TransportStreamID; }
+    //uint16_t GetVersionNumber( ) {  return VersionNumber; }
 
     const std::map<uint16_t, Service *> &GetServices( ) const { return services; };
     Service *GetService( uint16_t id );
     Source &GetSource( ) const { return source; }
+
+    void SetSignal( uint8_t signal, uint8_t noise ) { this->signal = signal; this->noise = noise; }
+    void SetTSID( uint16_t tsid ) { this->TSID = TSID; }
+    uint16_t GetTSID( ) { return TSID; }
+
+    void Disable( ) { enabled = false; }
+    bool Disabled( ) { return !enabled; }
 
     enum State
     {
@@ -90,6 +97,8 @@ class Transponder : public ConfigObject, public RPCObject
   protected:
     bool enabled;
     State state;
+    uint8_t signal;
+    uint8_t noise;
     Source &source;
 
     fe_delivery_system_t delsys;
@@ -97,8 +106,8 @@ class Transponder : public ConfigObject, public RPCObject
 
     std::map<uint16_t, Service *> services;
 
-    uint16_t TransportStreamID;
-    uint16_t VersionNumber;
+    uint16_t TSID;
+    //uint16_t VersionNumber;
 };
 
 #endif

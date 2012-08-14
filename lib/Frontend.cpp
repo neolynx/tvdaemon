@@ -313,9 +313,11 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
 
   state = Tuning;
 
-  if( !GetLockStatus( ))
+  uint8_t signal, noise;
+  if( !GetLockStatus( signal, noise ))
     return false;
 
+  t.SetSignal( signal, noise );
   transponder = &t;
   return true;
 }
@@ -617,7 +619,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   return true;
 }
 
-bool Frontend::GetLockStatus( int timeout )
+bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
 {
   if( !fe )
     return false;
@@ -768,6 +770,22 @@ void Frontend::Thread( )
   }
   if( !up )
     return;
+
+  transponder->SetTSID( pat->header.id );
+  Source &source = transponder->GetSource( );
+  const std::vector<Transponder *> &transponders = source.GetTransponders( );
+  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  {
+    if( *it != transponder && (*it)->GetTSID( ) == transponder->GetTSID( ))
+    {
+      LogWarn( "Disabling dupplicate transponder: %s same as %s", (*it)->toString( ).c_str( ),
+                                                            transponder->toString( ).c_str( ));
+      transponder->Disable( );
+      up = false;
+      return;
+    }
+  }
+
 
   //dvb_table_pat_print( fe, pat );
   Log( "  Reading PMT's" );

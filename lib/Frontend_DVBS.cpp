@@ -101,9 +101,11 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
 
   state = Tuning;
 
-  if( !GetLockStatus( ))
+  uint8_t signal, noise;
+  if( !GetLockStatus( signal, noise ))
     return false;
 
+  t.SetSignal( signal, noise );
   transponder = &t;
   return true;
 }

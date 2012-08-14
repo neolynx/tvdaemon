@@ -245,6 +245,12 @@ bool Source::ScanTransponder( int id )
   if( !t )
     return false;
 
+  if( t->Disabled( ))
+  {
+    LogWarn( "Transponder is disabled" );
+    return false;
+  }
+
   // FIXME: support scanning on next free transponder
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {

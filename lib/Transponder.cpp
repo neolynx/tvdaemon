@@ -36,6 +36,8 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
   ConfigObject( source, "transponder", config_id ),
   source(source),
   delsys(delsys),
+  signal(0), noise(0),
+  TSID(0),
   enabled(true),
   state(New)
 {
@@ -152,12 +154,13 @@ void Transponder::AddProperty( const struct dtv_property &prop )
 
 bool Transponder::SaveConfig( )
 {
-  Lookup( "DelSys",            Setting::TypeInt ) = (int) delsys;
-  Lookup( "Frequency",         Setting::TypeInt ) = (int) frequency;
-  Lookup( "TransportStreamID", Setting::TypeInt ) = TransportStreamID;
-  Lookup( "VersionNumber",     Setting::TypeInt ) = VersionNumber;
-  Lookup( "Enabled",           Setting::TypeInt ) = (int) enabled;
-  Lookup( "State",             Setting::TypeInt ) = (int) state;
+  Lookup( "DelSys",    Setting::TypeInt ) = (int) delsys;
+  Lookup( "Frequency", Setting::TypeInt ) = (int) frequency;
+  Lookup( "TSID",      Setting::TypeInt ) = (int) TSID;
+  Lookup( "Enabled",   Setting::TypeInt ) = (int) enabled;
+  Lookup( "State",     Setting::TypeInt ) = (int) state;
+  Lookup( "Signal",    Setting::TypeInt ) = signal;
+  Lookup( "Noise",     Setting::TypeInt ) = noise;
 
   for( std::map<uint16_t, Service *>::iterator it = services.begin( ); it != services.end( ); it++ )
   {
@@ -172,12 +175,13 @@ bool Transponder::LoadConfig( )
   if( !ReadConfig( ))
     return false;
 
-  delsys            = (fe_delivery_system_t) (int) Lookup( "DelSys", Setting::TypeInt );
-  frequency         = (uint32_t) (int) Lookup( "Frequency",          Setting::TypeInt );
-  TransportStreamID =            (int) Lookup( "TransportStreamID",  Setting::TypeInt );
-  VersionNumber     =            (int) Lookup( "VersionNumber",      Setting::TypeInt );
-  enabled           = (bool)     (int) Lookup( "Enabled",            Setting::TypeInt );
-  state             = (State)    (int) Lookup( "State",              Setting::TypeInt );
+  delsys    = (fe_delivery_system_t) (int) Lookup( "DelSys", Setting::TypeInt );
+  frequency = (uint32_t) (int) Lookup( "Frequency",          Setting::TypeInt );
+  TSID      =            (int) Lookup( "TSID",  Setting::TypeInt );
+  enabled   = (bool)     (int) Lookup( "Enabled",            Setting::TypeInt );
+  state     = (State)    (int) Lookup( "State",              Setting::TypeInt );
+  signal    = (uint8_t) (int) Lookup( "Signal", Setting::TypeInt );
+  noise     = (uint8_t) (int) Lookup( "Noise", Setting::TypeInt );
 
   if( !CreateFromConfig<Service, uint16_t, Transponder>( *this, "service", services ))
     return false;
