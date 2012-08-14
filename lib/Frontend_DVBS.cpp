@@ -227,6 +227,8 @@ bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
 						  source.GetTransponderCount( ));
       if( !source.AddTransponder( t ))
         delete t;
+      else
+        Log( "  Added transponder %s", t->toString( ).c_str( ));
 
     }
   }

@@ -719,10 +719,10 @@ void Frontend::Thread( )
   const std::vector<Transponder *> &transponders = source.GetTransponders( );
   for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
-    if( *it != transponder && (*it)->GetTSID( ) == transponder->GetTSID( ))
+    if( *it != transponder && (*it)->Enabled( ) && (*it)->GetTSID( ) == transponder->GetTSID( ))
     {
-      LogWarn( "Disabling dupplicate transponder: %s same as %s", (*it)->toString( ).c_str( ),
-                                                            transponder->toString( ).c_str( ));
+      LogWarn( "Disabling dupplicate transponder %s: same as %s", transponder->toString( ).c_str( ),
+                                                                        (*it)->toString( ).c_str( ));
       transponder->Disable( );
       up = false;
       return;
@@ -752,7 +752,7 @@ void Frontend::Thread( )
       }
       if( service_type == -1 )
       {
-        LogWarn( "  No service descriptor found" );
+        LogWarn( "  No service descriptor found for service %d", service->service_id );
         continue;
       }
 
@@ -777,11 +777,11 @@ void Frontend::Thread( )
 
       if( type == Service::Type_Unknown )
       {
-        LogWarn( "  Unknown Service %d type %d", service->service_id, service_type );
+        LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name );
         continue;
       }
 
-      Log( "  %6s service %5d%s: '%s'", Service::GetTypeName( type ), service->service_id, service->free_CA_mode ? " §" : "", name );
+      Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
       transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
       services.push_back( service->service_id );
     }
@@ -789,9 +789,8 @@ void Frontend::Thread( )
     dvb_table_sdt_free( sdt );
   }
 
-
   //dvb_table_pat_print( fe, pat );
-  Log( "  Reading PMT's" );
+  Log( "Reading PMT's" );
   dvb_pat_program_foreach( program, pat )
   {
     if( !up )
@@ -802,7 +801,7 @@ void Frontend::Thread( )
       {
         if( program->service_id == 0 )
         {
-          LogWarn( "Ignoring PMT of service 0" );
+          LogWarn( "  Ignoring PMT of service 0" );
           break;
         }
 
@@ -855,19 +854,19 @@ void Frontend::Thread( )
             case stream_private_data:     // 0x06
               dvb_desc_find( struct dvb_desc, desc, stream, AC_3_descriptor )
               {
-              type = Stream::Type_Audio_AC3;
+                type = Stream::Type_Audio_AC3;
                 break;
               }
               dvb_desc_find( struct dvb_desc, desc, stream, enhanced_AC_3_descriptor )
               {
                 type = Stream::Type_Audio_AC3;
-                LogWarn( "Found AC3 enhanced" );
+                LogWarn( "  Found AC3 enhanced" );
                 break;
               }
               break;
 
             default:
-              LogWarn( "Ignoring stream type %d: %s", stream->type, pmt_stream_name[stream->type] );
+              LogWarn( "  Ignoring stream type %d: %s", stream->type, pmt_stream_name[stream->type] );
               break;
           }
           if( type != Stream::Type_Unknown )

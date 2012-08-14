@@ -76,6 +76,7 @@ class Transponder : public ConfigObject, public RPCObject
     uint16_t GetTSID( ) { return TSID; }
 
     void Disable( ) { enabled = false; }
+    bool Enabled( ) { return enabled; }
     bool Disabled( ) { return !enabled; }
 
     enum State
