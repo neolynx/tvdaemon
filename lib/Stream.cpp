@@ -30,7 +30,7 @@ Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
   id(id),
   type(type)
 {
-  Log( "Created %s Stream with id %d", GetTypeName( type ), id );
+  Log( "    Stream %5d: %s", id, GetTypeName( type ));
 }
 
 Stream::Stream( Service &service, std::string configfile ) :

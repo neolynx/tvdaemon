@@ -72,7 +72,7 @@ class Transponder : public ConfigObject, public RPCObject
     Source &GetSource( ) const { return source; }
 
     void SetSignal( uint8_t signal, uint8_t noise ) { this->signal = signal; this->noise = noise; }
-    void SetTSID( uint16_t tsid ) { this->TSID = TSID; }
+    void SetTSID( uint16_t TSID ) { this->TSID = TSID; }
     uint16_t GetTSID( ) { return TSID; }
 
     void Disable( ) { enabled = false; }

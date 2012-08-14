@@ -624,8 +624,8 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
   if( !fe )
     return false;
   uint32_t status;
-  uint32_t snr = 0, _signal = 0;
-  uint32_t ber = 0, uncorrected_blocks = 0;
+  uint32_t snr = 0, sig = 0;
+  uint32_t ber = 0, unc = 0;
 
   for( int i = 0; i < timeout && state == Tuning; i++ )
   {
@@ -640,12 +640,14 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
     if( status & FE_HAS_LOCK )
     {
       dvb_fe_retrieve_stats( fe, DTV_BER, &ber );
-      dvb_fe_retrieve_stats( fe, DTV_SIGNAL_STRENGTH, &_signal );
-      dvb_fe_retrieve_stats( fe, DTV_UNCORRECTED_BLOCKS, &uncorrected_blocks );
+      dvb_fe_retrieve_stats( fe, DTV_SIGNAL_STRENGTH, &sig );
+      dvb_fe_retrieve_stats( fe, DTV_UNCORRECTED_BLOCKS, &unc );
       dvb_fe_retrieve_stats( fe, DTV_SNR, &snr );
 
-      Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", (_signal * 100) / 0xffff, (snr * 100) / 0xffff, ber, uncorrected_blocks );
+      Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", (sig * 100) / 0xffff, (snr * 100) / 0xffff, ber, unc );
 
+      signal = (sig * 100) / 0xffff;
+      noise  = (snr * 100) / 0xffff;
       return true;
     }
     usleep( 1000000 );
@@ -699,6 +701,33 @@ void Frontend::Thread( )
   int time = 5;
 
   std::vector<uint16_t> services;
+
+  Log( "Reading PAT" );
+  struct dvb_table_pat *pat = NULL;
+  dvb_read_section( fe, fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, time );
+  if( !pat )
+  {
+    LogError( "Error reading PAT table" );
+    up = false;
+  }
+  if( !up )
+    return;
+
+  Log( "  Setting TSID %d", pat->header.id );
+  transponder->SetTSID( pat->header.id );
+  Source &source = transponder->GetSource( );
+  const std::vector<Transponder *> &transponders = source.GetTransponders( );
+  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  {
+    if( *it != transponder && (*it)->GetTSID( ) == transponder->GetTSID( ))
+    {
+      LogWarn( "Disabling dupplicate transponder: %s same as %s", (*it)->toString( ).c_str( ),
+                                                            transponder->toString( ).c_str( ));
+      transponder->Disable( );
+      up = false;
+      return;
+    }
+  }
 
   Log( "Reading SDT" );
   struct dvb_table_sdt *sdt;
@@ -758,32 +787,6 @@ void Frontend::Thread( )
     }
 
     dvb_table_sdt_free( sdt );
-  }
-
-  Log( "Reading PAT" );
-  struct dvb_table_pat *pat = NULL;
-  dvb_read_section( fe, fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, time );
-  if( !pat )
-  {
-    LogError( "Error reading PAT table" );
-    up = false;
-  }
-  if( !up )
-    return;
-
-  transponder->SetTSID( pat->header.id );
-  Source &source = transponder->GetSource( );
-  const std::vector<Transponder *> &transponders = source.GetTransponders( );
-  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-  {
-    if( *it != transponder && (*it)->GetTSID( ) == transponder->GetTSID( ))
-    {
-      LogWarn( "Disabling dupplicate transponder: %s same as %s", (*it)->toString( ).c_str( ),
-                                                            transponder->toString( ).c_str( ));
-      transponder->Disable( );
-      up = false;
-      return;
-    }
   }
 
 
