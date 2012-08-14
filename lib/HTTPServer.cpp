@@ -120,9 +120,9 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
     if( strncmp( tokens[1], it->first.c_str( ), it->first.length( )) == 0 )
     {
-      Log( "RPC %s", tokens[1] );
       std::vector<const char *> params;
       std::map<std::string, std::string> parameters;
+      std::string url = tokens[1];
       Tokenize((char *) tokens[1], "?&", params );
       for( int i = 1; i < params.size( ); i++ )
       {
@@ -143,7 +143,13 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
         //Log( "Param: %s => %s", p[0], val );
       }
 
-      return it->second->HandleDynamicHTTP( client, parameters );
+      if( !it->second->HandleDynamicHTTP( client, parameters ))
+      {
+        LogError( "RPC Error %s", url.c_str( ));
+        return false;
+      }
+      Log( "RPC %s", url.c_str( ));
+      return true;
     }
 
   std::string url = _root;

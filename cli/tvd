@@ -21,7 +21,7 @@ def rpc( url ):
     print e.code, url
     return None
   except urllib2.URLError, e:
-    print e.args
+    print "%s: http://%s:%d"%( e.reason.args[1], server, port )
     return None
   return json.loads( response.read( ))
 
