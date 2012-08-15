@@ -70,12 +70,14 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
     return false;
 
   Log( "Tuning %s", t.toString( ).c_str( ));
+  t.SetState( Transponder::State_Tuning );
 
   int satpos = GetCurrentPort( )->GetID( );
   int lnb = dvb_sat_search_lnb( LNB.c_str( ));
   if( lnb < 0 )
   {
     LogError( "Unknown LNB '%s'", LNB.c_str( ));
+    t.SetState( Transponder::State_TuningFailed );
     return false;
   }
 
@@ -95,6 +97,7 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
   if( r != 0 )
   {
     LogError( "dvb_fe_set_parms failed." );
+    t.SetState( Transponder::State_TuningFailed );
     dvb_fe_prt_parms( fe );
     return false;
   }
@@ -103,9 +106,13 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
 
   uint8_t signal, noise;
   if( !GetLockStatus( signal, noise ))
+  {
+    t.SetState( Transponder::State_TuningFailed );
     return false;
+  }
 
   t.SetSignal( signal, noise );
+  t.SetState( Transponder::State_Tuned );
   transponder = &t;
   return true;
 }

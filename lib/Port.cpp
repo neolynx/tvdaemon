@@ -82,7 +82,7 @@ bool Port::Scan( Transponder &transponder )
   if( !frontend.Tune( transponder ))
     return false;
 
-  if( !frontend.Scan( transponder ))
+  if( !frontend.Scan( ))
   {
     LogError( "Frontend Scan failed." );
     return false;

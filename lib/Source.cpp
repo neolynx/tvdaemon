@@ -332,6 +332,27 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
       json_object_put( h ); // this should delete it
       return true;
     }
+
+    if( action->second == "states" )
+    {
+      json_object *h = json_object_new_object();
+      for( uint8_t i = 0; i < Transponder::State_Last; i++ )
+      {
+        char tmp[8];
+        snprintf( tmp, sizeof( tmp ), "%d", i );
+        json_object_object_add( h, tmp, json_object_new_string( Transponder::GetStateName((Transponder::State) i )));
+      }
+      const char *json = json_object_to_json_string( h );
+
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_OK );
+      response->AddTimeStamp( );
+      response->AddMime( "json" );
+      response->AddContents( json );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      json_object_put( h ); // this should delete it
+      return true;
+    }
   }
 
   if( cat == "service" )

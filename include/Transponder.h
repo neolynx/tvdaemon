@@ -81,13 +81,20 @@ class Transponder : public ConfigObject, public RPCObject
 
     enum State
     {
-      New,
-      Scanning,
-      Scanned,
-      Tuning,
-      Tuned,
-      Idle
+      State_New,
+      State_Tuning,
+      State_Tuned,
+      State_TuningFailed,
+      State_Scanning,
+      State_Scanned,
+      State_ScanningFailed,
+      State_Idle,
+      State_Last
     };
+
+    void SetState( State state ) { this->state = state; }
+    State GetState( ) { return state; }
+    static const char *GetStateName( State state );
 
     bool Tune( uint16_t pno );
 

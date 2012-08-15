@@ -58,20 +58,20 @@ int create_stuff( TVDaemon &tvd )
   int service_id = 1;
 
   // sat hotbird
-  //source_id = 2;
-  //adapter_id = 1;
-  //frontend_id = 0;
-  //port_id = 1;
-  //transponder_id = 17;
-  //service_id = 8003;
-
-  // sat astra
-  source_id = 1;
+  source_id = 2;
   adapter_id = 1;
   frontend_id = 0;
-  port_id = 0;
-  transponder_id = 20;
-  service_id = 5400;
+  port_id = 1;
+  transponder_id = -1;
+  service_id = -1;
+
+  // sat astra
+  //source_id = 1;
+  //adapter_id = 1;
+  //frontend_id = 0;
+  //port_id = 0;
+  //transponder_id = 30;
+  //service_id = 28007;
 
   Source *s = tvd.GetSource( source_id );
   if( s == NULL )
@@ -106,6 +106,11 @@ int create_stuff( TVDaemon &tvd )
   {
     for( int id = 0; up && id < s->GetTransponderCount(); ++id )
     {
+      if( s->GetTransponder( id )->GetState( ) == Transponder::State_Scanned )
+      {
+        printf( "Transponder %d/%d already scanned\n", id + 1, s->GetTransponderCount( ));
+        continue;
+      }
       printf( "Scanning Transponder %d/%d\n", id + 1, s->GetTransponderCount( ));
       if( !s->ScanTransponder( id ))
         printf( "Scan failed\n\n" );

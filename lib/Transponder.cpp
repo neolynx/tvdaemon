@@ -39,7 +39,7 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
   signal(0), noise(0),
   TSID(0),
   enabled(true),
-  state(New)
+  state(State_New)
 {
 }
 
@@ -259,10 +259,36 @@ bool Transponder::GetParams( struct dvb_v5_fe_parms *params ) const
   return true;
 }
 
+const char *Transponder::GetStateName( State state )
+{
+  switch( state )
+  {
+    case State_New:
+      return "New";
+    case State_Tuning:
+      return "Tuning";
+    case State_Tuned:
+      return "Tuned";
+    case State_TuningFailed:
+      return "Tuning Failed";
+    case State_Scanning:
+      return "Scanning";
+    case State_Scanned:
+      return "Scanned";
+    case State_ScanningFailed:
+      return "Scanning Failed";
+    case State_Idle:
+      return "Idle";
+  }
+  return "Unknown";
+}
+
 void Transponder::json( json_object *entry ) const
 {
   json_object_array_add( entry, json_object_new_string( toString( ).c_str( )));
   json_object_array_add( entry, json_object_new_int( GetKey( )));
+  json_object_array_add( entry, json_object_new_int( state ));
+  json_object_array_add( entry, json_object_new_int( enabled ));
 }
 
 bool Transponder::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )

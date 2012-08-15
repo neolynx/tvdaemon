@@ -279,6 +279,9 @@ class Transponders( ):
     self.cli = cli
     self.source_id = data[1]
 
+    self.states = { }
+    self.get_states( )
+
     self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
     self.path_items = { }
@@ -286,16 +289,35 @@ class Transponders( ):
   def get( self ):
     return rpc( 'tvd?c=transponder&a=list&source=%d'%self.source_id )
 
+  def get_states( self ):
+    self.states = { }
+    states = rpc( 'tvd?c=transponder&a=states&source=%d'%self.source_id )
+    if states:
+      for s in states:
+        self.states[int(s)] = states[s]
+
   def cmd_ls( self ):
     transponders = self.get( )
     if not transponders:
       return
     count = transponders["iTotalDisplayRecords"]
     for i in range( count ):
-      transponder = transponders["aaData"][i][0]
-      transponder_id = transponders["aaData"][i][1]
+      name    = transponders["aaData"][i][0]
+      id      = transponders["aaData"][i][1]
+      state   = transponders["aaData"][i][2]
+      enabled = transponders["aaData"][i][2]
 
-      sys.stdout.write( cf.bold_white( transponder ))
+      sys.stdout.write( "   " )
+      sys.stdout.write( cf.bold_white( name ))
+      sys.stdout.write( " " * ( 52 - len( name )))
+      statename = "Unknown"
+      if self.states.has_key( state ):
+        statename = self.states[state]
+      sys.stdout.write( "%-10s "%statename )
+      if not enabled:
+        sys.stdout.write( " " * ( 15 - len( statename )))
+        sys.stdout.write( "Disabled" );
+
       sys.stdout.write( "\n" )
     print "total: %d"%count
 

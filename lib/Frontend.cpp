@@ -288,11 +288,13 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   if( !Open( ))
     return false;
 
+  t.SetState( Transponder::State_Tuning );
   Log( "Tuning %s", t.toString( ).c_str( ));
   int r = dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
   if( r != 0 )
   {
     LogError( "dvb_set_compat_delivery_system return %d", r );
+    t.SetState( Transponder::State_TuningFailed );
     return false;
   }
   t.GetParams( fe );
@@ -303,6 +305,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   if( r != 0 )
   {
     LogError( "dvb_fe_set_parms failed with %d.", r );
+    t.SetState( Transponder::State_TuningFailed );
     dvb_fe_prt_parms( fe );
     return false;
   }
@@ -315,8 +318,12 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
 
   uint8_t signal, noise;
   if( !GetLockStatus( signal, noise ))
+  {
+    t.SetState( Transponder::State_TuningFailed );
     return false;
+  }
 
+  t.SetState( Transponder::State_Tuned );
   t.SetSignal( signal, noise );
   transponder = &t;
   return true;
@@ -327,13 +334,21 @@ void Frontend::Untune()
   if( state != Tuned)
     return;
   state = Opened;
+  transponder->SetState( Transponder::State_Idle );
   transponder = NULL;
 }
 
-bool Frontend::Scan( Transponder &transponder, int timeoutms )
+bool Frontend::Scan( int timeoutms )
 {
-  if( !CreateDemuxThread( ))
+  if( !transponder )
     return false;
+  transponder->SetState( Transponder::State_Scanning );
+  if( !CreateDemuxThread( ))
+  {
+    transponder->SetState( Transponder::State_ScanningFailed );
+    return false;
+  }
+
   state = Scanning;
   struct timespec abstime;
   int ret, count = 0;
@@ -346,7 +361,11 @@ bool Frontend::Scan( Transponder &transponder, int timeoutms )
     pthread_mutex_unlock( &mutex );
   } while( state == Scanning & ret == ETIMEDOUT && ++count < 60 );
   if( ret == 0 || !up )
+  {
+    transponder->SetState( Transponder::State_Scanned );
     return true;
+  }
+  transponder->SetState( Transponder::State_ScanningFailed );
   if( ret == ETIMEDOUT )
     LogError( "Scanning timeouted (%d seconds)", count );
   else
@@ -650,7 +669,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
       noise  = (snr * 100) / 0xffff;
       return true;
     }
-    usleep( 1000000 );
+    usleep( 10000 );
   }
   return false;
 }
@@ -694,6 +713,7 @@ void Frontend::Thread( )
   if( fd_demux < 0 )
   {
     LogError( "unable to open adapter demux" );
+    state = Closing;
     up = false;
     return;
   }
@@ -711,7 +731,11 @@ void Frontend::Thread( )
     up = false;
   }
   if( !up )
+  {
+    state = Closing;
+    up = false;
     return;
+  }
 
   Log( "  Setting TSID %d", pat->header.id );
   transponder->SetTSID( pat->header.id );
@@ -724,6 +748,7 @@ void Frontend::Thread( )
       LogWarn( "Disabling dupplicate transponder %s: same as %s", transponder->toString( ).c_str( ),
                                                                         (*it)->toString( ).c_str( ));
       transponder->Disable( );
+      state = Closing;
       up = false;
       return;
     }
@@ -777,7 +802,7 @@ void Frontend::Thread( )
 
       if( type == Service::Type_Unknown )
       {
-        LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name );
+        LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name, service_type );
         continue;
       }
 
@@ -881,7 +906,11 @@ void Frontend::Thread( )
   if( pat )
     dvb_table_pat_free( pat );
   if( !up )
+  {
+    state = Closing;
+    up = false;
     return;
+  }
 
   Log( "Reading NIT" );
   struct dvb_table_nit *nit;
@@ -900,7 +929,11 @@ void Frontend::Thread( )
   if( nit )
     dvb_table_nit_free( nit );
   if( !up )
+  {
+    state = Closing;
+    up = false;
     return;
+  }
 
   //Log( "Reading EIT" );
   //struct dvb_table_eit *eit;
