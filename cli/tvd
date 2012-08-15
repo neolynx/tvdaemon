@@ -305,7 +305,7 @@ class Transponders( ):
       name    = transponders["aaData"][i][0]
       id      = transponders["aaData"][i][1]
       state   = transponders["aaData"][i][2]
-      enabled = transponders["aaData"][i][2]
+      enabled = int( transponders["aaData"][i][3] )
 
       sys.stdout.write( "   " )
       sys.stdout.write( cf.bold_white( name ))
@@ -314,7 +314,7 @@ class Transponders( ):
       if self.states.has_key( state ):
         statename = self.states[state]
       sys.stdout.write( "%-10s "%statename )
-      if not enabled:
+      if enabled == 0:
         sys.stdout.write( " " * ( 15 - len( statename )))
         sys.stdout.write( "Disabled" );
 
