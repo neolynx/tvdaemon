@@ -22,11 +22,13 @@
 #include "Channel.h"
 
 #include <algorithm> // find
+#include <json/json.h>
 
+#include "RPCObject.h"
 #include "TVDaemon.h"
-#include "Source.h"
-#include "Transponder.h"
 #include "Service.h"
+#include "Transponder.h"
+#include "Source.h"
 #include "Log.h"
 
 Channel::Channel( TVDaemon &tvd, std::string name, int config_id ) :
@@ -117,5 +119,175 @@ bool Channel::Tune( )
     if( (*it)->Tune( ))
       return true;
   }
+  return false;
+}
+
+void Channel::json( json_object *entry ) const
+{
+  json_object_array_add( entry, json_object_new_string( name.c_str( )));
+  json_object_array_add( entry, json_object_new_int( GetKey( )));
+}
+
+bool Channel::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+{
+  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  if( action == parameters.end( ))
+  {
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_NOT_FOUND );
+    response->AddTimeStamp( );
+    response->AddMime( "html" );
+    response->AddContents( "RPC source: action not found" );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return false;
+  }
+
+  //if( cat == "transponder" )
+  //{
+    //if( action->second == "list" )
+    //{
+      //int count = transponders.size( );
+      //json_object *h = json_object_new_object();
+      ////std::string echo =  parameters["sEcho"];
+      //int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+      //json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+      //json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
+      //json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+      //json_object *a = json_object_new_array();
+
+      //for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+      //{
+        //json_object *entry = json_object_new_array( );
+        //(*it)->json( entry );
+        //json_object_array_add( a, entry );
+      //}
+
+      //json_object_object_add( h, "aaData", a );
+
+      //const char *json = json_object_to_json_string( h );
+
+      //HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      //response->AddStatus( HTTP_OK );
+      //response->AddTimeStamp( );
+      //response->AddMime( "json" );
+      //response->AddContents( json );
+      //httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      //json_object_put( h ); // this should delete it
+      //return true;
+    //}
+
+    //if( action->second == "states" )
+    //{
+      //json_object *h = json_object_new_object();
+      //for( uint8_t i = 0; i < Transponder::State_Last; i++ )
+      //{
+        //char tmp[8];
+        //snprintf( tmp, sizeof( tmp ), "%d", i );
+        //json_object_object_add( h, tmp, json_object_new_string( Transponder::GetStateName((Transponder::State) i )));
+      //}
+      //const char *json = json_object_to_json_string( h );
+
+      //HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      //response->AddStatus( HTTP_OK );
+      //response->AddTimeStamp( );
+      //response->AddMime( "json" );
+      //response->AddContents( json );
+      //httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      //json_object_put( h ); // this should delete it
+      //return true;
+    //}
+  //}
+
+  //if( cat == "service" )
+  //{
+    //const std::map<std::string, std::string>::const_iterator obj = parameters.find( "transponder" );
+    //if( obj == parameters.end( ))
+    //{
+      //if( action->second == "list" )
+      //{
+        //int count = 0;
+        //json_object *h = json_object_new_object();
+        ////std::string echo =  parameters["sEcho"];
+        //int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
+        //json_object_object_add( h, "sEcho", json_object_new_int( echo ));
+        //json_object *a = json_object_new_array();
+
+        //std::list<Service *> list;
+        //for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+        //{
+          //const std::map<uint16_t, Service *> &services = (*it)->GetServices( );
+          //for( std::map<uint16_t, Service *>::const_iterator it2 = services.begin( ); it2 != services.end( ); it2++ )
+          //{
+            //list.push_back( it2->second );
+            //count++;
+          //}
+        //}
+        //list.sort( Service::SortTypeName );
+
+        //for( std::list<Service *>::iterator it = list.begin( ); it != list.end( ); it++ )
+        //{
+          //json_object *entry = json_object_new_array( );
+          //(*it)->json( entry );
+          //json_object_array_add( a, entry );
+        //}
+
+        //json_object_object_add( h, "aaData", a );
+        //json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
+        //json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+
+        //const char *json = json_object_to_json_string( h );
+
+        //HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+        //response->AddStatus( HTTP_OK );
+        //response->AddTimeStamp( );
+        //response->AddMime( "json" );
+        //response->AddContents( json );
+        //httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+        //json_object_put( h ); // this should delete it
+        //return true;
+      //}
+
+      //if( action->second == "types" )
+      //{
+        //json_object *h = json_object_new_object();
+        //for( uint8_t i = 0; i < Service::Type_Last; i++ )
+        //{
+          //char tmp[8];
+          //snprintf( tmp, sizeof( tmp ), "%d", i );
+          //json_object_object_add( h, tmp, json_object_new_string( Service::GetTypeName((Service::Type) i )));
+        //}
+        //const char *json = json_object_to_json_string( h );
+
+        //HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+        //response->AddStatus( HTTP_OK );
+        //response->AddTimeStamp( );
+        //response->AddMime( "json" );
+        //response->AddContents( json );
+        //httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+        //json_object_put( h ); // this should delete it
+        //return true;
+      //}
+      //HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      //response->AddStatus( HTTP_NOT_FOUND );
+      //response->AddTimeStamp( );
+      //response->AddMime( "html" );
+      //response->AddContents( "RPC transponder: unknown action" );
+      //httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      //return false;
+    //}
+
+    //int obj_id = atoi( obj->second.c_str( ));
+    //if( obj_id >= 0 && obj_id < transponders.size( ))
+    //{
+      //return transponders[obj_id]->RPC( httpd, client, cat, parameters );
+    //}
+  //}
+
+  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+  response->AddStatus( HTTP_NOT_FOUND );
+  response->AddTimeStamp( );
+  response->AddMime( "html" );
+  response->AddContents( "RPC transponder: unknown action" );
+  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
   return false;
 }

@@ -29,6 +29,8 @@ Transponder_DVBC::Transponder_DVBC( Source &source, const fe_delivery_system_t d
   symbol_rate(0),
   inversion(INVERSION_AUTO)
 {
+  has_sdt = true;
+  has_nit = true;
 }
 
 Transponder_DVBC::Transponder_DVBC( Source &source, std::string configfile ) : Transponder( source, configfile ),
@@ -37,6 +39,8 @@ Transponder_DVBC::Transponder_DVBC( Source &source, std::string configfile ) : T
   symbol_rate(0),
   inversion(INVERSION_AUTO)
 {
+  has_sdt = true;
+  has_nit = true;
 }
 
 Transponder_DVBC::~Transponder_DVBC( )

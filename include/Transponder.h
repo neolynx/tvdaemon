@@ -50,6 +50,10 @@ class Transponder : public ConfigObject, public RPCObject
     static bool IsSame( const Transponder &transponder, const struct dvb_entry &info );
     virtual bool IsSame( const Transponder &transponder ) = 0;
 
+    bool HasNIT( ) { return has_nit; }
+    bool HasSDT( ) { return has_sdt; }
+    bool HasVCT( ) { return has_vct; }
+
     virtual void AddProperty( const struct dtv_property &prop );
 
     virtual bool GetParams( struct dvb_v5_fe_parms *params ) const;
@@ -115,7 +119,10 @@ class Transponder : public ConfigObject, public RPCObject
     std::map<uint16_t, Service *> services;
 
     uint16_t TSID;
-    //uint16_t VersionNumber;
+
+    bool has_nit;
+    bool has_sdt;
+    bool has_vct;
 };
 
 #endif

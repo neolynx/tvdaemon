@@ -25,10 +25,14 @@
 
 Transponder_DVBT::Transponder_DVBT( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
 {
+  has_sdt = true;
+  has_nit = true;
 }
 
 Transponder_DVBT::Transponder_DVBT( Source &source, std::string configfile ) : Transponder( source, configfile )
 {
+  has_sdt = true;
+  has_nit = true;
 }
 
 Transponder_DVBT::~Transponder_DVBT( )
@@ -102,6 +106,7 @@ bool Transponder_DVBT::LoadConfig( )
 bool Transponder_DVBT::GetParams( struct dvb_v5_fe_parms *params ) const
 {
   Transponder::GetParams( params );
+  dvb_fe_store_parm( params, DTV_INVERSION, INVERSION_AUTO );
   dvb_fe_store_parm( params, DTV_MODULATION, modulation );
   dvb_fe_store_parm( params, DTV_BANDWIDTH_HZ, bandwidth );
   dvb_fe_store_parm( params, DTV_CODE_RATE_HP, code_rate_HP );

@@ -20,13 +20,18 @@
  */
 
 #include "Transponder_ATSC.h"
+#include "Log.h"
+
+#include "dvb-fe.h"
 
 Transponder_ATSC::Transponder_ATSC( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
 {
+  has_vct = true;
 }
 
 Transponder_ATSC::Transponder_ATSC( Source &source, std::string configfile ) : Transponder( source, configfile )
 {
+  has_vct = true;
 }
 
 Transponder_ATSC::~Transponder_ATSC( )
@@ -38,6 +43,9 @@ void Transponder_ATSC::AddProperty( const struct dtv_property &prop )
   Transponder::AddProperty( prop );
   switch( prop.cmd )
   {
+    case DTV_MODULATION:
+      modulation = prop.u.data;
+      break;
   }
 }
 
@@ -57,10 +65,20 @@ bool Transponder_ATSC::LoadConfig( )
   return true;
 }
 
+bool Transponder_ATSC::GetParams( struct dvb_v5_fe_parms *params ) const
+{
+  Transponder::GetParams( params );
+  dvb_fe_store_parm( params, DTV_MODULATION, modulation );
+  return true;
+}
+
 std::string Transponder_ATSC::toString( ) const
 {
   char tmp[256];
   snprintf(tmp, sizeof(tmp), "%d", frequency );
+  snprintf(tmp, sizeof(tmp), "ATSC  %d %s", frequency,
+      fe_modulation_name[modulation]
+      );
   return tmp;
 }
 

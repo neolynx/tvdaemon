@@ -47,6 +47,7 @@
 #include "descriptors/nit.h"
 #include "descriptors/sdt.h"
 #include "descriptors/eit.h"
+#include "descriptors/vct.h"
 #include "descriptors/desc_service.h"
 #include "descriptors/desc_network_name.h"
 #include "descriptors/desc_event_short.h"
@@ -533,7 +534,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   {
     char file[256];
 
-    dumpfile = "/home/bay/tv/" + dumpfile;
+    dumpfile = "./" + dumpfile;
     int file_fd = open( dumpfile.c_str( ),
 #ifdef O_LARGEFILE
         O_LARGEFILE |
@@ -556,7 +557,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
     FD_SET ( fd_v, &fds );
     FD_SET ( fd_a, &fds );
 
-    uint8_t *data = (uint8_t *) malloc( bufsize << 1 );
+    uint8_t *data = (uint8_t *) malloc( bufsize );
     int len;
     up = true;
     int ac, vc;
@@ -577,7 +578,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 
       if( FD_ISSET( fd_a, &tmp_fds ))
       {
-        len = read( fd_a, data, bufsize << 1 );
+        len = read( fd_a, data, bufsize );
         if( len < 0 )
         {
           LogError( "Audio: Error receiving data... %d", errno );
@@ -603,7 +604,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 
       if( FD_ISSET( fd_v, &tmp_fds ))
       {
-        len = read( fd_v, data, bufsize << 1 );
+        len = read( fd_v, data, bufsize );
         if( len < 0 )
         {
           LogError( "Video: Error receiving data... %d", errno );
@@ -638,7 +639,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   return true;
 }
 
-bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
+bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
 {
   if( !fe )
     return false;
@@ -646,7 +647,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
   uint32_t snr = 0, sig = 0;
   uint32_t ber = 0, unc = 0;
 
-  for( int i = 0; i < timeout && state == Tuning; i++ )
+  for( int i = 0; i < retries && state == Tuning; i++ )
   {
     int r = dvb_fe_get_stats( fe );
     if( r < 0 )
@@ -655,6 +656,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
       return false;
     }
 
+    //printf( "dvb_fe_retrieve_stats: %d\n", retries );
     dvb_fe_retrieve_stats( fe, DTV_STATUS, &status );
     if( status & FE_HAS_LOCK )
     {
@@ -669,7 +671,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
       noise  = (snr * 100) / 0xffff;
       return true;
     }
-    usleep( 10000 );
+    //usleep( 1 );
   }
   return false;
 }
@@ -754,64 +756,101 @@ void Frontend::Thread( )
     }
   }
 
-  Log( "Reading SDT" );
-  struct dvb_table_sdt *sdt;
-  dvb_read_section( fe, fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, time );
-  if( sdt )
+  if( transponder->HasVCT( ))
   {
-    //dvb_table_sdt_print( fe, sdt );
-    dvb_sdt_service_foreach( service, sdt )
+    Log( "Reading VCT" );
+    struct dvb_table_vct *vct;
+    dvb_read_section( fe, fd_demux, DVB_TABLE_VCT, DVB_TABLE_VCT_PID, (uint8_t **) &vct, time );
+    if( vct && up )
     {
-      if( !up )
-        break;
-      const char *name = "", *provider = "";
-      int service_type = -1;
-      dvb_desc_find( struct dvb_desc_service, desc, service, service_descriptor )
+      dvb_table_vct_print( fe, vct );
+      dvb_vct_channel_foreach( vct, channel )
       {
-        service_type = desc->service_type;
-        if( desc->name )
-          name = desc->name;
-        if( desc->provider )
-          provider = desc->provider;
-        break;
-      }
-      if( service_type == -1 )
-      {
-        LogWarn( "  No service descriptor found for service %d", service->service_id );
-        continue;
-      }
+        std::string name = channel->short_name;
+        std::string provider = "unknown";
+        Service::Type type = Service::Type_Unknown;
+        switch( channel->service_type )
+        {
+          default:
+            type = Service::Type_TV;
+            break;
+        }
 
-      Service::Type type = Service::Type_Unknown;
-      switch( service_type )
-      {
-        case 0x01:
-        case 0x16:
-          type = Service::Type_TV;
-          break;
-        case 0x02:
-          type = Service::Type_Radio;
-          break;
-        case 0x19:
-          type = Service::Type_TVHD;
-          break;
-        case 0x0c:
-          // Data ignored
+        if( type == Service::Type_Unknown )
+        {
+          LogWarn( "  Service %5d: %s '%s': unknown type: %d", channel->program_number, channel->access_control ? "§" : " ", name.c_str( ), channel->service_type );
           continue;
+        }
 
+        transponder->UpdateService( channel->program_number, type, name, provider, channel->access_control );
+        services.push_back( channel->program_number );
       }
-
-      if( type == Service::Type_Unknown )
-      {
-        LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name, service_type );
-        continue;
-      }
-
-      Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
-      transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
-      services.push_back( service->service_id );
     }
+    if( vct )
+      dvb_table_vct_free( vct );
+  }
 
-    dvb_table_sdt_free( sdt );
+  if( transponder->HasSDT( ))
+  {
+    Log( "Reading SDT" );
+    struct dvb_table_sdt *sdt;
+    dvb_read_section( fe, fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, time );
+    if( sdt )
+    {
+      //dvb_table_sdt_print( fe, sdt );
+      dvb_sdt_service_foreach( service, sdt )
+      {
+        if( !up )
+          break;
+        const char *name = "", *provider = "";
+        int service_type = -1;
+        dvb_desc_find( struct dvb_desc_service, desc, service, service_descriptor )
+        {
+          service_type = desc->service_type;
+          if( desc->name )
+            name = desc->name;
+          if( desc->provider )
+            provider = desc->provider;
+          break;
+        }
+        if( service_type == -1 )
+        {
+          LogWarn( "  No service descriptor found for service %d", service->service_id );
+          continue;
+        }
+
+        Service::Type type = Service::Type_Unknown;
+        switch( service_type )
+        {
+          case 0x01:
+          case 0x16:
+            type = Service::Type_TV;
+            break;
+          case 0x02:
+            type = Service::Type_Radio;
+            break;
+          case 0x19:
+            type = Service::Type_TVHD;
+            break;
+          case 0x0c:
+            // Data ignored
+            continue;
+
+        }
+
+        if( type == Service::Type_Unknown )
+        {
+          LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name, service_type );
+          continue;
+        }
+
+        Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
+        transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
+        services.push_back( service->service_id );
+      }
+
+      dvb_table_sdt_free( sdt );
+    }
   }
 
   //dvb_table_pat_print( fe, pat );
@@ -912,22 +951,26 @@ void Frontend::Thread( )
     return;
   }
 
-  Log( "Reading NIT" );
-  struct dvb_table_nit *nit;
-  dvb_read_section( fe, fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, time );
-  if( nit && up )
+  if( transponder->HasSDT( ))
   {
-    dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
+    Log( "Reading NIT" );
+    struct dvb_table_nit *nit;
+    dvb_read_section( fe, fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, time );
+    if( nit && up )
     {
-      Log( "  Network Name: %s", desc->network_name );
-      //transponder->SetNetwork( desc->network_name );
-      break;
+      dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
+      {
+        Log( "  Network Name: %s", desc->network_name );
+        //transponder->SetNetwork( desc->network_name );
+        break;
+      }
+      //dvb_table_nit_print( fe, nit );
+      HandleNIT( nit );
     }
-    //dvb_table_nit_print( fe, nit );
-    HandleNIT( nit );
+    if( nit )
+      dvb_table_nit_free( nit );
   }
-  if( nit )
-    dvb_table_nit_free( nit );
+
   if( !up )
   {
     state = Closing;

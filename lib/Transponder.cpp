@@ -39,7 +39,10 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
   signal(0), noise(0),
   TSID(0),
   enabled(true),
-  state(State_New)
+  state(State_New),
+  has_nit(false),
+  has_sdt(false),
+  has_vct(false)
 {
 }
 
@@ -255,7 +258,6 @@ bool Transponder::Tune( uint16_t pno )
 bool Transponder::GetParams( struct dvb_v5_fe_parms *params ) const
 {
   dvb_fe_store_parm( params, DTV_FREQUENCY, frequency );
-  dvb_fe_store_parm( params, DTV_INVERSION, INVERSION_AUTO );
   return true;
 }
 
@@ -279,6 +281,8 @@ const char *Transponder::GetStateName( State state )
       return "Scanning Failed";
     case State_Idle:
       return "Idle";
+    default:
+      return "Unknown";
   }
   return "Unknown";
 }
