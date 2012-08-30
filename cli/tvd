@@ -45,7 +45,8 @@ class Adapters( ):
     self.category = "adapters"
     self.cli = cli
 
-    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+    self.commands = [ ("delete", self.cmd_delete) ]
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
   def update( self ):
     self.path_items = { }
@@ -114,7 +115,8 @@ class Frontend( ):
     self.adapter_id  = adapter_id
     self.frontend_id = data[1]
 
-    self.cli.RegisterItem( CLIItem( "addport", self.cmd_addport, category = self.category ))
+    self.commands = [ ("delete", self.cmd_delete) ]
+    #self.cli.RegisterItem( CLIItem( "addport", self.cmd_addport, category = self.category ))
 
   def update( self ):
     self.path_items = { }
@@ -150,7 +152,8 @@ class Port( ):
     self.frontend_id = frontend_id
     self.port_id     = data[1]
 
-    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+    self.commands = [ ("delete", self.cmd_delete) ]
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
   def update( self ):
     self.path_items = { }
@@ -161,47 +164,35 @@ class Port( ):
 
 class Channels( ):
   def __init__( self, cli ):
-    self.category = "adapters"
+    self.category = "channels"
     self.cli = cli
-    self.types = { }
-    self.get_types( )
 
-    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+    self.commands = [ ("delete", self.cmd_delete) ]
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
   def update( self ):
     self.path_items = { }
-    sources = self.get( )
-    if sources:
-      count = sources["iTotalDisplayRecords"]
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
       for i in range( count ):
-        self.path_items[sources["aaData"][i][0]] = Source( self.cli, sources["aaData"][i] )
+        self.path_items[data["aaData"][i][0]] = Source( self.cli, data["aaData"][i] )
 
   def get( self ):
-    return rpc( 'tvd?c=adapter&a=list' )
-
-  def get_types( self ):
-    self.types = { }
-    types = rpc( 'tvd?c=adapter&a=types' )
-    if types:
-      for t in types:
-        self.types[int(t)] = types[t]
+    return rpc( 'tvd?c=channel&a=list' )
 
   def cmd_ls( self ):
-    sources = self.get( )
-    if sources:
-      count = sources["iTotalDisplayRecords"]
+    data = self.get( )
+    if data:
+      count = data["iTotalDisplayRecords"]
       for i in range( count ):
-        source = sources["aaData"][i][0]
-        source_id = sources["aaData"][i][1]
-        source_type = sources["aaData"][i][2]
+        name = data["aaData"][i][0]
+        id   = data["aaData"][i][1]
 
-        sys.stdout.write( cf.bold_white( source ))
-        sys.stdout.write( " " * ( 30 - len( source )))
-        if self.types.has_key( source_type ):
-          sys.stdout.write( self.types[source_type] )
-        else:
-          sys.stdout.write( "Unknown (%d)"%source_type )
+        sys.stdout.write( cf.bold_white( name ))
+        #sys.stdout.write( " " * ( 30 - len( name )))
         sys.stdout.write( "\n" )
+      print "total: %d"%count
 
   def cmd_delete( self, item, args, rawline ):
     """source||delete source"""
@@ -214,8 +205,10 @@ class Sources( ):
     self.types = { }
     self.get_types( )
 
-    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
-    self.cli.RegisterItem( CLIItem( "add", self.cmd_add, category = self.category ))
+    self.commands = [ ("add", self.cmd_add),
+                      ("delete", self.cmd_delete) ]
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+    #self.cli.RegisterItem( CLIItem( "add", self.cmd_add, category = self.category ))
 
   def update( self ):
     self.path_items = { }
@@ -282,7 +275,8 @@ class Transponders( ):
     self.states = { }
     self.get_states( )
 
-    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+    self.commands = [ ("delete", self.cmd_delete) ]
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
     self.path_items = { }
 
@@ -334,7 +328,8 @@ class Services( ):
     self.types = { }
     self.get_types( )
 
-    self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
+    self.commands = [ ("delete", self.cmd_delete) ]
+    #self.cli.RegisterItem( CLIItem( "delete", self.cmd_delete, category = self.category ))
 
   #def update( self ):
     #self.path_items = { }
@@ -419,11 +414,6 @@ class TVDCLI( CLI ):
     loc = self._location.GetCurrentLocationValue( )
     if not loc:
       loc = self.root
-    cat = "root"
-    if hasattr( loc, "category" ):
-      cat = loc.category
-    self.SetItemsEnabledByCategories( cat, other_inverse = True )
-    self._UpdateHelpItem( )
     if hasattr( loc, "update" ):
       loc.update( )
     self.cd.ClearItems( )
@@ -432,6 +422,16 @@ class TVDCLI( CLI ):
         self.cd.AppendItem( CLIItem( path, value = loc.path_items[path], tab_delimiter = "/" ))
     else:
       print "object has no path items:", loc
+
+    cat = "root"
+    if hasattr( loc, "category" ):
+      cat = loc.category
+    self.SetItemsEnabledByCategories( cat, other_inverse = True )
+    self.ClearItems( )
+    if hasattr( loc, "commands" ):
+      for command in loc.commands:
+        self.RegisterItem( CLIItem( command[0], command[1], category = cat ))
+    self._UpdateHelpItem( )
 
   def cmd_cd( self, item, args, rawline ):
     """[location|..]||change current location"""
