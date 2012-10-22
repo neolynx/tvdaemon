@@ -121,9 +121,9 @@ void Adapter::SetPresence( bool present )
   }
 
   if( present )
-    Log( "Adapter hardware is present '%s'", name.c_str( ));
+    Log( "Adapter %d hardware is present '%s'", GetKey( ), name.c_str( ));
   else
-    Log( "Adapter hardware removed '%s'", name.c_str( ));
+    Log( "Adapter %d hardware removed '%s'", GetKey( ), name.c_str( ));
 
   this->present = present;
 }

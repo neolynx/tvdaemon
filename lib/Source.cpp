@@ -243,7 +243,10 @@ bool Source::ScanTransponder( int id )
 {
   Transponder *t = GetTransponder( id );
   if( !t )
+  {
+    LogError( "Transponder with id %d not found", id );
     return false;
+  }
 
   if( t->Disabled( ))
   {

@@ -81,6 +81,8 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
     return false;
   }
 
+  // FIXME: we should never use fe->* directly, use functions...
+  //
   fe->sat_number = satpos % 3;
   fe->lnb = dvb_sat_get_lnb( lnb ); // FIXME: put to ptroperties in v4l
   fe->diseqc_wait = 0;

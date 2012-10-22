@@ -199,6 +199,11 @@ Adapter *TVDaemon::UdevAdd( struct udev_device *dev, const char *path )
   int adapter_id  = atoi( udev_device_get_property_value( dev, "DVB_ADAPTER_NUM" ));
   int frontend_id = atoi( udev_device_get_property_value( dev, "DVB_DEVICE_NUM" ));
 
+  if( adapter_id == -1 || frontend_id == -1)
+  {
+    LogError( "Udev discovered not correctly initialized adapter" );
+    return NULL;
+  }
   Adapter *a = NULL;
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
   {

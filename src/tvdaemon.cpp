@@ -53,29 +53,27 @@ int create_stuff( TVDaemon &tvd )
   printf( "-------------------------\n\n" );
   // Test tuning/scanning
   int source_id = 0;
-  int adapter_id = 0;
+  int adapter_id = 1;
   int frontend_id = 0;
   int port_id = 0;
-  int transponder_id = 26;
-  int service_id = 3;
-  transponder_id = 41;
-  service_id = 5;
+  int transponder_id = 4;
+  int service_id = 1;
 
   // sat hotbird
   //source_id = 2;
-  //adapter_id = 1;
+  //adapter_id = 0;
   //frontend_id = 0;
   //port_id = 1;
-  //transponder_id = -1;
-  //service_id = -1;
+  //transponder_id = 5;
+  //service_id = 15705;
 
   // sat astra
   //source_id = 1;
-  //adapter_id = 1;
+  //adapter_id = 0;
   //frontend_id = 0;
   //port_id = 0;
-  //transponder_id = 30;
-  //service_id = 28007;
+  //transponder_id = 68;
+  //service_id = 20006;
 
   Source *s = tvd.GetSource( source_id );
   if( s == NULL )

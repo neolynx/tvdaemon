@@ -73,6 +73,7 @@ bool Port::Tune( Transponder &transponder )
 
 bool Port::Scan( Transponder &transponder )
 {
+  LogError( "setting port %d", id );
   if( !frontend.SetPort( id ))
   {
     LogError( "Error setting port %d on frontend", id );
@@ -80,7 +81,10 @@ bool Port::Scan( Transponder &transponder )
   }
 
   if( !frontend.Tune( transponder ))
+  {
+    LogError( "Tuning Failed" );
     return false;
+  }
 
   if( !frontend.Scan( ))
   {

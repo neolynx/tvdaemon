@@ -184,6 +184,11 @@ bool Frontend::Open()
   if( fe )
     return true;
 // FIXME: handle adapter_id == -1
+  if( adapter_id == -1 )
+  {
+    LogError( "adapter_id not set" );
+    return false;
+  }
   Log( "Opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
   fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
   if( !fe )
@@ -318,7 +323,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   state = Tuning;
 
   uint8_t signal, noise;
-  if( !GetLockStatus( signal, noise ))
+  if( !GetLockStatus( signal, noise, 10000 ))
   {
     t.SetState( Transponder::State_TuningFailed );
     return false;
@@ -469,7 +474,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
         dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
         {
           dumpfile = desc->name;
-          dumpfile += ".pes";
           break;
         }
       }
@@ -478,14 +482,14 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
         dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
         {
           upcoming = desc->name;
-          upcoming += ".pes";
+          break;
         }
       }
     }
     dvb_table_eit_free(eit);
   }
 
-  if( dumpfile.empty( ) && !upcoming.empty( ))
+  if( !upcoming.empty( ))
   {
     dumpfile = upcoming;
   }
@@ -510,11 +514,12 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   //}
 
   if( dumpfile.empty( ))
-    dumpfile = "dump.pes";
+    dumpfile = "dump";
   else
   {
     std::replace( dumpfile.begin(), dumpfile.end(), '/', '_');
     std::replace( dumpfile.begin(), dumpfile.end(), '`', '_');
+    std::replace( dumpfile.begin(), dumpfile.end(), '$', '_');
   }
 
   Log( "Setting PES filter for vpid %d", vpid );
@@ -534,12 +539,27 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   {
     char file[256];
 
-    dumpfile = "./" + dumpfile;
-    int file_fd = open( dumpfile.c_str( ),
+    std::string dir = "/home/bay/tv/";
+    std::string filename = dir + dumpfile + ".pes";
+
+    int i = 0;
+    while( Utils::IsFile( filename ))
+    {
+      char num[16];
+      if( ++i == 1000 )
+      {
+        LogError( "Too many files with same name: %s", filename.c_str( ));
+        return false;
+      }
+      snprintf( num, sizeof( num ), "_%d", i );
+      filename = dir + dumpfile + num + ".pes";
+    }
+
+    int file_fd = open( filename.c_str( ),
 #ifdef O_LARGEFILE
         O_LARGEFILE |
 #endif
-        O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        O_WRONLY | O_CREAT | O_TRUNC, 0644 );
 
     if( file_fd < 0 )
     {
