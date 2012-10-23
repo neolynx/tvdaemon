@@ -65,7 +65,7 @@ void Transponder_DVBT::AddProperty( const struct dtv_property &prop )
     case DTV_HIERARCHY:
       hierarchy = prop.u.data;
       break;
-    case DTV_DVBT2_PLP_ID:
+    case DTV_DVBT2_PLP_ID_LEGACY:
       plp_id = prop.u.data;
       break;
   }
@@ -115,7 +115,7 @@ bool Transponder_DVBT::GetParams( struct dvb_v5_fe_parms *params ) const
   dvb_fe_store_parm( params, DTV_TRANSMISSION_MODE, transmission_mode );
   dvb_fe_store_parm( params, DTV_HIERARCHY, hierarchy );
   if( delsys == SYS_DVBT2 )
-    dvb_fe_store_parm( params, DTV_DVBT2_PLP_ID, plp_id );
+    dvb_fe_store_parm( params, DTV_DVBT2_PLP_ID_LEGACY, plp_id );
   return true;
 }
 
