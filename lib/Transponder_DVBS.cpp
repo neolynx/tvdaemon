@@ -81,13 +81,14 @@ bool Transponder_DVBS::SaveConfig( )
   switch( delsys )
   {
     case SYS_DVBS2:
-      Lookup( "Modulation",  Setting::TypeInt )  = modulation;
-      Lookup( "Roll-Off",    Setting::TypeInt )  = roll_off;
+      WriteConfig( "Modulation",  modulation );
+      WriteConfig( "Roll-Off",    roll_off );
       // fall through
     case SYS_DVBS:
-      Lookup( "Symbol-Rate",  Setting::TypeInt ) = (int) symbol_rate;
-      Lookup( "FEC",          Setting::TypeInt ) = fec;
-      Lookup( "Polarization", Setting::TypeInt ) = polarization;
+      Log( "saving transponder %d", GetKey( ));
+      WriteConfig( "Symbol-Rate",  symbol_rate );
+      WriteConfig( "FEC",          fec );
+      WriteConfig( "Polarization", polarization );
       break;
   }
 
@@ -102,13 +103,13 @@ bool Transponder_DVBS::LoadConfig( )
   switch( delsys )
   {
     case SYS_DVBS2:
-      modulation = (int) Lookup( "Modulation",  Setting::TypeInt );
-      roll_off   = (int) Lookup( "Roll-Off",    Setting::TypeInt );
+      ReadConfig( "Modulation",  modulation );
+      ReadConfig( "Roll-Off",    roll_off );
       // fall through
     case SYS_DVBS:
-      symbol_rate  =             (uint32_t) (int) Lookup( "Symbol-Rate",  Setting::TypeInt );
-      fec          =                        (int) Lookup( "FEC",          Setting::TypeInt );
-      polarization = (dvb_sat_polarization) (int) Lookup( "Polarization", Setting::TypeInt );
+      ReadConfig( "Symbol-Rate",  symbol_rate );
+      ReadConfig( "FEC",          fec );
+      ReadConfig( "Polarization", (int &) polarization );
       break;
   }
 

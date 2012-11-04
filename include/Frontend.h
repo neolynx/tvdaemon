@@ -76,6 +76,7 @@ class Frontend : public ConfigObject, public RPCObject
       Tuned,
       TuningFailed,
       Scanning,
+      Shutdown,
     };
 
     bool TunePID( Transponder &t, uint16_t pno );

@@ -56,12 +56,12 @@ Source::~Source( )
 
 bool Source::SaveConfig( )
 {
-  Lookup( "Name", Setting::TypeString ) = name;
-  Lookup( "Type", Setting::TypeInt )    = type;
+  WriteConfig( "Name", name );
+  WriteConfig( "Type", type );
 
   SaveReferences<Port, Source>( *this, "Ports", ports );
 
-  WriteConfig( );
+  WriteConfigFile( );
 
   for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
@@ -72,18 +72,18 @@ bool Source::SaveConfig( )
 
 bool Source::LoadConfig( )
 {
-  if( !ReadConfig( ))
+  if( !ReadConfigFile( ))
     return false;
 
-  name =               (const char *) Lookup( "Name", Setting::TypeString );
-  type = (TVDaemon::SourceType) (int) Lookup( "Type", Setting::TypeInt );
+  ReadConfig( "Name", name );
+  ReadConfig( "Type", (int &) type );
 
   Log( "Loading Source '%s'", name.c_str( ));
 
   if( !CreateFromConfigFactory<Transponder, Source>( *this, "transponder", transponders ))
     return false;
 
-  Setting &n = Lookup( "Ports", Setting::TypeList );
+  Setting &n = ConfigList( "Ports" );
   for( int i = 0; i < n.getLength( ); i++ )
   {
     Setting &n2 = n[i];

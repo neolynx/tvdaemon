@@ -51,7 +51,7 @@ void Transponder_ATSC::AddProperty( const struct dtv_property &prop )
 
 bool Transponder_ATSC::SaveConfig( )
 {
-  Lookup( "Modulation", Setting::TypeInt ) = (int) modulation;
+  WriteConfig( "Modulation", modulation );
 
   return Transponder::SaveConfig( );
 }
@@ -61,7 +61,7 @@ bool Transponder_ATSC::LoadConfig( )
   if( !Transponder::LoadConfig( ))
     return false;
 
-  modulation = (uint32_t) Lookup( "Modulation", Setting::TypeInt );
+  ReadConfig( "Modulation", modulation );
   return true;
 }
 

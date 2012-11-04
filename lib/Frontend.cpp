@@ -90,6 +90,8 @@ Frontend::~Frontend( )
   if( fe )
     fe->abort = 1;
 
+  state = Shutdown;
+
   if( up )
   {
     up = false;
@@ -108,8 +110,9 @@ Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
 {
   ConfigObject cfg;
   cfg.SetConfigFile( configfile );
-  cfg.ReadConfig( );
-  TVDaemon::SourceType type = (TVDaemon::SourceType) (int) cfg.Lookup( "Type", Setting::TypeInt );
+  cfg.ReadConfigFile( );
+  TVDaemon::SourceType type;
+  cfg.ReadConfig( "Type", (int &) type );
   switch( type )
   {
     case TVDaemon::Source_DVB_S:
@@ -232,9 +235,9 @@ bool Frontend::GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *d
 
 bool Frontend::SaveConfig( )
 {
-  Lookup( "Type", Setting::TypeInt ) = type;
+  WriteConfig( "Type", type );
 
-  WriteConfig( );
+  WriteConfigFile( );
 
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {
@@ -245,10 +248,10 @@ bool Frontend::SaveConfig( )
 
 bool Frontend::LoadConfig( )
 {
-  if( !ReadConfig( ))
+  if( !ReadConfigFile( ))
     return false;
 
-  type = (TVDaemon::SourceType) (int) Lookup( "Type", Setting::TypeInt );
+  ReadConfig( "Type", (int &) type );
 
   if( !CreateFromConfig<Port, Frontend>( *this, "port", ports ))
     return false;
@@ -323,7 +326,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   state = Tuning;
 
   uint8_t signal, noise;
-  if( !GetLockStatus( signal, noise, 10000 ))
+  if( !GetLockStatus( signal, noise, 10 ))
   {
     t.SetState( Transponder::State_TuningFailed );
     return false;
@@ -335,7 +338,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   return true;
 }
 
-void Frontend::Untune()
+void Frontend::Untune( )
 {
   if( state != Tuned)
     return;
@@ -568,7 +571,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
       return false;
     }
 
-    Log( "Recording '%s' ...", dumpfile.c_str( ));
+    Log( "Recording '%s' ...", filename.c_str( ));
 
     fd_set tmp_fds;
     fd_set fds;
@@ -676,7 +679,6 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
       return false;
     }
 
-    //printf( "dvb_fe_retrieve_stats: %d\n", retries );
     dvb_fe_retrieve_stats( fe, DTV_STATUS, &status );
     if( status & FE_HAS_LOCK )
     {
@@ -685,6 +687,8 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
       dvb_fe_retrieve_stats( fe, DTV_UNCORRECTED_BLOCKS, &unc );
       dvb_fe_retrieve_stats( fe, DTV_SNR, &snr );
 
+      if( i > 0 )
+        printf( "\n" );
       Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", (sig * 100) / 0xffff, (snr * 100) / 0xffff, ber, unc );
 
       signal = (sig * 100) / 0xffff;
@@ -692,7 +696,10 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
       return true;
     }
     //usleep( 1 );
+    printf( "." );
+    fflush( stdout );
   }
+  printf( "\n" );
   return false;
 }
 

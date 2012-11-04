@@ -46,19 +46,19 @@ Port::~Port( )
 
 bool Port::SaveConfig( )
 {
-  Lookup( "Name", Setting::TypeString ) = name;
-  Lookup( "ID",   Setting::TypeInt )    = id;
+  WriteConfig( "Name", name );
+  WriteConfig( "ID",   id );
 
-  return WriteConfig( );
+  return WriteConfigFile( );
 }
 
 bool Port::LoadConfig( )
 {
-  if( !ReadConfig( ))
+  if( !ReadConfigFile( ))
     return false;
 
-  name = (const char *) Lookup( "Name", Setting::TypeString );
-  id   = (int)          Lookup( "ID",   Setting::TypeInt );
+  ReadConfig( "Name", name );
+  ReadConfig( "ID",   id );
 
   Log( "    Loading Port '%s'", name.c_str( ));
   return true;
@@ -73,7 +73,6 @@ bool Port::Tune( Transponder &transponder )
 
 bool Port::Scan( Transponder &transponder )
 {
-  LogError( "setting port %d", id );
   if( !frontend.SetPort( id ))
   {
     LogError( "Error setting port %d on frontend", id );

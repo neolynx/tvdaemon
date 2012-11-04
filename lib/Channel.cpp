@@ -50,21 +50,21 @@ Channel::~Channel( )
 
 bool Channel::SaveConfig( )
 {
-  Lookup( "Name", Setting::TypeString ) = name;
+  WriteConfig( "Name", name );
 
-  SaveReferences<Service, Channel>( *this, "Services", services );
-  return WriteConfig( );
+  //SaveReferences<Service, Channel>( *this, "Services", services );
+  return WriteConfigFile( );
 }
 
 bool Channel::LoadConfig( )
 {
-  if( !ReadConfig( ))
+  if( !ReadConfigFile( ))
     return false;
-  name = (const char *) Lookup( "Name", Setting::TypeString );
+  ReadConfig( "Name", name );
 
   Log( "Loading Channel '%s'", name.c_str( ));
 
-  Setting &n = Lookup( "Services", Setting::TypeList );
+  Setting &n = ConfigList( "Services" );
   for( int i = 0; i < n.getLength( ); i++ )
   {
     Setting &n2 = n[i];

@@ -25,13 +25,13 @@
 #include <json/json.h>
 #include <strings.h> // strcasecmp
 
+#include "ConfigObject.h"
 #include "Transponder.h"
 #include "HTTPServer.h"
 #include "Stream.h"
 #include "Log.h"
 
 Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id ) :
-  ConfigObject( transponder, "service", config_id ),
   transponder(transponder),
   service_id(service_id),
   pid(pid),
@@ -39,8 +39,7 @@ Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, i
 {
 }
 
-Service::Service( Transponder &transponder, std::string configfile ) :
-  ConfigObject( transponder, configfile ),
+Service::Service( Transponder &transponder ) :
   transponder(transponder)
 {
 }
@@ -53,40 +52,44 @@ Service::~Service( )
   }
 }
 
-bool Service::SaveConfig( )
+bool Service::SaveConfig( ConfigBase &config )
 {
-  Lookup( "ServiceID",    Setting::TypeInt )    = service_id;
-  Lookup( "PID",          Setting::TypeInt )    = pid;
-  Lookup( "Type",         Setting::TypeInt )    = (int) type;
-  Lookup( "Name",         Setting::TypeString ) = name;
-  Lookup( "Provider",     Setting::TypeString ) = provider;
-  Lookup( "Scrambled",    Setting::TypeInt )    = (int) scrambled;
+  config.WriteConfig( "ServiceID",    service_id );
+  config.WriteConfig( "PID",          pid );
+  config.WriteConfig( "Type",         type );
+  config.WriteConfig( "Name",         name );
+  config.WriteConfig( "Provider",     provider );
+  config.WriteConfig( "Scrambled",    scrambled );
 
+  config.DeleteConfig( "Streams" );
+  Setting &n = config.ConfigList( "Streams" );
+  ConfigBase c( n );
   for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++ )
   {
-    it->second->SaveConfig( );
+    Setting &n2 = c.ConfigGroup( );
+    ConfigBase c2( n2 );
+    it->second->SaveConfig( c2 );
   }
-
-  return WriteConfig( );
+  return true;
 }
 
-bool Service::LoadConfig( )
+bool Service::LoadConfig( ConfigBase &config )
 {
-  if( !ReadConfig( ))
-    return false;
+  config.ReadConfig( "ServiceID", service_id );
+  config.ReadConfig( "PID", pid );
+  config.ReadConfig( "Type", (int &) type );
+  config.ReadConfig( "Name", name );
+  config.ReadConfig( "Provider", provider );
+  config.ReadConfig( "Scrambled", scrambled );
 
-  service_id = (int) Lookup( "ServiceID", Setting::TypeInt );
-  pid        = (int) Lookup( "PID", Setting::TypeInt );
-  type       = (Type) (int) Lookup( "Type", Setting::TypeInt );
-  const char *t = Lookup( "Name", Setting::TypeString );
-  if( t ) name = t;
-  t =             Lookup( "Provider", Setting::TypeString );
-  if( t ) provider = t;
-  scrambled    = (int) Lookup( "Scrambled", Setting::TypeInt );
-
-  if( !CreateFromConfig<Stream, uint16_t, Service>( *this, "stream", streams ))
-    return false;
-
+  Setting &n = config.ConfigList( "Streams" );
+  for( int i = 0; i < n.getLength( ); i++ )
+  {
+    ConfigBase c2( n[i] );
+    Stream *s = new Stream( *this );
+    s->LoadConfig( c2 );
+    streams[s->GetKey( )] = s;
+  }
   return true;
 }
 

@@ -31,15 +31,40 @@ using namespace libconfig;
 
 #include "Utils.h"
 
-class ConfigObject
+class ConfigBase
+{
+  public:
+    ConfigBase( ) : settings(NULL) { };
+    ConfigBase( Setting &settings ) : settings(&settings) { };
+    Setting &ConfigArray ( const char *key = NULL );
+    Setting &ConfigGroup ( const char *key = NULL );
+    Setting &ConfigList  ( const char *key = NULL );
+    void     ReadConfig  ( const char *key, int &i );
+    void     ReadConfig  ( const char *key, bool &b );
+    void     ReadConfig  ( const char *key, uint8_t &u8 );
+    void     ReadConfig  ( const char *key, uint16_t &u16 );
+    void     ReadConfig  ( const char *key, uint32_t &u32 );
+    void     ReadConfig  ( const char *key, float &f );
+    void     ReadConfig  ( const char *key, std::string &s );
+    void     WriteConfig ( const char *key, int i );
+    void     WriteConfig ( const char *key, bool b );
+    void     WriteConfig ( const char *key, uint8_t u8 );
+    void     WriteConfig ( const char *key, uint16_t u16 );
+    void     WriteConfig ( const char *key, uint32_t u32 );
+    void     WriteConfig ( const char *key, float f );
+    void     WriteConfig ( const char *key, std::string &s );
+    bool     DeleteConfig( const char *key );
+  protected:
+    Setting *settings;
+};
+
+class ConfigObject : public ConfigBase
 {
   public:
     ConfigObject( );
     ConfigObject( ConfigObject &parent, std::string configfile );
     ConfigObject( ConfigObject &parent, std::string configname, int config_id );
     virtual ~ConfigObject( );
-
-    Setting &GetSettings( ) { return config.getRoot( ); }
 
     virtual bool SaveConfig( ) { return true; }
     virtual bool LoadConfig( ) { return true; }
@@ -119,7 +144,7 @@ class ConfigObject
     template <class Class, class Parent> static void SaveReferences( Parent &parent, std::string configname, std::vector<Class *> &list )
     {
       parent.DeleteConfig( configname.c_str( ));
-      Setting &n = parent.Lookup( configname.c_str( ), Setting::TypeList );
+      Setting &n = parent.ConfigList( configname.c_str( ));
       typename std::vector<Class *>::iterator it;
       for( it = list.begin( ); it != list.end( ); it++ )
       {
@@ -136,12 +161,8 @@ class ConfigObject
     std::string GetConfigDir( )  { return configdir; }
     std::string GetConfigFile( ) { return configfile; }
     bool SetConfigFile( std::string configfile );
-    bool WriteConfig( );
-    bool ReadConfig( );
-
-    Setting &Lookup( const char *key, Setting::Type type );
-
-    bool DeleteConfig( const char *key );
+    bool WriteConfigFile( );
+    bool ReadConfigFile( );
 
     std::list<int> GetParentPath( );
 

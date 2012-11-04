@@ -22,7 +22,6 @@
 #ifndef _Service_
 #define _Service_
 
-#include "ConfigObject.h"
 #include "RPCObject.h"
 
 #include <string>
@@ -33,11 +32,11 @@
 
 class Transponder;
 
-class Service : public ConfigObject, public RPCObject
+class Service : public RPCObject
 {
   public:
     Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id );
-    Service( Transponder &transponder, std::string configfile );
+    Service( Transponder &transponder );
     virtual ~Service( );
 
     enum Type
@@ -63,8 +62,8 @@ class Service : public ConfigObject, public RPCObject
     bool UpdateStream( int pid, Stream::Type type );
     std::map<uint16_t, Stream *> &GetStreams();
 
-    virtual bool SaveConfig( );
-    virtual bool LoadConfig( );
+    virtual bool SaveConfig( ConfigBase &config );
+    virtual bool LoadConfig( ConfigBase &config );
 
     bool Tune( );
 

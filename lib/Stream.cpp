@@ -21,11 +21,11 @@
 
 #include "Stream.h"
 
+#include "ConfigObject.h"
 #include "Service.h"
 #include "Log.h"
 
 Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
-  ConfigObject( service, "stream", config_id ),
   service(service),
   id(id),
   type(type)
@@ -33,8 +33,7 @@ Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
   Log( "  Stream  %5d: %s", id, GetTypeName( type ));
 }
 
-Stream::Stream( Service &service, std::string configfile ) :
-  ConfigObject( service, configfile ),
+Stream::Stream( Service &service ) :
   service(service)
 {
 }
@@ -43,21 +42,18 @@ Stream::~Stream( )
 {
 }
 
-bool Stream::SaveConfig( )
+bool Stream::SaveConfig( ConfigBase &config )
 {
-  Lookup( "ID",          Setting::TypeInt )    = id;
-  Lookup( "Type",        Setting::TypeInt )    = (int) type;
-  return WriteConfig( );
+  config.WriteConfig( "ID",   id );
+  config.WriteConfig( "Type", type );
+  return true;
 }
 
-bool Stream::LoadConfig( )
+bool Stream::LoadConfig( ConfigBase &config )
 {
-  if( !ReadConfig( ))
-    return false;
-
-  id   =        (int) Lookup( "ID",   Setting::TypeInt );
-  type = (Type) (int) Lookup( "Type", Setting::TypeInt );
-
+  config.ReadConfig( "ID",   id );
+  config.ReadConfig( "Type", (int &) type );
+  Log( "  Stream  %5d: %s", id, GetTypeName( type ));
   return true;
 }
 

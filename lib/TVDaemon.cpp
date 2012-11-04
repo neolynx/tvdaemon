@@ -27,6 +27,7 @@
 #include <sstream>  // ostringstream
 #include <unistd.h> // usleep
 #include <json/json.h>
+#include <math.h>   // NAN
 #include <string>
 
 #include "config.h"
@@ -61,37 +62,6 @@ TVDaemon::TVDaemon( std::string confdir ) :
   Log( "TVDconfig: %s", GetConfigFile( ).c_str( ));
 }
 
-bool TVDaemon::Start( )
-{
-  if( !LoadConfig( ))
-  {
-    LogError( "Error loading config directory '%s'", GetConfigDir( ).c_str( ));
-    return false;
-  }
-
-  // Setup udev
-  udev = udev_new( );
-  udev_mon = udev_monitor_new_from_netlink( udev, "udev" );
-  udev_monitor_filter_add_match_subsystem_devtype( udev_mon, "dvb", NULL );
-
-  FindAdapters( );
-
-  MonitorAdapters( );
-
-  httpd = new HTTPServer( "www" );
-  httpd->AddDynamicHandler( "tvd", this );
-  httpd->SetLogFunc( TVD_Log );
-
-  if( !httpd->CreateServerTCP( HTTPDPORT ))
-  {
-    //LogError( "unable to create server" );
-    return false;
-  }
-  httpd->Start( );
-  Log( "HTTP Server listening on port %d", HTTPDPORT );
-  return true;
-}
-
 TVDaemon::~TVDaemon( )
 {
   SaveConfig( );
@@ -124,12 +94,42 @@ TVDaemon::~TVDaemon( )
   }
 }
 
+bool TVDaemon::Start( )
+{
+  if( !LoadConfig( ))
+  {
+    LogError( "Error loading config directory '%s'", GetConfigDir( ).c_str( ));
+    return false;
+  }
+
+  // Setup udev
+  udev = udev_new( );
+  udev_mon = udev_monitor_new_from_netlink( udev, "udev" );
+  udev_monitor_filter_add_match_subsystem_devtype( udev_mon, "dvb", NULL );
+
+  FindAdapters( );
+
+  MonitorAdapters( );
+
+  httpd = new HTTPServer( "www" );
+  httpd->AddDynamicHandler( "tvd", this );
+  httpd->SetLogFunc( TVD_Log );
+
+  if( !httpd->CreateServerTCP( HTTPDPORT ))
+  {
+    //LogError( "unable to create server" );
+    return false;
+  }
+  httpd->Start( );
+  Log( "HTTP Server listening on port %d", HTTPDPORT );
+  return true;
+}
+
 bool TVDaemon::SaveConfig( )
 {
-  Setting &root = GetSettings( );
-  Setting &version = Lookup( "Version", Setting::TypeFloat );
-  version = atof( PACKAGE_VERSION );
-  WriteConfig( );
+  float version = atof( PACKAGE_VERSION );
+  WriteConfig( "Version", version );
+  WriteConfigFile( );
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
@@ -150,12 +150,12 @@ bool TVDaemon::SaveConfig( )
 
 bool TVDaemon::LoadConfig( )
 {
-  if( !ReadConfig( ))
+  if( !ReadConfigFile( ))
     return false;
 
-  Setting &root = GetSettings( );
-  Setting &version = Lookup( "Version", Setting::TypeFloat );
-  Log( "Found config version: %f", (float) version );
+  float version = NAN;
+  ReadConfig( "Version", version );
+  Log( "Found config version: %f", version );
 
   if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
     return false;

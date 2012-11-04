@@ -49,7 +49,7 @@ Frontend_DVBS::~Frontend_DVBS( )
 
 bool Frontend_DVBS::SaveConfig( )
 {
-  Lookup( "LNB", Setting::TypeString ) = LNB;
+  WriteConfig( "LNB", LNB );
   return Frontend::SaveConfig( );
 }
 
@@ -58,9 +58,7 @@ bool Frontend_DVBS::LoadConfig( )
   Log( "  Loading Frontend DVB-S" );
   if( !Frontend::LoadConfig( ))
     return false;
-  const char *t = Lookup( "LNB", Setting::TypeString );
-  if( t )
-    LNB = t;
+  ReadConfig( "LNB", LNB );
   return true;
 }
 

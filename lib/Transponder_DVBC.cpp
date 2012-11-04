@@ -69,10 +69,10 @@ void Transponder_DVBC::AddProperty( const struct dtv_property &prop )
 
 bool Transponder_DVBC::SaveConfig( )
 {
-  Lookup( "Symbol-Rate", Setting::TypeInt ) = (int) symbol_rate;
-  Lookup( "FEC-Inner",   Setting::TypeInt ) = (int) inner_fec;
-  Lookup( "Modulation",  Setting::TypeInt ) = (int) modulation;
-  Lookup( "Inversion",   Setting::TypeInt ) = (int) inversion;
+  WriteConfig( "Symbol-Rate", symbol_rate );
+  WriteConfig( "FEC-Inner",   inner_fec );
+  WriteConfig( "Modulation",  modulation );
+  WriteConfig( "Inversion",   inversion );
 
   return Transponder::SaveConfig( );
 }
@@ -82,10 +82,10 @@ bool Transponder_DVBC::LoadConfig( )
   if( !Transponder::LoadConfig( ))
     return false;
 
-  symbol_rate = (uint32_t) Lookup( "Symbol-Rate", Setting::TypeInt );
-  inner_fec   = (uint32_t) Lookup( "FEC-Inner",   Setting::TypeInt );
-  modulation  = (uint32_t) Lookup( "Modulation",  Setting::TypeInt );
-  inversion   = (uint32_t) Lookup( "Inversion",   Setting::TypeInt );
+  ReadConfig( "Symbol-Rate", symbol_rate );
+  ReadConfig( "FEC-Inner",   inner_fec );
+  ReadConfig( "Modulation",  modulation );
+  ReadConfig( "Inversion",   inversion );
   return true;
 }
 

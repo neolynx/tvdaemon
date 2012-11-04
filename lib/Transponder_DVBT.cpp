@@ -73,15 +73,15 @@ void Transponder_DVBT::AddProperty( const struct dtv_property &prop )
 
 bool Transponder_DVBT::SaveConfig( )
 {
-  Lookup( "Modulation",        Setting::TypeInt ) = modulation;
-  Lookup( "Bandwidth",         Setting::TypeInt ) = bandwidth;
-  Lookup( "Code-Rate-HP",      Setting::TypeInt ) = code_rate_HP;
-  Lookup( "Code-Rate-LP",      Setting::TypeInt ) = code_rate_LP;
-  Lookup( "Guard-Interval",    Setting::TypeInt ) = guard_interval;
-  Lookup( "Transmission-Mode", Setting::TypeInt ) = transmission_mode;
-  Lookup( "Hierarchy",         Setting::TypeInt ) = hierarchy;
+  WriteConfig( "Modulation",        modulation );
+  WriteConfig( "Bandwidth",         bandwidth );
+  WriteConfig( "Code-Rate-HP",      code_rate_HP );
+  WriteConfig( "Code-Rate-LP",      code_rate_LP );
+  WriteConfig( "Guard-Interval",    guard_interval );
+  WriteConfig( "Transmission-Mode", transmission_mode );
+  WriteConfig( "Hierarchy",         hierarchy );
   if( delsys == SYS_DVBT2 )
-    Lookup( "PLP ID",          Setting::TypeInt ) = plp_id;
+    WriteConfig( "PLP ID",          plp_id );
 
   return Transponder::SaveConfig( );
 }
@@ -91,15 +91,15 @@ bool Transponder_DVBT::LoadConfig( )
   if( !Transponder::LoadConfig( ))
     return false;
 
-  modulation        = (int) Lookup( "Modulation",        Setting::TypeInt );
-  bandwidth         = (int) Lookup( "Bandwidth",         Setting::TypeInt );
-  code_rate_HP      = (int) Lookup( "Code-Rate-HP",      Setting::TypeInt );
-  code_rate_LP      = (int) Lookup( "Code-Rate-LP",      Setting::TypeInt );
-  transmission_mode = (int) Lookup( "Transmission-Mode", Setting::TypeInt );
-  guard_interval    = (int) Lookup( "Guard-Interval",    Setting::TypeInt );
-  hierarchy         = (int) Lookup( "Hierarchy",         Setting::TypeInt );
+  ReadConfig( "Modulation",        modulation );
+  ReadConfig( "Bandwidth",         bandwidth );
+  ReadConfig( "Code-Rate-HP",      code_rate_HP );
+  ReadConfig( "Code-Rate-LP",      code_rate_LP );
+  ReadConfig( "Transmission-Mode", transmission_mode );
+  ReadConfig( "Guard-Interval",    guard_interval );
+  ReadConfig( "Hierarchy",         hierarchy );
   if( delsys == SYS_DVBT2 )
-    plp_id          = (int) Lookup( "PLP ID",            Setting::TypeInt );
+    ReadConfig( "PLP ID",          plp_id );
   return true;
 }
 

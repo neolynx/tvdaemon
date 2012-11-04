@@ -22,15 +22,14 @@
 #ifndef _Stream_
 #define _Stream_
 
-#include "ConfigObject.h"
-
 #include <stdint.h>
 
 #include "descriptors.h"
 
+class ConfigBase;
 class Service;
 
-class Stream : public ConfigObject
+class Stream
 {
   public:
     enum Type
@@ -49,11 +48,11 @@ class Stream : public ConfigObject
     };
 
     Stream( Service &service, uint16_t id, enum Type type, int config_id );
-    Stream( Service &service, std::string configfile );
+    Stream( Service &service );
     virtual ~Stream( );
 
-    virtual bool SaveConfig( );
-    virtual bool LoadConfig( );
+    virtual bool SaveConfig( ConfigBase &config );
+    virtual bool LoadConfig( ConfigBase &config );
 
     virtual int GetKey( ) const { return id; }
 

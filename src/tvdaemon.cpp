@@ -45,10 +45,10 @@ void termination_handler( int signum )
 int create_stuff( TVDaemon &tvd )
 {
   //tvd.CreateSource( "ATSC", "atsc/us-CA-SF-Bay-Area" );
-  tvd.CreateSource( "ATSC", "atsc/us-ATSC-center-frequencies-8VSB" );
-  //tvd.CreateSource( "DVB-T", "dvb-t/ch-All" );
-  //tvd.CreateSource( "Astra 19.2E", "dvb-s/Astra-19.2E" );
-  //tvd.CreateSource( "Hotbird 13E", "dvb-s/Hotbird-13.0E" );
+  //tvd.CreateSource( "ATSC", "atsc/us-ATSC-center-frequencies-8VSB" );
+  tvd.CreateSource( "DVB-T", "dvb-t/ch-All" );
+  tvd.CreateSource( "Astra 19.2E", "dvb-s/Astra-19.2E" );
+  tvd.CreateSource( "Hotbird 13E", "dvb-s/Hotbird-13.0E" );
 
   printf( "-------------------------\n\n" );
   // Test tuning/scanning
@@ -56,7 +56,7 @@ int create_stuff( TVDaemon &tvd )
   int adapter_id = 1;
   int frontend_id = 0;
   int port_id = 0;
-  int transponder_id = 4;
+  int transponder_id = -1;
   int service_id = 1;
 
   // sat hotbird
@@ -64,16 +64,16 @@ int create_stuff( TVDaemon &tvd )
   //adapter_id = 0;
   //frontend_id = 0;
   //port_id = 1;
-  //transponder_id = 5;
+  //transponder_id = -1;
   //service_id = 15705;
 
   // sat astra
-  //source_id = 1;
-  //adapter_id = 0;
-  //frontend_id = 0;
-  //port_id = 0;
-  //transponder_id = 68;
-  //service_id = 20006;
+  source_id = 1;
+  adapter_id = 0;
+  frontend_id = 0;
+  port_id = 0;
+  transponder_id = -1;
+  //service_id = 776;
 
   Source *s = tvd.GetSource( source_id );
   if( s == NULL )

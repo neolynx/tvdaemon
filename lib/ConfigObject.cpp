@@ -27,11 +27,175 @@
 #include "Utils.h"
 #include "Log.h"
 
-ConfigObject::ConfigObject( ) : parent(NULL)
+Setting &ConfigBase::ConfigArray( const char *key )
 {
+  if( !key )
+    return settings->add( Setting::TypeArray );
+  if( settings->exists( key ))
+  {
+    return (*settings)[key];
+  }
+  return settings->add( key, Setting::TypeArray );
+}
+
+Setting &ConfigBase::ConfigGroup( const char *key )
+{
+  if( !key )
+    return settings->add( Setting::TypeGroup );
+  if( settings->exists( key ))
+  {
+    return (*settings)[key];
+  }
+  return settings->add( key, Setting::TypeGroup );
+}
+
+Setting &ConfigBase::ConfigList( const char *key )
+{
+  if( !key )
+    return settings->add( Setting::TypeList );
+  if( settings->exists( key ))
+  {
+    return (*settings)[key];
+  }
+  return settings->add( key, Setting::TypeList );
+}
+
+
+void ConfigBase::ReadConfig( const char *key, int &i )
+{
+  if( settings->exists( key ))
+    settings->lookupValue( key, i );
+  else
+    i = settings->add( key, Setting::TypeInt );
+}
+
+void ConfigBase::ReadConfig( const char *key, uint8_t &u8 )
+{
+  int i;
+  if( settings->exists( key ))
+    settings->lookupValue( key, i );
+  else
+    i = settings->add( key, Setting::TypeInt );
+  u8 = i;
+}
+
+void ConfigBase::ReadConfig( const char *key, uint16_t &u16 )
+{
+  int i;
+  if( settings->exists( key ))
+    settings->lookupValue( key, i );
+  else
+    i = settings->add( key, Setting::TypeInt );
+  u16 = i;
+}
+
+void ConfigBase::ReadConfig( const char *key, uint32_t &u32 )
+{
+  if( settings->exists( key ))
+    settings->lookupValue( key, u32 );
+  else
+    u32 = settings->add( key, Setting::TypeInt );
+}
+
+void ConfigBase::ReadConfig( const char *key, bool &b )
+{
+  int i;
+  if( settings->exists( key ))
+    settings->lookupValue( key, i );
+  else
+    i = settings->add( key, Setting::TypeInt );
+  b = i != 0;
+}
+
+void ConfigBase::ReadConfig( const char *key, float &f )
+{
+  Log( "settings: %p", settings );
+  if( settings->exists( key ))
+    settings->lookupValue( key, f );
+  else
+    f = settings->add( key, Setting::TypeFloat );
+}
+
+void ConfigBase::ReadConfig( const char *key, std::string &s )
+{
+  if( settings->exists( key ))
+    settings->lookupValue( key, s );
+  else
+    s = (const char *) settings->add( key, Setting::TypeString );
+}
+
+void ConfigBase::WriteConfig( const char *key, int i )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = i;
+  else
+    settings->add( key, Setting::TypeInt ) = i;
+}
+
+void ConfigBase::WriteConfig( const char *key, uint8_t u8 )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = u8;
+  else
+    settings->add( key, Setting::TypeInt ) = u8;
+}
+
+void ConfigBase::WriteConfig( const char *key, uint16_t u16 )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = u16;
+  else
+    settings->add( key, Setting::TypeInt ) = u16;
+}
+
+void ConfigBase::WriteConfig( const char *key, uint32_t u32 )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = (int) u32;
+  else
+    settings->add( key, Setting::TypeInt ) = (int) u32;
+}
+
+void ConfigBase::WriteConfig( const char *key, bool b )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = b ? 1 : 0;
+  else
+    settings->add( key, Setting::TypeInt ) = b ? 1 : 0;
+}
+
+void ConfigBase::WriteConfig( const char *key, float f )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = f;
+  else
+    settings->add( key, Setting::TypeFloat ) = f;
+}
+
+void ConfigBase::WriteConfig( const char *key, std::string &s )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = s;
+  else
+    settings->add( key, Setting::TypeString ) = s;
+}
+
+bool ConfigBase::DeleteConfig( const char *key )
+{
+  if( !settings->exists( key ))
+    return false;
+  settings->remove( key );
+  return true;
+}
+
+
+ConfigObject::ConfigObject( ) : ConfigBase( ), parent(NULL)
+{
+  settings = &config.getRoot( );
 }
 
 ConfigObject::ConfigObject( ConfigObject &parent, std::string configname, int config_id ) :
+  ConfigBase( ),
   configname(configname),
   config_id(config_id),
   parent(&parent)
@@ -41,9 +205,11 @@ ConfigObject::ConfigObject( ConfigObject &parent, std::string configname, int co
   char buf[128];
   snprintf( buf, sizeof( buf ), "%s%d/config", configname.c_str( ), config_id );
   SetConfigFile( parent.GetConfigDir( ) + buf );
+  settings = &config.getRoot( );
 }
 
 ConfigObject::ConfigObject( ConfigObject &parent, std::string configfile ) :
+  ConfigBase( ),
   parent(&parent)
 {
   // parse config_id out
@@ -59,6 +225,7 @@ ConfigObject::ConfigObject( ConfigObject &parent, std::string configfile ) :
     pos--;
   config_id = atoi( t + pos );
   SetConfigFile( configfile );
+  settings = &config.getRoot( );
 }
 
 ConfigObject::~ConfigObject( )
@@ -81,13 +248,13 @@ bool ConfigObject::SetConfigFile( std::string configfile )
   return true;
 }
 
-bool ConfigObject::WriteConfig( )
+bool ConfigObject::WriteConfigFile( )
 {
   config.writeFile( configfile.c_str( ));
   return true;
 }
 
-bool ConfigObject::ReadConfig( )
+bool ConfigObject::ReadConfigFile( )
 {
   if( !Utils::IsFile( configfile ))
   {
@@ -103,23 +270,7 @@ bool ConfigObject::ReadConfig( )
     LogError( "Error reading config file: %s", configfile.c_str( ));
     return false;
   }
-  return true;
-}
-
-Setting &ConfigObject::Lookup( const char *key, Setting::Type type )
-{
-  if( config.exists( key ))
-    return config.lookup( key );
-  Setting &root = GetSettings( );
-  return root.add( key, type );
-}
-
-bool ConfigObject::DeleteConfig( const char *key )
-{
-  if( !config.exists( key ))
-    return false;
-  Setting &root = GetSettings( );
-  root.remove( key );
+  settings = &config.getRoot( );
   return true;
 }
 

@@ -88,8 +88,9 @@ Transponder *Transponder::Create( Source &source, std::string configfile )
 {
   ConfigObject cfg;
   cfg.SetConfigFile( configfile );
-  cfg.ReadConfig( );
-  fe_delivery_system_t delsys = (fe_delivery_system_t) (int) cfg.Lookup( "DelSys", Setting::TypeInt );
+  cfg.ReadConfigFile( );
+  fe_delivery_system_t delsys;
+  cfg.ReadConfig( "DelSys", (int &) delsys );
   switch( delsys )
   {
     case SYS_DVBS:
@@ -157,37 +158,48 @@ void Transponder::AddProperty( const struct dtv_property &prop )
 
 bool Transponder::SaveConfig( )
 {
-  Lookup( "DelSys",    Setting::TypeInt ) = (int) delsys;
-  Lookup( "Frequency", Setting::TypeInt ) = (int) frequency;
-  Lookup( "TSID",      Setting::TypeInt ) = (int) TSID;
-  Lookup( "Enabled",   Setting::TypeInt ) = (int) enabled;
-  Lookup( "State",     Setting::TypeInt ) = (int) state;
-  Lookup( "Signal",    Setting::TypeInt ) = signal;
-  Lookup( "Noise",     Setting::TypeInt ) = noise;
+  WriteConfig( "DelSys",    delsys );
+  WriteConfig( "Frequency", (int) frequency );
+  WriteConfig( "TSID",      TSID );
+  WriteConfig( "Enabled",   enabled );
+  WriteConfig( "State",     state );
+  WriteConfig( "Signal",    signal );
+  WriteConfig( "Noise",     noise );
 
+  DeleteConfig( "Services" );
+  Setting &n = ConfigList( "Services" );
+  ConfigBase c( n );
   for( std::map<uint16_t, Service *>::iterator it = services.begin( ); it != services.end( ); it++ )
   {
-    it->second->SaveConfig( );
+    Setting &n2 = c.ConfigGroup( );
+    ConfigBase c2( n2 );
+    it->second->SaveConfig( c2 );
   }
 
-  return WriteConfig( );
+  return WriteConfigFile( );
 }
 
 bool Transponder::LoadConfig( )
 {
-  if( !ReadConfig( ))
+  if( !ReadConfigFile( ))
     return false;
 
-  delsys    = (fe_delivery_system_t) (int) Lookup( "DelSys", Setting::TypeInt );
-  frequency = (uint32_t) (int) Lookup( "Frequency",          Setting::TypeInt );
-  TSID      =            (int) Lookup( "TSID",  Setting::TypeInt );
-  enabled   = (bool)     (int) Lookup( "Enabled",            Setting::TypeInt );
-  state     = (State)    (int) Lookup( "State",              Setting::TypeInt );
-  signal    = (uint8_t) (int) Lookup( "Signal", Setting::TypeInt );
-  noise     = (uint8_t) (int) Lookup( "Noise", Setting::TypeInt );
+  ReadConfig( "DelSys", (int &) delsys );
+  ReadConfig( "Frequency",      frequency );
+  ReadConfig( "TSID",           TSID );
+  ReadConfig( "Enabled",        enabled );
+  ReadConfig( "State",  (int &) state );
+  ReadConfig( "Signal",         signal );
+  ReadConfig( "Noise",          noise );
 
-  if( !CreateFromConfig<Service, uint16_t, Transponder>( *this, "service", services ))
-    return false;
+  Setting &n = ConfigList( "Services" );
+  for( int i = 0; i < n.getLength( ); i++ )
+  {
+    ConfigBase c2( n[i] );
+    Service *s = new Service( *this );
+    s->LoadConfig( c2 );
+    services[s->GetKey( )] = s;
+  }
   return true;
 }
 

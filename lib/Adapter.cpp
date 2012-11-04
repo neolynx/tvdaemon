@@ -56,10 +56,10 @@ Adapter::~Adapter( )
 
 bool Adapter::SaveConfig( )
 {
-  Lookup( "Name", Setting::TypeString )    = name;
-  Lookup( "UDev-ID", Setting::TypeString ) = uid;
+  WriteConfig( "Name", name );
+  WriteConfig( "UDev-ID", uid );
 
-  WriteConfig( );
+  WriteConfigFile( );
 
   for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
   {
@@ -70,10 +70,10 @@ bool Adapter::SaveConfig( )
 
 bool Adapter::LoadConfig( )
 {
-  if( !ReadConfig( ))
+  if( !ReadConfigFile( ))
     return false;
-  name = (const char *) Lookup( "Name", Setting::TypeString );
-  uid  = (const char *) Lookup( "UDev-ID", Setting::TypeString );
+  ReadConfig( "Name", name );
+  ReadConfig( "UDev-ID", uid );
 
   Log( "Loading Adapter '%s'", name.c_str( ));
 
