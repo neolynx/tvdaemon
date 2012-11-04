@@ -108,6 +108,11 @@ int create_stuff( TVDaemon &tvd )
   {
     for( int id = 0; up && id < s->GetTransponderCount(); ++id )
     {
+      if( s->GetTransponder( id )->Disabled( ))
+      {
+        printf( "Transponder %d/%d disabled\n", id + 1, s->GetTransponderCount( ));
+        continue;
+      }
       if( s->GetTransponder( id )->GetState( ) == Transponder::State_Scanned )
       {
         printf( "Transponder %d/%d already scanned\n", id + 1, s->GetTransponderCount( ));
