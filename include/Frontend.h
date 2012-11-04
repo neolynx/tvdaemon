@@ -59,7 +59,7 @@ class Frontend : public ConfigObject, public RPCObject
     virtual bool Tune( Transponder &transponder, int timeout = 1000 );
     virtual void Untune();
     virtual bool Scan( int timeout = 1000 );
-    virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries = 100 );
+    virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries );
     bool Open( );
     void Close( );
 

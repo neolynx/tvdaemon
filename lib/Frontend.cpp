@@ -326,7 +326,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   state = Tuning;
 
   uint8_t signal, noise;
-  if( !GetLockStatus( signal, noise, 10 ))
+  if( !GetLockStatus( signal, noise, 150 ))
   {
     t.SetState( Transponder::State_TuningFailed );
     return false;
@@ -687,8 +687,8 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
       dvb_fe_retrieve_stats( fe, DTV_UNCORRECTED_BLOCKS, &unc );
       dvb_fe_retrieve_stats( fe, DTV_SNR, &snr );
 
-      if( i > 0 )
-        printf( "\n" );
+      //if( i > 0 )
+        //printf( "\n" );
       Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", (sig * 100) / 0xffff, (snr * 100) / 0xffff, ber, unc );
 
       signal = (sig * 100) / 0xffff;
@@ -696,10 +696,10 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
       return true;
     }
     //usleep( 1 );
-    printf( "." );
-    fflush( stdout );
+    //printf( "." );
+    //fflush( stdout );
   }
-  printf( "\n" );
+  //printf( "\n" );
   return false;
 }
 
