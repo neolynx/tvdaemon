@@ -48,7 +48,10 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
 
 Transponder::Transponder( Source &source, std::string configfile ) :
   ConfigObject( source, configfile ),
-  source(source)
+  source(source),
+  has_nit(false),
+  has_sdt(false),
+  has_vct(false)
 {
 }
 
