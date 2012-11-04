@@ -85,7 +85,6 @@ bool Transponder_DVBS::SaveConfig( )
       WriteConfig( "Roll-Off",    roll_off );
       // fall through
     case SYS_DVBS:
-      Log( "saving transponder %d", GetKey( ));
       WriteConfig( "Symbol-Rate",  symbol_rate );
       WriteConfig( "FEC",          fec );
       WriteConfig( "Polarization", polarization );

@@ -53,7 +53,6 @@ bool Stream::LoadConfig( ConfigBase &config )
 {
   config.ReadConfig( "ID",   id );
   config.ReadConfig( "Type", (int &) type );
-  Log( "  Stream  %5d: %s", id, GetTypeName( type ));
   return true;
 }
 
