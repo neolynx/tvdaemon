@@ -65,7 +65,8 @@ bool Source::SaveConfig( )
 
   for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
-    (*it)->SaveConfig( );
+    if((*it)->IsModified( ))
+      (*it)->SaveConfig( );
   }
   return true;
 }

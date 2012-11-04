@@ -44,6 +44,7 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
   has_sdt(false),
   has_vct(false)
 {
+  SetModified( );
 }
 
 Transponder::Transponder( Source &source, std::string configfile ) :
@@ -213,6 +214,7 @@ bool Transponder::UpdateProgram( uint16_t service_id, uint16_t pid )
   {
     Service *s = new Service( *this, service_id, pid, services.size( ));
     services[service_id] = s;
+    SetModified( );
     return true;
   }
   Service *s = it->second;
@@ -221,6 +223,7 @@ bool Transponder::UpdateProgram( uint16_t service_id, uint16_t pid )
     if( s->GetPID( ) != 0 )
       LogError( "pid mismatch in service %d: %d != %d", service_id, s->GetPID( ), pid );
     s->SetPID( pid );
+    SetModified( );
     return false;
   }
   //LogWarn( "Already known Service with pno %d, pid %d", pno, pid );
@@ -242,6 +245,7 @@ bool Transponder::UpdateService( uint16_t service_id, Service::Type type, std::s
   s->SetName( name );
   s->SetProvider( provider );
   s->SetScrambled( scrambled );
+  SetModified( );
   return true;
 }
 
@@ -254,6 +258,7 @@ bool Transponder::UpdateStream( uint16_t service_id, int id, int type )
     return false;
   }
   it->second->UpdateStream( id, (Stream::Type) type );
+  SetModified( );
   return true;
 }
 

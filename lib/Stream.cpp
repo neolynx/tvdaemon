@@ -30,7 +30,6 @@ Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
   id(id),
   type(type)
 {
-  Log( "  Stream  %5d: %s", id, GetTypeName( type ));
 }
 
 Stream::Stream( Service &service ) :

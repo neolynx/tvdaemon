@@ -189,7 +189,7 @@ bool ConfigBase::DeleteConfig( const char *key )
 }
 
 
-ConfigObject::ConfigObject( ) : ConfigBase( ), parent(NULL)
+ConfigObject::ConfigObject( ) : ConfigBase( ), parent(NULL), modified(false)
 {
   settings = &config.getRoot( );
 }
@@ -198,7 +198,8 @@ ConfigObject::ConfigObject( ConfigObject &parent, std::string configname, int co
   ConfigBase( ),
   configname(configname),
   config_id(config_id),
-  parent(&parent)
+  parent(&parent),
+  modified(false)
 {
   if( config_id < 0 )
     LogWarn( "negative config id not supported: %s%d/config", configname.c_str( ), config_id );
@@ -210,7 +211,8 @@ ConfigObject::ConfigObject( ConfigObject &parent, std::string configname, int co
 
 ConfigObject::ConfigObject( ConfigObject &parent, std::string configfile ) :
   ConfigBase( ),
-  parent(&parent)
+  parent(&parent),
+  modified(false)
 {
   // parse config_id out
   size_t pos = configfile.rfind( '/' );

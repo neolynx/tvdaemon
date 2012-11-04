@@ -69,6 +69,8 @@ class ConfigObject : public ConfigBase
     virtual bool SaveConfig( ) { return true; }
     virtual bool LoadConfig( ) { return true; }
     virtual int GetKey( ) const { return config_id; }
+    bool IsModified( ) { return modified; }
+    void SetModified( ) { modified = true; }
 
     template <class Class, class Parent> static bool CreateFromConfig( Parent &parent, std::string configname, std::vector<Class *> &list )
     {
@@ -173,6 +175,7 @@ class ConfigObject : public ConfigBase
     std::string configdir;
     Config config;
     ConfigObject *parent;
+    bool modified;
 };
 
 #endif
