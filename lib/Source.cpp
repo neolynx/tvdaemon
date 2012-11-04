@@ -283,9 +283,9 @@ bool Source::Tune( Transponder &transponder, uint16_t pno )
 
 void Source::json( json_object *entry ) const
 {
-  json_object_array_add( entry, json_object_new_string( name.c_str( )));
-  json_object_array_add( entry, json_object_new_int( GetKey( )));
-  json_object_array_add( entry, json_object_new_int( type ));
+  json_object_object_add( entry, "name", json_object_new_string( name.c_str( )));
+  json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "type", json_object_new_int( type ));
 }
 
 bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )

@@ -530,24 +530,44 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
   {
     if( action->second == "list" )
     {
+      const std::map<std::string, std::string>::const_iterator callback = parameters.find( "callback" );
+      if( callback == parameters.end( ))
+      {
+        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+        response->AddStatus( HTTP_NOT_FOUND );
+        response->AddTimeStamp( );
+        response->AddMime( "html" );
+        response->AddContents( "RPC source: callback not found" );
+        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+        return false;
+      }
+
       json_object *h = json_object_new_object();
-      //std::string echo =  parameters["sEcho"];
+      //
+      // request: /tvd?c=source&a=list&callback=jQuery1820030653434250784373_1352050601360&filterscount=0&groupscount=0&pagenum=0&pagesize=10&recordstartindex=0&recordendindex=18&featureClass=P&style=full&maxRows=50
+      //
+      // reply:
+      //
+      //jQuery1820030653434250784373_1352050601360({"totalResultsCount":3136649,
+      //^@"geonames":[{"alternateNames":[{"name":"Beijing",
+      //^@"lang":"af"},
+      //^@{"name":"ቤዪጂንግ",
+      //^@"lang":"am"},
+      //
       int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-      json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-      json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
-      json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( sources.size( )));
+      json_object_object_add( h, "totalResultsCount", json_object_new_int( sources.size( )));
       json_object *a = json_object_new_array();
 
       for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
       {
-        json_object *entry = json_object_new_array( );
+        json_object *entry = json_object_new_object( );
         (*it)->json( entry );
         json_object_array_add( a, entry );
       }
 
-      json_object_object_add( h, "aaData", a );
+      json_object_object_add( h, "sources", a );
 
-      const char *json = json_object_to_json_string( h );
+      std::string json = callback->second + "(" + json_object_to_json_string( h ) + ");";
 
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
       response->AddStatus( HTTP_OK );
