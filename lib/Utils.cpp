@@ -33,12 +33,14 @@
 std::string Utils::Expand( std::string path )
 {
   wordexp_t p;
-  wordexp( path.c_str( ), &p, 0 );
-  if( p.we_wordc > 0 )
+  std::string ex;
+  if( wordexp( path.c_str( ), &p, 0 ) == 0 )
   {
-    return p.we_wordv[0];
+    if( p.we_wordc > 0 )
+      ex = p.we_wordv[0];
+    wordfree( &p );
   }
-  return "";
+  return ex;
 }
 
 std::string Utils::DirName( std::string path )

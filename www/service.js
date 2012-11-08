@@ -1,4 +1,19 @@
 
+var source_types = {};
+
+function renderType( row )
+{
+  var data = $("#jqxgrid").jqxGrid( 'getrowdata', row );
+  type = data["type"]
+  return '<div style="overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px; text-align: left; margin: 4px;">' + type + '</div>';
+}
+
+function renderLink( row )
+{
+  var data = $("#jqxgrid").jqxGrid( 'getrowdata', row );
+  return '<div style="overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px; text-align: left; margin: 4px;">' + '<a href="tvd?c=service&a=show&source_id=' + source_id + '&transponder_id=' + transponder_id + '&service_id=' + data["id"] + '">' + data["name"] + '</a>' + '</div>';
+}
+
 $(document).ready( function ()
 {
   var theme = getTheme();
@@ -10,30 +25,38 @@ $(document).ready( function ()
     $("#type").addClass('jqx-input-' + theme);
   }
 
+  //$.getJSON('tvd?c=tvdaemon&a=list_sourcetypes', function(data) {
+    //for( type in data["data"] )
+    //{
+      //source_types[data["data"][type]["id"]] = data["data"][type]["type"];
+    //}
+  //});
 
   var source =
   {
-    datatype: "jsonp",
+    datatype: "json",
     datafields: [
-      { name: 'name' },
       { name: 'type', type: 'int' },
       { name: 'id', type: 'int' },
     ],
     url: "tvd",
-    data: { c: "source", a: "list" }
+    data: { c: "service", a: "list_streams",
+            source_id: source_id,
+            transponder_id: transponder_id,
+            service_id: service_id }
   };
 
   var dataAdapter = new $.jqx.dataAdapter(source);
   $("#jqxgrid").jqxGrid(
     {
-      width: 440,
+      width: 640,
       source: dataAdapter,
       theme: theme,
       autoheight: true,
       columnsresize: true,
       columns: [
-        { text: 'Source', datafield: 'name', width: 200 },
-        { text: 'Type', datafield: 'type', cellsformat: 'n', width: 170 },
+        { text: 'PID', datafield: 'id', width: 400 },
+        { text: 'Type', datafield: 'type', width: 170, cellsrenderer: renderType },
 
          { text: '', datafield: 'Edit', width: 30, columntype: 'button', cellsrenderer: function () {
              return '...';

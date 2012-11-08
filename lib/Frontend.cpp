@@ -326,7 +326,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   state = Tuning;
 
   uint8_t signal, noise;
-  if( !GetLockStatus( signal, noise, 150 ))
+  if( !GetLockStatus( signal, noise, 1500 ))
   {
     t.SetState( Transponder::State_TuningFailed );
     return false;
@@ -542,7 +542,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   {
     char file[256];
 
-    std::string dir = "/home/bay/tv/";
+    std::string dir = "../";
     std::string filename = dir + dumpfile + ".pes";
 
     int i = 0;

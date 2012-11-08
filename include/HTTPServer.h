@@ -73,6 +73,8 @@ class HTTPServer : public SocketHandler
 
     void AddDynamicHandler( std::string url, HTTPDynamicHandler *handler );
 
+    std::string GetRoot( ) { return _root; }
+
     class HTTPResponse
     {
       public:

@@ -25,6 +25,8 @@
 #include "Service.h"
 #include "Log.h"
 
+#include <json/json.h>
+
 Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
   service(service),
   id(id),
@@ -92,5 +94,11 @@ bool Stream::Update( Type type )
     return false;
   }
   return true;
+}
+
+void Stream::json( json_object *entry ) const
+{
+  json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "type",      json_object_new_int( type ));
 }
 

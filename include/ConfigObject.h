@@ -69,6 +69,7 @@ class ConfigObject : public ConfigBase
     virtual bool SaveConfig( ) { return true; }
     virtual bool LoadConfig( ) { return true; }
     virtual int GetKey( ) const { return config_id; }
+    virtual ConfigObject &GetParent( ) const { return *parent; }
     bool IsModified( ) { return modified; }
     void SetModified( ) { modified = true; }
 

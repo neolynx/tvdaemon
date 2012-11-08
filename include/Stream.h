@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "RPCObject.h"
+
 #include "descriptors.h"
 
 class ConfigBase;
@@ -63,6 +65,9 @@ class Stream
     bool IsAudio( ) { return type > start_audio_types; }
 
     static const char *GetTypeName( Type type );
+
+    // RPC
+    void json( json_object *entry ) const;
 
   private:
     Service &service;

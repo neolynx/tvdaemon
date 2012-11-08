@@ -104,8 +104,6 @@ bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
   return false;
 }
 
-#define DYNAMIC_URL "/tvd?"
-
 bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
 {
   std::vector<const char *> tokens;
@@ -157,6 +155,19 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
     url += "/";
   url += tokens[1];
   url = Utils::Expand( url.c_str( ));
+
+  if( url.empty( ))
+  {
+    LogError( "HTTPServer: file not found: %s", tokens[1] );
+    HTTPResponse *err_response = new HTTPResponse( );
+    err_response->AddStatus( HTTP_NOT_FOUND );
+    err_response->AddTimeStamp( );
+    err_response->AddMime( "html" );
+    err_response->AddContents( "<html><body><h1>404 Not found</h1></body></html>" );
+    //LogWarn( "Sending: %s", err_response->GetBuffer( ).c_str( ));
+    SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
+    return false;
+  }
 
   if( Utils::IsDir( url ))
   {
@@ -263,7 +274,7 @@ void HTTPServer::HTTPResponse::AddContents( std::string buffer )
 {
   size_t length = buffer.size( );
   char length_str[10];
-  snprintf( length_str, sizeof( length_str ), "%ld", length );
+  snprintf( length_str, sizeof( length_str ), "%d", length );
 
   AddAttribute( "Content-Length", length_str );
   _buffer.append( "\r\n" );
