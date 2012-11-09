@@ -591,25 +591,20 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
 
   if( action->second == "list_adapters" )
   {
-    int count = adapters.size( );
     json_object *h = json_object_new_object();
-    //std::string echo =  parameters["sEcho"];
-    int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-    json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-    json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
-    json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+    json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
     json_object *a = json_object_new_array();
 
     for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
-      json_object *entry = json_object_new_array( );
+      json_object *entry = json_object_new_object( );
       (*it)->json( entry );
       json_object_array_add( a, entry );
     }
 
-    json_object_object_add( h, "aaData", a );
-
-    const char *json = json_object_to_json_string( h );
+    json_object_object_add( h, "data", a );
+    std::string json = json_object_to_json_string( h );
+    json_object_put( h );
 
     HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
     response->AddStatus( HTTP_OK );
@@ -617,7 +612,6 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
     response->AddMime( "json" );
     response->AddContents( json );
     httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    json_object_put( h ); // this should delete it
     return true;
   }
 

@@ -3,15 +3,21 @@ var source_types = {};
 
 function renderType( row )
 {
-  var data = $("#jqxgrid").jqxGrid( 'getrowdata', row );
+  var data = $("#sources").jqxGrid( 'getrowdata', row );
   type = source_types[data["type"]]
   return '<div style="overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px; text-align: left; margin: 4px;">' + type + '</div>';
 }
 
 function renderSource( row )
 {
-  var data = $("#jqxgrid").jqxGrid( 'getrowdata', row );
+  var data = $("#sources").jqxGrid( 'getrowdata', row );
   return '<div style="overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px; text-align: left; margin: 4px;">' + '<a href="tvd?c=source&a=show&source_id=' + data["id"] + '">' + data["name"] + '</a>' + '</div>';
+}
+
+function renderAdapter( row )
+{
+  var data = $("#adapters").jqxGrid( 'getrowdata', row );
+  return '<div style="overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px; text-align: left; margin: 4px;">' + '<a href="tvd?c=adapter&a=show&adapter_id=' + data["id"] + '">' + data["name"] + '</a>' + '</div>';
 }
 
 $(document).ready( function ()
@@ -32,7 +38,7 @@ $(document).ready( function ()
     }
   });
 
-  var source =
+  var sources =
   {
     datatype: "json",
     datafields: [
@@ -44,8 +50,8 @@ $(document).ready( function ()
     data: { c: "tvdaemon", a: "list_sources" }
   };
 
-  var dataAdapter = new $.jqx.dataAdapter(source);
-  $("#jqxgrid").jqxGrid(
+  var dataAdapter = new $.jqx.dataAdapter(sources);
+  $("#sources").jqxGrid(
     {
       width: 440,
       source: dataAdapter,
@@ -56,52 +62,38 @@ $(document).ready( function ()
         { text: 'Source', datafield: 'name', width: 200, cellsrenderer: renderSource },
         { text: 'Type', datafield: 'type', width: 170, cellsrenderer: renderType },
 
-         { text: '', datafield: 'Edit', width: 30, columntype: 'button', cellsrenderer: function () {
-             return '...';
-         }, buttonclick: function (row) {
-             // open the popup window when the user clicks a button.
-             editrow = row;
-             var offset = $("#jqxgrid").offset();
-             $("#popupWindow").jqxWindow({ position: { x: parseInt(offset.left) + 60, y: parseInt(offset.top) + 60} });
-
-             // get the clicked row's data and initialize the input fields.
-             var dataRecord = $("#jqxgrid").jqxGrid('getrowdata', editrow);
-             $("#name").val(dataRecord.name);
-             $("#type").val(dataRecord.type);
-             $("#id").val(dataRecord.id);
-
-             // show the popup window.
-             $("#popupWindow").jqxWindow('show');
-         }
-         },
-         { text: '', datafield: 'Delete', width: 30, columntype: 'button', cellsrenderer: function( ) {
-            return "X";
-         }, buttonclick: function( row ) {
-            // delete row
-            deleterow = row;
-            var maxrow = $("#jqxgrid").jqxGrid('getdatainformation').rowscount;
-            if( deleterow >= 0 && deleterow < maxrow ) {
-              var commit = $("#jqxgrid").jqxGrid("deleterow", deleterow );
-            }
-         }
-         },
-
+        { text: '', datafield: 'Edit', width: 30, columntype: 'button', cellsrenderer: function () { return '...'; }, buttonclick: function (row) { } },
+        { text: '', datafield: 'Delete', width: 30, columntype: 'button', cellsrenderer: function( ) { return "X"; }, buttonclick: function( row ) { } },
       ]
     });
 
-    // initialize the popup window and buttons.
-    $("#popupWindow").jqxWindow({ width: 250, resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#Cancel"), modalOpacity: 0.01 });
-    $("#Cancel").jqxButton({ theme: theme });
-    $("#Save").jqxButton({ theme: theme });
+  var adapters =
+  {
+    datatype: "json",
+    datafields: [
+      { name: 'name' },
+      { name: 'path', type: 'int' },
+      { name: 'id', type: 'int' },
+    ],
+    url: "tvd",
+    data: { c: "tvdaemon", a: "list_adapters" }
+  };
 
-    // update the edited row when the user clicks the 'Save' button.
-    $("#Save").click(function () {
-        if (editrow >= 0) {
-            var row = { name: $("#name").val(), type: parseInt($("#type").jqxNumberInput('decimal')),
-            };
-            $('#jqxgrid').jqxGrid('updaterow', editrow, row);
-            $("#popupWindow").jqxWindow('hide');
-        }
+  var dataAdapter = new $.jqx.dataAdapter(adapters);
+  $("#adapters").jqxGrid(
+    {
+      width: "100%",
+      source: dataAdapter,
+      theme: theme,
+      autoheight: true,
+      columnsresize: true,
+      columns: [
+        { text: 'Adapter', datafield: 'name', width: 200, cellsrenderer: renderAdapter },
+        { text: 'Path',    datafield: 'path', width: 300 },
+
+        { text: '', datafield: 'Edit', width: 30, columntype: 'button', cellsrenderer: function () { return '...'; }, buttonclick: function (row) { } },
+        { text: '', datafield: 'Delete', width: 30, columntype: 'button', cellsrenderer: function( ) { return "X"; }, buttonclick: function( row ) { } },
+      ]
     });
 });
 
