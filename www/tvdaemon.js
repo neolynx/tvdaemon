@@ -53,14 +53,13 @@ $(document).ready( function ()
   var dataAdapter = new $.jqx.dataAdapter(sources);
   $("#sources").jqxGrid(
     {
-      width: 440,
       source: dataAdapter,
       theme: theme,
       autoheight: true,
       columnsresize: true,
       columns: [
-        { text: 'Source', datafield: 'name', width: 200, cellsrenderer: renderSource },
-        { text: 'Type', datafield: 'type', width: 170, cellsrenderer: renderType },
+        { text: 'Source', datafield: 'name', cellsrenderer: renderSource },
+        { text: 'Type', datafield: 'type', cellsrenderer: renderType },
 
         { text: '', datafield: 'Edit', width: 30, columntype: 'button', cellsrenderer: function () { return '...'; }, buttonclick: function (row) { } },
         { text: '', datafield: 'Delete', width: 30, columntype: 'button', cellsrenderer: function( ) { return "X"; }, buttonclick: function( row ) { } },
@@ -82,14 +81,13 @@ $(document).ready( function ()
   var dataAdapter = new $.jqx.dataAdapter(adapters);
   $("#adapters").jqxGrid(
     {
-      width: "100%",
       source: dataAdapter,
       theme: theme,
       autoheight: true,
       columnsresize: true,
       columns: [
-        { text: 'Adapter', datafield: 'name', width: 200, cellsrenderer: renderAdapter },
-        { text: 'Path',    datafield: 'path', width: 300 },
+        { text: 'Adapter', datafield: 'name', cellsrenderer: renderAdapter },
+        { text: 'Path',    datafield: 'path' },
 
         { text: '', datafield: 'Edit', width: 30, columntype: 'button', cellsrenderer: function () { return '...'; }, buttonclick: function (row) { } },
         { text: '', datafield: 'Delete', width: 30, columntype: 'button', cellsrenderer: function( ) { return "X"; }, buttonclick: function( row ) { } },

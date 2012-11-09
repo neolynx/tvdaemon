@@ -28,6 +28,9 @@
 
 #include <algorithm> // find
 #include <json/json.h>
+#include <string.h>  // strlen
+#include <fcntl.h>   // open
+#include <unistd.h>  // read
 
 Adapter::Adapter( TVDaemon &tvd, std::string uid, std::string name, int config_id ) :
   ConfigObject( tvd, "adapter", config_id ),
@@ -156,29 +159,58 @@ bool Adapter::RPC( HTTPServer *httpd, const int client, std::string &cat, const 
     return false;
   }
 
-  if( cat == "frontend" )
+  if( cat == "adapter" )
   {
-    if( action->second == "list" )
+    if( action->second == "show" )
     {
-      int count = frontends.size( );
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_OK );
+      response->AddTimeStamp( );
+      response->AddMime( "html" );
+      std::string data;
+      std::string filename = httpd->GetRoot( ) + "/adapter.html";
+      int fd = open( filename.c_str( ), O_RDONLY );
+      if( fd < 0 )
+      {
+        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+        response->AddStatus( HTTP_NOT_FOUND );
+        response->AddTimeStamp( );
+        response->AddMime( "html" );
+        response->AddContents( "RPC template not found" );
+        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+        return false;
+      }
+      char tmp[256];
+      int len;
+      while(( len = read( fd, tmp, 255 )) > 0 )
+      {
+        tmp[len] = '\0';
+        data += tmp;
+      }
+      snprintf( tmp, sizeof( tmp ), "%d", GetKey( ));
+      size_t pos = 0;
+      if(( pos = data.find( "@adapter_id@" )) != std::string::npos )
+        data.replace( pos, strlen( "@adapter_id@" ), tmp );
+      response->AddContents( data );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      return true;
+    }
+    else if( action->second == "list_frontends" )
+    {
       json_object *h = json_object_new_object();
-      //std::string echo =  parameters["sEcho"];
-      int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-      json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-      json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
-      json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+      json_object_object_add( h, "iTotalRecords", json_object_new_int( frontends.size( )));
       json_object *a = json_object_new_array();
 
       for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
       {
-        json_object *entry = json_object_new_array( );
+        json_object *entry = json_object_new_object( );
         (*it)->json( entry );
         json_object_array_add( a, entry );
       }
 
-      json_object_object_add( h, "aaData", a );
-
-      const char *json = json_object_to_json_string( h );
+      json_object_object_add( h, "data", a );
+      std::string json = json_object_to_json_string( h );
+      json_object_put( h );
 
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
       response->AddStatus( HTTP_OK );
@@ -186,7 +218,6 @@ bool Adapter::RPC( HTTPServer *httpd, const int client, std::string &cat, const 
       response->AddMime( "json" );
       response->AddContents( json );
       httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-      json_object_put( h ); // this should delete it
       return true;
     }
   }

@@ -328,7 +328,6 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
       int len;
       while(( len = read( fd, tmp, 255 )) > 0 )
       {
-        Log( "read %d bytes", len );
         tmp[len] = '\0';
         data += tmp;
       }
@@ -340,8 +339,7 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
       httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
       return true;
     }
-
-    if( action->second == "list_transponders" )
+    else if( action->second == "list_transponders" )
     {
       json_object *h = json_object_new_object();
       json_object_object_add( h, "iTotalRecords", json_object_new_int( transponders.size( )));

@@ -491,7 +491,7 @@ bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, 
   if( cat->second == "source" )
     return RPC_Source( client, cat->second, parameters );
   if( cat->second == "adapter" )
-    return RPC( client, cat->second, parameters );
+    return RPC_Adapter( client, cat->second, parameters );
   if( cat->second == "channel" )
     return RPC( client, cat->second, parameters );
 
@@ -688,7 +688,7 @@ bool TVDaemon::RPC_Source( const int client, std::string cat, const std::map<std
 
 bool TVDaemon::RPC_Adapter( const int client, std::string cat, const std::map<std::string, std::string> &parameters )
 {
-  const std::map<std::string, std::string>::const_iterator data = parameters.find( "adapter" );
+  const std::map<std::string, std::string>::const_iterator data = parameters.find( "adapter_id" );
   if( data == parameters.end( ))
   {
     HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
