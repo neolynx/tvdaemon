@@ -3,14 +3,14 @@ var source_types = {};
 
 function renderType( row )
 {
-  var data = $("#jqxgrid").jqxGrid( 'getrowdata', row );
+  var data = $("#services").jqxGrid( 'getrowdata', row );
   type = data["type"]
   return '<div style="overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px; text-align: left; margin: 4px;">' + type + '</div>';
 }
 
 function renderLink( row )
 {
-  var data = $("#jqxgrid").jqxGrid( 'getrowdata', row );
+  var data = $("#services").jqxGrid( 'getrowdata', row );
   return '<div style="overflow: hidden; text-overflow: ellipsis; padding-bottom: 2px; text-align: left; margin: 4px;">' + '<a href="tvd?c=service&a=show&source_id=' + source_id + '&transponder_id=' + transponder_id + '&service_id=' + data["id"] + '">' + data["name"] + '</a>' + '</div>';
 }
 
@@ -46,17 +46,16 @@ $(document).ready( function ()
   };
 
   var dataAdapter = new $.jqx.dataAdapter(source);
-  $("#jqxgrid").jqxGrid(
+  $("#services").jqxGrid(
     {
-      width: 640,
       source: dataAdapter,
       theme: theme,
       autoheight: true,
       columnsresize: true,
       columns: [
-        { text: 'Service', datafield: 'name', width: 400, cellsrenderer: renderLink },
-        { text: 'Type', datafield: 'type', width: 170, cellsrenderer: renderType },
-        { text: 'Scrambled', datafield: 'scrambled', width: 170 },
+        { text: 'Service', datafield: 'name', cellsrenderer: renderLink },
+        { text: 'Type', datafield: 'type', cellsrenderer: renderType },
+        { text: 'Scrambled', datafield: 'scrambled' },
 
          { text: '', datafield: 'Edit', width: 30, columntype: 'button', cellsrenderer: function () {
              return '...';
