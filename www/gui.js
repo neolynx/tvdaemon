@@ -1,8 +1,16 @@
 
+var last_adapter = null;
+var last_frontend = null;
+var last_port = null;
+
 function renderAdapter( row )
 {
   var data = $("#gui").jqxGrid( 'getrowdata', row );
   adapter = data["adapter"]
+  if( last_adapter == adapter["id"] )
+    return "";
+  last_adapter = adapter["id"];
+  last_frontend = null;
   return adapter["name"];
 }
 
@@ -10,6 +18,10 @@ function renderFrontend( row )
 {
   var data = $("#gui").jqxGrid( 'getrowdata', row );
   frontend = data["frontend"]
+  if( last_frontend == frontend["id"] )
+    return "";
+  last_frontend = frontend["id"];
+  last_port = null;
   return frontend["name"];
 }
 
@@ -17,6 +29,9 @@ function renderPort( row )
 {
   var data = $("#gui").jqxGrid( 'getrowdata', row );
   port = data["port"]
+  if( last_port == port["id"] )
+    return "";
+  last_port = port["id"];
   return port["name"];
 }
 
