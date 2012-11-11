@@ -40,10 +40,9 @@
 #include "SocketHandler.h"
 #include "Log.h"
 
-TVDaemon::TVDaemon( std::string confdir ) :
-  ConfigObject( ),
-  httpd(NULL),
-  up(false)
+TVDaemon *TVDaemon::instance = NULL;
+
+bool TVDaemon::Create( std::string confdir )
 {
   // Setup config directory
   std::string d = Utils::Expand( confdir );
@@ -52,7 +51,7 @@ TVDaemon::TVDaemon( std::string confdir ) :
     if( !Utils::MkDir( d ))
     {
       LogError( "Cannot create dir '%s'", d.c_str( ));
-      // FIXME: complain
+      return false;
     }
   }
   Utils::EnsureSlash( d );
@@ -60,6 +59,21 @@ TVDaemon::TVDaemon( std::string confdir ) :
   if( !Utils::IsFile( GetConfigFile( )))
     SaveConfig( );
   Log( "TVDconfig: %s", GetConfigFile( ).c_str( ));
+  return true;
+}
+
+TVDaemon *TVDaemon::Instance( )
+{
+  if( !instance )
+    instance = new TVDaemon( );
+  return instance;
+}
+
+TVDaemon::TVDaemon( ) :
+  ConfigObject( ),
+  httpd(NULL),
+  up(false)
+{
 }
 
 TVDaemon::~TVDaemon( )
@@ -92,6 +106,7 @@ TVDaemon::~TVDaemon( )
   {
     delete *it;
   }
+  instance = NULL;
 }
 
 bool TVDaemon::Start( )
@@ -157,9 +172,9 @@ bool TVDaemon::LoadConfig( )
   ReadConfig( "Version", version );
   Log( "Found config version: %f", version );
 
-  if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
-    return false;
   if( !CreateFromConfig<Source, TVDaemon>( *this, "source", sources ))
+    return false;
+  if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
     return false;
   if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
     return false;

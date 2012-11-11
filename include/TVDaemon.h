@@ -42,7 +42,8 @@ class HTTPServer;
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler
 {
   public:
-    TVDaemon( std::string configdir );
+    static TVDaemon *Instance( );
+    bool Create( std::string configdir );
     virtual ~TVDaemon( );
 
     bool Start( );
@@ -78,9 +79,11 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
     bool RPC_Adapter( const int client, std::string cat, const std::map<std::string, std::string> &parameters );
 
   private:
+    TVDaemon( );
     int FindAdapters( );
     void MonitorAdapters( );
 
+    static TVDaemon *instance;
     std::vector<Adapter *> adapters;
     std::vector<Source *>  sources;
     std::vector<Channel *> channels;

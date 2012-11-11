@@ -28,6 +28,7 @@
 #include "Source.h"
 #include "Transponder.h"
 #include "Service.h"
+#include "Log.h"
 
 #include <stdio.h>
 
@@ -169,12 +170,17 @@ int main( int argc, char *argv[] )
   sigaction( SIGINT, &action, NULL );
   sigaction( SIGTERM, &action, NULL );
 
-  printf( "TVDaemon starting ...\n" );
+  Log( "TVDaemon starting ...\n" );
 
-  TVDaemon tvd( "~/.tvdaemon" );
-  if( !tvd.Start( ))
+  TVDaemon *tvd = TVDaemon::Instance( );
+  if( !tvd->Create( "~/.tvdaemon" ))
   {
-    printf( "Unable to start tvdaemon\n" );
+    LogError( "Unable to create tvdaemon\n" );
+    return -1;
+  }
+  if( !tvd->Start( ))
+  {
+    LogError( "Unable to start tvdaemon\n" );
     return -1;
   }
 
@@ -194,30 +200,31 @@ int main( int argc, char *argv[] )
     //printf( "  %s\n", it->c_str( ));
   //printf( "\n" );
 
-  list = tvd.GetAdapterList( );
+  list = tvd->GetAdapterList( );
   printf( "\nFound Adapters:\n" );
   for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
     printf( "  %s\n", it->c_str( ));
   printf( "\n" );
 
-  list = tvd.GetSourceList( );
+  list = tvd->GetSourceList( );
   printf( "\nFound Sources:\n" );
   for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
     printf( "  %s\n", it->c_str( ));
   printf( "\n" );
 
-  list = tvd.GetChannelList( );
+  list = tvd->GetChannelList( );
   printf( "\nFound Channels:\n" );
   for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
     printf( "  %s\n", it->c_str( ));
   printf( "\n" );
 
-  create_stuff( tvd );
+  create_stuff( *tvd );
 
   while( up )
   {
     sleep( 1 );
   }
+  delete tvd;
   return 0;
 }
 

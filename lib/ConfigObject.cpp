@@ -109,7 +109,6 @@ void ConfigBase::ReadConfig( const char *key, bool &b )
 
 void ConfigBase::ReadConfig( const char *key, float &f )
 {
-  Log( "settings: %p", settings );
   if( settings->exists( key ))
     settings->lookupValue( key, f );
   else

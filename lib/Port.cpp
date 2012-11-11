@@ -21,6 +21,7 @@
 
 #include "Port.h"
 
+#include "Source.h"
 #include "Frontend.h"
 #include "Log.h"
 
@@ -30,7 +31,8 @@ Port::Port( Frontend &frontend, int config_id, std::string name, int id ) :
   ConfigObject( frontend, "port", config_id ),
   frontend(frontend),
   name(name),
-  id(id)
+  id(id),
+  source_id(-1)
 {
 }
 
@@ -46,8 +48,9 @@ Port::~Port( )
 
 bool Port::SaveConfig( )
 {
-  WriteConfig( "Name", name );
-  WriteConfig( "ID",   id );
+  WriteConfig( "Name",   name );
+  WriteConfig( "ID",     id );
+  WriteConfig( "Source", source_id );
 
   return WriteConfigFile( );
 }
@@ -57,8 +60,21 @@ bool Port::LoadConfig( )
   if( !ReadConfigFile( ))
     return false;
 
-  ReadConfig( "Name", name );
-  ReadConfig( "ID",   id );
+  ReadConfig( "Name",   name );
+  ReadConfig( "ID",     id );
+  ReadConfig( "Source", source_id );
+
+  if( source_id >= 0 )
+  {
+    Source *s = TVDaemon::Instance( )->GetSource( source_id );
+    if( s == NULL )
+    {
+      LogError( "Source with id %d not found", source_id );
+      source_id = -1;
+    }
+    else
+      s->AddPort( this );
+  }
 
   Log( "    Loading Port '%s'", name.c_str( ));
   return true;
@@ -109,10 +125,10 @@ void Port::Untune( )
 
 void Port::json( json_object *entry ) const
 {
-  char name[32];
-  snprintf( name, sizeof( name ), "Port%d", GetKey( ));
-  json_object_object_add( entry, "name", json_object_new_string( name ));
-  json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "name",      json_object_new_string( name.c_str( )));
+  json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "port_id",   json_object_new_int( id ));
+  json_object_object_add( entry, "source_id", json_object_new_int( source_id ));
 }
 
 bool Port::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
