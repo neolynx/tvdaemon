@@ -11,7 +11,16 @@ function renderAdapter( row )
     return "";
   last_adapter = adapter["id"];
   last_frontend = null;
-  return adapter["name"];
+  type = "???";
+  if( adapter["path"].indexOf( "/usb" ) != -1 )
+    type = "USB";
+  else if ( adapter["path"].indexOf( "/pci" ) != -1 )
+    type = "PCI";
+  if( adapter["present"] == 1 )
+    present = "* ";
+  else
+    present = "! ";
+  return present + type + ": " + adapter["name"];
 }
 
 function renderFrontend( row )
