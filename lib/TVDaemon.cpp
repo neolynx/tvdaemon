@@ -589,10 +589,8 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
     return true;
   }
 
-  if( action->second == "list_adapters" )
+  if( action->second == "list_devices" )
   {
-    json_object *h = json_object_new_object();
-    json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
     json_object *a = json_object_new_array();
 
     for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
@@ -602,9 +600,8 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
       json_object_array_add( a, entry );
     }
 
-    json_object_object_add( h, "data", a );
-    std::string json = json_object_to_json_string( h );
-    json_object_put( h );
+    std::string json = json_object_to_json_string( a );
+    json_object_put( a );
 
     HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
     response->AddStatus( HTTP_OK );

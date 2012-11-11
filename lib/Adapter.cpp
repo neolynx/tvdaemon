@@ -143,6 +143,16 @@ void Adapter::json( json_object *entry ) const
   json_object_object_add( entry, "name", json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
   json_object_object_add( entry, "path", json_object_new_string( uid.c_str( )));
+  json_object *a = json_object_new_array();
+
+  for( std::vector<Frontend *>::const_iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+  {
+    json_object *entry = json_object_new_object( );
+    (*it)->json( entry );
+    json_object_array_add( a, entry );
+  }
+
+  json_object_object_add( entry, "frontends", a );
 }
 
 bool Adapter::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )

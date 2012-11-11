@@ -111,8 +111,8 @@ void Port::json( json_object *entry ) const
 {
   char name[32];
   snprintf( name, sizeof( name ), "Port%d", GetKey( ));
-  json_object_array_add( entry, json_object_new_string( name ));
-  json_object_array_add( entry, json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "name", json_object_new_string( name ));
+  json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
 }
 
 bool Port::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )

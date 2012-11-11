@@ -1028,6 +1028,15 @@ void Frontend::json( json_object *entry ) const
   snprintf( name, sizeof( name ), "Frontend%d", GetKey( ));
   json_object_object_add( entry, "name", json_object_new_string( name ));
   json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
+
+  json_object *a = json_object_new_array();
+  for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+  {
+    json_object *entry = json_object_new_object( );
+    (*it)->json( entry );
+    json_object_array_add( a, entry );
+  }
+  json_object_object_add( entry, "ports", a );
 }
 
 bool Frontend::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
