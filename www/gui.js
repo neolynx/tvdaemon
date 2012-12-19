@@ -4,23 +4,38 @@ window.setInterval( function( ) { ready( ); }, 2000 );
 
 var sources = [];
 
+function getJSON( url, callback )
+{
+  $.ajax( {
+    url: url,
+    dataType: 'json',
+    success: callback,
+    timeout: 3000,
+    error: function(jqXHR, status, errorThrown ) { callback( null ); }
+  });
+}
+
 function ready( )
 {
-  $.getJSON('tvd?c=tvdaemon&a=list_sources', readSources );
+  getJSON('tvd?c=tvdaemon&a=list_sources', readSources );
 }
 
 function readSources( data )
 {
-  for( s in data["data"] )
+  if( data )
   {
-    sources.push( data["data"][s]["name"] );
+    for( s in data["data"] )
+    {
+      sources.push( data["data"][s]["name"] );
+    }
   }
-  $.getJSON('tvd?c=tvdaemon&a=list_devices', readDevices );
+  getJSON('tvd?c=tvdaemon&a=list_devices', readDevices );
 }
 
 function readDevices( data )
 {
   $( '#plant' ).empty( );
+  if( !data ) return;
   for( a in data )
   {
     adapter = data[a];
