@@ -224,6 +224,7 @@ bool Source::AddPort( Port *port )
 
   // FIXME: verify frontend type
   ports.push_back( port );
+  port->SetSource( GetKey( ));
   return true;
 }
 
