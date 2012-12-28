@@ -28,7 +28,12 @@ ltmain.sh
 depcomp
 install-sh
 configure
+config.guess
+config.log
+config.status
+config.sub
 
 include/config.h
 include/stamp-h1
 src/tvdaemon
+INSTALL
