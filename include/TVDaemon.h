@@ -72,6 +72,8 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
     std::vector<std::string> GetChannelList( );
     Channel *GetChannel( int id );
 
+    std::string GetDir( ) { return dir; }
+
     virtual bool HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters );
 
     bool RPC        ( const int client, std::string cat, const std::map<std::string, std::string> &parameters );
@@ -89,6 +91,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
     std::vector<Channel *> channels;
 
     bool up;
+    std::string dir;
 
     // udev
     Adapter *UdevAdd( struct udev_device *dev, const char *path );

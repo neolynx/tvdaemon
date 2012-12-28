@@ -93,7 +93,7 @@ function getAdapter( adapter )
 
 function getFrontend( frontend )
 {
-  return frontend["name"];
+  return frontend["name"] + "<br/><a href=\"\">add port</a>";
 }
 
 function getPort( port )

@@ -32,6 +32,8 @@
 #include "Source.h"
 #include "Service.h"
 #include "Log.h"
+#include "Recorder.h"
+#include "Utils.h" // dump
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -48,6 +50,9 @@
 #include "descriptors/sdt.h"
 #include "descriptors/eit.h"
 #include "descriptors/vct.h"
+#include "descriptors/mpeg_ts.h"
+#include "descriptors/mpeg_pes.h"
+#include "descriptors/mpeg_es.h"
 #include "descriptors/desc_service.h"
 #include "descriptors/desc_network_name.h"
 #include "descriptors/desc_event_short.h"
@@ -186,7 +191,7 @@ bool Frontend::Open()
 {
   if( fe )
     return true;
-// FIXME: handle adapter_id == -1
+  // FIXME: handle adapter_id == -1
   if( adapter_id == -1 )
   {
     LogError( "adapter_id not set" );
@@ -389,6 +394,7 @@ bool Frontend::Scan( int timeoutms )
 
 bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 {
+  bool ret = true;
   if( !Open( ))
     return false;
   if( this->transponder != NULL )
@@ -405,38 +411,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
     LogError( "No service with id %d found", service_id);
     return false;
   }
-  std::map<uint16_t, Stream *> &streams = s->GetStreams();
-  uint16_t vpid = 0;
-  for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++)
-  {
-    if( it->second->IsVideo( ))
-    {
-      Log( "Video Stream: %s", it->second->GetTypeName( ));
-      vpid = it->first;
-      break;
-    }
-  }
-  if( vpid == 0)
-  {
-    LogError( "no video stream for service %d found", service_id );
-    return false;
-  }
-
-  uint16_t apid = 0;
-  for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++)
-  {
-    if( it->second->IsAudio( ))
-    {
-      Log( "Audio Stream: %s", it->second->GetTypeName( ));
-      apid = it->first;
-      break;
-    }
-  }
-  if( apid == 0)
-  {
-    LogError( "no audio stream for service %d found", service_id );
-    return false;
-  }
 
   if( !Tune( t ))
   {
@@ -444,29 +418,40 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
     return false;
   }
 
-  int bufsize = 2 * 1024 * 1024;
+  std::vector<int> fds;
 
-  int fd_v = dvb_dmx_open( adapter_id, frontend_id );
-  if( fd_v < 0 )
+  int videofd = -1;
+  std::map<uint16_t, Stream *> &streams = s->GetStreams();
+  for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++)
   {
-    LogError( "unable to open adapter demux for recording" );
-    return false;
+    if( it->second->IsVideo( ) || it->second->IsAudio( ))
+    {
+      Log( "Adding Stream %d: %s", it->first, it->second->GetTypeName( ));
+      int fd = it->second->Open( *this );
+      if( fd )
+        fds.push_back( fd );
+      if( it->second->IsVideo( ))
+      {
+        videofd = fd;
+      }
+    }
+    else
+      LogWarn( "Ignoring Stream %d: %s (%d)", it->first, it->second->GetTypeName( ), it->second->GetType( ));
   }
-  int fd_a = dvb_dmx_open( adapter_id, frontend_id );
-  if( fd_a < 0 )
+
+  if( fds.empty( ))
   {
-    LogError( "unable to open adapter demux for recording" );
-    close( fd_v );
-    // FIXME: cleanup
+    LogError( "no audio or video stream for service %d found", service_id );
     return false;
   }
 
   std::string dumpfile;
   std::string upcoming;
 
+  int fd = OpenDemux( );
   Log( "Reading EIT" );
   struct dvb_table_eit *eit;
-  dvb_read_section_with_id( fe, fd_v, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, 5 );
+  dvb_read_section_with_id( fe, fd, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, 5 );
   if( eit )
   {
     dvb_table_eit_print( fe, eit );
@@ -496,24 +481,24 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   {
     dumpfile = upcoming;
   }
-    //dvb_read_section_with_id( fe, fd_v, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, &eitlen, 5 );
-    //if( eit )
-    //{
-      //dvb_table_eit_print( fe, eit );
-      //dvb_eit_event_foreach(event, eit)
-      //{
-        //if( event->running_status == 4 ) // now
-        //{
-          //dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
-          //{
-            //dumpfile = desc->name;
-            //dumpfile += ".pes";
-            //break;
-          //}
-        //}
-      //}
-      //free( eit );
-    //}
+
+  //dvb_read_section_with_id( fe, fd_v, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, &eitlen, 5 );
+  //if( eit )
+  //{
+  //dvb_table_eit_print( fe, eit );
+  //dvb_eit_event_foreach(event, eit)
+  //{
+  //if( event->running_status == 4 ) // now
+  //{
+  //dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
+  //{
+  //dumpfile = desc->name;
+  //dumpfile += ".pes";
+  //break;
+  //}
+  //}
+  //}
+  //free( eit );
   //}
 
   if( dumpfile.empty( ))
@@ -525,24 +510,11 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
     std::replace( dumpfile.begin(), dumpfile.end(), '$', '_');
   }
 
-  Log( "Setting PES filter for vpid %d", vpid );
-  if( 0 != dvb_set_pesfilter( fd_v, vpid, DMX_PES_OTHER, DMX_OUT_TSDEMUX_TAP, bufsize ))
-  {
-    LogWarn( "failed to set the pid filter for pno %d", service_id );
-    return false;
-  }
-
-  Log( "Setting PES filter for apid %d", apid );
-  if( 0 != dvb_set_pesfilter( fd_a, apid, DMX_PES_OTHER, DMX_OUT_TSDEMUX_TAP, bufsize ))
-  {
-    LogWarn( "failed to set the pid filter for pno %d", service_id );
-    return false;
-  }
-
   {
     char file[256];
 
-    std::string dir = "../";
+    std::string dir = Utils::Expand( TVDaemon::Instance( )->GetDir( ));
+    Utils::EnsureSlash( dir );
     std::string filename = dir + dumpfile + ".pes";
 
     int i = 0;
@@ -552,7 +524,8 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
       if( ++i == 1000 )
       {
         LogError( "Too many files with same name: %s", filename.c_str( ));
-        return false;
+        ret = false;
+        goto exit;
       }
       snprintf( num, sizeof( num ), "_%d", i );
       filename = dir + dumpfile + num + ".pes";
@@ -564,102 +537,167 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 #endif
         O_WRONLY | O_CREAT | O_TRUNC, 0644 );
 
+    int packet_fd = open( "packet.dump",
+#ifdef O_LARGEFILE
+        O_LARGEFILE |
+#endif
+        O_WRONLY | O_CREAT | O_TRUNC, 0644 );
+
     if( file_fd < 0 )
     {
-      LogError( "Cannot open file '%s'", dumpfile.c_str( ));
+      LogError( "Cannot open file '%s'", filename.c_str( ));
       // FIXME: cleanup
-      return false;
+      ret = false;
+      goto exit;
     }
 
     Log( "Recording '%s' ...", filename.c_str( ));
 
-    fd_set tmp_fds;
-    fd_set fds;
-    FD_ZERO( &fds );
-    int fdmax = fd_v > fd_a ? fd_v : fd_a;
-    FD_SET ( fd_v, &fds );
-    FD_SET ( fd_a, &fds );
+    bool started = false;
 
-    uint8_t *data = (uint8_t *) malloc( bufsize );
+    fd_set tmp_fdset;
+    fd_set fdset;
+    FD_ZERO( &fdset );
+    int fdmax = 0;
+    for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
+    {
+      FD_SET ( *it, &fdset );
+      if( *it > fdmax )
+        fdmax = *it;
+    }
+
+    Recorder rec;
+
+    uint8_t *data = (uint8_t *) malloc( DMX_BUFSIZE );
     int len;
     up = true;
     int ac, vc;
     ac = vc = 0;
+    uint64_t startpts = 0;
     while( up )
     {
-      tmp_fds = fds;
+      tmp_fdset = fdset;
 
       struct timeval timeout = { 1, 0 }; // 1 sec
-      if( select( FD_SETSIZE, &tmp_fds, NULL, NULL, &timeout ) == -1 )
+      if( select( FD_SETSIZE, &tmp_fdset, NULL, NULL, &timeout ) == -1 )
       {
         LogError( "select error" );
         up = false;
         continue;
       }
 
-      //printf( "available a:%d v:%d\n", FD_ISSET( fd_a, &tmp_fds ), FD_ISSET( fd_v, &tmp_fds ));
-
-      if( FD_ISSET( fd_a, &tmp_fds ))
+      for( std::vector<int>::iterator it = fds.begin( ); up && it != fds.end( ); it++ )
       {
-        len = read( fd_a, data, bufsize );
-        if( len < 0 )
+        int fd = *it;
+        if( FD_ISSET( fd, &tmp_fdset ))
         {
-          LogError( "Audio: Error receiving data... %d", errno );
-          //up = false;
-          continue;
-        }
+          len = read( fd, data, DMX_BUFSIZE );
+          if( len < 0 )
+          {
+            LogError( "Error receiving data... %d", errno );
+            continue;
+          }
 
-        if( len == 0 )
-        {
-          Log( "Audio: no data received" );
-          //up = false;
-          continue;
-        }
+          if( len == 0 )
+          {
+            Log( "no data received" );
+            continue;
+          }
 
-        int ret = write( file_fd, data, len );
+          int ret = write( file_fd, data, len );
 
-        if( ac++ % 100 == 0 )
-        {
-          printf( "a" );
-          fflush( stdout );
+          if( fd == videofd )
+          {
+            //int ret = write( packet_fd, data, len );
+
+            //Log( "Video Packet: %d bytes", len );
+            int packets = 0;
+            ssize_t size = 0;
+            ssize_t size2 = 0;
+            uint8_t buf[188];
+            int remaining = len;
+            int pos = 0;
+            uint8_t *p = data;
+            while( up && remaining > 0 )
+            {
+              int chunk = 188;
+              if( remaining < chunk ) chunk = remaining;
+              remaining -= chunk;
+              uint8_t *t = p;
+              dvb_mpeg_ts_init( fe, p, chunk, buf, &size );
+              if( size == 0 )
+              {
+                break;
+              }
+              p += size;
+              chunk -= size;
+              dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
+              uint8_t buf2[184];
+              size2 = 0;
+              if( ts->payload_start )
+              {
+                dvb_mpeg_pes_init( fe, p, chunk, buf2, &size2 );
+                if( size2 == 0 )
+                {
+                  break;
+                }
+                dvb_mpeg_pes *pes = (dvb_mpeg_pes *) buf2;
+                //Utils::dump( p, chunk );
+                //dvb_mpeg_pes_print( fe, pes );
+                //if( pes->optional->two == 2 && pes->optional->PTS_DTS == 3 )
+                  //Log( "PES pts: %f dts: %f", pes->optional->pts / 90000.0, pes->optional->dts / 90000.0 );
+                //else if( pes->optional->two == 2 && pes->optional->PTS_DTS == 2 )
+                  //Log( "PES pts: %f", pes->optional->pts / 90000.0 );
+                //else
+                  //Log( "PES" );
+                p += size2;
+                chunk -= size2;
+                if( pes->optional->pts > 0 )
+                {
+                  //Utils::dump( p, chunk );
+                  if( startpts == 0 )
+                  {
+                    Log( "Creating test.mkv" );
+                    rec.AddTrack( );
+                    startpts = pes->optional->pts;
+                  }
+                  //Log( "pts: %lld", ( pes->optional->pts - startpts ) / 90);
+                  rec.AddCluster( ( pes->optional->pts - startpts ) / 90 );
+                }
+                started = true;
+              }
+              else if( !started )
+              {
+                p += chunk;
+                //Log( "not started yet" );
+                continue;
+              }
+              //int ret = write( packet_fd, p + size + size2, 188 - size - size2 );
+
+              //Log( "MPG @ %d", p - data );
+
+              //rec.record( p, chunk );
+
+              p += chunk;
+            }
+          }
         }
       }
-
-      if( FD_ISSET( fd_v, &tmp_fds ))
-      {
-        len = read( fd_v, data, bufsize );
-        if( len < 0 )
-        {
-          LogError( "Video: Error receiving data... %d", errno );
-          //up = false;
-          continue;
-        }
-
-        if( len == 0 )
-        {
-          Log( "Video: no data received" );
-          //up = false;
-          continue;
-        }
-
-        int ret = write( file_fd, data, len );
-
-        if( vc++ % 100 == 0 )
-        {
-          printf( "v" );
-          fflush( stdout );
-        }
-      }
-
     }
     close( file_fd );
     free( data );
   }
 
-  dvb_dmx_close( fd_a );
-  dvb_dmx_close( fd_v );
+exit:
+  for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
+    dvb_dmx_close( *it );
 
-  return true;
+  return ret;
+}
+
+int Frontend::OpenDemux( )
+{
+  return dvb_dmx_open( adapter_id, frontend_id );
 }
 
 bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
@@ -688,7 +726,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
       dvb_fe_retrieve_stats( fe, DTV_SNR, &snr );
 
       //if( i > 0 )
-        //printf( "\n" );
+      //printf( "\n" );
       Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", (sig * 100) / 0xffff, (snr * 100) / 0xffff, ber, unc );
 
       signal = (sig * 100) / 0xffff;
@@ -728,7 +766,6 @@ void *Frontend::run( void *ptr )
 
 void Frontend::Thread( )
 {
-  fd_set fds;
   struct timeval tv;
   int ret;
   const char *err;
@@ -775,7 +812,7 @@ void Frontend::Thread( )
     if( *it != transponder && (*it)->Enabled( ) && (*it)->GetTSID( ) == transponder->GetTSID( ))
     {
       LogWarn( "Disabling dupplicate transponder %s: same as %s", transponder->toString( ).c_str( ),
-                                                                        (*it)->toString( ).c_str( ));
+          (*it)->toString( ).c_str( ));
       transponder->Disable( );
       state = Closing;
       up = false;
@@ -1010,10 +1047,10 @@ void Frontend::Thread( )
   //dvb_read_section_with_id( fe, fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, 1, (uint8_t **) &eit, time );
   //if( eit && up )
   //{
-    //dvb_table_eit_print( fe, eit );
+  //dvb_table_eit_print( fe, eit );
   //}
   //if( eit )
-    //dvb_table_eit_free( eit );
+  //dvb_table_eit_free( eit );
 
   dvb_dmx_close( fd_demux );
   state = Closing;

@@ -30,6 +30,7 @@
 
 class ConfigBase;
 class Service;
+class Frontend;
 
 class Stream
 {
@@ -37,16 +38,18 @@ class Stream
     enum Type
     {
       Type_Unknown,
+      _start_video_types,
       Type_Video,
       Type_Video_H262,
       Type_Video_H264,
-      start_audio_types,
+      _start_audio_types,
       Type_Audio,
       Type_Audio_13818_3,
       Type_Audio_ADTS,
       Type_Audio_LATM,
       Type_Audio_AC3,
-      Type_Audio_AAC
+      Type_Audio_AAC,
+      _end_audio_types
     };
 
     Stream( Service &service, uint16_t id, enum Type type, int config_id );
@@ -58,11 +61,12 @@ class Stream
 
     virtual int GetKey( ) const { return id; }
 
+    int Open( Frontend &frontend );
     bool Update( Type type );
-    Type GetType() { return type; }
+    Type GetType( ) { return type; }
     const char *GetTypeName( ) { return GetTypeName( type ); };
-    bool IsVideo( ) { return type < start_audio_types; }
-    bool IsAudio( ) { return type > start_audio_types; }
+    bool IsVideo( ) { return type > _start_video_types && type < _start_audio_types; }
+    bool IsAudio( ) { return type > _start_audio_types && type < _end_audio_types; }
 
     static const char *GetTypeName( Type type );
 

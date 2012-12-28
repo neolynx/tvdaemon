@@ -20,8 +20,10 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Stream.cpp \
 			  SocketHandler.cpp \
 			  HTTPServer.cpp \
+			  Recorder.cpp \
+			  Matroska.cpp \
 			  Log.cpp
 
-libtvdaemon_la_LIBADD = -ludev -lconfig++ -lrt -lpthread -ljson ../v4l-utils/lib/libdvbv5/libdvbv5.la
+libtvdaemon_la_LIBADD = -ludev -lconfig++ -lrt -lpthread -ljson ../v4l-utils/lib/libdvbv5/libdvbv5.la -lmatroska
 
 INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/v4l-utils/lib/include

@@ -120,7 +120,13 @@ void ConfigBase::ReadConfig( const char *key, std::string &s )
   if( settings->exists( key ))
     settings->lookupValue( key, s );
   else
-    s = (const char *) settings->add( key, Setting::TypeString );
+  {
+    const char *tmp = settings->add( key, Setting::TypeString );
+    if( tmp )
+      s = tmp;
+    else
+      s = "";
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, int i )

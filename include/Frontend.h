@@ -37,6 +37,8 @@ class Adapter;
 class Transponder;
 class Port;
 
+#define DMX_BUFSIZE 2 * 1024 * 1024
+
 class Frontend : public ConfigObject, public RPCObject
 {
   public:
@@ -60,6 +62,7 @@ class Frontend : public ConfigObject, public RPCObject
     virtual void Untune();
     virtual bool Scan( int timeout = 1000 );
     virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries );
+    int OpenDemux( );
     bool Open( );
     void Close( );
 

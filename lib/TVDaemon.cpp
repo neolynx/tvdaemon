@@ -132,11 +132,13 @@ bool TVDaemon::Start( )
 
   if( !httpd->CreateServerTCP( HTTPDPORT ))
   {
-    //LogError( "unable to create server" );
-    return false;
+    LogError( "unable to create web server" );
   }
-  httpd->Start( );
-  Log( "HTTP Server listening on port %d", HTTPDPORT );
+  else
+  {
+    httpd->Start( );
+    Log( "HTTP Server listening on port %d", HTTPDPORT );
+  }
   return true;
 }
 
@@ -144,6 +146,7 @@ bool TVDaemon::SaveConfig( )
 {
   float version = atof( PACKAGE_VERSION );
   WriteConfig( "Version", version );
+  WriteConfig( "Dir", dir );
   WriteConfigFile( );
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
@@ -170,7 +173,11 @@ bool TVDaemon::LoadConfig( )
 
   float version = NAN;
   ReadConfig( "Version", version );
+  ReadConfig( "Dir", dir );
+
   Log( "Found config version: %f", version );
+  if( dir.empty( ))
+    dir = "~";
 
   if( !CreateFromConfig<Source, TVDaemon>( *this, "source", sources ))
     return false;
