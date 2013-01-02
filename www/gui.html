@@ -5,19 +5,37 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="css/tvdaemon.css">
     <script type="text/javascript" src="scripts/jquery-1.8.2.min.js"></script>
+    <link rel="stylesheet" href="jqwidgets/styles/jqx.base.css" type="text/css" />
+    <script type="text/javascript" src="jqwidgets/jqxcore.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxwindow.js"></script>
     <script type="text/javascript" src="gui.js"></script>
 
   </head>
-    <body class="bodybackground" >
-	<div class="centerbackground">
-	  <div class="header"><br><br><br><br><br><hr>
-	    <div class="bottom"><br><br></div>
-	   	<div class="content"></div>
-         	<table class=configtable id=config>
-		</table>
-	   </div>
-	  </div>
-	
-    </body>
+  <body class="bodybackground" >
+    <div class="centerbackground">
+      <div class="header"><br><br><br><br><br><hr>
+        <div class="bottom"><br><br></div>
+        <div class="content"></div>
+        <table class=configtable id=config>
+        </table>
+      </div>
+    </div>
+
+    <div id="popup" style="display: none; overflow: hidden;">
+      <div>Edit Port</div>
+      <div style="overflow: hidden;">
+        <table>
+          <tr><td align="right">Name  </td><td align="left"><input id="port_name"/></td> </tr>
+          <tr><td align="right">LNB ID</td><td align="left"><input id="port_id"/></td> </tr>
+          <tr>
+            <td colspan="2" style="padding-top: 10px;" align="right">
+              <input style="margin-right: 5px;" type="button" id="Save" value="Save"/><input id="Cancel" type="button" value="Cancel"/>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+  </body>
 </html>
 

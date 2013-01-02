@@ -17,6 +17,8 @@ function getJSON( url, callback )
 
 function ready( )
 {
+  theme = "";
+  $("#popup").jqxWindow({ width: 250, resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#Cancel"), modalOpacity: 0.01 });
   getJSON('tvd?c=tvdaemon&a=list_sources', readSources );
 }
 
@@ -124,7 +126,7 @@ function getFrontend( frontend )
 
 function getPort( port )
 {
-  return port["name"];
+  return "<a href=\"javascript: editPort( );\">" + port["name"] + "</a>";
 }
 
 function getSource( source_id )
@@ -135,3 +137,7 @@ function getSource( source_id )
     return " - ";
 }
 
+function editPort( )
+{
+  $("#popup").jqxWindow('show');
+}
