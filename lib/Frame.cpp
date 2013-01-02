@@ -37,6 +37,7 @@ Frame::Frame( struct dvb_v5_fe_parms &fe, Matroska &mkv ) : fe(fe), mkv(mkv)
   slices = false;
   pts_start = 0;
   pts = 0;
+  frame_type = DVB_MPEG_ES_FRAME_UNKNOWN;
 }
 
 Frame::~Frame( )
@@ -49,12 +50,16 @@ bool Frame::ReadFrame( uint8_t *data, size_t length )
   bool got_slice = false;
   bool payload = false;
   uint64_t last_pts = pts;
+  dvb_mpeg_es_frame_t last_frame_type = frame_type;
   uint8_t type = data[3];
   switch( type )
   {
     case DVB_MPEG_ES_PIC_START:
       if( dvb_mpeg_es_pic_start_init( data, length, &pic_start ) == 0 )
-        dvb_mpeg_es_pic_start_print( &fe, &pic_start );
+      {
+        //dvb_mpeg_es_pic_start_print( &fe, &pic_start );
+        frame_type = (dvb_mpeg_es_frame_t) pic_start.coding_type;
+      }
       payload = true;
       break;
     case DVB_MPEG_ES_USER_DATA:
@@ -85,7 +90,7 @@ bool Frame::ReadFrame( uint8_t *data, size_t length )
         if( pes->optional->PTS_DTS & 0x02 )
         {
           //Log( "pts: %ld", pes->optional->pts );
-          if( !started )
+          if( pts_start == 0 )
             pts_start = pes->optional->pts;
           pts = (pes->optional->pts - pts_start) / 90;
           //Log( "pts set to %ld", pts );
@@ -93,7 +98,7 @@ bool Frame::ReadFrame( uint8_t *data, size_t length )
       }
       break;
     default:
-      LogWarn( "unknown packet: %02x", type );
+      LogWarn( "MPEG ES unknown packet: %02x", type );
       break;
   }
 
@@ -104,7 +109,7 @@ bool Frame::ReadFrame( uint8_t *data, size_t length )
     slices = false;
     if( started )
     {
-      mkv.AddFrame( last_pts, frame_type, buffer, buffer_length );
+      mkv.AddFrame( last_pts, last_frame_type, buffer, buffer_length );
       buffer_length = 0;
     }
   }
@@ -121,3 +126,4 @@ bool Frame::ReadFrame( uint8_t *data, size_t length )
   }
 
 }
+

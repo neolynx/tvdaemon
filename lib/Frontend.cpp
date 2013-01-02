@@ -538,12 +538,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 #endif
         O_WRONLY | O_CREAT | O_TRUNC, 0644 );
 
-    int packet_fd = open( "packet.dump",
-#ifdef O_LARGEFILE
-        O_LARGEFILE |
-#endif
-        O_WRONLY | O_CREAT | O_TRUNC, 0644 );
-
     if( file_fd < 0 )
     {
       LogError( "Cannot open file '%s'", filename.c_str( ));
@@ -607,8 +601,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 
           if( fd == videofd )
           {
-            //int ret = write( packet_fd, data, len );
-
             //Log( "Video Packet: %d bytes", len );
             int packets = 0;
             ssize_t size = 0;
@@ -622,7 +614,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
               int chunk = 188;
               if( remaining < chunk ) chunk = remaining;
               remaining -= chunk;
-              //uint8_t *t = p;
               dvb_mpeg_ts_init( fe, p, chunk, buf, &size );
               if( size == 0 )
               {
@@ -633,47 +624,8 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 
 
               dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
-              //uint8_t buf2[184];
-              //size2 = 0;
               if( ts->payload_start )
                 started = true;
-              //{
-              //dvb_mpeg_pes_init( fe, p, chunk, buf2, &size2 );
-              //if( size2 == 0 )
-              //{
-              //break;
-              //}
-              //dvb_mpeg_pes *pes = (dvb_mpeg_pes *) buf2;
-              //Utils::dump( p, chunk );
-              //dvb_mpeg_pes_print( fe, pes );
-              //if( pes->optional->two == 2 && pes->optional->PTS_DTS == 3 )
-              //Log( "PES pts: %f dts: %f", pes->optional->pts / 90000.0, pes->optional->dts / 90000.0 );
-              //else if( pes->optional->two == 2 && pes->optional->PTS_DTS == 2 )
-              //Log( "PES pts: %f", pes->optional->pts / 90000.0 );
-              //else
-              //Log( "PES" );
-              //p += size2;
-              //chunk -= size2;
-              //if( pes->optional->pts > 0 )
-              //{
-              ////Utils::dump( p, chunk );
-              //if( startpts == 0 )
-              //{
-              //startpts = pes->optional->pts;
-              //}
-              ////Log( "pts: %lld", ( pes->optional->pts - startpts ) / 90);
-
-              //rec.AddCluster( ( pes->optional->pts - startpts ) / 90 );
-
-              //}
-              //started = true;
-              //}
-              //else if( !started )
-              //{
-              //p += chunk;
-              ////Log( "not started yet" );
-              //continue;
-              //}
 
               if( started )
                 rec.record( p, chunk );

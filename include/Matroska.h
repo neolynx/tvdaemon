@@ -50,6 +50,7 @@ class Matroska
     void AddTrack( );
     void AddCluster( uint64_t ts );
     void CloseCluster( );
+    void WriteSegment( );
     void AddFrame( uint64_t ts, dvb_mpeg_es_frame_t type, uint8_t *data, size_t size );
 
   private:
@@ -65,7 +66,6 @@ class Matroska
     KaxCluster *cluster;
 
     KaxTrackEntry *track;
-    KaxBlockGroup *last_block;
 
     uint64_t segment_size;
     uint64_t curr_seg_size;
