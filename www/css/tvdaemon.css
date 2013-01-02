@@ -1,52 +1,49 @@
-.bodybackground
+body
 {
-
   background-image: url('../images/bg.jpg');
-  background-position:0 0;
-  padding: 20px;
   background-attachment:fixed;
 }
 
-.centerbackground
+div.main
 {
-  width: 80%;
-  height:500px;
-  padding: 10%;
+  padding: 10px;
   background-image: url('../images/center_bg.jpg');
-  background-position: 100;
   background-attachment:fixed;
   background-repeat: repeat;
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  right: 10px;
+  left: 10px;
 }
 
-
-.header
+div.logo
 {
   background-image: url('../images/TVDeamon_small.png'),url('../images/logo.png');
-  background-position: left+15px top,125px 57px;
+  background-position: left top, 115px 57px;
   background-repeat: no-repeat;
+  width: 300px;
+  height: 90px;
 }
 
-.bottom
+div.content
 {
-  position: absolute;
-  left:12%;
-  bottom:5px;
-  width: 80%;
+}
+
+div.status
+{
   background-image: url('../images/menu_bg.jpg');
+
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  left: 10px;
+  height: 40px;
 }
 
-.content
+img.grey
 {
-  background-image: url('../images/center_bg.jpg');
-  position: absolute;
-  left:55px;
-  top:10px;
-  width: 75%;
-  font-size: 12px;
-  font-family: Verdana, Arial, Helvetica, SunSans-Regular, Sans-Serif;
-  color:#564b47;
-  margin: 20px 20px  20px 20px;
-  text-align: left;
+  opacity: 0.2;
 }
 
 .button
@@ -89,23 +86,25 @@
 
 table.configtable
 {
-  border: 
+  padding: 10px;
   left:10%;
 }
 
 td.adapter
 {
-    border: 1px solid;
-    background-position:left;
+  border: 1px solid;
+  background-position:left;
 }
 
 td.frontend
-{  border: 1px solid black;
+{
+  border: 1px solid black;
   background-position:left;
 }
 
 td.port
-{  border: 1px solid black;
+{
+  border: 1px solid black;
   background-position:left;
 }
 

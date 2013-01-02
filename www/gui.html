@@ -11,24 +11,23 @@
     <script type="text/javascript" src="gui.js"></script>
 
   </head>
-  <body class="bodybackground" >
-    <div class="centerbackground">
-      <div class="header"><br><br><br><br><br><hr>
-        <div class="bottom"><br><br></div>
-        <div class="content"></div>
-        <table class=configtable id=config>
-        </table>
+  <body>
+    <div class="main">
+      <div class="logo"></div>
+      <div class="content">
+        <table class="configtable" id="config"></table>
       </div>
+      <div class="status">status</div>
     </div>
 
     <div id="popup" style="display: none; overflow: hidden;">
       <div>Edit Port</div>
       <div style="overflow: hidden;">
         <table>
-          <tr><td align="right">Name  </td><td align="left"><input id="port_name"/></td> </tr>
-          <tr><td align="right">LNB ID</td><td align="left"><input id="port_id"/></td> </tr>
+          <tr><td>Name  </td><td><input id="port_name"/></td> </tr>
+          <tr><td>LNB ID</td><td><input id="port_id"/></td> </tr>
           <tr>
-            <td colspan="2" style="padding-top: 10px;" align="right">
+            <td colspan="2" style="padding-top: 10px;">
               <input style="margin-right: 5px;" type="button" id="Save" value="Save"/><input id="Cancel" type="button" value="Cancel"/>
             </td>
           </tr>

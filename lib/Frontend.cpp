@@ -1017,6 +1017,7 @@ void Frontend::json( json_object *entry ) const
   snprintf( name, sizeof( name ), "Frontend%d", GetKey( ));
   json_object_object_add( entry, "name", json_object_new_string( name ));
   json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "type", json_object_new_int( type ));
 
   json_object *a = json_object_new_array();
   for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )

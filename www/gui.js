@@ -1,8 +1,9 @@
 $(document).ready( ready );
 
-window.setInterval( function( ) { ready( ); }, 2000 );
+window.setInterval( function( ) { update( ); }, 2000 );
 
 var sources = [];
+var no_update = false;
 
 function getJSON( url, callback )
 {
@@ -18,7 +19,14 @@ function getJSON( url, callback )
 function ready( )
 {
   theme = "";
-  $("#popup").jqxWindow({ width: 250, resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#Cancel"), modalOpacity: 0.01 });
+  $("#popup").jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#Cancel"), modalOpacity: 0.30 });
+  update( );
+}
+
+function update( )
+{
+  if( no_update )
+    return;
   getJSON('tvd?c=tvdaemon&a=list_sources', readSources );
 }
 
@@ -92,15 +100,14 @@ function readDevices( data )
   row.append( cell );
 
   cell2 = $('<td>');
-  cell2.html( "<div id=\"return frontend\"> <a href=\"\"class=\"button\">Select DVB-S/T/C</a></div>" );
   row.append( cell2 );
 
   cell3 = $('<td>');
-  cell3.html( "<div id=\"return port\"> <a href=\"\"class=\"button\"> Add LNB  </a></div>" );
+  cell3.html( "<div id=\"return port\"> <a href=\"\"class=\"button\">Add Port</a></div>" );
   row.append( cell3 );
 
   cell4 = $('<td>');
-  cell4.html( "<div id=\"return sat\"> <a href=\"\"class=\"button\"> Add Location</a></div>" );
+  cell4.html( "<div id=\"return sat\"> <a href=\"\"class=\"button\">Add Source</a></div>" );
   row.append( cell4 );
 
   row.appendTo( '#config' );
@@ -108,10 +115,9 @@ function readDevices( data )
 
 function getAdapter( adapter )
 {
-  if( adapter["present"] == 1 )
-    imgstyle = "";
-  else
-    imgstyle = content; // this should use class as well, and take style from css !
+  imgstyle = "";
+  if( adapter["present"] != 1 )
+    imgstyle = "alt=\"not present\" class=\"grey\";";
   if( adapter["path"].indexOf( "/usb" ) != -1 )
     icon = "<img src=\"images/usb-icon.png\" style=\"" + imgstyle + "\"/>";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
@@ -121,7 +127,7 @@ function getAdapter( adapter )
 
 function getFrontend( frontend )
 {
-  return frontend["name"] + "<br/><a href=\"\"class=\"button\">Add port</a>";
+  return "Type: " + frontend["type"] + " " + frontend["name"] + "<br/><a href=\"\"class=\"button\">Add port</a>";
 }
 
 function getPort( port )
@@ -139,5 +145,6 @@ function getSource( source_id )
 
 function editPort( )
 {
+  no_update = true;
   $("#popup").jqxWindow('show');
 }
