@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  DVB Recorder class
+ *  DVB Frame class
  *
  *  Copyright (C) 2012 André Roth
  *
@@ -19,30 +19,43 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _Recorder_
-#define _Recorder_
+#ifndef _Frame_
+#define _Frame_
 
-#include <stdint.h> // uint64_t
+#include <stdint.h> // uint8_t
+#include <unistd.h> // size_t
+#include "descriptors/mpeg_pes.h"
+#include "descriptors/mpeg_es.h"
 
 class Matroska;
-class RingBuffer;
-class Frame;
 
-class Recorder
+class Frame
 {
   public:
-    Recorder( struct dvb_v5_fe_parms &fe );
-    ~Recorder( );
+    Frame( struct dvb_v5_fe_parms &fe, Matroska &mkv );
+    ~Frame( );
 
-    void AddTrack( );
-    void record( uint8_t *data, int size );
+    bool ReadFrame( uint8_t *data, size_t size );
 
   private:
     struct dvb_v5_fe_parms &fe;
-    Matroska *mkv;
+    Matroska &mkv;
 
-    RingBuffer *buffer;
-    Frame *frame;
+    uint8_t *buffer;
+    size_t   buffer_size;
+    size_t   buffer_length;
+
+    bool slices;
+    struct dvb_mpeg_pes pes;
+    struct dvb_mpeg_es_seq_start seq_start;
+    struct dvb_mpeg_es_pic_start pic_start;
+
+    uint64_t pts_start;
+    uint64_t pts;
+
+    bool started;
+
+    dvb_mpeg_es_frame_t frame_type;
 };
 
 #endif

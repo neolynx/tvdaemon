@@ -23,7 +23,6 @@
 
 #include "Log.h"
 
-
 #include <ebml/EbmlSubHead.h>
 //#include "matroska/FileKax.h"
 #include "matroska/KaxTracks.h"
@@ -39,12 +38,12 @@
 //#include "matroska/KaxChapters.h"
 //#include "matroska/KaxContentEncoding.h"
 
-
 Matroska::Matroska( std::string name ) : name(name), out(NULL), cluster(NULL)
 {
   track_count = 0;
   timecode_scale = 1000000;  // default scale: 1 milisecond;
   last_block = NULL;
+  cluster_size = 0;
 }
 
 Matroska::~Matroska( )
@@ -105,6 +104,7 @@ void Matroska::WriteHeader( )
   {
     LogError( "Matroska: %s", e.what( ));
   }
+  AddCluster( 0 );
 }
 
 void Matroska::AddTrack( )
@@ -144,84 +144,86 @@ void Matroska::AddTrack( )
 
   curr_seg_size += tracks.Render( *out, false );
   seek.IndexThis( tracks, segment );
-}
+
+  }
 
 void Matroska::CloseCluster( )
 {
   if( cluster )
   {
+    Log( "Closing Cluster" );
     curr_seg_size += cluster->Render( *out, cues, false );
     cluster->ReleaseFrames( );
     seek.IndexThis( *cluster, segment);
     delete cluster;
     cluster = NULL;
+    last_block = NULL;
   }
 }
 
 void Matroska::AddCluster( uint64_t ts )
 {
   CloseCluster( );
+  Log( "Adding Cluster %ld", ts );
   cluster = new KaxCluster( );
   cluster->SetParent( segment );
-  double t = (double) ts;
-  t *= (double) timecode_scale;
+  //double t = (double) ts;
   //t /= 9000.0;
-  //Log( "ts: %lld -> %f %lld", ts, t, (uint64_t) t );
   //static uint64_t iii = 0;
-  cluster->SetPreviousTimecode( (uint64_t)t, timecode_scale );
+  //Log( "cluster->SetPreviousTimecode %ld", (uint64_t)t );
+  cluster->InitTimecode( ts, timecode_scale );
+  //t *= (double) timecode_scale;
+  //cluster->SetPreviousTimecode( (uint64_t)t, timecode_scale );
+  //Log( "cluster->SetPreviousTimecode done" );
   //iii += timecode_scale;
   cluster->EnableChecksum( );
+  cluster_size = 0;
 }
 
-void Matroska::AddFrame( uint8_t *data, size_t size )
+void Matroska::AddFrame( uint64_t ts, dvb_mpeg_es_frame_t type, uint8_t *data, size_t size )
 {
-  //ComponentResult err = noErr;
-  //Media theMedia;
-  //int trackNum = 0;
-  //TimeValue64 decodeTime = glob->outputTracks->at(0).currentTime;
-  //TimeValue64 decodeDuration, displayOffset;
-  //MediaSampleFlags sampleFlags;
-  //ByteCount sampleDataSize;
-
-  //// find the track with the next earliest sample
-  //for (int i = 1; i < glob->outputTracks->size(); i++) {
-  //if (glob->outputTracks->at(i).currentTime < decodeTime &&
-  //glob->outputTracks->at(i).currentTime >= 0) {
-
-  //trackNum = i;
-  //decodeTime = glob->outputTracks->at(i).currentTime;
-  //}
-  //}
-
-  //theMedia = GetTrackMedia(glob->outputTracks->at(trackNum).theTrack);
-
-  //// update the track's current time
-  //GetMediaNextInterestingDecodeTime(theMedia, nextTimeMediaSample, decodeTime, fixed1,
-  //&glob->outputTracks->at(trackNum).currentTime, NULL);
-
-  //// get the sample size
-  //err = GetMediaSample2(theMedia, NULL, 0, &sampleDataSize, decodeTime,
-  //NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL);
-  //if (err) return err;
-
-  //// make sure our buffer is large enough
-  //if (sampleDataSize > GetPtrSize(glob->sampleBuffer))
-  //SetPtrSize(glob->sampleBuffer, sampleDataSize);
-
-  //// and actually fetch the sample
-  //err = GetMediaSample2(theMedia, (UInt8 *) glob->sampleBuffer, GetPtrSize(glob->sampleBuffer),
-  //NULL, decodeTime, NULL, &decodeDuration, &displayOffset,
-  //NULL, NULL, 1, NULL, &sampleFlags);
-
-  //DataBuffer data((binary *)glob->sampleBuffer, sampleDataSize);
-
-  //// TODO: import with references to correct frames
-  uint64_t ts = 0;
+  if( !track )
+    return;
+  Log( "Adding Frame @%ld: %d bytes", ts, size );
   KaxBlockGroup *block;
-  DataBuffer frame( (binary *) data, size );
-  cluster->AddFrame( *track, ts, frame, block );
+  DataBuffer *frame = new DataBuffer( (binary *) data, size, NULL, true ); // internal buffer
+  //KaxSimpleBlock &simpleblock = GetChild<KaxSimpleBlock>( *cluster );
 
+  //KaxSimpleBlock *simpleblock = new KaxSimpleBlock( );
+  //simpleblock.SetParent( *cluster );
 
-  //return err;
+  //simpleblock.AddFrame( *track, ts, *frame, LACING_EBML );
+  //simpleblock.SetKeyframe(true);
+  //simpleblock.SetDiscardable(false);
+
+  cluster_size += size;
+  //simpleblock.Render( *out, false );
+  LogWarn( "delta: %ld * %ld - %ld", ts, timecode_scale, cluster->GlobalTimecode( ) );
+  int64_t delta = ((int64_t)( ts * timecode_scale ) - (int64_t) cluster->GlobalTimecode( )) / (int64_t) timecode_scale;
+  LogWarn( "delta: %ld", (int64_t) delta );
+  if( delta > 32767ll || delta < -32768ll || cluster_size > 2000000 / 40 )
+  {
+    AddCluster( ts );
+    delta = 0;
+  }
+
+  KaxBlockBlob *blob = new KaxBlockBlob( BLOCK_BLOB_ALWAYS_SIMPLE );
+  blob->SetParent( *cluster );
+
+  blob->AddFrameAuto( *track, ts * timecode_scale, *frame, LACING_EBML );
+  //blob->SetBlockDuration( 50 * timecode_scale );
+
+  cluster->AddBlockBlob( blob );
+  //if( last_block )
+  //cluster->AddFrame( *track, ts, *frame, block, *last_block );
+  //else
+  //cluster->AddFrame( *track, ts, *frame, block, LACING_EBML );
+  //if( block )
+  //last_block = block;
+
+  //KaxBlockBlob *blob = new KaxBlockBlob( BLOCK_BLOB_NO_SIMPLE );
+  //blob->SetBlockGroup( *last_block );
+  //cues.AddBlockBlob( *blob );
+
 }
 

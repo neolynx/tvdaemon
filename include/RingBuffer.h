@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  DVB Recorder class
+ *  DVB RingBuffer class
  *
  *  Copyright (C) 2012 André Roth
  *
@@ -19,30 +19,31 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _Recorder_
-#define _Recorder_
+#ifndef _RingBuffer_
+#define _RingBuffer_
 
-#include <stdint.h> // uint64_t
+#include <unistd.h> // size_t
+#include <stdint.h> // uint8_t
 
-class Matroska;
-class RingBuffer;
-class Frame;
-
-class Recorder
+class RingBuffer
 {
   public:
-    Recorder( struct dvb_v5_fe_parms &fe );
-    ~Recorder( );
+    RingBuffer( size_t size, size_t overlap = 0 );
+    ~RingBuffer( );
 
-    void AddTrack( );
-    void record( uint8_t *data, int size );
+    bool append( uint8_t *data, size_t length );
+    bool read( uint8_t *data, size_t length );
+
+    bool GetFrame( uint8_t * &data, size_t &length );
+
+    uint8_t *Data( ) { return buffer; }
+    size_t Count( ) { return count; }
+    size_t Remaining( ) { return size - readpos; }
+    size_t ReadPos( ) { return readpos; }
 
   private:
-    struct dvb_v5_fe_parms &fe;
-    Matroska *mkv;
-
-    RingBuffer *buffer;
-    Frame *frame;
+    uint8_t *buffer;
+    size_t size, overlap, readpos, writepos, count;
 };
 
 #endif

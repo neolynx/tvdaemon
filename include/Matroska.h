@@ -30,6 +30,7 @@
 #include "matroska/KaxCues.h"
 #include "matroska/KaxCluster.h"
 
+#include "descriptors/mpeg_es.h"
 
 using namespace LIBEBML_NAMESPACE;
 using namespace LIBMATROSKA_NAMESPACE;
@@ -49,7 +50,7 @@ class Matroska
     void AddTrack( );
     void AddCluster( uint64_t ts );
     void CloseCluster( );
-    void AddFrame( uint8_t *data, size_t size );
+    void AddFrame( uint64_t ts, dvb_mpeg_es_frame_t type, uint8_t *data, size_t size );
 
   private:
     std::string name;
@@ -70,6 +71,8 @@ class Matroska
     uint64_t curr_seg_size;
 
     int track_count;
+
+    uint64_t cluster_size;
 
 };
 

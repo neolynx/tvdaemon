@@ -52,7 +52,6 @@
 #include "descriptors/vct.h"
 #include "descriptors/mpeg_ts.h"
 #include "descriptors/mpeg_pes.h"
-#include "descriptors/mpeg_es.h"
 #include "descriptors/desc_service.h"
 #include "descriptors/desc_network_name.h"
 #include "descriptors/desc_event_short.h"
@@ -418,6 +417,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
     return false;
   }
 
+  Recorder rec( *fe );
   std::vector<int> fds;
 
   int videofd = -1;
@@ -432,6 +432,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
         fds.push_back( fd );
       if( it->second->IsVideo( ))
       {
+        rec.AddTrack( );
         videofd = fd;
       }
     }
@@ -566,8 +567,6 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
         fdmax = *it;
     }
 
-    Recorder rec;
-
     uint8_t *data = (uint8_t *) malloc( DMX_BUFSIZE );
     int len;
     up = true;
@@ -623,7 +622,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
               int chunk = 188;
               if( remaining < chunk ) chunk = remaining;
               remaining -= chunk;
-              uint8_t *t = p;
+              //uint8_t *t = p;
               dvb_mpeg_ts_init( fe, p, chunk, buf, &size );
               if( size == 0 )
               {
@@ -631,52 +630,53 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
               }
               p += size;
               chunk -= size;
+
+
               dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
-              uint8_t buf2[184];
-              size2 = 0;
+              //uint8_t buf2[184];
+              //size2 = 0;
               if( ts->payload_start )
-              {
-                dvb_mpeg_pes_init( fe, p, chunk, buf2, &size2 );
-                if( size2 == 0 )
-                {
-                  break;
-                }
-                dvb_mpeg_pes *pes = (dvb_mpeg_pes *) buf2;
-                //Utils::dump( p, chunk );
-                //dvb_mpeg_pes_print( fe, pes );
-                //if( pes->optional->two == 2 && pes->optional->PTS_DTS == 3 )
-                  //Log( "PES pts: %f dts: %f", pes->optional->pts / 90000.0, pes->optional->dts / 90000.0 );
-                //else if( pes->optional->two == 2 && pes->optional->PTS_DTS == 2 )
-                  //Log( "PES pts: %f", pes->optional->pts / 90000.0 );
-                //else
-                  //Log( "PES" );
-                p += size2;
-                chunk -= size2;
-                if( pes->optional->pts > 0 )
-                {
-                  //Utils::dump( p, chunk );
-                  if( startpts == 0 )
-                  {
-                    Log( "Creating test.mkv" );
-                    rec.AddTrack( );
-                    startpts = pes->optional->pts;
-                  }
-                  //Log( "pts: %lld", ( pes->optional->pts - startpts ) / 90);
-                  rec.AddCluster( ( pes->optional->pts - startpts ) / 90 );
-                }
                 started = true;
-              }
-              else if( !started )
-              {
-                p += chunk;
-                //Log( "not started yet" );
-                continue;
-              }
-              //int ret = write( packet_fd, p + size + size2, 188 - size - size2 );
+              //{
+              //dvb_mpeg_pes_init( fe, p, chunk, buf2, &size2 );
+              //if( size2 == 0 )
+              //{
+              //break;
+              //}
+              //dvb_mpeg_pes *pes = (dvb_mpeg_pes *) buf2;
+              //Utils::dump( p, chunk );
+              //dvb_mpeg_pes_print( fe, pes );
+              //if( pes->optional->two == 2 && pes->optional->PTS_DTS == 3 )
+              //Log( "PES pts: %f dts: %f", pes->optional->pts / 90000.0, pes->optional->dts / 90000.0 );
+              //else if( pes->optional->two == 2 && pes->optional->PTS_DTS == 2 )
+              //Log( "PES pts: %f", pes->optional->pts / 90000.0 );
+              //else
+              //Log( "PES" );
+              //p += size2;
+              //chunk -= size2;
+              //if( pes->optional->pts > 0 )
+              //{
+              ////Utils::dump( p, chunk );
+              //if( startpts == 0 )
+              //{
+              //startpts = pes->optional->pts;
+              //}
+              ////Log( "pts: %lld", ( pes->optional->pts - startpts ) / 90);
 
-              //Log( "MPG @ %d", p - data );
+              //rec.AddCluster( ( pes->optional->pts - startpts ) / 90 );
 
-              //rec.record( p, chunk );
+              //}
+              //started = true;
+              //}
+              //else if( !started )
+              //{
+              //p += chunk;
+              ////Log( "not started yet" );
+              //continue;
+              //}
+
+              if( started )
+                rec.record( p, chunk );
 
               p += chunk;
             }

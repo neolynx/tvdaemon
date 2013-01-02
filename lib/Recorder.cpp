@@ -24,17 +24,23 @@
 #include "Matroska.h"
 #include "Log.h"
 #include "Utils.h"
+#include "RingBuffer.h"
+#include "Frame.h"
 
-Recorder::Recorder( ): mkv(NULL)
+Recorder::Recorder( struct dvb_v5_fe_parms &fe ): fe(fe), mkv(NULL)
 {
   mkv = new Matroska( "test" );
   mkv->WriteHeader( );
-  readpos = writepos = 0;
+
+  buffer = new RingBuffer( 64 * 1024 );
+  frame = new Frame( fe, *mkv );
 }
 
 Recorder::~Recorder( )
 {
   delete mkv;
+  delete buffer;
+  delete frame;
 }
 
 void Recorder::AddTrack( )
@@ -42,22 +48,22 @@ void Recorder::AddTrack( )
   mkv->AddTrack( );
 }
 
-void Recorder::AddCluster( uint64_t ts )
-{
-  mkv->AddCluster( ts );
-}
-
 void Recorder::record( uint8_t *data, int size )
 {
-  mkv->AddFrame( data, size );
-  for( int i = 0; i < size - 4; i++ )
+  //Utils::dump( data, size );
+  buffer->append( data, size );
+
+  uint8_t *p;
+  size_t framelen;
+  if( buffer->GetFrame( p, framelen ))
   {
-    if(( *(uint32_t *)( data + i ) & 0xFFFFFF ) == 0x010000 )
-    {
-      uint8_t *type = data + i + 3;
-      //Log( "packet: %02x", *type );
-      //Utils::dump( data, size );
-    }
+    frame->ReadFrame( p, framelen );
+
+    //Utils::dump( frame, framelen );
+    //mkv->AddFrame( frame, framelen );
+    delete[] p;
+    //buffer->FreeFrame( frame );
   }
+  return;
 }
 
