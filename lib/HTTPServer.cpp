@@ -123,7 +123,7 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
 
 void HTTPServer::AddDynamicHandler( std::string url, HTTPDynamicHandler *handler )
 {
-  url = "/" + url + "?";
+  url = "/" + url;
   dynamic_handlers[url] = handler;
 }
 
@@ -157,41 +157,39 @@ bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
 
 bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
 {
-  std::vector<const char *> tokens;
-  Tokenize((char *) request.header.front( ).c_str( ), " ", tokens );
+  std::vector<std::string> tokens;
+  Tokenize( request.header.front( ).c_str( ), " ", tokens );
 
   if( tokens.size( ) < 3 )
   {
+    LogError( "HTTPServer: unknown http message '%s'", request.header.front( ).c_str( ));
     // FIXME: http error
     return false;
   }
 
-  for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
-    if( strncmp( tokens[1], it->first.c_str( ), it->first.length( )) == 0 )
+  std::string url = tokens[1];
+  std::vector<std::string> params;
+  Tokenize( url.c_str( ), "?&", params );
+  std::map<std::string, std::string> parameters;
+  for( int i = 1; i < params.size( ); i++ )
+  {
+    std::vector<std::string> p;
+    Tokenize( params[i].c_str( ), "=", p );
+    if( p.size( ) == 1 )
+      parameters[p[0]] = "1";
+    else if( p.size( ) == 2 )
+      parameters[p[0]] = p[1];
+    else
     {
-      std::vector<const char *> params;
-      std::map<std::string, std::string> parameters;
-      std::string url = tokens[1];
-      Tokenize((char *) tokens[1], "?&", params );
-      for( int i = 1; i < params.size( ); i++ )
-      {
-        std::vector<const char *> p;
-        Tokenize((char *) params[i], "=", p );
-        const char *val;
-        if( p.size( ) == 1 )
-          val = "1";
-        else if( p.size( ) == 2 )
-          val = p[1];
-        else
-        {
-          LogWarn( "Ignoring strange parameter: '%s'", params[i] );
-          continue;
-        }
-        parameters[p[0]] = val;
+      LogWarn( "Ignoring strange parameter: '%s'", params[i].c_str( ));
+      continue;
+    }
+    //Log( "Param: %s => %s", p[0], val );
+  }
 
-        //Log( "Param: %s => %s", p[0], val );
-      }
-
+  for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
+    if( params[0] == it->first )
+    {
       if( !it->second->HandleDynamicHTTP( client, parameters ))
       {
         LogError( "RPC Error %s", url.c_str( ));
@@ -201,7 +199,9 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
       return true;
     }
 
-  std::string url = _root;
+  // Handle http files
+
+  url = _root;
   if( tokens[1][0] != '/' )
     url += "/";
   url += tokens[1];
@@ -209,7 +209,7 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
 
   if( url.empty( ))
   {
-    LogError( "HTTPServer: file not found: %s", tokens[1] );
+    LogError( "HTTPServer: file not found: %s", tokens[1].c_str( ));
     HTTPResponse *err_response = new HTTPResponse( );
     err_response->AddStatus( HTTP_NOT_FOUND );
     err_response->AddTimeStamp( );
@@ -274,8 +274,8 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
 
 bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
 {
-  std::vector<const char *> tokens;
-  Tokenize((char *) request.header.front( ).c_str( ), " ", tokens );
+  std::vector<std::string> tokens;
+  Tokenize( request.header.front( ).c_str( ), " ", tokens );
 
   if( tokens.size( ) < 3 )
   {
@@ -283,34 +283,102 @@ bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
     return false;
   }
 
-  for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
-    if( strncmp( tokens[1], it->first.c_str( ), it->first.length( )) == 0 )
+  std::string url = tokens[1];
+  std::vector<std::string> params;
+  Tokenize( url.c_str( ), "?&", params );
+  std::map<std::string, std::string> parameters;
+  for( int i = 1; i < params.size( ); i++ )
+  {
+    std::vector<std::string> p;
+    Tokenize( params[i].c_str( ), "=", p );
+    if( p.size( ) == 1 )
+      parameters[p[0]] = "1";
+    else if( p.size( ) == 2 )
+      parameters[p[0]] = p[1];
+    else
     {
-      std::vector<const char *> params;
-      std::map<std::string, std::string> parameters;
-      std::string url = tokens[1];
-      Tokenize((char *) tokens[1], "?&", params );
-      for( int i = 1; i < params.size( ); i++ )
+      LogWarn( "Ignoring strange parameter: '%s'", params[i].c_str( ));
+      continue;
+    }
+    //Log( "Param: %s => %s", p[0], val );
+  }
+
+  if( request.content.length( ) > 0 )
+  {
+    std::vector<std::string> vars;
+    Tokenize( request.content.c_str( ), "&", vars );
+    for( int i = 0; i < vars.size( ); i++ )
+    {
+      std::vector<std::string> p;
+      Tokenize( vars[i].c_str( ), "=", p );
+      if( p.size( ) == 1 )
+        parameters[p[0]] = "1";
+      else if( p.size( ) == 2 )
       {
-        std::vector<const char *> p;
-        Tokenize((char *) params[i], "=", p );
-        const char *val;
-        if( p.size( ) == 1 )
-          val = "1";
-        else if( p.size( ) == 2 )
-          val = p[1];
-        else
+        int len = p[1].length( );
+        for( int j = 0; j < len; j++ )
         {
-          LogWarn( "Ignoring strange parameter: '%s'", params[i] );
-          continue;
+          if( p[1][j] == '%' )
+          {
+            if( j > len - 3 )
+            {
+              LogError( "HTTPServer: invalid url encoded data: '%s'", p[1].c_str( ));
+              break;
+            }
+            char x = p[1][j+1];
+            switch( x )
+            {
+              case '0' ... '9':
+                x -= '0';
+                break;
+              case 'a' ... 'f':
+                x -= 'a' - 10;
+                break;
+              case 'A' ... 'F':
+                x -= 'A' - 10;
+                break;
+              default:
+                LogError( "HTTPServer: inot a hex value: %c", x );
+            }
+
+            char y = p[1][j+2];
+            switch( y )
+            {
+              case '0' ... '9':
+                y -= '0';
+                break;
+              case 'a' ... 'f':
+                y -= 'a' - 10;
+                break;
+              case 'A' ... 'F':
+                y -= 'A' - 10;
+                break;
+              default:
+                LogError( "HTTPServer: inot a hex value: %c", y );
+            }
+            parameters[p[0]] += ( x << 4 ) + y;
+
+            j += 2;
+            continue;
+          }
+          if( p[1][j] == '+' )
+            parameters[p[0]] += ' ';
+          else
+            parameters[p[0]] += p[1][j];
         }
-        parameters[p[0]] = val;
-
-        //Log( "Param: %s => %s", p[0], val );
       }
+      else
+      {
+        LogWarn( "Ignoring strange variable: '%s'", params[i].c_str( ));
+        continue;
+      }
+    }
 
-      LogWarn( "POST data: '%s'", request.content.c_str( ));
+  }
 
+  for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
+    if( params[0] == it->first )
+    {
       if( !it->second->HandleDynamicHTTP( client, parameters ))
       {
         LogError( "RPC Error %s", url.c_str( ));
@@ -404,7 +472,7 @@ void HTTPServer::HTTPResponse::AddMime( const char *mime )
   _buffer.append( "\r\n" );
 }
 
-int HTTPServer::Tokenize( char *string, const char delims[], std::vector<const char *> &tokens, int count )
+int HTTPServer::Tokenize( const char *string, const char delims[], std::vector<std::string> &tokens, int count )
 {
   int len = strlen( string );
   int dlen = strlen( delims );
@@ -428,7 +496,7 @@ int HTTPServer::Tokenize( char *string, const char delims[], std::vector<const c
     if( i >= len )
       break;
 
-    tokens.push_back( string + i );
+    int j = i;
 
     // eat non-delimiters
     while( i < len )
@@ -444,10 +512,11 @@ int HTTPServer::Tokenize( char *string, const char delims[], std::vector<const c
         break;
       i++;
     }
-    if( i >= len )
-      break;
 
-    string[i] = '\0';
+    tokens.push_back( std::string( string + j,  i - j ));
+
+    if( i == len )
+      break;
 
     if( count )
       if( --count == 0 )

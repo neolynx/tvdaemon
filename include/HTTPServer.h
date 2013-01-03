@@ -129,7 +129,7 @@ class HTTPServer : public SocketHandler
     bool HandleMethodGET( const int client, HTTPRequest &request );
     bool HandleMethodPOST( const int client, HTTPRequest &request );
 
-    static int Tokenize( char *string, const char delims[], std::vector<const char *> &tokens, int count = 0 );
+    static int Tokenize( const char *string, const char delims[], std::vector<std::string> &tokens, int count = 0 );
 
 };
 
