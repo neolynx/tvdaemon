@@ -158,91 +158,32 @@ void Adapter::json( json_object *entry ) const
 
 bool Adapter::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
 {
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
-
   if( cat == "adapter" )
   {
-    if( action->second == "show" )
+    const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+    if( action == parameters.end( ))
     {
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
+      response->AddStatus( HTTP_NOT_FOUND );
       response->AddTimeStamp( );
       response->AddMime( "html" );
-      std::string data;
-      std::string filename = httpd->GetRoot( ) + "/adapter.html";
-      int fd = open( filename.c_str( ), O_RDONLY );
-      if( fd < 0 )
-      {
-        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-        response->AddStatus( HTTP_NOT_FOUND );
-        response->AddTimeStamp( );
-        response->AddMime( "html" );
-        response->AddContents( "RPC template not found" );
-        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-        return false;
-      }
-      char tmp[256];
-      int len;
-      while(( len = read( fd, tmp, 255 )) > 0 )
-      {
-        tmp[len] = '\0';
-        data += tmp;
-      }
-      snprintf( tmp, sizeof( tmp ), "%d", GetKey( ));
-      size_t pos = 0;
-      if(( pos = data.find( "@adapter_id@" )) != std::string::npos )
-        data.replace( pos, strlen( "@adapter_id@" ), tmp );
-      response->AddContents( data );
+      response->AddContents( "RPC adapter: action not found" );
       httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-      return true;
+      return false;
     }
-    else if( action->second == "list_frontends" )
-    {
-      json_object *h = json_object_new_object();
-      json_object_object_add( h, "iTotalRecords", json_object_new_int( frontends.size( )));
-      json_object *a = json_object_new_array();
 
-      for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
-      {
-        json_object *entry = json_object_new_object( );
-        (*it)->json( entry );
-        json_object_array_add( a, entry );
-      }
-
-      json_object_object_add( h, "data", a );
-      std::string json = json_object_to_json_string( h );
-      json_object_put( h );
-
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "json" );
-      response->AddContents( json );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-      return true;
-    }
   }
 
   if( cat == "port" )
   {
-    const std::map<std::string, std::string>::const_iterator data = parameters.find( "frontend" );
+    const std::map<std::string, std::string>::const_iterator data = parameters.find( "frontend_id" );
     if( data == parameters.end( ))
     {
       HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
       response->AddStatus( HTTP_NOT_FOUND );
       response->AddTimeStamp( );
       response->AddMime( "html" );
-      response->AddContents( "RPC: adapter not found" );
+      response->AddContents( "RPC: frontend not found" );
       httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
       return false;
     }

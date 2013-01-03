@@ -171,17 +171,17 @@ Frontend *Frontend::Create( Adapter &adapter, int adapter_id, int frontend_id, i
   return NULL;
 }
 
-Port *Frontend::AddPort( std::string name, int port_id )
+Port *Frontend::AddPort( std::string name, int port_num )
 {
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {
-    if( (*it)->GetID( ) == port_id )
+    if( (*it)->GetPortNum( ) == port_num )
     {
-      LogError( "Port %d already exists", port_id );
+      LogError( "Port %d already exists", port_num );
       return NULL;
     }
   }
-  Port *port = new Port( *this, ports.size( ), name, port_id );
+  Port *port = new Port( *this, ports.size( ), name, port_num );
   ports.push_back( port );
   return port;
 }
@@ -1031,6 +1031,29 @@ void Frontend::json( json_object *entry ) const
 
 bool Frontend::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
 {
+  if( cat == "port" )
+  {
+    const std::map<std::string, std::string>::const_iterator data = parameters.find( "port_id" );
+    if( data == parameters.end( ))
+    {
+      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+      response->AddStatus( HTTP_NOT_FOUND );
+      response->AddTimeStamp( );
+      response->AddMime( "html" );
+      response->AddContents( "RPC: port not found" );
+      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      return false;
+    }
+
+    int id = atoi( data->second.c_str( ));
+
+    if( id >= 0 && id < ports.size( ))
+    {
+      return ports[id]->RPC( httpd, client, cat, parameters );
+    }
+    return false;
+  }
+
   const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
   if( action == parameters.end( ))
   {
@@ -1038,44 +1061,9 @@ bool Frontend::RPC( HTTPServer *httpd, const int client, std::string &cat, const
     response->AddStatus( HTTP_NOT_FOUND );
     response->AddTimeStamp( );
     response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
+    response->AddContents( "RPC frontend: action not found" );
     httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
     return false;
-  }
-
-  if( cat == "port" )
-  {
-    if( action->second == "list" )
-    {
-      int count = ports.size( );
-      json_object *h = json_object_new_object();
-      //std::string echo =  parameters["sEcho"];
-      int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-      json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-      json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
-      json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
-      json_object *a = json_object_new_array();
-
-      for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-      {
-        json_object *entry = json_object_new_array( );
-        (*it)->json( entry );
-        json_object_array_add( a, entry );
-      }
-
-      json_object_object_add( h, "aaData", a );
-
-      const char *json = json_object_to_json_string( h );
-
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "json" );
-      response->AddContents( json );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-      json_object_put( h ); // this should delete it
-      return true;
-    }
   }
 
   HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );

@@ -70,7 +70,7 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
   Log( "Tuning %s", t.toString( ).c_str( ));
   t.SetState( Transponder::State_Tuning );
 
-  int satpos = GetCurrentPort( )->GetID( );
+  int satpos = GetCurrentPort( )->GetPortNum( );
   int lnb = dvb_sat_search_lnb( LNB.c_str( ));
   if( lnb < 0 )
   {

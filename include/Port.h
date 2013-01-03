@@ -40,7 +40,7 @@ class Port : public ConfigObject, public RPCObject
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
-    int GetID( ) { return id; }
+    int GetPortNum( ) { return port_num; }
     void SetSource( int id ) { source_id = id; }
 
     bool Tune( Transponder &transponder );
@@ -56,7 +56,7 @@ class Port : public ConfigObject, public RPCObject
   private:
     Frontend &frontend;
     std::string name;
-    int id;
+    int port_num;
     int source_id;
 
 };

@@ -26,12 +26,13 @@
 #include "Log.h"
 
 #include <json/json.h>
+#include <stdlib.h> // atoi
 
-Port::Port( Frontend &frontend, int config_id, std::string name, int id ) :
+Port::Port( Frontend &frontend, int config_id, std::string name, int port_num ) :
   ConfigObject( frontend, "port", config_id ),
   frontend(frontend),
   name(name),
-  id(id),
+  port_num(port_num),
   source_id(-1)
 {
 }
@@ -49,7 +50,7 @@ Port::~Port( )
 bool Port::SaveConfig( )
 {
   WriteConfig( "Name",   name );
-  WriteConfig( "ID",     id );
+  WriteConfig( "ID", port_num );
   WriteConfig( "Source", source_id );
 
   return WriteConfigFile( );
@@ -61,7 +62,7 @@ bool Port::LoadConfig( )
     return false;
 
   ReadConfig( "Name",   name );
-  ReadConfig( "ID",     id );
+  ReadConfig( "ID",     port_num );
   ReadConfig( "Source", source_id );
 
   if( source_id >= 0 )
@@ -82,16 +83,16 @@ bool Port::LoadConfig( )
 
 bool Port::Tune( Transponder &transponder )
 {
-  if( frontend.SetPort( id ))
+  if( frontend.SetPort( port_num ))
     return frontend.Tune( transponder );
   return false;
 }
 
 bool Port::Scan( Transponder &transponder )
 {
-  if( !frontend.SetPort( id ))
+  if( !frontend.SetPort( port_num ))
   {
-    LogError( "Error setting port %d on frontend", id );
+    LogError( "Error setting port %d on frontend", port_num );
     return false;
   }
 
@@ -113,7 +114,7 @@ bool Port::Scan( Transponder &transponder )
 
 bool Port::Tune( Transponder &transponder, uint16_t pno )
 {
-  if( frontend.SetPort( id ))
+  if( frontend.SetPort( port_num ))
     return frontend.TunePID( transponder, pno );
   return false;
 }
@@ -127,7 +128,7 @@ void Port::json( json_object *entry ) const
 {
   json_object_object_add( entry, "name",      json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
-  json_object_object_add( entry, "port_id",   json_object_new_int( id ));
+  json_object_object_add( entry, "port_num",   json_object_new_int( port_num ));
   json_object_object_add( entry, "source_id", json_object_new_int( source_id ));
 }
 
@@ -140,16 +141,32 @@ bool Port::RPC( HTTPServer *httpd, const int client, std::string &cat, const std
     response->AddStatus( HTTP_NOT_FOUND );
     response->AddTimeStamp( );
     response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
+    response->AddContents( "RPC port: action not found" );
     httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
     return false;
+  }
+
+  if( action->second == "set" )
+  {
+    std::map<std::string, std::string>::const_iterator p = parameters.find( "port_num" );
+    if( p != parameters.end( ))
+      port_num = atoi( p->second.c_str( ));
+    p = parameters.find( "port_name" );
+    if( p != parameters.end( ))
+      name = p->second;
+
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_OK );
+    response->AddTimeStamp( );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    return true;
   }
 
   HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
   response->AddStatus( HTTP_NOT_FOUND );
   response->AddTimeStamp( );
   response->AddMime( "html" );
-  response->AddContents( "RPC transponder: unknown action" );
+  response->AddContents( "Port::RPC unknown action" ); // FIXME: %s", action->second.c_str( ));
   httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
   return false;
 }

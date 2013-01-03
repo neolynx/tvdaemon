@@ -510,17 +510,24 @@ bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, 
 
   if( cat->second == "tvdaemon" )
     return RPC( client, cat->second, parameters );
+
   if( cat->second == "source" )
     return RPC_Source( client, cat->second, parameters );
-  if( cat->second == "adapter" )
-    return RPC_Adapter( client, cat->second, parameters );
-  if( cat->second == "channel" )
-    return RPC( client, cat->second, parameters );
-
   if( cat->second == "transponder" )
     return RPC_Source( client, cat->second, parameters );
   if( cat->second == "service" )
     return RPC_Source( client, cat->second, parameters );
+
+  if( cat->second == "adapter" )
+    return RPC_Adapter( client, cat->second, parameters );
+  if( cat->second == "frontend" )
+    return RPC_Adapter( client, cat->second, parameters );
+  if( cat->second == "port" )
+    return RPC_Adapter( client, cat->second, parameters );
+
+  if( cat->second == "channel" )
+    return RPC( client, cat->second, parameters );
+
 
 
 
@@ -714,7 +721,7 @@ bool TVDaemon::RPC_Adapter( const int client, std::string cat, const std::map<st
     response->AddStatus( HTTP_NOT_FOUND );
     response->AddTimeStamp( );
     response->AddMime( "html" );
-    response->AddContents( "RPC: adapter not found" );
+    response->AddContents( "RPC: adapter_id not found" );
     httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
     return false;
   }

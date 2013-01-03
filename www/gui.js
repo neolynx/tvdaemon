@@ -139,7 +139,10 @@ function getFrontend( frontend )
 
 function getPort( port )
 {
-  return "<a href=\"javascript: editPort( " + port["adapter_id"] + ", " + port["frontend_id"] + ",  " + port["id"] + " );\">" + port["name"] + "</a>";
+  frontend = adapters[port["adapter_id"]]["frontends"][port["frontend_id"]];
+  if( frontend["type"] == 0 ) // Sat
+    return "<a href=\"javascript: editPort( " + port["adapter_id"] + ", " + port["frontend_id"] + ",  " + port["id"] + " );\">" + port["name"] + "</a>";
+  return "";
 }
 
 function getSource( source_id )
@@ -157,7 +160,10 @@ function editPort( adapter_id, frontend_id, port_id )
   port = adapters[adapter_id]["frontends"][frontend_id]["ports"][port_id];
   $("#port_name").focus( );
   $("#port_name").val( port["name"] );
-  $("#port_id").val( port["port_id"] );
+  $("#port_num").val( port["port_num"] );
+  $("#adapter_id").val( adapter_id );
+  $("#frontend_id").val( frontend_id );
+  $("#port_id").val( port_id );
 
 }
 
@@ -166,9 +172,9 @@ function savePort( )
   $.ajax( {
             type: 'POST',
             cache: false,
-            url: 'tvd?c=bla',
+            url: 'tvd?c=port&a=set',
             data: $('#port_form').serialize( ),
             success: function(msg) { $("#popup_port").jqxWindow( 'hide' ); },
-            error: function( jqXHR, status, errorThrown ) { alert( "error ocurred" ); }
+            error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
           } );
 }

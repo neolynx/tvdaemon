@@ -46,7 +46,7 @@ class Frontend : public ConfigObject, public RPCObject
     static Frontend *Create( Adapter &adapter, std::string configfile );
     virtual ~Frontend( );
 
-    Port *AddPort( std::string name, int port_id );
+    Port *AddPort( std::string name, int port_num );
 
     void SetPresence( bool present ) { this->present = present; }
     bool IsPresent( ) { return present; }
