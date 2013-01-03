@@ -89,6 +89,7 @@ class SocketHandler
     {
       private:
         bool submitted;
+      protected:
         std::string line;
       public:
         Message( ) { line = ""; submitted = false; }
@@ -106,7 +107,7 @@ class SocketHandler
 
     static void Dump( const char *buffer, int length );
 
-    virtual Message *CreateMessage( ) const;
+    virtual Message *CreateMessage( int client ) const;
 
     void DisconnectClient( int client, bool error = false );
 

@@ -367,7 +367,7 @@ void SocketHandler::Run( )
                 while( readpos != writepos && up ) // handle all data
                 {
                   if( !messages[i] )
-                    messages[i] = CreateMessage( );
+                    messages[i] = CreateMessage( i );
 
                   already_read = messages[i]->AccumulateData( buf + readpos, len );
                   if( already_read > len )
@@ -429,7 +429,7 @@ void SocketHandler::Run( )
             while( readpos != writepos && up ) // handle all data
             {
               if( !messages[sd] )
-                messages[sd] = CreateMessage( );
+                messages[sd] = CreateMessage( sd );
 
               already_read = messages[sd]->AccumulateData( buf + readpos, len );
               if( already_read > len )
@@ -517,7 +517,7 @@ void SocketHandler::Dump( const char *buffer, int length )
   printf( "\n" );
 }
 
-SocketHandler::Message *SocketHandler::CreateMessage( ) const
+SocketHandler::Message *SocketHandler::CreateMessage( int /* client */ ) const
 {
   return new Message( );
 }

@@ -57,7 +57,13 @@ struct mime_type
   bool binary;
 };
 
-typedef std::list<std::string> HTTPRequest;
+struct HTTPRequest
+{
+  HTTPRequest( ) { content_length = -1; }
+  std::list<std::string> header;
+  int content_length;
+  std::string content;
+};
 
 class HTTPDynamicHandler
 {
@@ -99,9 +105,21 @@ class HTTPServer : public SocketHandler
     virtual void Disconnected( int client, bool error );
     virtual void HandleMessage( const int client, const SocketHandler::Message &msg );
 
+    class Message : public SocketHandler::Message
+    {
+      public:
+        Message( int content_length ) : SocketHandler::Message( ), content_length(content_length) { }
+        virtual ~Message( ) { };
+        virtual int AccumulateData( const char *buffer, int length );
+      private:
+        int content_length;
+    };
+
+    virtual SocketHandler::Message *CreateMessage( int client ) const;
+
   private:
     std::string _root;
-    std::map<int, HTTPRequest> _requests;
+    std::map<int, HTTPRequest *> _requests;
 
     std::map<std::string, HTTPDynamicHandler *> dynamic_handlers;
 
@@ -109,7 +127,7 @@ class HTTPServer : public SocketHandler
 
     // Handle HTTP methods
     bool HandleMethodGET( const int client, HTTPRequest &request );
-    //bool HandleMethodPOST( const int client, const std::vector<std::string> &tokens );
+    bool HandleMethodPOST( const int client, HTTPRequest &request );
 
     static int Tokenize( char *string, const char delims[], std::vector<const char *> &tokens, int count = 0 );
 

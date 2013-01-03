@@ -55,6 +55,33 @@ void HTTPServer::Connected( int client )
 
 void HTTPServer::Disconnected( int client, bool error )
 {
+  if( _requests.find( client ) != _requests.end( ))
+  {
+    delete _requests[client];
+    _requests.erase( client );
+  }
+}
+
+SocketHandler::Message *HTTPServer::CreateMessage( int client ) const
+{
+  std::map<int, HTTPRequest *>::const_iterator it = _requests.find( client );
+  if( it != _requests.end( ) && it->second->content_length != -1 )
+    return new HTTPServer::Message( it->second->content_length );
+  return new SocketHandler::Message( );
+}
+
+int HTTPServer::Message::AccumulateData( const char *buffer, int length )
+{
+  int i = content_length - line.length( );
+  if( length < i )
+    i = length;
+
+  line.append( buffer, i );
+  if( content_length == line.length( ))
+  {
+    Submit( );
+  }
+  return i;
 }
 
 void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &msg )
@@ -62,16 +89,35 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
   const char *buffer = msg.getLine( ).c_str( );
   int length = msg.getLine( ).length( );
   //LogWarn( "Got: '%s' from client %d", msg.getLine( ).c_str( ), client );
+
+  if( _requests.find( client ) == _requests.end( ))
+    _requests[client] = new HTTPRequest( );
+
   if( msg.getLine( ).empty( ))
   {
-    HandleHTTPRequest( client, _requests[client] );
+    if( _requests[client]->content_length == -1 )
+      for( std::list<std::string>::iterator it = _requests[client]->header.begin( ); it != _requests[client]->header.end( ); it++ )
+      {
+        int content_length = -1;
+        if( sscanf( it->c_str( ), "Content-Length: %d", &content_length ) == 1 && content_length > 0 )
+        {
+          _requests[client]->content_length = content_length;
+          return;
+        }
+      }
+    HandleHTTPRequest( client, *_requests[client] );
     DisconnectClient( client );
-
-    _requests.erase( client );
   }
   else
   {
-    _requests[client].push_back( msg.getLine( ));
+    if( _requests[client]->content_length > 0 && _requests[client]->content.length( ) < _requests[client]->content_length )
+    {
+      _requests[client]->content += msg.getLine( );
+      HandleHTTPRequest( client, *_requests[client] );
+      DisconnectClient( client );
+    }
+    else
+      _requests[client]->header.push_back( msg.getLine( ));
   }
 }
 
@@ -83,14 +129,18 @@ void HTTPServer::AddDynamicHandler( std::string url, HTTPDynamicHandler *handler
 
 bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
 {
-  if( request.empty( ))
+  if( request.header.empty( ))
     return false;
 
-  const char *method = request.front( ).c_str( );
+  const char *method = request.header.front( ).c_str( );
 
   if( strncmp( method, "GET ", 4 ) == 0 )
   {
     HandleMethodGET( client, request );
+  }
+  else if( strncmp( method, "POST ", 5 ) == 0 )
+  {
+    HandleMethodPOST( client, request );
   }
   else
   {
@@ -99,6 +149,7 @@ bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
     err_response->AddTimeStamp( );
     err_response->AddMime( "html" );
     err_response->AddContents( "<html><body><h1>501 Method not implemented</h1></body></html>" );
+    LogError( "HTTPServer: method not implemented: %s", method );
     SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
   }
   return false;
@@ -107,7 +158,7 @@ bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
 bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
 {
   std::vector<const char *> tokens;
-  Tokenize((char *) request.front( ).c_str( ), " ", tokens );
+  Tokenize((char *) request.header.front( ).c_str( ), " ", tokens );
 
   if( tokens.size( ) < 3 )
   {
@@ -221,6 +272,56 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   return SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
 }
 
+bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
+{
+  std::vector<const char *> tokens;
+  Tokenize((char *) request.header.front( ).c_str( ), " ", tokens );
+
+  if( tokens.size( ) < 3 )
+  {
+    // FIXME: http error
+    return false;
+  }
+
+  for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
+    if( strncmp( tokens[1], it->first.c_str( ), it->first.length( )) == 0 )
+    {
+      std::vector<const char *> params;
+      std::map<std::string, std::string> parameters;
+      std::string url = tokens[1];
+      Tokenize((char *) tokens[1], "?&", params );
+      for( int i = 1; i < params.size( ); i++ )
+      {
+        std::vector<const char *> p;
+        Tokenize((char *) params[i], "=", p );
+        const char *val;
+        if( p.size( ) == 1 )
+          val = "1";
+        else if( p.size( ) == 2 )
+          val = p[1];
+        else
+        {
+          LogWarn( "Ignoring strange parameter: '%s'", params[i] );
+          continue;
+        }
+        parameters[p[0]] = val;
+
+        //Log( "Param: %s => %s", p[0], val );
+      }
+
+      LogWarn( "POST data: '%s'", request.content.c_str( ));
+
+      if( !it->second->HandleDynamicHTTP( client, parameters ))
+      {
+        LogError( "RPC Error %s", url.c_str( ));
+        return false;
+      }
+      return true;
+    }
+
+  LogError( "HTTPServer: no dynamic handler found for POST request" );
+  return false;
+}
 
 HTTPServer::HTTPResponse::HTTPResponse( )
 {
