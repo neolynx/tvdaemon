@@ -59,6 +59,7 @@ class Source : public ConfigObject, public RPCObject
     const std::vector<Transponder *> &GetTransponders( ) { return transponders; }
 
     bool AddPort( Port *port );
+    bool RemovePort( Port *port );
     bool AddTransponder( Transponder *t );
 
     bool Tune( Transponder &transponder, uint16_t pno );

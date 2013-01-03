@@ -228,6 +228,17 @@ bool Source::AddPort( Port *port )
   return true;
 }
 
+bool Source::RemovePort( Port *port )
+{
+  //FIXME: locking
+  if( !port )
+    return false;
+
+  std::vector<Port *>::iterator it = std::find( ports.begin( ), ports.end( ), port );
+  if( it != ports.end( ))
+    ports.erase( it );
+}
+
 bool Source::TuneTransponder( int id )
 {
   Transponder* t = GetTransponder( id );

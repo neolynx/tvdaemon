@@ -154,6 +154,25 @@ bool Port::RPC( HTTPServer *httpd, const int client, std::string &cat, const std
     p = parameters.find( "port_name" );
     if( p != parameters.end( ))
       name = p->second;
+    p = parameters.find( "port_source" );
+    if( p != parameters.end( ))
+    {
+      int i = atoi( p->second.c_str( ));
+      if( i >= -1 && i != source_id )
+      {
+        if( i >= 0 )
+        {
+          Source *s = TVDaemon::Instance( )->GetSource( i );
+          s->AddPort( this );
+        }
+        else
+        {
+          Source *s = TVDaemon::Instance( )->GetSource( source_id );
+          s->RemovePort( this );
+        }
+        SetSource( i );
+      }
+    }
 
     HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
     response->AddStatus( HTTP_OK );
