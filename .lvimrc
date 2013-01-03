@@ -1,3 +1,4 @@
 set path+=include
 
+set tags+=../libmatroska-1.3.0/tags,../libebml-1.2.2/tags
 
