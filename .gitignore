@@ -34,6 +34,7 @@ config.status
 config.sub
 
 include/config.h
+include/config.h.in
 include/stamp-h1
 src/tvdaemon
 INSTALL
