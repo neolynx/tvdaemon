@@ -4,6 +4,11 @@ body
   background-attachment:fixed;
 }
 
+.right
+{
+  text-align: right;
+}
+
 div.main
 {
   padding: 10px;
@@ -25,12 +30,12 @@ div.logo
   background-repeat: no-repeat;
   width: 500px;
   height: 90px;
-  
+
 }
 
 div.content
 {
- position: absolute;
+  position: absolute;
   top: 100px;
   left: 1%;
 
@@ -74,7 +79,7 @@ img.grey
   font-family: Georgia, serif;
   text-decoration: none;
   vertical-align: bottom;
-white-space:nowrap;
+  white-space:nowrap;
 }
 
 .button:hover
@@ -99,7 +104,7 @@ table.configtable
 
 td.adapter
 {
-  width:8em; 
+  width:8em;
   word-wrap:break-word;
   border: 1px solid;
   background-position:left;
@@ -109,7 +114,7 @@ td.adapter
 
 td.frontend
 {
- width:8em; 
+  width:8em;
   word-wrap:break-word;
   border: 1px solid black;
   background-position:left;
@@ -118,7 +123,7 @@ td.frontend
 
 td.port
 {
- width:6em; 
+  width:6em;
   word-wrap:break-word;
 
   border: 1px solid black;
@@ -128,7 +133,7 @@ td.port
 
 td.source
 {
- width:6em; 
+  width:6em;
   word-wrap:break-word;
   border: 1px solid black;
   vertical-align: top;
