@@ -41,6 +41,11 @@ div.status
   height: 40px;
 }
 
+.right
+{
+  text-align: right;
+}
+
 img.grey
 {
   opacity: 0.2;

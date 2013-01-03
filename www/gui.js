@@ -3,6 +3,7 @@ $(document).ready( ready );
 window.setInterval( function( ) { update( ); }, 2000 );
 
 var sources = [];
+var adapters = [];
 var no_update = false;
 
 function getJSON( url, callback )
@@ -19,7 +20,9 @@ function getJSON( url, callback )
 function ready( )
 {
   theme = "";
-  $("#popup").jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#Cancel"), modalOpacity: 0.30 });
+  $('#popup_port').jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
+  $('#popup_port').bind( 'closed', function ( event ) { no_update = false; } );
+  $('#port_ok').bind( 'click', function ( event ) { savePort( ); } );
   update( );
 }
 
@@ -46,7 +49,8 @@ function readDevices( data )
 {
   $( '#config' ).empty( );
   if( !data ) return;
-  for( a in data )
+  adapters = data;
+  for( a in adapters )
   {
     adapter = data[a];
     row = $('<tr>');
@@ -60,6 +64,7 @@ function readDevices( data )
     for( f in adapter["frontends"] )
     {
       frontend = adapter["frontends"][f];
+      frontend["adapter_id"] = adapter["id"];
 
       cell2 = $('<td>');
       cell2.html( getFrontend( frontend ));
@@ -73,6 +78,8 @@ function readDevices( data )
       for( p in frontend["ports"] )
       {
         port = frontend["ports"][p];
+        port["frontend_id"] = frontend["id"];
+        port["adapter_id"] = adapter["id"];
 
         cell3 = $('<td>');
         cell3.html( getPort( port ));
@@ -132,7 +139,7 @@ function getFrontend( frontend )
 
 function getPort( port )
 {
-  return "<a href=\"javascript: editPort( );\">" + port["name"] + "</a>";
+  return "<a href=\"javascript: editPort( " + port["adapter_id"] + ", " + port["frontend_id"] + ",  " + port["id"] + " );\">" + port["name"] + "</a>";
 }
 
 function getSource( source_id )
@@ -143,8 +150,25 @@ function getSource( source_id )
     return " - ";
 }
 
-function editPort( )
+function editPort( adapter_id, frontend_id, port_id )
 {
   no_update = true;
-  $("#popup").jqxWindow('show');
+  $("#popup_port").jqxWindow('show');
+  port = adapters[adapter_id]["frontends"][frontend_id]["ports"][port_id];
+  $("#port_name").focus( );
+  $("#port_name").val( port["name"] );
+  $("#port_id").val( port["port_id"] );
+
+}
+
+function savePort( )
+{
+  $.ajax( {
+            type: 'POST',
+            cache: false,
+            url: 'tvd?c=bla',
+            data: $('#port_form').serialize( ),
+            success: function(msg) { $("#popup_port").jqxWindow( 'hide' ); },
+            error: function( jqXHR, status, errorThrown ) { alert( "error ocurred" ); }
+          } );
 }

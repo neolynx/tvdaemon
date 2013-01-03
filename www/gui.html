@@ -20,18 +20,16 @@
       <div class="status">status</div>
     </div>
 
-    <div id="popup" style="display: none; overflow: hidden;">
+    <div id="popup_port" style="display: none; overflow: hidden;">
       <div>Edit Port</div>
       <div style="overflow: hidden;">
-        <table>
-          <tr><td>Name  </td><td><input id="port_name"/></td> </tr>
-          <tr><td>LNB ID</td><td><input id="port_id"/></td> </tr>
-          <tr>
-            <td colspan="2" style="padding-top: 10px;">
-              <input style="margin-right: 5px;" type="button" id="Save" value="Save"/><input id="Cancel" type="button" value="Cancel"/>
-            </td>
-          </tr>
-        </table>
+        <form id="port_form" action="tvd?c=saveport" method="POST">
+          <div class="right"><label>Name  </label><input type="text" name="port_name" id="port_name"/></div>
+          <div class="right"><label>LNB ID</label><input type="text" name="port_id" id="port_id"/></div>
+          <div class="right">
+            <input style="margin-right: 5px;" type="button" id="port_ok" value="Ok"/><input id="port_cancel" type="button" value="Cancel"/>
+          </div>
+        </form>
       </div>
     </div>
 
