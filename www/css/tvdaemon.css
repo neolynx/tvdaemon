@@ -99,22 +99,27 @@ td.adapter
 {
   border: 1px solid;
   background-position:left;
+  vertical-align: top;
+  text-align: right;
 }
 
 td.frontend
 {
   border: 1px solid black;
   background-position:left;
+  vertical-align: top;
 }
 
 td.port
 {
   border: 1px solid black;
   background-position:left;
+  vertical-align: top;
 }
 
 td.source
 {
   border: 1px solid black;
+  vertical-align: top;
 }
 

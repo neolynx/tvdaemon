@@ -39,7 +39,7 @@ function readSources( data )
   {
     for( s in data["data"] )
     {
-      sources.push( data["data"][s]["name"] );
+      sources.push( data["data"][s] );
     }
   }
   getJSON('tvd?c=tvdaemon&a=list_devices', readDevices );
@@ -110,11 +110,9 @@ function readDevices( data )
   row.append( cell2 );
 
   cell3 = $('<td>');
-  cell3.html( "<div id=\"return port\"> <a href=\"\"class=\"button\">Add Port</a></div>" );
   row.append( cell3 );
 
   cell4 = $('<td>');
-  cell4.html( "<div id=\"return sat\"> <a href=\"\"class=\"button\">Add Source</a></div>" );
   row.append( cell4 );
 
   row.appendTo( '#config' );
@@ -129,12 +127,12 @@ function getAdapter( adapter )
     icon = "<img src=\"images/usb-icon.png\" style=\"" + imgstyle + "\"/>";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
     icon = "<img src=\"images/pci-icon.png\" style=\"" + imgstyle + "\"/>";
-  return icon + '<br/>' + adapter["name"];
+  return "<b>" + adapter["name"] + "<br/>" + icon;
 }
 
 function getFrontend( frontend )
 {
-  return "Type: " + frontend["type"] + " " + frontend["name"] + "<br/><a href=\"\"class=\"button\">Add port</a>";
+  return "<b>" + frontend["name"] + "</b></br>Type: " + frontend["type"]
 }
 
 function getPort( port )
@@ -148,9 +146,12 @@ function getPort( port )
 function getSource( source_id )
 {
   if( source_id >= 0 )
-    return sources[source_id];
+    return "<b>" + sources[source_id]["name"]
+      + "</b><br/>Type: " + sources[source_id]["type"]
+      + "<br/>Transponders: " + sources[source_id]["transponders"]
+      + "<br/>Services: " + sources[source_id]["services"];
   else
-    return " - ";
+    return "<a href=\"\">select ...</a>";
 }
 
 function editPort( adapter_id, frontend_id, port_id )

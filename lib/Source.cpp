@@ -284,11 +284,21 @@ bool Source::Tune( Transponder &transponder, uint16_t pno )
   return false;
 }
 
+int Source::CountServices( ) const
+{
+  int count = 0;
+  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+    count += (*it)->CountServices( );
+  return count;
+}
+
 void Source::json( json_object *entry ) const
 {
   json_object_object_add( entry, "name", json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type", json_object_new_int( type ));
+  json_object_object_add( entry, "transponders", json_object_new_int( transponders.size( )));
+  json_object_object_add( entry, "services", json_object_new_int( CountServices( )));
 }
 
 bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )

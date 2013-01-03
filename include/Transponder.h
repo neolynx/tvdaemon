@@ -71,6 +71,7 @@ class Transponder : public ConfigObject, public RPCObject
     //uint16_t GetTransportStreamID( ) { return TransportStreamID; }
     //uint16_t GetVersionNumber( ) {  return VersionNumber; }
 
+    int CountServices( ) const { return services.size( ); }
     const std::map<uint16_t, Service *> &GetServices( ) const { return services; };
     Service *GetService( uint16_t id );
     Source &GetSource( ) const { return source; }
