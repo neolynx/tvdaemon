@@ -29,6 +29,7 @@
 #include <json/json.h>
 #include <math.h>   // NAN
 #include <string>
+#include <algorithm> // sort
 
 #include "config.h"
 #include "Utils.h"
@@ -411,7 +412,7 @@ std::vector<std::string> TVDaemon::GetScanfileList( SourceType type, std::string
       continue;
     }
 
-    while(( dp = readdir( dirp )) != NULL )
+    while(( dp = readdir( dirp )) != NULL ) // FIXME: use reentrant
     {
       if( dp->d_name[0] == '.' ) continue;
       if( country != "" && i != 2 ) // DVB-S has no countries
@@ -419,12 +420,13 @@ std::vector<std::string> TVDaemon::GetScanfileList( SourceType type, std::string
         if( country.compare( 0, 2, dp->d_name, 2 ) != 0 )
           continue;
       }
-      std::string s = dirs[i];
+      std::string s ; //= dirs[i];
       s += dp->d_name;
       result.push_back( s );
     }
     closedir( dirp );
   }
+  std::sort( result.begin( ), result.end( ));
   return result;
 }
 
@@ -615,6 +617,34 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
     response->AddContents( json );
     httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
     json_object_put( h ); // this should delete it
+    return true;
+  }
+
+  if( action->second == "get_scanfiles" )
+  {
+    SourceType source_type = Source_Any;
+    const std::map<std::string, std::string>::const_iterator type = parameters.find( "type" );
+    if( type != parameters.end( ))
+    {
+      int i = atoi( type->second.c_str( ));
+      if( i != Source_Any && i < Source_Last )
+        source_type = (SourceType) i;
+    }
+
+    std::vector<std::string> scanfiles = TVDaemon::GetScanfileList( source_type );
+
+    json_object *a = json_object_new_array( );
+    for( int i = 0; i < scanfiles.size( ); i++ )
+      json_object_array_add( a, json_object_new_string( scanfiles[i].c_str( )));
+    std::string json = json_object_to_json_string( a );
+
+    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
+    response->AddStatus( HTTP_OK );
+    response->AddTimeStamp( );
+    response->AddMime( "json" );
+    response->AddContents( json );
+    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    json_object_put( a ); // this should delete it
     return true;
   }
 

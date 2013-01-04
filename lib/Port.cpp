@@ -151,10 +151,10 @@ bool Port::RPC( HTTPServer *httpd, const int client, std::string &cat, const std
     std::map<std::string, std::string>::const_iterator p = parameters.find( "port_num" );
     if( p != parameters.end( ))
       port_num = atoi( p->second.c_str( ));
-    p = parameters.find( "port_name" );
+    p = parameters.find( "name" );
     if( p != parameters.end( ))
       name = p->second;
-    p = parameters.find( "port_source" );
+    p = parameters.find( "source_id" );
     if( p != parameters.end( ))
     {
       int i = atoi( p->second.c_str( ));

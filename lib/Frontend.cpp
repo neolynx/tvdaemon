@@ -127,7 +127,7 @@ Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
       return new Frontend_DVBT( adapter, configfile );
     case TVDaemon::Source_ATSC:
       return new Frontend_ATSC( adapter, configfile );
-    case TVDaemon::Source_ANY:
+    case TVDaemon::Source_Any:
       return NULL;
   }
   return NULL;

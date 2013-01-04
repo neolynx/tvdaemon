@@ -13,16 +13,22 @@ function getJSON( url, callback )
     dataType: 'json',
     success: callback,
     timeout: 3000,
-    error: function(jqXHR, status, errorThrown ) { callback( null ); }
+    error: function(jqXHR, status, errorThrown ) { callback( null, jqXHR.responseText ); }
   });
 }
 
 function ready( )
 {
   theme = "";
-  $('#popup_port').jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
-  $('#popup_port').bind( 'closed', function ( event ) { no_update = false; } );
+  $('#port_popup').jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
+  $('#port_popup').bind( 'closed', function ( event ) { no_update = false; } );
   $('#port_ok').bind( 'click', function ( event ) { savePort( ); } );
+  $('#port_source').bind( 'change', function ( event ) { if( $(this).val( ) == -2 ) editSource( ); } );
+
+  $('#source_popup').jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#source_cancel"), modalOpacity: 0.30 });
+  $('#source_popup').bind( 'closed', function ( event ) { no_update = false; } );
+  $('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
+
   update( );
 }
 
@@ -33,7 +39,7 @@ function update( )
   getJSON('tvd?c=tvdaemon&a=list_sources', readSources );
 }
 
-function readSources( data )
+function readSources( data, errmsg )
 {
   if( data )
   {
@@ -46,7 +52,7 @@ function readSources( data )
   getJSON('tvd?c=tvdaemon&a=list_devices', readDevices );
 }
 
-function readDevices( data )
+function readDevices( data, errmsg )
 {
   $( '#config' ).empty( );
   if( !data ) return;
@@ -169,16 +175,15 @@ function getSource( port )
 function editPort( adapter_id, frontend_id, port_id )
 {
   no_update = true;
-  $("#popup_port").jqxWindow('show');
+  $("#port_popup").jqxWindow('show');
   frontend = adapters[adapter_id]["frontends"][frontend_id];
   port = frontend["ports"][port_id];
-  port = adapters[adapter_id]["frontends"][frontend_id]["ports"][port_id];
   $("#port_name").focus( );
   $("#port_name").val( port["name"] );
   $("#port_num").val( port["port_num"] );
-  $("#adapter_id").val( adapter_id );
-  $("#frontend_id").val( frontend_id );
-  $("#port_id").val( port_id );
+  $("#port_adapter_id").val( adapter_id );
+  $("#port_frontend_id").val( frontend_id );
+  $("#port_port_id").val( port_id );
 
   $("#port_source").empty( );
   $("#port_source").append( new Option( "Undefined", "-1" ));
@@ -193,11 +198,53 @@ function savePort( )
 {
   $.ajax( {
     type: 'POST',
-  cache: false,
-  url: 'tvd?c=port&a=set',
-  data: $('#port_form').serialize( ),
-  success: function(msg) { $("#popup_port").jqxWindow( 'hide' ); },
-  error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
+    cache: false,
+    url: 'tvd?c=port&a=set',
+    data: $('#port_form').serialize( ),
+    success: function(msg) { $("#port_popup").jqxWindow( 'hide' ); },
+    error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
+  } );
+}
+
+function editSource( adapter_id, frontend_id, port_id )
+{
+  no_update = true;
+  adapter_id = $("#port_adapter_id").val( );
+  frontend_id = $("#port_frontend_id").val( );
+  port_id = $("#port_port_id").val( );
+  frontend = adapters[adapter_id]["frontends"][frontend_id];
+  $("#source_adapter_id").val( adapter_id );
+  $("#source_frontend_id").val( frontend_id );
+  $("#source_port_id").val( port_id );
+
+  getJSON( 'tvd?c=tvdaemon&a=get_scanfiles&type=' + frontend["type"], loadScanfiles );
+}
+
+function loadScanfiles( scanfiles, errmsg )
+{
+  if( !scanfiles )
+  {
+    alert( errmsg );
+    return;
+  }
+
+  $("#source_scanfiles").empty( );
+  $("#source_scanfiles").append( new Option( "select ...", "-1" ));
+  for( i in scanfiles )
+    $("#source_scanfiles").append( new Option( scanfiles[i], scanfiles[i] ));
+
+  $("#source_popup").jqxWindow('show');
+}
+
+function saveSource( )
+{
+  $.ajax( {
+    type: 'POST',
+    cache: false,
+    url: 'tvd?c=tvdaemon&a=create_source',
+    data: $('#source_form').serialize( ),
+    success: function(msg) { $("#source_popup").jqxWindow( 'hide' ); },
+    error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
   } );
 }
 

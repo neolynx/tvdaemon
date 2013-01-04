@@ -53,14 +53,15 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
 
     enum SourceType
     {
-      Source_ANY    = 0xff,
+      Source_Any    = 0xff,
       Source_DVB_S  = 0,
-      Source_DVB_C  = 1,
-      Source_DVB_T  = 2,
-      Source_ATSC   = 3,
+      Source_DVB_C,
+      Source_DVB_T,
+      Source_ATSC,
+      Source_Last,
     };
 
-    std::vector<std::string> GetScanfileList( SourceType type = Source_ANY, std::string country = "" );
+    std::vector<std::string> GetScanfileList( SourceType type = Source_Any, std::string country = "" );
     std::vector<std::string> GetAdapterList( );
     Adapter *GetAdapter( int id );
 

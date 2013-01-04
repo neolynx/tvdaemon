@@ -36,7 +36,7 @@
 Source::Source( TVDaemon &tvd, std::string name, int config_id ) :
   ConfigObject( tvd, "source", config_id ),
   tvd(tvd), name(name),
-  type(TVDaemon::Source_ANY)
+  type(TVDaemon::Source_Any)
 {
 }
 
