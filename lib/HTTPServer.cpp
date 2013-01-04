@@ -195,7 +195,7 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
         LogError( "RPC Error %s", url.c_str( ));
         return false;
       }
-      Log( "RPC %s", url.c_str( ));
+      //Log( "RPC %s", url.c_str( ));
       return true;
     }
 
@@ -249,7 +249,7 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
     return false;
   }
 
-  Log( "HTTPServer: serving: %s", url.c_str( ));
+  //Log( "HTTPServer: serving: %s", url.c_str( ));
   std::string file_contents;
 
   file.seekg( 0, std::ios::end );
