@@ -32,11 +32,12 @@
 
 #include "dvb-file.h"
 #include "descriptors.h"
+#include <dirent.h>
 
-Source::Source( TVDaemon &tvd, std::string name, int config_id ) :
+Source::Source( TVDaemon &tvd, std::string name, Type type, int config_id ) :
   ConfigObject( tvd, "source", config_id ),
   tvd(tvd), name(name),
-  type(TVDaemon::Source_Any)
+  type(type)
 {
 }
 
@@ -121,7 +122,26 @@ bool Source::LoadConfig( )
 
 bool Source::ReadScanfile( std::string scanfile )
 {
-  struct dvb_file *file = dvb_read_file_format( scanfile.c_str( ), SYS_UNDEFINED, FILE_CHANNEL );
+  std::string filename = SCANFILE_DIR;
+  Utils::EnsureSlash( filename );
+  switch( type )
+  {
+    case Type_DVBT:
+      filename += "dvb-t/";
+      break;
+    case Type_DVBS:
+      filename += "dvb-s/";
+      break;
+    case Type_DVBC:
+      filename += "dvb-c/";
+      break;
+    case Type_ATSC:
+      filename += "atsc/";
+      break;
+  }
+  filename += scanfile;
+
+  struct dvb_file *file = dvb_read_file_format( filename.c_str( ), SYS_UNDEFINED, FILE_CHANNEL );
   if( !file )
   {
     LogError( "Failed to parse '%s'", scanfile.c_str( ));
@@ -169,20 +189,20 @@ Transponder *Source::CreateTransponder( const struct dvb_entry &info )
     case SYS_DVBC_ANNEX_A:
     case SYS_DVBC_ANNEX_B:
     case SYS_DVBC_ANNEX_C:
-      type = TVDaemon::Source_DVB_C;
+      type = Type_DVBC;
       break;
     case SYS_DVBT:
     case SYS_DVBT2:
-      type = TVDaemon::Source_DVB_T;
+      type = Type_DVBT;
       break;
     case SYS_DSS:
     case SYS_DVBS:
     case SYS_DVBS2:
-      type = TVDaemon::Source_DVB_S;
+      type = Type_DVBS;
       break;
     case SYS_ATSC:
     case SYS_ATSCMH:
-      type = TVDaemon::Source_ATSC;
+      type = Type_ATSC;
       break;
   }
 
@@ -312,39 +332,22 @@ void Source::json( json_object *entry ) const
   json_object_object_add( entry, "services", json_object_new_int( CountServices( )));
 }
 
-bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
-
   if( cat == "source" )
   {
-    if( action->second == "show" )
+    if( action == "show" )
     {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
+      HTTPServer::Response response;
+      response.AddStatus( HTTP_OK );
+      response.AddTimeStamp( );
+      response.AddMime( "html" );
       std::string data;
-      std::string filename = httpd->GetRoot( ) + "/source.html";
+      std::string filename = request.GetDocRoot( ) + "/source.html";
       int fd = open( filename.c_str( ), O_RDONLY );
       if( fd < 0 )
       {
-        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-        response->AddStatus( HTTP_NOT_FOUND );
-        response->AddTimeStamp( );
-        response->AddMime( "html" );
-        response->AddContents( "RPC template not found" );
-        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+        request.NotFound( "RPC source: template '%s' not found", filename.c_str( ));
         return false;
       }
       char tmp[256];
@@ -358,11 +361,11 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
       size_t pos = 0;
       if(( pos = data.find( "@source_id@" )) != std::string::npos )
         data.replace( pos, strlen( "@source_id@" ), tmp );
-      response->AddContents( data );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      response.AddContents( data );
+      request.Reply( response );
       return true;
     }
-    else if( action->second == "list_transponders" )
+    else if( action == "list_transponders" )
     {
       json_object *h = json_object_new_object();
       json_object_object_add( h, "iTotalRecords", json_object_new_int( transponders.size( )));
@@ -376,49 +379,29 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
       }
 
       json_object_object_add( h, "data", a );
-      std::string json = json_object_to_json_string( h );
-      json_object_put( h );
 
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "json" );
-      response->AddContents( json );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      request.Reply( h );
       return true;
     }
   }
   else if( cat == "transponder" || cat == "service" )
   {
-    const std::map<std::string, std::string>::const_iterator obj = parameters.find( "transponder_id" );
-    if( obj == parameters.end( ))
-    {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_NOT_FOUND );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
-      response->AddContents( "RPC transponder: transponder_id not found" );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    std::string t;
+    if( !request.GetParam( "transponder_id", t ))
       return false;
-    }
 
-    int obj_id = atoi( obj->second.c_str( ));
+    int obj_id = atoi( t.c_str( ));
     if( obj_id >= 0 && obj_id < transponders.size( ))
     {
-      return transponders[obj_id]->RPC( httpd, client, cat, parameters );
+      return transponders[obj_id]->RPC( request, cat, action );
     }
 
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC transponder: unknown transponder" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    request.NotFound( "RPC transponder: unknown transponder" );
     return false;
   }
 
 
-  if( action->second == "states" )
+  if( action == "states" )
   {
     json_object *h = json_object_new_object();
     for( uint8_t i = 0; i < Transponder::State_Last; i++ )
@@ -429,107 +412,51 @@ bool Source::RPC( HTTPServer *httpd, const int client, std::string &cat, const s
     }
     const char *json = json_object_to_json_string( h );
 
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    json_object_put( h ); // this should delete it
+    request.Reply( h );
     return true;
   }
 
-  if( cat == "service" )
-  {
-    const std::map<std::string, std::string>::const_iterator obj = parameters.find( "transponder" );
-    if( obj == parameters.end( ))
-    {
-      if( action->second == "list" )
-      {
-        int count = 0;
-        json_object *h = json_object_new_object();
-        //std::string echo =  parameters["sEcho"];
-        int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-        json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-        json_object *a = json_object_new_array();
-
-        std::list<Service *> list;
-        for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-        {
-          const std::map<uint16_t, Service *> &services = (*it)->GetServices( );
-          for( std::map<uint16_t, Service *>::const_iterator it2 = services.begin( ); it2 != services.end( ); it2++ )
-          {
-            list.push_back( it2->second );
-            count++;
-          }
-        }
-        list.sort( Service::SortTypeName );
-
-        for( std::list<Service *>::iterator it = list.begin( ); it != list.end( ); it++ )
-        {
-          json_object *entry = json_object_new_array( );
-          (*it)->json( entry );
-          json_object_array_add( a, entry );
-        }
-
-        json_object_object_add( h, "aaData", a );
-        json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
-        json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
-
-        const char *json = json_object_to_json_string( h );
-
-        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-        response->AddStatus( HTTP_OK );
-        response->AddTimeStamp( );
-        response->AddMime( "json" );
-        response->AddContents( json );
-        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-        json_object_put( h ); // this should delete it
-        return true;
-      }
-
-      if( action->second == "types" )
-      {
-        json_object *h = json_object_new_object();
-        for( uint8_t i = 0; i < Service::Type_Last; i++ )
-        {
-          char tmp[8];
-          snprintf( tmp, sizeof( tmp ), "%d", i );
-          json_object_object_add( h, tmp, json_object_new_string( Service::GetTypeName((Service::Type) i )));
-        }
-        const char *json = json_object_to_json_string( h );
-
-        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-        response->AddStatus( HTTP_OK );
-        response->AddTimeStamp( );
-        response->AddMime( "json" );
-        response->AddContents( json );
-        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-        json_object_put( h ); // this should delete it
-        return true;
-      }
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_NOT_FOUND );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
-      response->AddContents( "RPC transponder: unknown action" );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-      return false;
-    }
-
-    int obj_id = atoi( obj->second.c_str( ));
-    if( obj_id >= 0 && obj_id < transponders.size( ))
-    {
-      return transponders[obj_id]->RPC( httpd, client, cat, parameters );
-    }
-  }
-
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC transponder: unknown action" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC: unknown action '%s'", action.c_str( ));
   return false;
+}
+
+std::vector<std::string> Source::GetScanfileList( Type type, std::string country )
+{
+  std::vector<std::string> result;
+
+  const char *dirs[4] = { "dvb-t/", "dvb-c/", "dvb-s/", "atsc/" };
+  for( int i = 0; i < 4; i++ )
+  {
+    if( type == Type_DVBT &&  i != 0 ) continue;
+    if( type == Type_DVBC &&  i != 1 ) continue;
+    if( type == Type_DVBS &&  i != 2 ) continue;
+    if( type == Type_ATSC  &&  i != 3 ) continue;
+
+    DIR *dirp;
+    struct dirent *dp;
+    char dir[128];
+    snprintf( dir, sizeof( dir ), SCANFILE_DIR"%s", dirs[i]);
+    if(( dirp = opendir( dir )) == NULL )
+    {
+      LogError( "couldn't open %s", dir  );
+      continue;
+    }
+
+    while(( dp = readdir( dirp )) != NULL ) // FIXME: use reentrant
+    {
+      if( dp->d_name[0] == '.' ) continue;
+      if( country != "" && i != 2 ) // DVB-S has no countries
+      {
+        if( country.compare( 0, 2, dp->d_name, 2 ) != 0 )
+          continue;
+      }
+      std::string s ; //= dirs[i];
+      s += dp->d_name;
+      result.push_back( s );
+    }
+    closedir( dirp );
+  }
+  std::sort( result.begin( ), result.end( ));
+  return result;
 }
 

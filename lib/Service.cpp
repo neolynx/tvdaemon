@@ -143,39 +143,22 @@ void Service::json( json_object *entry ) const
   json_object_object_add( entry, "scrambled", json_object_new_int( scrambled ));
 }
 
-bool Service::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
-
   if( cat == "service" )
   {
-    if( action->second == "show" )
+    if( action == "show" )
     {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
+      HTTPServer::Response response;
+      response.AddStatus( HTTP_OK );
+      response.AddTimeStamp( );
+      response.AddMime( "html" );
       std::string data;
-      std::string filename = httpd->GetRoot( ) + "/service.html";
+      std::string filename = request.GetDocRoot( ) + "/service.html";
       int fd = open( filename.c_str( ), O_RDONLY );
       if( fd < 0 )
       {
-        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-        response->AddStatus( HTTP_NOT_FOUND );
-        response->AddTimeStamp( );
-        response->AddMime( "html" );
-        response->AddContents( "RPC template not found" );
-        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+        request.NotFound( "RPC template not found" );
         return false;
       }
       char tmp[256];
@@ -195,11 +178,11 @@ bool Service::RPC( HTTPServer *httpd, const int client, std::string &cat, const 
       snprintf( tmp, sizeof( tmp ), "%d", GetKey( ));
       if(( pos = data.find( "@service_id@" )) != std::string::npos )
         data.replace( pos, strlen( "@service_id@" ), tmp );
-      response->AddContents( data );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      response.AddContents( data );
+      request.Reply( response );
       return true;
     }
-    else if( action->second == "list_streams" )
+    else if( action == "list_streams" )
     {
       json_object *h = json_object_new_object();
       json_object_object_add( h, "iTotalRecords", json_object_new_int( streams.size( )));
@@ -213,25 +196,13 @@ bool Service::RPC( HTTPServer *httpd, const int client, std::string &cat, const 
       }
 
       json_object_object_add( h, "data", a );
-      std::string json = json_object_to_json_string( h );
-      json_object_put( h );
 
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "json" );
-      response->AddContents( json );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      request.Reply( h );
       return true;
     }
   }
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC transponder: unknown action" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC transponder: unknown action" );
   return false;
 }
 

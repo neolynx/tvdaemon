@@ -132,61 +132,45 @@ void Port::json( json_object *entry ) const
   json_object_object_add( entry, "source_id", json_object_new_int( source_id ));
 }
 
-bool Port::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+bool Port::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
+  if( action == "set" )
   {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC port: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
+    int port_num;
+    std::string name;
+    int source_id;
 
-  if( action->second == "set" )
-  {
-    std::map<std::string, std::string>::const_iterator p = parameters.find( "port_num" );
-    if( p != parameters.end( ))
-      port_num = atoi( p->second.c_str( ));
-    p = parameters.find( "name" );
-    if( p != parameters.end( ))
-      name = p->second;
-    p = parameters.find( "source_id" );
-    if( p != parameters.end( ))
+    if( !request.GetParam( "port_num", port_num ))
+      return false;
+    this->port_num = port_num;
+
+    if( !request.GetParam( "name", name ))
+      return false;
+    this->name = name;
+
+    if( !request.GetParam( "source_id", source_id ))
+      return false;
+
+    if( source_id >= -1 && source_id != this->source_id )
     {
-      int i = atoi( p->second.c_str( ));
-      if( i >= -1 && i != source_id )
+      if( this->source_id != -1 )
       {
-        if( i >= 0 )
-        {
-          Source *s = TVDaemon::Instance( )->GetSource( i );
-          s->AddPort( this );
-        }
-        else
-        {
-          Source *s = TVDaemon::Instance( )->GetSource( source_id );
-          s->RemovePort( this );
-        }
-        SetSource( i );
+        Source *s = TVDaemon::Instance( )->GetSource( this->source_id );
+        s->RemovePort( this );
       }
+      if( source_id >= 0 )
+      {
+        Source *s = TVDaemon::Instance( )->GetSource( source_id );
+        s->AddPort( this );
+      }
+      SetSource( source_id );
     }
 
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    request.Reply( HTTP_OK );
     return true;
   }
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "Port::RPC unknown action" ); // FIXME: %s", action->second.c_str( ));
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "Port::RPC unknown action '%s'", action.c_str( ));
   return false;
 }
 

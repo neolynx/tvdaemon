@@ -19,20 +19,20 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _JsonObject_
-#define _JsonObject_
+#ifndef _RPCObject_
+#define _RPCObject_
 
 #include <string>
 #include <map>
 
 struct json_object;
-class HTTPServer;
+class HTTPRequest;
 
 class RPCObject
 {
   public:
     virtual void json( json_object *j ) const = 0;
-    virtual bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters ) = 0;
+    virtual bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action ) = 0;
 };
 
 #endif

@@ -128,19 +128,14 @@ void Channel::json( json_object *entry ) const
   json_object_array_add( entry, json_object_new_int( GetKey( )));
 }
 
-bool Channel::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
+  //const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
+  //if( action == parameters.end( ))
+  //{
+    //httpd->NotFound( client, "RPC source: action not found" );
+    //return false;
+  //}
 
   //if( cat == "transponder" )
   //{
@@ -283,11 +278,6 @@ bool Channel::RPC( HTTPServer *httpd, const int client, std::string &cat, const 
     //}
   //}
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC transponder: unknown action" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC transponder: unknown action" );
   return false;
 }

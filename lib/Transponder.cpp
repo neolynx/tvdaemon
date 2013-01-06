@@ -31,6 +31,7 @@
 #include "Transponder_DVBC.h"
 #include "Transponder_ATSC.h"
 #include "Log.h"
+#include "HTTPServer.h"
 
 Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int config_id ) :
   ConfigObject( source, "transponder", config_id ),
@@ -315,46 +316,28 @@ void Transponder::json( json_object *entry ) const
   json_object_object_add( entry, "enabled", json_object_new_int( enabled ));
 }
 
-bool Transponder::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+bool Transponder::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
-
   if( cat == "transponder" )
   {
-    if( action->second == "show" )
+    if( action == "show" )
     {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
+      HTTPServer::Response response;
+      response.AddStatus( HTTP_OK );
+      response.AddTimeStamp( );
+      response.AddMime( "html" );
       std::string data;
-      std::string filename = httpd->GetRoot( ) + "/transponder.html";
+      std::string filename = request.GetDocRoot( ) + "/transponder.html";
       int fd = open( filename.c_str( ), O_RDONLY );
       if( fd < 0 )
       {
-        HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-        response->AddStatus( HTTP_NOT_FOUND );
-        response->AddTimeStamp( );
-        response->AddMime( "html" );
-        response->AddContents( "RPC template not found" );
-        httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+        request.NotFound( "RPC template not found" );
         return false;
       }
       char tmp[256];
       int len;
       while(( len = read( fd, tmp, 255 )) > 0 )
       {
-        Log( "read %d bytes", len );
         tmp[len] = '\0';
         data += tmp;
       }
@@ -365,12 +348,12 @@ bool Transponder::RPC( HTTPServer *httpd, const int client, std::string &cat, co
       snprintf( tmp, sizeof( tmp ), "%d", GetKey( ));
       if(( pos = data.find( "@transponder_id@" )) != std::string::npos )
         data.replace( pos, strlen( "@transponder_id@" ), tmp );
-      response->AddContents( data );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      response.AddContents( data );
+      request.Reply( response );
       return true;
     }
 
-    else if( action->second == "list_services" )
+    else if( action == "list_services" )
     {
       json_object *h = json_object_new_object();
       json_object_object_add( h, "iTotalRecords", json_object_new_int( services.size( )));
@@ -384,54 +367,26 @@ bool Transponder::RPC( HTTPServer *httpd, const int client, std::string &cat, co
       }
 
       json_object_object_add( h, "data", a );
-      std::string json = json_object_to_json_string( h );
-      json_object_put( h );
-
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_OK );
-      response->AddTimeStamp( );
-      response->AddMime( "json" );
-      response->AddContents( json );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+      request.Reply( h );
       return true;
     }
   }
   else if( cat == "service" )
   {
-    const std::map<std::string, std::string>::const_iterator obj = parameters.find( "service_id" );
-    if( obj == parameters.end( ))
-    {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_NOT_FOUND );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
-      response->AddContents( "RPC service: service_id not found" );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    int service_id;
+    if( !request.GetParam( "service_id", service_id ))
       return false;
-    }
-
-    int obj_id = atoi( obj->second.c_str( ));
-    const std::map<uint16_t, Service *>::const_iterator it = services.find( obj_id );
+    const std::map<uint16_t, Service *>::const_iterator it = services.find( service_id );
     if( it != services.end( ))
     {
-      return it->second->RPC( httpd, client, cat, parameters );
+      return it->second->RPC( request, cat, action );
     }
 
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC service: unknown service" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    request.NotFound( "RPC service: unknown service" );
     return false;
   }
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC transponder: unknown action" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC transponder: unknown action" );
   return false;
 }
 

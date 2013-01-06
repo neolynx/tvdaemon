@@ -30,6 +30,7 @@
           <input type="hidden" name="adapter_id" id="port_adapter_id"/>
           <input type="hidden" name="frontend_id" id="port_frontend_id"/>
           <input type="hidden" name="port_id" id="port_port_id"/>
+          <input type="hidden" id="port_type"/>
           <div class="right"><label>Name  </label><input type="text" name="name" id="port_name"/></div>
           <div class="right"><label>LNB ID</label><input type="text" name="port_num" id="port_num"/></div>
           <div class="right"><label>Source</label><select name="source_id" id="port_source"></select></div>
@@ -44,13 +45,11 @@
       <div>Create Source</div>
       <div style="overflow: hidden;">
         <form id="source_form" method="POST">
-          <input type="hidden" name="adapter_id" id="source_adapter_id"/>
-          <input type="hidden" name="frontend_id" id="source_frontend_id"/>
-          <input type="hidden" name="port_id" id="source_port_id"/>
-          <div class="right"><label>Name  </label><input type="text" name="source_name" id="source_name"/></div>
+          <input type="hidden" name="type" id="source_type"/>
+          <div class="right"><label>Name  </label><input type="text" name="name" id="source_name"/></div>
           <div class="right">
             <label>Load Transponders</label>
-            <select name="source_scanfiles" id="source_scanfiles">
+            <select name="scanfile" id="source_scanfile">
               <option>loading...</option>
             </select>
           </div>

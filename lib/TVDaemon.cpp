@@ -368,66 +368,27 @@ void TVDaemon::Thread_udev( )
 }
 
 
-Source *TVDaemon::CreateSource( std::string name, std::string scanfile )
+Source *TVDaemon::CreateSource( std::string name, Source::Type type, std::string scanfile )
 {
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
     if( (*it)->GetName( ) == name )
     {
-      LogWarn( "Source with name '%s' already exists", name.c_str( ));
+      LogError( "Source with name '%s' already exists", name.c_str( ));
       return NULL;
     }
   }
 
-  Source *s = new Source( *this, name, sources.size( ));
+  // FIXME: lock
+  Source *s = new Source( *this, name, type, sources.size( ));
 
   if( scanfile != "" )
   {
-    s->ReadScanfile( std::string( SCANFILE_DIR ) + scanfile );
+    s->ReadScanfile( scanfile );
   }
 
   sources.push_back( s );
   return s;
-}
-
-std::vector<std::string> TVDaemon::GetScanfileList( SourceType type, std::string country )
-{
-  std::vector<std::string> result;
-
-  const char *dirs[4] = { "dvb-t/", "dvb-c/", "dvb-s/", "atsc/" };
-  for( int i = 0; i < 4; i++ )
-  {
-    if( type == Source_DVB_T &&  i != 0 ) continue;
-    if( type == Source_DVB_C &&  i != 1 ) continue;
-    if( type == Source_DVB_S &&  i != 2 ) continue;
-    if( type == Source_ATSC  &&  i != 3 ) continue;
-
-    DIR *dirp;
-    struct dirent *dp;
-    char dir[128];
-    snprintf( dir, sizeof( dir ), SCANFILE_DIR"%s", dirs[i]);
-    if(( dirp = opendir( dir )) == NULL )
-    {
-      LogError( "couldn't open %s", dir  );
-      continue;
-    }
-
-    while(( dp = readdir( dirp )) != NULL ) // FIXME: use reentrant
-    {
-      if( dp->d_name[0] == '.' ) continue;
-      if( country != "" && i != 2 ) // DVB-S has no countries
-      {
-        if( country.compare( 0, 2, dp->d_name, 2 ) != 0 )
-          continue;
-      }
-      std::string s ; //= dirs[i];
-      s += dp->d_name;
-      result.push_back( s );
-    }
-    closedir( dirp );
-  }
-  std::sort( result.begin( ), result.end( ));
-  return result;
 }
 
 std::vector<std::string> TVDaemon::GetAdapterList( )
@@ -496,67 +457,42 @@ Channel *TVDaemon::GetChannel( int id )
   return channels[id];
 }
 
-bool TVDaemon::HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters )
+bool TVDaemon::HandleDynamicHTTP( const HTTPRequest &request )
 {
-  const std::map<std::string, std::string>::const_iterator cat = parameters.find( "c" );
-  if( cat == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC category not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  std::string cat;
+  if( !request.GetParam( "c", cat ))
     return false;
-  }
+  std::string action;
+  if( !request.GetParam( "a", action ))
+    return false;
 
-  if( cat->second == "tvdaemon" )
-    return RPC( client, cat->second, parameters );
+  if( cat == "tvdaemon" )
+    return RPC( request, cat, action );
 
-  if( cat->second == "source" )
-    return RPC_Source( client, cat->second, parameters );
-  if( cat->second == "transponder" )
-    return RPC_Source( client, cat->second, parameters );
-  if( cat->second == "service" )
-    return RPC_Source( client, cat->second, parameters );
+  if( cat == "source" )
+    return RPC_Source( request, cat, action );
+  if( cat == "transponder" )
+    return RPC_Source( request, cat, action );
+  if( cat == "service" )
+    return RPC_Source( request, cat, action );
 
-  if( cat->second == "adapter" )
-    return RPC_Adapter( client, cat->second, parameters );
-  if( cat->second == "frontend" )
-    return RPC_Adapter( client, cat->second, parameters );
-  if( cat->second == "port" )
-    return RPC_Adapter( client, cat->second, parameters );
+  if( cat == "adapter" )
+    return RPC_Adapter( request, cat, action );
+  if( cat == "frontend" )
+    return RPC_Adapter( request, cat, action );
+  if( cat == "port" )
+    return RPC_Adapter( request, cat, action );
 
-  if( cat->second == "channel" )
-    return RPC( client, cat->second, parameters );
+  if( cat == "channel" )
+    return RPC( request, cat, action );
 
-
-
-
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC unknown category" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC unknown category: %s", cat.c_str( ));
   return false;
 }
 
-bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::string, std::string> &parameters )
+bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC source: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
-
-  if( action->second == "list_sources" )
+  if( action == "get_sources" )
   {
     json_object *h = json_object_new_object();
     json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
@@ -570,85 +506,87 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
     }
 
     json_object_object_add( h, "data", a );
-    std::string json = json_object_to_json_string( h );
-    json_object_put( h );
-
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    request.Reply( h );
     return true;
   }
 
-  if( action->second == "list_sourcetypes" )
+  if( action == "list_sourcetypes" )
   {
     json_object *h = json_object_new_object( );
     json_object *a = json_object_new_array( );
 
     json_object *entry = json_object_new_object( );
-    json_object_object_add( entry, "id", json_object_new_int( Source_DVB_S ));
+    json_object_object_add( entry, "id", json_object_new_int( Source::Type_DVBS ));
     json_object_object_add( entry, "type", json_object_new_string( "DVB-S" ));
     json_object_array_add( a, entry );
 
     entry = json_object_new_object( );
-    json_object_object_add( entry, "id", json_object_new_int( Source_DVB_C ));
+    json_object_object_add( entry, "id", json_object_new_int( Source::Type_DVBC ));
     json_object_object_add( entry, "type", json_object_new_string( "DVB-C" ));
     json_object_array_add( a, entry );
 
     entry = json_object_new_object( );
-    json_object_object_add( entry, "id", json_object_new_int( Source_DVB_T ));
+    json_object_object_add( entry, "id", json_object_new_int( Source::Type_DVBT ));
     json_object_object_add( entry, "type", json_object_new_string( "DVB-T" ));
     json_object_array_add( a, entry );
 
     entry = json_object_new_object( );
-    json_object_object_add( entry, "id", json_object_new_int( Source_ATSC ));
+    json_object_object_add( entry, "id", json_object_new_int( Source::Type_ATSC ));
     json_object_object_add( entry, "type", json_object_new_string( "ATSC" ));
     json_object_array_add( a, entry );
 
     json_object_object_add( h, "data", a );
-    std::string json = json_object_to_json_string( h );
-
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    json_object_put( h ); // this should delete it
+    request.Reply( h );
     return true;
   }
 
-  if( action->second == "get_scanfiles" )
+  if( action == "create_source" )
   {
-    SourceType source_type = Source_Any;
-    const std::map<std::string, std::string>::const_iterator type = parameters.find( "type" );
-    if( type != parameters.end( ))
+    std::string name;
+    if( !request.GetParam( "name", name ))
+      return false;
+    std::string scanfile;
+    if( !request.GetParam( "scanfile", scanfile ))
+      return false;
+    Source::Type type;
+    if( !request.GetParam( "type", (int &) type ))
+      return false;
+
+    Log( "Creating Source '%s' type %d initialized from '%s'", name.c_str( ), type, scanfile.c_str( ));
+
+    Source *s = CreateSource( name, type, scanfile );
+    if( !s )
     {
-      int i = atoi( type->second.c_str( ));
-      if( i != Source_Any && i < Source_Last )
-        source_type = (SourceType) i;
+      request.NotFound( "Error creating source" );
+      return false;
     }
 
-    std::vector<std::string> scanfiles = TVDaemon::GetScanfileList( source_type );
+    request.Reply( HTTP_OK, s->GetKey( ));
+    return true;
+  }
+
+  if( action == "get_scanfiles" )
+  {
+    Source::Type source_type = Source::Type_Any;
+    if( request.HasParam( "type" ))
+    {
+      std::string t;
+      request.GetParam( "type", t );
+      int i = atoi( t.c_str( ));
+      if( i != Source::Type_Any && i < Source::Type_Last )
+        source_type = (Source::Type) i;
+    }
+
+    std::vector<std::string> scanfiles = Source::GetScanfileList( source_type );
 
     json_object *a = json_object_new_array( );
     for( int i = 0; i < scanfiles.size( ); i++ )
       json_object_array_add( a, json_object_new_string( scanfiles[i].c_str( )));
-    std::string json = json_object_to_json_string( a );
-
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    json_object_put( a ); // this should delete it
+    request.Reply( a );
     return true;
   }
 
-  if( action->second == "list_devices" )
+  if( action == "get_devices" )
   {
     json_object *a = json_object_new_array();
 
@@ -659,19 +597,11 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
       json_object_array_add( a, entry );
     }
 
-    std::string json = json_object_to_json_string( a );
-    json_object_put( a );
-
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    request.Reply( a );
     return true;
   }
 
-  if( action->second == "list_channels" )
+  if( action == "list_channels" )
   {
     int count = channels.size( );
     json_object *h = json_object_new_object();
@@ -690,84 +620,44 @@ bool TVDaemon::RPC( const int client, std::string cat, const std::map<std::strin
     }
 
     json_object_object_add( h, "aaData", a );
-
-    const char *json = json_object_to_json_string( h );
-
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_OK );
-    response->AddTimeStamp( );
-    response->AddMime( "json" );
-    response->AddContents( json );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    json_object_put( h ); // this should delete it
+    request.Reply( h );
     return true;
   }
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC: unknown action" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC unknown action: %s", action.c_str( ));
   return false;
   }
 
 
-bool TVDaemon::RPC_Source( const int client, std::string cat, const std::map<std::string, std::string> &parameters )
+bool TVDaemon::RPC_Source( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator obj = parameters.find( "source_id" );
-  if( obj == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC source: source not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  std::string t;
+  if( !request.GetParam( "source_id", t ))
     return false;
-  }
 
-  int obj_id = atoi( obj->second.c_str( ));
-  if( obj_id >= 0 && obj_id < sources.size( ))
+  int i = atoi( t.c_str( ));
+  if( i >= 0 && i < sources.size( ))
   {
-    return sources[obj_id]->RPC( httpd, client, cat, parameters );
+    return sources[i]->RPC( request, cat, action );
   }
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC source: unknown source" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC unknown source: %d", i );
   return false;
 }
 
-bool TVDaemon::RPC_Adapter( const int client, std::string cat, const std::map<std::string, std::string> &parameters )
+bool TVDaemon::RPC_Adapter( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  const std::map<std::string, std::string>::const_iterator data = parameters.find( "adapter_id" );
-  if( data == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC: adapter_id not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  std::string t;
+  if( !request.GetParam( "adapter_id", t ))
     return false;
-  }
 
-  int id = atoi( data->second.c_str( ));
-  if( id >= 0 && id < adapters.size( ))
+  int i = atoi( t.c_str( ));
+  if( i >= 0 && i < adapters.size( ))
   {
-    return adapters[id]->RPC( httpd, client, cat, parameters );
+    return adapters[i]->RPC( request, cat, action );
   }
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC: unknwon adapter" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC unknown adapter: %d", i );
   return false;
 }
 

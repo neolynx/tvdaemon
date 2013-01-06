@@ -26,7 +26,7 @@
 Frontend_DVBT::Frontend_DVBT( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   Frontend( adapter, adapter_id, frontend_id, config_id )
 {
-  type = TVDaemon::Source_DVB_T;
+  type = Source::Type_DVBT;
   Log( "  Creating Frontend DVB-T /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
 }
 

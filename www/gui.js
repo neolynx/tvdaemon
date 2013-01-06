@@ -36,7 +36,7 @@ function update( )
 {
   if( no_update )
     return;
-  getJSON('tvd?c=tvdaemon&a=list_sources', readSources );
+  getJSON('tvd?c=tvdaemon&a=get_sources', readSources );
 }
 
 function readSources( data, errmsg )
@@ -49,7 +49,7 @@ function readSources( data, errmsg )
       sources.push( data["data"][s] );
     }
   }
-  getJSON('tvd?c=tvdaemon&a=list_devices', readDevices );
+  getJSON('tvd?c=tvdaemon&a=get_devices', readDevices );
 }
 
 function readDevices( data, errmsg )
@@ -184,12 +184,24 @@ function editPort( adapter_id, frontend_id, port_id )
   $("#port_adapter_id").val( adapter_id );
   $("#port_frontend_id").val( frontend_id );
   $("#port_port_id").val( port_id );
+  $("#port_type").val( frontend["type"] );
 
+  getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
+}
+
+function editPortGetSources( data, errmsg )
+{
+  type = $("#port_type").val( );
   $("#port_source").empty( );
   $("#port_source").append( new Option( "Undefined", "-1" ));
-  for( s in sources )
-    if( sources[s]["type"] == frontend["type"] )
-      $("#port_source").append( new Option( sources[s]["name"], sources[s]["id"] ));
+  sources = [];
+  for( s in data["data"] )
+  {
+    source = data["data"][s];
+    if( source["type"] == type )
+      $("#port_source").append( new Option( source["name"], source["id"] ));
+    sources.push( source );
+  }
   $("#port_source").val( port["source_id"] ).attr( 'selected', true );
   $("#port_source").append( new Option( "create new ...", "-2" ));
 }
@@ -211,11 +223,8 @@ function editSource( adapter_id, frontend_id, port_id )
   no_update = true;
   adapter_id = $("#port_adapter_id").val( );
   frontend_id = $("#port_frontend_id").val( );
-  port_id = $("#port_port_id").val( );
   frontend = adapters[adapter_id]["frontends"][frontend_id];
-  $("#source_adapter_id").val( adapter_id );
-  $("#source_frontend_id").val( frontend_id );
-  $("#source_port_id").val( port_id );
+  $("#source_type").val( frontend["type"] );
 
   getJSON( 'tvd?c=tvdaemon&a=get_scanfiles&type=' + frontend["type"], loadScanfiles );
 }
@@ -228,10 +237,10 @@ function loadScanfiles( scanfiles, errmsg )
     return;
   }
 
-  $("#source_scanfiles").empty( );
-  $("#source_scanfiles").append( new Option( "select ...", "-1" ));
+  $("#source_scanfile").empty( );
+  $("#source_scanfile").append( new Option( "select ...", "-1" ));
   for( i in scanfiles )
-    $("#source_scanfiles").append( new Option( scanfiles[i], scanfiles[i] ));
+    $("#source_scanfile").append( new Option( scanfiles[i], scanfiles[i] ));
 
   $("#source_popup").jqxWindow('show');
 }
@@ -243,7 +252,11 @@ function saveSource( )
     cache: false,
     url: 'tvd?c=tvdaemon&a=create_source',
     data: $('#source_form').serialize( ),
-    success: function(msg) { $("#source_popup").jqxWindow( 'hide' ); },
+    success: function(msg) {
+      $("#source_popup").jqxWindow( 'hide' );
+      port["source_id"] = msg;
+      getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
+      },
     error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
   } );
 }

@@ -24,7 +24,7 @@
 
 #include "ConfigObject.h"
 #include "RPCObject.h"
-#include "TVDaemon.h"
+//#include "TVDaemon.h"
 #include "Transponder.h"
 
 #include <string>
@@ -32,11 +32,22 @@
 
 class Port;
 class HTTPServer;
+class TVDaemon;
 
 class Source : public ConfigObject, public RPCObject
 {
   public:
-    Source( TVDaemon &tvd, std::string name, int config_id );
+    enum Type
+    {
+      Type_Any    = 0xff,
+      Type_DVBS  = 0,
+      Type_DVBC,
+      Type_DVBT,
+      Type_ATSC,
+      Type_Last,
+    };
+
+    Source( TVDaemon &tvd, std::string name, Type type, int config_id );
     Source( TVDaemon &tvd, std::string configfile );
     virtual ~Source( );
 
@@ -45,6 +56,7 @@ class Source : public ConfigObject, public RPCObject
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
+    static std::vector<std::string> GetScanfileList( Type type = Type_Any, std::string country = "" );
     bool ReadScanfile( std::string scanfile );
 
     Transponder *CreateTransponder( const struct dvb_entry &info );
@@ -52,7 +64,7 @@ class Source : public ConfigObject, public RPCObject
     bool TuneTransponder( int id );
     bool ScanTransponder( int id );
     uint GetTransponderCount() { return transponders.size(); }
-    TVDaemon::SourceType GetType( ) const { return type; }
+    Type GetType( ) const { return type; }
 
     int CountServices( ) const;
 
@@ -66,7 +78,7 @@ class Source : public ConfigObject, public RPCObject
 
     // RPC
     void json( json_object *entry ) const;
-    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
+    bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
   private:
     TVDaemon &tvd;
@@ -74,7 +86,7 @@ class Source : public ConfigObject, public RPCObject
 
     static int ScanfileLoadCallback( struct dvbcfg_scanfile *channel, void *private_data );
 
-    TVDaemon::SourceType type;
+    Type type;
 
     std::vector<Transponder *> transponders;
     std::vector<Port *> ports;

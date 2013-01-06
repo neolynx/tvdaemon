@@ -115,19 +115,19 @@ Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
   ConfigObject cfg;
   cfg.SetConfigFile( configfile );
   cfg.ReadConfigFile( );
-  TVDaemon::SourceType type;
+  Source::Type type;
   cfg.ReadConfig( "Type", (int &) type );
   switch( type )
   {
-    case TVDaemon::Source_DVB_S:
+    case Source::Type_DVBS:
       return new Frontend_DVBS( adapter, configfile );
-    case TVDaemon::Source_DVB_C:
+    case Source::Type_DVBC:
       return new Frontend_DVBC( adapter, configfile );
-    case TVDaemon::Source_DVB_T:
+    case Source::Type_DVBT:
       return new Frontend_DVBT( adapter, configfile );
-    case TVDaemon::Source_ATSC:
+    case Source::Type_ATSC:
       return new Frontend_ATSC( adapter, configfile );
-    case TVDaemon::Source_Any:
+    case Source::Type_Any:
       return NULL;
   }
   return NULL;
@@ -627,8 +627,8 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
               if( ts->payload_start )
                 started = true;
 
-              if( started )
-                rec.record( p, chunk );
+              //if( started )
+                //rec.record( p, chunk );
 
               p += chunk;
             }
@@ -1029,49 +1029,22 @@ void Frontend::json( json_object *entry ) const
   json_object_object_add( entry, "ports", a );
 }
 
-bool Frontend::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
   if( cat == "port" )
   {
-    const std::map<std::string, std::string>::const_iterator data = parameters.find( "port_id" );
-    if( data == parameters.end( ))
-    {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_NOT_FOUND );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
-      response->AddContents( "RPC: port not found" );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    int port_id;
+    if( !request.GetParam( "port_id", port_id ))
       return false;
-    }
 
-    int id = atoi( data->second.c_str( ));
-
-    if( id >= 0 && id < ports.size( ))
+    if( port_id >= 0 && port_id < ports.size( ))
     {
-      return ports[id]->RPC( httpd, client, cat, parameters );
+      return ports[port_id]->RPC( request, cat, action );
     }
     return false;
   }
 
-  const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-  if( action == parameters.end( ))
-  {
-    HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-    response->AddStatus( HTTP_NOT_FOUND );
-    response->AddTimeStamp( );
-    response->AddMime( "html" );
-    response->AddContents( "RPC frontend: action not found" );
-    httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-    return false;
-  }
-
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC transponder: unknown action" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC transponder: unknown action" );
   return false;
 }
 

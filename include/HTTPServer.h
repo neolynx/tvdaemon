@@ -18,6 +18,8 @@
 
 #define HTTP_VERSION  "HTTP/1.0"
 
+struct json_object;
+
 typedef enum
 {
   HEAD,
@@ -57,19 +59,8 @@ struct mime_type
   bool binary;
 };
 
-struct HTTPRequest
-{
-  HTTPRequest( ) { content_length = -1; }
-  std::list<std::string> header;
-  int content_length;
-  std::string content;
-};
-
-class HTTPDynamicHandler
-{
-  public:
-    virtual bool HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters ) = 0;
-};
+class HTTPDynamicHandler;
+class HTTPRequest;
 
 class HTTPServer : public SocketHandler
 {
@@ -81,11 +72,11 @@ class HTTPServer : public SocketHandler
 
     std::string GetRoot( ) { return _root; }
 
-    class HTTPResponse
+    class Response
     {
       public:
-        HTTPResponse( );
-        ~HTTPResponse( );
+        Response( );
+        ~Response( );
 
         void AddStatus( HTTPStatus status );
         void AddTimeStamp( );
@@ -94,7 +85,7 @@ class HTTPServer : public SocketHandler
         void AddContents( std::string buffer );
 
         void FreeResponseBuffer( );
-        std::string GetBuffer( );
+        std::string GetBuffer( ) const;
       private:
         std::string _buffer;
     };
@@ -123,14 +114,47 @@ class HTTPServer : public SocketHandler
 
     std::map<std::string, HTTPDynamicHandler *> dynamic_handlers;
 
-    bool HandleHTTPRequest( const int client, HTTPRequest &request );
+    bool HandleRequest( HTTPRequest &request );
 
     // Handle HTTP methods
-    bool HandleMethodGET( const int client, HTTPRequest &request );
-    bool HandleMethodPOST( const int client, HTTPRequest &request );
+    bool HandleMethodGET( HTTPRequest &request );
+    bool HandleMethodPOST( HTTPRequest &request );
 
     static int Tokenize( const char *string, const char delims[], std::vector<std::string> &tokens, int count = 0 );
 
+};
+
+class HTTPDynamicHandler
+{
+  public:
+    virtual bool HandleDynamicHTTP( const HTTPRequest &request ) = 0;
+};
+
+class HTTPRequest
+{
+  public:
+    HTTPRequest( HTTPServer &server, int client ) : server(server), client(client), content_length(-1) { }
+
+    bool HasParam( std::string key ) const;
+    bool GetParam( std::string key, std::string &value ) const;
+    bool GetParam( std::string key, int &value ) const;
+
+    void Reply( const HTTPServer::Response &response ) const;
+    void Reply( json_object *obj ) const;
+    void Reply( HTTPStatus status ) const;
+    void Reply( HTTPStatus status, int ret ) const;
+    void NotFound( const char *fmt, ... ) const __attribute__ (( format( printf, 2, 3 )));
+
+    std::string GetDocRoot( ) const { return server.GetRoot( ); }
+
+  private:
+    HTTPServer &server;
+    int client;
+    std::list<std::string> header;
+    int content_length;
+    std::string content;
+    std::map<std::string, std::string> parameters;
+  friend class HTTPServer;
 };
 
 #endif

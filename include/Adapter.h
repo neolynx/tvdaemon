@@ -55,7 +55,7 @@ class Adapter : public ConfigObject, public RPCObject
     bool IsPresent( ) const { return present; }
 
     void json( json_object *entry ) const;
-    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
+    bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
   private:
     TVDaemon &tvd;

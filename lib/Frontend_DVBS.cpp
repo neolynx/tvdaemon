@@ -34,7 +34,7 @@
 Frontend_DVBS::Frontend_DVBS( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   Frontend( adapter, adapter_id, frontend_id, config_id )
 {
-  type = TVDaemon::Source_DVB_S;
+  type = Source::Type_DVBS;
   Log( "  Creating Frontend DVB-S /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
   LNB = "UNIVERSAL";
 }

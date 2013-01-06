@@ -27,7 +27,7 @@
 Frontend_ATSC::Frontend_ATSC( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   Frontend( adapter, adapter_id, frontend_id, config_id )
 {
-  type = TVDaemon::Source_ATSC;
+  type = Source::Type_ATSC;
   Log( "  Creating Frontend ATSC /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
 }
 

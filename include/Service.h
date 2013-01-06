@@ -69,7 +69,7 @@ class Service : public RPCObject
 
     // RPC
     void json( json_object *entry ) const;
-    bool RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters );
+    bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
     static bool SortTypeName( Service *s1, Service *s2 );
 

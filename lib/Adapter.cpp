@@ -156,52 +156,21 @@ void Adapter::json( json_object *entry ) const
   json_object_object_add( entry, "frontends", a );
 }
 
-bool Adapter::RPC( HTTPServer *httpd, const int client, std::string &cat, const std::map<std::string, std::string> &parameters )
+bool Adapter::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  if( cat == "adapter" )
-  {
-    const std::map<std::string, std::string>::const_iterator action = parameters.find( "a" );
-    if( action == parameters.end( ))
-    {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_NOT_FOUND );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
-      response->AddContents( "RPC adapter: action not found" );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
-      return false;
-    }
-
-  }
-
   if( cat == "port" )
   {
-    const std::map<std::string, std::string>::const_iterator data = parameters.find( "frontend_id" );
-    if( data == parameters.end( ))
-    {
-      HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-      response->AddStatus( HTTP_NOT_FOUND );
-      response->AddTimeStamp( );
-      response->AddMime( "html" );
-      response->AddContents( "RPC: frontend not found" );
-      httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+    std::string t;
+    if( !request.GetParam( "frontend_id", t ))
       return false;
-    }
-
-    int id = atoi( data->second.c_str( ));
-
-    if( id >= 0 && id < frontends.size( ))
+    int i = atoi( t.c_str( ));
+    if( i >= 0 && i < frontends.size( ))
     {
-      return frontends[id]->RPC( httpd, client, cat, parameters );
+      return frontends[i]->RPC( request, cat, action );
     }
   }
 
-  HTTPServer::HTTPResponse *response = new HTTPServer::HTTPResponse( );
-  response->AddStatus( HTTP_NOT_FOUND );
-  response->AddTimeStamp( );
-  response->AddMime( "html" );
-  response->AddContents( "RPC transponder: unknown action" );
-  httpd->SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.NotFound( "RPC: unknown action '%s'", action.c_str( ));
   return false;
 }
 

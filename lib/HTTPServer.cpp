@@ -9,6 +9,8 @@
 #include "Utils.h"
 #include "Log.h"
 
+#include <string.h>
+#include <json/json.h>
 #include <sstream>
 #include <istream>
 #include <iterator>
@@ -16,9 +18,8 @@
 #include <iostream>
 #include <fstream>
 #include <streambuf>
-#include <string.h>
-
 #include <sstream>
+#include <stdlib.h> // atoi
 
 static const struct http_status response_status[] = {
   { HTTP_OK, "OK" },
@@ -31,13 +32,14 @@ static const struct http_status response_status[] = {
 };
 
 static const struct mime_type mime_types[] = {
-  { "html", "text/html", false },
-  { "js", "text/javascript", false },
-  { "css", "text/css", false },
-  { "jpg", "image/jpeg", true },
-  { "jpeg", "image/jpeg", true },
-  { "gif", "image/gif", true },
-  { "png", "image/png", true },
+  { "txt",  "text/plain",       false },
+  { "html", "text/html",        false },
+  { "js",   "text/javascript",  false },
+  { "css",  "text/css",         false },
+  { "jpg",  "image/jpeg",       true },
+  { "jpeg", "image/jpeg",       true },
+  { "gif",  "image/gif",        true },
+  { "png",  "image/png",        true },
   { "json", "application/json", false },
 };
 
@@ -91,7 +93,7 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
   //LogWarn( "Got: '%s' from client %d", msg.getLine( ).c_str( ), client );
 
   if( _requests.find( client ) == _requests.end( ))
-    _requests[client] = new HTTPRequest( );
+    _requests[client] = new HTTPRequest( *this, client );
 
   if( msg.getLine( ).empty( ))
   {
@@ -105,7 +107,7 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
           return;
         }
       }
-    HandleHTTPRequest( client, *_requests[client] );
+    HandleRequest( *_requests[client] );
     DisconnectClient( client );
   }
   else
@@ -113,7 +115,7 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
     if( _requests[client]->content_length > 0 && _requests[client]->content.length( ) < _requests[client]->content_length )
     {
       _requests[client]->content += msg.getLine( );
-      HandleHTTPRequest( client, *_requests[client] );
+      HandleRequest( *_requests[client] );
       DisconnectClient( client );
     }
     else
@@ -127,7 +129,7 @@ void HTTPServer::AddDynamicHandler( std::string url, HTTPDynamicHandler *handler
   dynamic_handlers[url] = handler;
 }
 
-bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
+bool HTTPServer::HandleRequest( HTTPRequest &request )
 {
   if( request.header.empty( ))
     return false;
@@ -136,26 +138,26 @@ bool HTTPServer::HandleHTTPRequest( const int client, HTTPRequest &request )
 
   if( strncmp( method, "GET ", 4 ) == 0 )
   {
-    HandleMethodGET( client, request );
+    HandleMethodGET( request );
   }
   else if( strncmp( method, "POST ", 5 ) == 0 )
   {
-    HandleMethodPOST( client, request );
+    HandleMethodPOST( request );
   }
   else
   {
-    HTTPResponse *err_response = new HTTPResponse( );
+    Response *err_response = new Response( );
     err_response->AddStatus( HTTP_NOT_IMPLEMENTED );
     err_response->AddTimeStamp( );
     err_response->AddMime( "html" );
     err_response->AddContents( "<html><body><h1>501 Method not implemented</h1></body></html>" );
     LogError( "HTTPServer: method not implemented: %s", method );
-    SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
+    request.Reply( *err_response );
   }
   return false;
 }
 
-bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
+bool HTTPServer::HandleMethodGET( HTTPRequest &request )
 {
   std::vector<std::string> tokens;
   Tokenize( request.header.front( ).c_str( ), " ", tokens );
@@ -170,15 +172,14 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   std::string url = tokens[1];
   std::vector<std::string> params;
   Tokenize( url.c_str( ), "?&", params );
-  std::map<std::string, std::string> parameters;
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
     Tokenize( params[i].c_str( ), "=", p );
     if( p.size( ) == 1 )
-      parameters[p[0]] = "1";
+      request.parameters[p[0]] = "1";
     else if( p.size( ) == 2 )
-      parameters[p[0]] = p[1];
+      request.parameters[p[0]] = p[1];
     else
     {
       LogWarn( "Ignoring strange parameter: '%s'", params[i].c_str( ));
@@ -190,7 +191,7 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
     if( params[0] == it->first )
     {
-      if( !it->second->HandleDynamicHTTP( client, parameters ))
+      if( !it->second->HandleDynamicHTTP( request ))
       {
         LogError( "RPC Error %s", url.c_str( ));
         return false;
@@ -210,13 +211,13 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   if( url.empty( ))
   {
     LogError( "HTTPServer: file not found: %s", tokens[1].c_str( ));
-    HTTPResponse *err_response = new HTTPResponse( );
-    err_response->AddStatus( HTTP_NOT_FOUND );
-    err_response->AddTimeStamp( );
-    err_response->AddMime( "html" );
-    err_response->AddContents( "<html><body><h1>404 Not found</h1></body></html>" );
+    Response err_response;
+    err_response.AddStatus( HTTP_NOT_FOUND );
+    err_response.AddTimeStamp( );
+    err_response.AddMime( "html" );
+    err_response.AddContents( "<html><body><h1>404 Not found</h1></body></html>" );
     //LogWarn( "Sending: %s", err_response->GetBuffer( ).c_str( ));
-    SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
+    request.Reply( err_response );
     return false;
   }
 
@@ -239,13 +240,13 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   if( !file.is_open( ))
   {
     LogError( "HTTPServer: file not found: %s", url.c_str( ));
-    HTTPResponse *err_response = new HTTPResponse( );
-    err_response->AddStatus( HTTP_NOT_FOUND );
-    err_response->AddTimeStamp( );
-    err_response->AddMime( "html" );
-    err_response->AddContents( "<html><body><h1>404 Not found</h1></body></html>" );
+    Response err_response;
+    err_response.AddStatus( HTTP_NOT_FOUND );
+    err_response.AddTimeStamp( );
+    err_response.AddMime( "html" );
+    err_response.AddContents( "<html><body><h1>404 Not found</h1></body></html>" );
     //LogWarn( "Sending: %s", err_response->GetBuffer( ).c_str( ));
-    SendToClient( client, err_response->GetBuffer( ).c_str( ), err_response->GetBuffer( ).size( ));
+    request.Reply( err_response );
     return false;
   }
 
@@ -262,17 +263,18 @@ bool HTTPServer::HandleMethodGET( const int client, HTTPRequest &request )
   std::string basename = Utils::BaseName( filename.c_str( ));
   std::string extension = Utils::GetExtension( basename );
 
-  HTTPResponse *response = new HTTPResponse( );
-  response->AddStatus( HTTP_OK );
-  response->AddTimeStamp( );
-  response->AddMime( extension.c_str( ));
-  response->AddContents( file_contents );
+  Response response;
+  response.AddStatus( HTTP_OK );
+  response.AddTimeStamp( );
+  response.AddMime( extension.c_str( ));
+  response.AddContents( file_contents );
   //LogWarn( "Sending %s", response->GetBuffer( ).c_str( ));
 
-  return SendToClient( client, response->GetBuffer( ).c_str( ), response->GetBuffer( ).size( ));
+  request.Reply( response );
+  return true;
 }
 
-bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
+bool HTTPServer::HandleMethodPOST( HTTPRequest &request )
 {
   std::vector<std::string> tokens;
   Tokenize( request.header.front( ).c_str( ), " ", tokens );
@@ -286,15 +288,14 @@ bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
   std::string url = tokens[1];
   std::vector<std::string> params;
   Tokenize( url.c_str( ), "?&", params );
-  std::map<std::string, std::string> parameters;
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
     Tokenize( params[i].c_str( ), "=", p );
     if( p.size( ) == 1 )
-      parameters[p[0]] = "1";
+      request.parameters[p[0]] = "1";
     else if( p.size( ) == 2 )
-      parameters[p[0]] = p[1];
+      request.parameters[p[0]] = p[1];
     else
     {
       LogWarn( "Ignoring strange parameter: '%s'", params[i].c_str( ));
@@ -312,7 +313,7 @@ bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
       std::vector<std::string> p;
       Tokenize( vars[i].c_str( ), "=", p );
       if( p.size( ) == 1 )
-        parameters[p[0]] = "1";
+        request.parameters[p[0]] = "1";
       else if( p.size( ) == 2 )
       {
         int len = p[1].length( );
@@ -356,15 +357,15 @@ bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
               default:
                 LogError( "HTTPServer: inot a hex value: %c", y );
             }
-            parameters[p[0]] += ( x << 4 ) + y;
+            request.parameters[p[0]] += ( x << 4 ) + y;
 
             j += 2;
             continue;
           }
           if( p[1][j] == '+' )
-            parameters[p[0]] += ' ';
+            request.parameters[p[0]] += ' ';
           else
-            parameters[p[0]] += p[1][j];
+            request.parameters[p[0]] += p[1][j];
         }
       }
       else
@@ -379,7 +380,7 @@ bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
   for( std::map<std::string, HTTPDynamicHandler *>::iterator it = dynamic_handlers.begin( ); it != dynamic_handlers.end( ); it++ )
     if( params[0] == it->first )
     {
-      if( !it->second->HandleDynamicHTTP( client, parameters ))
+      if( !it->second->HandleDynamicHTTP( request ))
       {
         LogError( "RPC Error %s", url.c_str( ));
         return false;
@@ -391,15 +392,15 @@ bool HTTPServer::HandleMethodPOST( const int client, HTTPRequest &request )
   return false;
 }
 
-HTTPServer::HTTPResponse::HTTPResponse( )
+HTTPServer::Response::Response( )
 {
 }
 
-HTTPServer::HTTPResponse::~HTTPResponse( )
+HTTPServer::Response::~Response( )
 {
 }
 
-void HTTPServer::HTTPResponse::AddStatus( HTTPStatus status )
+void HTTPServer::Response::AddStatus( HTTPStatus status )
 {
   char tmp[128];
   uint8_t pos = 0;
@@ -417,7 +418,7 @@ void HTTPServer::HTTPResponse::AddStatus( HTTPStatus status )
   _buffer.append( tmp );
 }
 
-void HTTPServer::HTTPResponse::AddTimeStamp( )
+void HTTPServer::Response::AddTimeStamp( )
 {
   time_t rawtime;
   time( &rawtime );
@@ -427,19 +428,19 @@ void HTTPServer::HTTPResponse::AddTimeStamp( )
   _buffer.append( date_buffer );
 }
 
-void HTTPServer::HTTPResponse::AddAttribute( const char *attrib_name, const char *attrib_value )
+void HTTPServer::Response::AddAttribute( const char *attrib_name, const char *attrib_value )
 {
   char tmp[256];
   snprintf( tmp, sizeof( tmp ), "%s: %s\r\n", attrib_name, attrib_value );
   _buffer.append( tmp );
 }
 
-void HTTPServer::HTTPResponse::FreeResponseBuffer( )
+void HTTPServer::Response::FreeResponseBuffer( )
 {
   _buffer.clear( );
 }
 
-void HTTPServer::HTTPResponse::AddContents( std::string buffer )
+void HTTPServer::Response::AddContents( std::string buffer )
 {
   size_t length = buffer.size( );
   char length_str[10];
@@ -450,12 +451,12 @@ void HTTPServer::HTTPResponse::AddContents( std::string buffer )
   _buffer += buffer;
 }
 
-std::string HTTPServer::HTTPResponse::GetBuffer( )
+std::string HTTPServer::Response::GetBuffer( ) const
 {
   return _buffer;
 }
 
-void HTTPServer::HTTPResponse::AddMime( const char *mime )
+void HTTPServer::Response::AddMime( const char *mime )
 {
   int i = -1;
   for( i = 0; i < sizeof( mime_types ) / sizeof( mime_type ); i++ )
@@ -524,4 +525,81 @@ int HTTPServer::Tokenize( const char *string, const char delims[], std::vector<s
   }
 }
 
+void HTTPRequest::NotFound( const char *fmt, ... ) const
+{
+  HTTPServer::Response response;
+  response.AddStatus( HTTP_NOT_FOUND );
+  response.AddTimeStamp( );
+  response.AddMime( "txt" );
+  va_list ap;
+  va_start( ap, fmt );
+  char buf[1024];
+  vsnprintf( buf, sizeof( buf ), fmt, ap );
+  response.AddContents( buf );
+  va_end( ap );
+  Reply( response );
+}
 
+bool HTTPRequest::GetParam( std::string key, std::string &value ) const
+{
+  const std::map<std::string, std::string>::const_iterator p = parameters.find( key );
+  if( p == parameters.end( ))
+  {
+    NotFound( "RPC param '%s' not found", key.c_str( ));
+    return false;
+  }
+  value = p->second;
+  return true;
+}
+
+bool HTTPRequest::GetParam( std::string key, int &value ) const
+{
+  std::string t;
+  if( !GetParam( key, t ))
+    return false;
+  value = atoi( t.c_str( ));
+  return true;
+}
+
+bool HTTPRequest::HasParam( std::string key ) const
+{
+  const std::map<std::string, std::string>::const_iterator p = parameters.find( key );
+  return p != parameters.end( );
+}
+
+void HTTPRequest::Reply( const HTTPServer::Response &response ) const
+{
+  server.SendToClient( client, response.GetBuffer( ).c_str( ), response.GetBuffer( ).size( ));
+}
+
+void HTTPRequest::Reply( HTTPStatus status ) const
+{
+  HTTPServer::Response response;
+  response.AddStatus( status );
+  response.AddTimeStamp( );
+  Reply( response );
+}
+
+void HTTPRequest::Reply( HTTPStatus status, int ret ) const
+{
+  HTTPServer::Response response;
+  response.AddStatus( status );
+  response.AddTimeStamp( );
+  response.AddMime( "txt" );
+  char buf[32];
+  snprintf( buf, sizeof( buf ), "%d", ret );
+  response.AddContents( buf );
+  Reply( response );
+}
+
+void HTTPRequest::Reply( json_object *obj ) const
+{
+  std::string json = json_object_to_json_string( obj );
+  HTTPServer::Response response;
+  response.AddStatus( HTTP_OK );
+  response.AddTimeStamp( );
+  response.AddMime( "json" );
+  response.AddContents( json );
+  Reply( response );
+  json_object_put( obj ); // free
+}

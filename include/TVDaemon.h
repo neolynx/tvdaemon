@@ -24,6 +24,7 @@
 
 #include "ConfigObject.h"
 #include "HTTPServer.h"
+#include "Source.h"
 
 #include <map>
 #include <vector>
@@ -51,23 +52,12 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
-    enum SourceType
-    {
-      Source_Any    = 0xff,
-      Source_DVB_S  = 0,
-      Source_DVB_C,
-      Source_DVB_T,
-      Source_ATSC,
-      Source_Last,
-    };
-
-    std::vector<std::string> GetScanfileList( SourceType type = Source_Any, std::string country = "" );
     std::vector<std::string> GetAdapterList( );
     Adapter *GetAdapter( int id );
 
+    Source *CreateSource( std::string name, Source::Type type, std::string scanfile = "" );
     std::vector<std::string> GetSourceList( );
     Source *GetSource( int id ) const;
-    Source *CreateSource( std::string name, std::string scanfile = "" );
 
     Channel *CreateChannel( std::string name );
     std::vector<std::string> GetChannelList( );
@@ -75,11 +65,11 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
 
     std::string GetDir( ) { return dir; }
 
-    virtual bool HandleDynamicHTTP( const int client, const std::map<std::string, std::string> &parameters );
-
-    bool RPC        ( const int client, std::string cat, const std::map<std::string, std::string> &parameters );
-    bool RPC_Source ( const int client, std::string cat, const std::map<std::string, std::string> &parameters );
-    bool RPC_Adapter( const int client, std::string cat, const std::map<std::string, std::string> &parameters );
+    // RPC
+    virtual bool HandleDynamicHTTP( const HTTPRequest &request );
+    bool RPC        ( const HTTPRequest &request, const std::string &cat, const std::string &action );
+    bool RPC_Source ( const HTTPRequest &request, const std::string &cat, const std::string &action );
+    bool RPC_Adapter( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
   private:
     TVDaemon( );

@@ -26,7 +26,7 @@
 Frontend_DVBC::Frontend_DVBC( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   Frontend( adapter, adapter_id, frontend_id, config_id )
 {
-  type = TVDaemon::Source_DVB_C;
+  type = Source::Type_DVBC;
   Log( "  Creating Frontend DVB-C /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
 }
 
