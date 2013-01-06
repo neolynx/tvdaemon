@@ -45,13 +45,6 @@ void termination_handler( int signum )
 
 int create_stuff( TVDaemon &tvd )
 {
-  //tvd.CreateSource( "ATSC", "atsc/us-CA-SF-Bay-Area" );
-  //tvd.CreateSource( "ATSC", "atsc/us-ATSC-center-frequencies-8VSB" );
-  tvd.CreateSource( "Astra 19.2E", "dvb-s/Astra-19.2E" );
-  tvd.CreateSource( "DVB-T", "dvb-t/ch-All" );
-  tvd.CreateSource( "Hotbird 13E", "dvb-s/Hotbird-13.0E" );
-
-  printf( "-------------------------\n\n" );
   // Test tuning/scanning
   int source_id = 1;
   int adapter_id = 0;
@@ -212,23 +205,23 @@ int main( int argc, char *argv[] )
   //printf( "  %s\n", it->c_str( ));
   //printf( "\n" );
 
-  list = tvd->GetAdapterList( );
-  printf( "\nFound Adapters:\n" );
-  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
-    printf( "  %s\n", it->c_str( ));
-  printf( "\n" );
+  //list = tvd->GetAdapterList( );
+  //printf( "\nFound Adapters:\n" );
+  //for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    //printf( "  %s\n", it->c_str( ));
+  //printf( "\n" );
 
-  list = tvd->GetSourceList( );
-  printf( "\nFound Sources:\n" );
-  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
-    printf( "  %s\n", it->c_str( ));
-  printf( "\n" );
+  //list = tvd->GetSourceList( );
+  //printf( "\nFound Sources:\n" );
+  //for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    //printf( "  %s\n", it->c_str( ));
+  //printf( "\n" );
 
-  list = tvd->GetChannelList( );
-  printf( "\nFound Channels:\n" );
-  for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
-    printf( "  %s\n", it->c_str( ));
-  printf( "\n" );
+  //list = tvd->GetChannelList( );
+  //printf( "\nFound Channels:\n" );
+  //for( std::vector<std::string>::iterator it = list.begin( ); it != list.end( ); it++ )
+    //printf( "  %s\n", it->c_str( ));
+  //printf( "\n" );
 
   create_stuff( *tvd );
 
