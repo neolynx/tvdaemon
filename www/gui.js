@@ -164,8 +164,8 @@ function getSource( port )
 {
   source_id = port["source_id"];
   if( source_id >= 0 )
-    return "<b>" + sources[source_id]["name"]
-      + "</b><br/>Type: " + sources[source_id]["type"]
+    return "<a href=\"tvd?c=source&a=show&source_id=" + source_id + "\"><b>" + sources[source_id]["name"]
+      + "</b></a><br/>Type: " + sources[source_id]["type"]
       + "<br/>Transponders: " + sources[source_id]["transponders"]
       + "<br/>Services: " + sources[source_id]["services"];
   else

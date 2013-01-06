@@ -510,7 +510,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
-  if( action == "list_sourcetypes" )
+  if( action == "get_sourcetypes" )
   {
     json_object *h = json_object_new_object( );
     json_object *a = json_object_new_array( );
@@ -601,7 +601,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
-  if( action == "list_channels" )
+  if( action == "get_channels" )
   {
     int count = channels.size( );
     json_object *h = json_object_new_object();

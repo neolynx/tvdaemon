@@ -42,7 +42,7 @@ $(document).ready( function ()
       { name: 'state', type: 'int' },
     ],
     url: "tvd",
-    data: { c: "source", a: "list_transponders", source_id: source_id }
+    data: { c: "source", a: "get_transponders", source_id: source_id }
   };
 
   var dataAdapter = new $.jqx.dataAdapter(source);

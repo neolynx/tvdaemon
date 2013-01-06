@@ -31,7 +31,7 @@ $(document).ready( function ()
     $("#type").addClass('jqx-input-' + theme);
   }
 
-  $.getJSON('tvd?c=tvdaemon&a=list_sourcetypes', function(data) {
+  $.getJSON('tvd?c=tvdaemon&a=get_sourcetypes', function(data) {
     for( type in data["data"] )
     {
       source_types[data["data"][type]["id"]] = data["data"][type]["type"];
@@ -47,7 +47,7 @@ $(document).ready( function ()
       { name: 'id', type: 'int' },
     ],
     url: "tvd",
-    data: { c: "tvdaemon", a: "list_sources" }
+    data: { c: "tvdaemon", a: "get_sources" }
   };
 
   var dataAdapter = new $.jqx.dataAdapter(sources);
@@ -75,7 +75,7 @@ $(document).ready( function ()
       { name: 'id', type: 'int' },
     ],
     url: "tvd",
-    data: { c: "tvdaemon", a: "list_adapters" }
+    data: { c: "tvdaemon", a: "get_adapters" }
   };
 
   var dataAdapter = new $.jqx.dataAdapter(adapters);
