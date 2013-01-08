@@ -145,8 +145,11 @@ bool Port::RPC( const HTTPRequest &request, const std::string &cat, const std::s
     if( !request.GetParam( "source_id", source_id ))
       return false;
 
-    if( source && source_id != source->GetKey( ))
+    if( source && ( source_id == -1 || source_id != source->GetKey( )))
+    {
       source->RemovePort( this );
+      source = NULL;
+    }
 
     if( source_id != -1 )
     {
