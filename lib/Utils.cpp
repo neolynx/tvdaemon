@@ -115,8 +115,8 @@ void Utils::dump( const unsigned char *data, int length )
   for( int i = 0; i < length; i++ )
   {
     char t[4];
-    snprintf( t, sizeof(t), "%02x ", (unsigned int) data[i] );
-    strncat( hex, t, sizeof( hex ));
+    snprintf( t, sizeof( t ), "%02x ", (unsigned int) data[i] );
+    strncat( hex, t, 3 );
     if( data[i] > 31 && data[i] < 128 )
       ascii[j] = data[i];
     else
