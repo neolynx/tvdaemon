@@ -302,11 +302,12 @@ Port *Frontend::GetCurrentPort( )
 
 void Frontend::Untune( )
 {
-  if( state != Tuned)
-    return;
-  state = Opened;
-  transponder->SetState( Transponder::State_Idle );
-  transponder = NULL;
+  //if( transponder )
+  //{
+    //transponder->SetState( Transponder::State_Idle );
+    //transponder = NULL;
+  //}
+  Close( );
 }
 
 bool Frontend::TunePID( Transponder &t, uint16_t service_id )
@@ -623,6 +624,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   {
     LogError( "dvb_set_compat_delivery_system return %d", r );
     t.SetState( Transponder::State_TuningFailed );
+    Close( );
     return false;
   }
   t.GetParams( fe );
@@ -635,6 +637,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
     LogError( "dvb_fe_set_parms failed with %d.", r );
     t.SetState( Transponder::State_TuningFailed );
     dvb_fe_prt_parms( fe );
+    Close( );
     return false;
   }
 
@@ -649,6 +652,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   {
     t.SetState( Transponder::State_TuningFailed );
     LogError( "Tuning failed" );
+    Close( );
     return false;
   }
 
