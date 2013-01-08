@@ -29,6 +29,7 @@
 
 class Frontend;
 class Transponder;
+class Source;
 
 class Port : public ConfigObject, public RPCObject
 {
@@ -41,10 +42,11 @@ class Port : public ConfigObject, public RPCObject
     virtual bool LoadConfig( );
 
     int GetPortNum( ) { return port_num; }
-    void SetSource( int id ) { source_id = id; }
+    void SetSource( Source *source ) { this->source = source; }
+    Source *GetSource( ) { return source; }
 
     bool Tune( Transponder &transponder );
-    bool Scan( Transponder &transponder );
+    bool Scan( );
 
     bool Tune( Transponder &transponder, uint16_t pno );
     void Untune( );
@@ -57,7 +59,7 @@ class Port : public ConfigObject, public RPCObject
     Frontend &frontend;
     std::string name;
     int port_num;
-    int source_id;
+    Source *source;
 
 };
 

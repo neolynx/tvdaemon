@@ -53,6 +53,8 @@ class Transponder_DVBS : public Transponder
     bool IsSame( const Transponder &transponder );
 
   private:
+    void Init( );
+
     dvb_sat_polarization polarization;
 
     uint32_t symbol_rate;

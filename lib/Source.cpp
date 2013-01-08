@@ -24,6 +24,7 @@
 #include <algorithm> // find
 #include <json/json.h>
 
+#include "TVDaemon.h"
 #include "Transponder.h"
 #include "Adapter.h"
 #include "Frontend.h"
@@ -36,6 +37,7 @@
 
 Source::Source( TVDaemon &tvd, std::string name, Type type, int config_id ) :
   ConfigObject( tvd, "source", config_id ),
+  ThreadBase( ),
   tvd(tvd), name(name),
   type(type)
 {
@@ -49,10 +51,10 @@ Source::Source( TVDaemon &tvd, std::string configfile ) :
 
 Source::~Source( )
 {
+  Lock( );
   for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-  {
     delete *it;
-  }
+  Unlock( );
 }
 
 bool Source::SaveConfig( )
@@ -158,20 +160,24 @@ bool Source::ReadScanfile( std::string scanfile )
 
 bool Source::AddTransponder( Transponder *t )
 {
+  Lock( );
   for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
     if( (*it)->IsSame( *t ))
     {
       //LogWarn( "Already known transponder: %s", t->toString( ).c_str( ));
+      Unlock( );
       return false;
     }
   }
   transponders.push_back( t );
+  Unlock( );
   return true;
 }
 
 Transponder *Source::CreateTransponder( const struct dvb_entry &info )
 {
+  Lock( );
   fe_delivery_system_t delsys;
   uint32_t frequency;
   for( int i = 0; i < info.n_props; i++ )
@@ -211,6 +217,7 @@ Transponder *Source::CreateTransponder( const struct dvb_entry &info )
     if( Transponder::IsSame( **it, info ))
     {
       //LogWarn( "Already known transponder: %s %d", delivery_system_name[delsys], frequency );
+      Unlock( );
       return NULL;
     }
   }
@@ -222,11 +229,13 @@ Transponder *Source::CreateTransponder( const struct dvb_entry &info )
     for( int i = 0; i < info.n_props; i++ )
       t->AddProperty( info.props[i] );
   }
+  Unlock( );
   return t;
 }
 
 Transponder *Source::GetTransponder( int id )
 {
+  // FIXME: locking ?
   if( id >= transponders.size( ))
     return NULL;
   return transponders[id];
@@ -244,7 +253,7 @@ bool Source::AddPort( Port *port )
 
   // FIXME: verify frontend type
   ports.push_back( port );
-  port->SetSource( GetKey( ));
+  port->SetSource( this );
   return true;
 }
 
@@ -275,27 +284,27 @@ bool Source::TuneTransponder( int id )
 
 bool Source::ScanTransponder( int id )
 {
-  Transponder *t = GetTransponder( id );
-  if( !t )
-  {
-    LogError( "Transponder with id %d not found", id );
-    return false;
-  }
+  //Transponder *t = GetTransponder( id );
+  //if( !t )
+  //{
+    //LogError( "Transponder with id %d not found", id );
+    //return false;
+  //}
 
-  if( t->Disabled( ))
-  {
-    LogWarn( "Transponder is disabled" );
-    return false;
-  }
+  //if( t->Disabled( ))
+  //{
+    //LogWarn( "Transponder is disabled" );
+    //return false;
+  //}
 
-  // FIXME: support scanning on next free transponder
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-  {
-    if( !(*it)->Scan( *t ))
-      return false;
-    t->SaveConfig( );
-    return true;
-  }
+  //// FIXME: support scanning on next free transponder
+  //for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+  //{
+    //if( !(*it)->Scan( *t ))
+      //return false;
+    //t->SaveConfig( );
+    //return true;
+  //}
   return false;
 }
 
@@ -318,8 +327,10 @@ bool Source::Tune( Transponder &transponder, uint16_t pno )
 int Source::CountServices( ) const
 {
   int count = 0;
+  Lock( );
   for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
     count += (*it)->CountServices( );
+  Unlock( );
   return count;
 }
 
@@ -458,5 +469,15 @@ std::vector<std::string> Source::GetScanfileList( Type type, std::string country
   }
   std::sort( result.begin( ), result.end( ));
   return result;
+}
+
+Transponder *Source::GetTransponderForScanning( )
+{
+  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  {
+    if( (*it)->GetState( ) == Transponder::State_New )
+      return *it;
+  }
+  return NULL;
 }
 

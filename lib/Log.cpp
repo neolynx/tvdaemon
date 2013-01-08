@@ -59,3 +59,47 @@ void TVD_Log( int level, const char *fmt, ... )
   va_end( ap );
 }
 
+void TVD_Log( int level, char *msg )
+{
+  if( level > sizeof( loglevels ) / sizeof( struct loglevel ) - 2 )
+    level = LOG_INFO;
+  if( isatty( loglevels[level].io->_fileno ))
+    fprintf(  loglevels[level].io, loglevels[level].color );
+  fprintf(    loglevels[level].io, "%s ", loglevels[level].name );
+  fprintf(    loglevels[level].io, msg );
+  if( isatty( loglevels[level].io->_fileno ))
+    fprintf(  loglevels[level].io, loglevels[LOG_COLOROFF].color );
+  fprintf(    loglevels[level].io, "\n" );
+}
+
+
+void Log( const char *fmt, ... )
+{
+  char msg[255];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( msg, sizeof( msg ), fmt, ap );
+  va_end( ap );
+  TVD_Log( LOG_INFO, msg );
+}
+
+void LogWarn( const char *fmt, ... )
+{
+  char msg[255];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( msg, sizeof( msg ), fmt, ap );
+  va_end( ap );
+  TVD_Log( LOG_WARNING, msg );
+}
+
+void LogError( const char *fmt, ... )
+{
+  char msg[255];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( msg, sizeof( msg ), fmt, ap );
+  va_end( ap );
+  TVD_Log( LOG_ERR, msg );
+}
+

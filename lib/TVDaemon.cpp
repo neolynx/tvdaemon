@@ -73,12 +73,14 @@ TVDaemon *TVDaemon::Instance( )
 TVDaemon::TVDaemon( ) :
   ConfigObject( ),
   httpd(NULL),
-  up(false)
+  up(true)
 {
+  thread_udev = new Thread( *this, (ThreadFunc) &TVDaemon::Thread_udev );
 }
 
 TVDaemon::~TVDaemon( )
 {
+
   SaveConfig( );
 
   if( httpd )
@@ -87,11 +89,8 @@ TVDaemon::~TVDaemon( )
     delete httpd;
   }
 
-  if( up )
-  {
-    up = false;
-    pthread_join( thread_udev, NULL );
-  }
+  if( up ) up = false;
+  delete thread_udev;
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
@@ -298,18 +297,7 @@ void TVDaemon::MonitorAdapters( )
   udev_monitor_enable_receiving( udev_mon );
   udev_fd = udev_monitor_get_fd( udev_mon );
 
-  if( pthread_create( &thread_udev, NULL, run_udev, (void *) this ) != 0 )
-  {
-    LogError( "cannot create udev thread" );
-  }
-}
-
-void *TVDaemon::run_udev( void *ptr )
-{
-  TVDaemon *t = (TVDaemon *) ptr;
-  t->Thread_udev( );
-  pthread_exit( NULL );
-  return NULL;
+  thread_udev->Run( );
 }
 
 void TVDaemon::Thread_udev( )
@@ -319,7 +307,6 @@ void TVDaemon::Thread_udev( )
   int ret;
   struct udev_device *dev;
 
-  up = true;
   while( up )
   {
     FD_ZERO( &fds );
@@ -366,7 +353,6 @@ void TVDaemon::Thread_udev( )
     usleep( 250 * 1000 );
   }
 }
-
 
 Source *TVDaemon::CreateSource( std::string name, Source::Type type, std::string scanfile )
 {

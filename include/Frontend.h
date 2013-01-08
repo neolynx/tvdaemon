@@ -24,12 +24,12 @@
 
 #include "ConfigObject.h"
 #include "RPCObject.h"
+#include "Source.h"
+#include "Thread.h"
 
 #include <string>
 #include <vector>
 #include <deque>
-#include <pthread.h>
-#include "TVDaemon.h"
 
 #include "dvb-frontend.h"
 
@@ -39,7 +39,7 @@ class Port;
 
 #define DMX_BUFSIZE 2 * 1024 * 1024
 
-class Frontend : public ConfigObject, public RPCObject
+class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 {
   public:
     static Frontend *Create( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
@@ -60,11 +60,12 @@ class Frontend : public ConfigObject, public RPCObject
     virtual bool SetPort( int port_id );
     virtual bool Tune( Transponder &transponder, int timeout = 1000 );
     virtual void Untune();
-    virtual bool Scan( int timeout = 1000 );
     virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries );
     int OpenDemux( );
     bool Open( );
     void Close( );
+
+    bool Scan( Transponder &transponder );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
@@ -115,23 +116,24 @@ class Frontend : public ConfigObject, public RPCObject
     bool HandleSDT( struct section *section );
     bool HandlePMT( struct section *section, uint16_t pid );
 
+    void Log( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
+    void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
+    void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
+
     uint8_t filter[18];
     uint8_t mask[18];
 
     bool up;
 
   private:
-    bool CreateDemuxThread( );
+    void Init( );
 
     std::map<uint16_t, uint16_t> pid_map;
     std::deque<uint16_t> pno_list;
     uint16_t curPid;
 
-    pthread_t thread;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-    static void *run( void *ptr );
-    void Thread( );
+    Thread *thread_idle;
+    void Thread_idle( );
 };
 
 #endif

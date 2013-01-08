@@ -24,7 +24,7 @@
 
 #include "ConfigObject.h"
 #include "RPCObject.h"
-//#include "TVDaemon.h"
+#include "Thread.h"
 #include "Transponder.h"
 
 #include <string>
@@ -34,7 +34,7 @@ class Port;
 class HTTPServer;
 class TVDaemon;
 
-class Source : public ConfigObject, public RPCObject
+class Source : public ConfigObject, public RPCObject, public ThreadBase
 {
   public:
     enum Type
@@ -65,6 +65,8 @@ class Source : public ConfigObject, public RPCObject
     bool ScanTransponder( int id );
     uint GetTransponderCount() { return transponders.size(); }
     Type GetType( ) const { return type; }
+
+    Transponder *GetTransponderForScanning( );
 
     int CountServices( ) const;
 

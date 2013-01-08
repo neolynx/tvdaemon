@@ -27,14 +27,12 @@
 
 Transponder_DVBS::Transponder_DVBS( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
 {
-  has_sdt = true;
-  has_nit = true;
+  Init( );
 }
 
 Transponder_DVBS::Transponder_DVBS( Source &source, std::string configfile ) : Transponder( source, configfile )
 {
-  has_sdt = true;
-  has_nit = true;
+  Init( );
 }
 
 Transponder_DVBS::Transponder_DVBS( Source &source,
@@ -53,10 +51,17 @@ Transponder_DVBS::Transponder_DVBS( Source &source,
   roll_off(roll_off)
 {
   this->frequency = frequency;
+  Init( );
 }
 
 Transponder_DVBS::~Transponder_DVBS( )
 {
+}
+
+void Transponder_DVBS::Init( )
+{
+  has_sdt = true;
+  has_nit = true;
 }
 
 void Transponder_DVBS::AddProperty( const struct dtv_property &prop )

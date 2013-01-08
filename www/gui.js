@@ -225,6 +225,7 @@ function editSource( adapter_id, frontend_id, port_id )
   frontend_id = $("#port_frontend_id").val( );
   frontend = adapters[adapter_id]["frontends"][frontend_id];
   $("#source_type").val( frontend["type"] );
+  $("#source_name").val( "" );
 
   getJSON( 'tvd?c=tvdaemon&a=get_scanfiles&type=' + frontend["type"], loadScanfiles );
 }

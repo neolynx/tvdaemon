@@ -61,6 +61,7 @@
 
 Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   ConfigObject( adapter, "frontend", config_id )
+  , ThreadBase( )
   , adapter(adapter)
   , fe(NULL)
   , adapter_id(adapter_id)
@@ -68,25 +69,23 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , present(false)
   , transponder(NULL)
   , current_port(0)
-  , up(false)
+  , up(true)
 {
   ports.push_back( new Port( *this, 0 ));
-  pthread_mutex_init( &mutex, NULL );
-  pthread_cond_init( &cond, NULL );
-
+  Init( );
 }
 
 Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   ConfigObject( adapter, configfile )
+  , ThreadBase( )
   , adapter(adapter)
   , fe(NULL)
   , present(false)
   , transponder(NULL)
   , current_port(0)
-  , up(false)
+  , up(true)
 {
-  pthread_mutex_init( &mutex, NULL );
-  pthread_cond_init( &cond, NULL );
+  Init( );
 }
 
 Frontend::~Frontend( )
@@ -96,11 +95,8 @@ Frontend::~Frontend( )
 
   state = Shutdown;
 
-  if( up )
-  {
-    up = false;
-    pthread_join( thread, NULL );
-  }
+  up = false;
+  delete thread_idle;
 
   Close( );
 
@@ -108,6 +104,12 @@ Frontend::~Frontend( )
   {
     delete *it;
   }
+}
+
+void Frontend::Init( )
+{
+  thread_idle = new Thread( *this, (ThreadFunc) &Frontend::Thread_idle );
+  thread_idle->Run( );
 }
 
 Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
@@ -151,7 +153,7 @@ Frontend *Frontend::Create( Adapter &adapter, int adapter_id, int frontend_id, i
     case SYS_CMMB:
     case SYS_DAB:
     case SYS_TURBO:
-      LogError( "Delivery system %s not supported", delivery_system_name[delsys] );
+      ::LogError( "%d.%d Delivery system %s not supported", adapter_id, frontend_id, delivery_system_name[delsys] );
       return NULL;
     case SYS_ATSC:
     case SYS_ATSCMH:
@@ -211,6 +213,7 @@ void Frontend::Close()
 {
   if( fe )
   {
+    Log( "Closing /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
     dvb_fe_close( fe );
     fe = NULL;
     state = Closed;
@@ -223,7 +226,7 @@ bool Frontend::GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *d
   struct dvb_v5_fe_parms *fe = dvb_fe_open( adapter_id, frontend_id, 0, 0 );
   if( !fe )
   {
-    LogError( "Error opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+    ::LogError( "Error opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
     return false;
   }
 
@@ -264,9 +267,9 @@ bool Frontend::LoadConfig( )
 
 void Frontend::SetIDs( int adapter_id, int frontend_id )
 {
-  Log( "  Frontend on /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
   this->adapter_id  = adapter_id;
   this->frontend_id = frontend_id;
+  Log( "  Frontend on /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
 }
 
 bool Frontend::SetPort( int id )
@@ -296,51 +299,6 @@ Port *Frontend::GetCurrentPort( )
   return ports[current_port];
 }
 
-bool Frontend::Tune( Transponder &t, int timeoutms )
-{
-  if( !Open( ))
-    return false;
-
-  t.SetState( Transponder::State_Tuning );
-  Log( "Tuning %s", t.toString( ).c_str( ));
-  int r = dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
-  if( r != 0 )
-  {
-    LogError( "dvb_set_compat_delivery_system return %d", r );
-    t.SetState( Transponder::State_TuningFailed );
-    return false;
-  }
-  t.GetParams( fe );
-
-  //dvb_fe_prt_parms( fe );
-
-  r = dvb_fe_set_parms( fe );
-  if( r != 0 )
-  {
-    LogError( "dvb_fe_set_parms failed with %d.", r );
-    t.SetState( Transponder::State_TuningFailed );
-    dvb_fe_prt_parms( fe );
-    return false;
-  }
-
-  //uint32_t freq;
-  //dvb_fe_retrieve_parm( fe, DTV_FREQUENCY, &freq );
-  //Log( "tuning to %d", freq );
-
-  state = Tuning;
-
-  uint8_t signal, noise;
-  if( !GetLockStatus( signal, noise, 1500 ))
-  {
-    t.SetState( Transponder::State_TuningFailed );
-    return false;
-  }
-
-  t.SetState( Transponder::State_Tuned );
-  t.SetSignal( signal, noise );
-  transponder = &t;
-  return true;
-}
 
 void Frontend::Untune( )
 {
@@ -349,46 +307,6 @@ void Frontend::Untune( )
   state = Opened;
   transponder->SetState( Transponder::State_Idle );
   transponder = NULL;
-}
-
-bool Frontend::Scan( int timeoutms )
-{
-  if( !transponder )
-    return false;
-  transponder->SetState( Transponder::State_Scanning );
-  if( !CreateDemuxThread( ))
-  {
-    transponder->SetState( Transponder::State_ScanningFailed );
-    return false;
-  }
-
-  state = Scanning;
-  struct timespec abstime;
-  int ret, count = 0;
-  do
-  {
-    clock_gettime( CLOCK_REALTIME, &abstime );
-    abstime.tv_sec += 1;
-    pthread_mutex_lock( &mutex );
-    ret = pthread_cond_timedwait( &cond, &mutex, &abstime );
-    pthread_mutex_unlock( &mutex );
-  } while( state == Scanning & ret == ETIMEDOUT && ++count < 60 );
-  if( ret == 0 || !up )
-  {
-    transponder->SetState( Transponder::State_Scanned );
-    return true;
-  }
-  transponder->SetState( Transponder::State_ScanningFailed );
-  if( ret == ETIMEDOUT )
-    LogError( "Scanning timeouted (%d seconds)", count );
-  else
-    LogError( "Error waiting for scan to terminate" );
-  if( up ) // FIXME: mutex
-  {
-    up = false;
-    pthread_join( thread, NULL );
-  }
-  return false;
 }
 
 bool Frontend::TunePID( Transponder &t, uint16_t service_id )
@@ -407,7 +325,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   Service *s = t.GetService( service_id );
   if( !s )
   {
-    LogError( "No service with id %d found", service_id);
+    LogError( "No service with id %d found", service_id );
     return false;
   }
 
@@ -693,86 +611,88 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
   return false;
 }
 
-bool Frontend::CreateDemuxThread( )
+bool Frontend::Tune( Transponder &t, int timeoutms )
 {
-  if( up )
+  if( !Open( ))
+    return false;
+
+  t.SetState( Transponder::State_Tuning );
+  Log( "Tuning %s", t.toString( ).c_str( ));
+  int r = dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
+  if( r != 0 )
   {
-    LogError( "demux thread already running" );
+    LogError( "dvb_set_compat_delivery_system return %d", r );
+    t.SetState( Transponder::State_TuningFailed );
     return false;
   }
-  if( pthread_create( &thread, NULL, run, (void *) this ) != 0 )
+  t.GetParams( fe );
+
+  //dvb_fe_prt_parms( fe );
+
+  r = dvb_fe_set_parms( fe );
+  if( r != 0 )
   {
-    LogError( "failed to create thread" );
+    LogError( "dvb_fe_set_parms failed with %d.", r );
+    t.SetState( Transponder::State_TuningFailed );
+    dvb_fe_prt_parms( fe );
     return false;
   }
+
+  //uint32_t freq;
+  //dvb_fe_retrieve_parm( fe, DTV_FREQUENCY, &freq );
+  //Log( "tuning to %d", freq );
+
+  state = Tuning;
+
+  uint8_t signal, noise;
+  if( !GetLockStatus( signal, noise, 1500 ))
+  {
+    t.SetState( Transponder::State_TuningFailed );
+    LogError( "Tuning failed" );
+    return false;
+  }
+
+  t.SetState( Transponder::State_Tuned );
+  t.SetSignal( signal, noise );
+  transponder = &t;
   return true;
 }
 
-void *Frontend::run( void *ptr )
-{
-  Frontend *t = (Frontend *) ptr;
-  t->Thread( );
-  pthread_exit( NULL );
-  return NULL;
-}
-
-void Frontend::Thread( )
+bool Frontend::Scan( Transponder &transponder )
 {
   struct timeval tv;
   int ret;
   const char *err;
+  int time = 5;
+  std::vector<uint16_t> services;
+  int fd_demux;
+  struct dvb_table_pat *pat = NULL;
 
-  up = true;
+  if( !Tune( transponder ))
+    return false;
 
-  //
-  // open the demux device
-  //
-  int fd_demux = dvb_dmx_open( adapter_id, frontend_id );
-  if( fd_demux < 0 )
+  transponder.SetState( Transponder::State_Scanning );
+
+  if(( fd_demux = OpenDemux( )) < 0 )
   {
     LogError( "unable to open adapter demux" );
-    state = Closing;
-    up = false;
-    return;
+    goto scan_failed;
   }
 
-  int time = 5;
-
-  std::vector<uint16_t> services;
-
   Log( "Reading PAT" );
-  struct dvb_table_pat *pat = NULL;
   dvb_read_section( fe, fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, time );
   if( !pat )
   {
     LogError( "Error reading PAT table" );
-    up = false;
-  }
-  if( !up )
-  {
-    state = Closing;
-    up = false;
-    return;
+    goto scan_failed;
   }
 
   Log( "  Setting TSID %d", pat->header.id );
-  transponder->SetTSID( pat->header.id );
-  Source &source = transponder->GetSource( );
-  const std::vector<Transponder *> &transponders = source.GetTransponders( );
-  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-  {
-    if( *it != transponder && (*it)->Enabled( ) && (*it)->GetTSID( ) == transponder->GetTSID( ))
-    {
-      LogWarn( "Disabling dupplicate transponder %s: same as %s", transponder->toString( ).c_str( ),
-          (*it)->toString( ).c_str( ));
-      transponder->Disable( );
-      state = Closing;
-      up = false;
-      return;
-    }
-  }
+  transponder.SetTSID( pat->header.id );
+  if( transponder.GetState( ) == Transponder::State_Duplicate )
+    goto scan_aborted;
 
-  if( transponder->HasVCT( ))
+  if( transponder.HasVCT( ))
   {
     Log( "Reading VCT" );
     struct dvb_table_vct *vct;
@@ -798,7 +718,7 @@ void Frontend::Thread( )
           continue;
         }
 
-        transponder->UpdateService( channel->program_number, type, name, provider, channel->access_control );
+        transponder.UpdateService( channel->program_number, type, name, provider, channel->access_control );
         services.push_back( channel->program_number );
       }
     }
@@ -806,7 +726,7 @@ void Frontend::Thread( )
       dvb_table_vct_free( vct );
   }
 
-  if( transponder->HasSDT( ))
+  if( transponder.HasSDT( ))
   {
     Log( "Reading SDT" );
     struct dvb_table_sdt *sdt;
@@ -816,8 +736,6 @@ void Frontend::Thread( )
       //dvb_table_sdt_print( fe, sdt );
       dvb_sdt_service_foreach( service, sdt )
       {
-        if( !up )
-          break;
         const char *name = "", *provider = "";
         int service_type = -1;
         dvb_desc_find( struct dvb_desc_service, desc, service, service_descriptor )
@@ -861,7 +779,7 @@ void Frontend::Thread( )
         }
 
         Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
-        transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
+        transponder.UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
         services.push_back( service->service_id );
       }
 
@@ -873,8 +791,6 @@ void Frontend::Thread( )
   Log( "Reading PMT's" );
   dvb_pat_program_foreach( program, pat )
   {
-    if( !up )
-      break;
     for( std::vector<uint16_t>::iterator it = services.begin( ); it != services.end( ); it++ )
     {
       if( *it == program->service_id )
@@ -885,7 +801,7 @@ void Frontend::Thread( )
           break;
         }
 
-        transponder->UpdateProgram( program->service_id, program->pid );
+        transponder.UpdateProgram( program->service_id, program->pid );
 
         struct dvb_table_pmt *pmt;
         dvb_read_section( fe, fd_demux, DVB_TABLE_PMT, program->pid, (uint8_t **) &pmt, time );
@@ -899,8 +815,6 @@ void Frontend::Thread( )
 
         dvb_pmt_stream_foreach( stream, pmt )
         {
-          if( !up )
-            break;
           Stream::Type type = Stream::Type_Unknown;
           switch( stream->type )
           {
@@ -950,7 +864,7 @@ void Frontend::Thread( )
               break;
           }
           if( type != Stream::Type_Unknown )
-            transponder->UpdateStream( program->service_id, stream->elementary_pid, type );
+            transponder.UpdateStream( program->service_id, stream->elementary_pid, type );
         }
 
         dvb_table_pmt_free( pmt );
@@ -960,19 +874,13 @@ void Frontend::Thread( )
   }
   if( pat )
     dvb_table_pat_free( pat );
-  if( !up )
-  {
-    state = Closing;
-    up = false;
-    return;
-  }
 
-  if( transponder->HasSDT( ))
+  if( transponder.HasNIT( ))
   {
     Log( "Reading NIT" );
     struct dvb_table_nit *nit;
     dvb_read_section( fe, fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, time );
-    if( nit && up )
+    if( nit )
     {
       dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
       {
@@ -987,13 +895,6 @@ void Frontend::Thread( )
       dvb_table_nit_free( nit );
   }
 
-  if( !up )
-  {
-    state = Closing;
-    up = false;
-    return;
-  }
-
   //Log( "Reading EIT" );
   //struct dvb_table_eit *eit;
   //dvb_read_section_with_id( fe, fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, 1, (uint8_t **) &eit, time );
@@ -1005,9 +906,18 @@ void Frontend::Thread( )
   //dvb_table_eit_free( eit );
 
   dvb_dmx_close( fd_demux );
+  Untune( );
   state = Closing;
-  up = false;
-  return;
+  transponder.SetState( Transponder::State_Scanned );
+  return true;
+
+scan_failed:
+  transponder.SetState( Transponder::State_ScanningFailed );
+scan_aborted:
+  dvb_dmx_close( fd_demux );
+  Untune( );
+  state = Closing;
+  return false;
 }
 
 
@@ -1046,5 +956,49 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   request.NotFound( "RPC transponder: unknown action" );
   return false;
+}
+
+void Frontend::Thread_idle( )
+{
+  while( up )
+  {
+    for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+    {
+      if( (*it)->Scan( ))
+        continue;
+    }
+
+    sleep( 1 );
+  }
+}
+
+void Frontend::Log( const char *fmt, ... )
+{
+  char msg[255];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( msg, sizeof( msg ), fmt, ap );
+  va_end( ap );
+  TVD_Log( LOG_INFO, "%d.%d %s", adapter.GetKey( ), GetKey( ), msg );
+}
+
+void Frontend::LogWarn( const char *fmt, ... )
+{
+  char msg[255];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( msg, sizeof( msg ), fmt, ap );
+  va_end( ap );
+  TVD_Log( LOG_WARNING, "%d.%d %s", adapter.GetKey( ), GetKey( ), msg );
+}
+
+void Frontend::LogError( const char *fmt, ... )
+{
+  char msg[255];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( msg, sizeof( msg ), fmt, ap );
+  va_end( ap );
+  TVD_Log( LOG_ERR, "%d.%d %s", adapter.GetKey( ), GetKey( ), msg );
 }
 

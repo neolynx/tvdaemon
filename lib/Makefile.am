@@ -24,6 +24,7 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Matroska.cpp \
 			  RingBuffer.cpp \
 			  Frame.cpp \
+			  Thread.cpp \
 			  Log.cpp
 
 libtvdaemon_la_LIBADD = -ludev -lconfig++ -lrt -lpthread -ljson ../v4l-utils/lib/libdvbv5/libdvbv5.la -lmatroska

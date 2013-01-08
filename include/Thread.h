@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  Logging
+ *  Thread class
  *
  *  Copyright (C) 2012 André Roth
  *
@@ -19,15 +19,38 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _Log_
-#define _Log_
+#ifndef _Thread_
+#define _Thread_
 
-#include <syslog.h>
+#include <pthread.h>
 
-void TVD_Log( int level, const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
-void TVD_Log( int level, char *msg );
+class ThreadBase;
+typedef void (ThreadBase::*ThreadFunc)( );
 
-void Log( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
-void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
-void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
+class ThreadBase
+{
+  public:
+    ThreadBase( );
+    void Lock( ) const;
+    void Unlock( ) const;
+
+  protected:
+    class Thread
+    {
+      public:
+        Thread( ThreadBase &base, ThreadFunc func );
+        bool Run( );
+        virtual ~Thread( );
+
+      private:
+        ThreadBase &base;
+        ThreadFunc func;
+        pthread_t thread;
+        static void *run( void *ptr );
+    };
+  private:
+    volatile pthread_mutex_t mutex;
+};
+
+
 #endif

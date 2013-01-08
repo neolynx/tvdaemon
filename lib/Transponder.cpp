@@ -390,3 +390,18 @@ bool Transponder::RPC( const HTTPRequest &request, const std::string &cat, const
   return false;
 }
 
+void Transponder::SetTSID( uint16_t TSID )
+{
+  this->TSID = TSID;
+  const std::vector<Transponder *> &transponders = source.GetTransponders( );
+  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  {
+    if( *it != this && (*it)->Enabled( ) && (*it)->GetTSID( ) == TSID )
+    {
+      LogWarn( "Disabling dupplicate transponder %s: same as %s", toString( ).c_str( ), (*it)->toString( ).c_str( ));
+      Disable( );
+      SetState( State_Duplicate );
+    }
+  }
+}
+

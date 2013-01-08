@@ -22,6 +22,7 @@
 #include "Port.h"
 
 #include "Source.h"
+#include "TVDaemon.h"
 #include "Frontend.h"
 #include "Log.h"
 
@@ -33,13 +34,14 @@ Port::Port( Frontend &frontend, int config_id, std::string name, int port_num ) 
   frontend(frontend),
   name(name),
   port_num(port_num),
-  source_id(-1)
+  source(NULL)
 {
 }
 
 Port::Port( Frontend &frontend, std::string configfile ) :
   ConfigObject( frontend, configfile ),
-  frontend(frontend)
+  frontend(frontend),
+  source(NULL)
 {
 }
 
@@ -51,7 +53,7 @@ bool Port::SaveConfig( )
 {
   WriteConfig( "Name",   name );
   WriteConfig( "ID", port_num );
-  WriteConfig( "Source", source_id );
+  WriteConfig( "Source", source ? source->GetKey( ) : -1 );
 
   return WriteConfigFile( );
 }
@@ -61,23 +63,22 @@ bool Port::LoadConfig( )
   if( !ReadConfigFile( ))
     return false;
 
+  int source_id;
+
   ReadConfig( "Name",   name );
   ReadConfig( "ID",     port_num );
   ReadConfig( "Source", source_id );
 
   if( source_id >= 0 )
   {
-    Source *s = TVDaemon::Instance( )->GetSource( source_id );
-    if( s == NULL )
+    source = TVDaemon::Instance( )->GetSource( source_id );
+    if( source == NULL )
     {
       LogError( "Source with id %d not found", source_id );
-      source_id = -1;
+      return false;
     }
-    else
-      s->AddPort( this );
+    source->AddPort( this );
   }
-
-  Log( "    Loading Port '%s'", name.c_str( ));
   return true;
 }
 
@@ -88,28 +89,21 @@ bool Port::Tune( Transponder &transponder )
   return false;
 }
 
-bool Port::Scan( Transponder &transponder )
+bool Port::Scan( )
 {
+  if( !source )
+    return false;
+  Transponder *t = source->GetTransponderForScanning( );
+  if( !t )
+    return false;
+
   if( !frontend.SetPort( port_num ))
   {
     LogError( "Error setting port %d on frontend", port_num );
     return false;
   }
 
-  if( !frontend.Tune( transponder ))
-  {
-    LogError( "Tuning Failed" );
-    return false;
-  }
-
-  if( !frontend.Scan( ))
-  {
-    LogError( "Frontend Scan failed." );
-    return false;
-  }
-
-  frontend.Untune();
-  return true;
+  return frontend.Scan( *t );
 }
 
 bool Port::Tune( Transponder &transponder, uint16_t pno )
@@ -129,7 +123,7 @@ void Port::json( json_object *entry ) const
   json_object_object_add( entry, "name",      json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
   json_object_object_add( entry, "port_num",   json_object_new_int( port_num ));
-  json_object_object_add( entry, "source_id", json_object_new_int( source_id ));
+  json_object_object_add( entry, "source_id", json_object_new_int( source ? source->GetKey( ) : -1 ));
 }
 
 bool Port::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
@@ -151,19 +145,17 @@ bool Port::RPC( const HTTPRequest &request, const std::string &cat, const std::s
     if( !request.GetParam( "source_id", source_id ))
       return false;
 
-    if( source_id >= -1 && source_id != this->source_id )
+    if( source && source_id != source->GetKey( ))
+      source->RemovePort( this );
+
+    if( source_id != -1 )
     {
-      if( this->source_id != -1 )
+      if( !source || ( source && source_id != source->GetKey( )))
       {
-        Source *s = TVDaemon::Instance( )->GetSource( this->source_id );
-        s->RemovePort( this );
+        source = TVDaemon::Instance( )->GetSource( source_id );
+        source->AddPort( this );
+        SetSource( source );
       }
-      if( source_id >= 0 )
-      {
-        Source *s = TVDaemon::Instance( )->GetSource( source_id );
-        s->AddPort( this );
-      }
-      SetSource( source_id );
     }
 
     request.Reply( HTTP_OK );

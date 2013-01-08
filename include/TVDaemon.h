@@ -24,6 +24,7 @@
 
 #include "ConfigObject.h"
 #include "HTTPServer.h"
+#include "Thread.h"
 #include "Source.h"
 
 #include <map>
@@ -40,7 +41,7 @@ class Source;
 class Channel;
 class HTTPServer;
 
-class TVDaemon : public ConfigObject, public HTTPDynamicHandler
+class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBase
 {
   public:
     static TVDaemon *Instance( );
@@ -90,11 +91,12 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler
     struct udev *udev;
     struct udev_monitor *udev_mon;
     int udev_fd;
-    pthread_t thread_udev;
-    static void *run_udev( void *ptr );
-    void Thread_udev( );
 
     HTTPServer *httpd;
+
+    Thread *thread_udev;
+    void Thread_udev( );
+
 };
 
 #endif
