@@ -1,55 +1,81 @@
-body
+div.back
 {
-  background-image: url('../images/bg.jpg');
-  background-attachment:fixed;
-}
-
-.right
-{
-  text-align: right;
-}
-
-div.main
-{
-  padding: 10px;
+  min-width: 650px; /* activate browser scrollbar if screen is less 650pixels wide */
+  padding: 1px;
   background-image: url('../images/center_bg.jpg');
   background-attachment:fixed;
   background-repeat: repeat;
   background-position:center;
+  /* Safari 4-5, Chrome 1-9 */
+  background: -webkit-gradient(radial, 20% 20%, 80%, 40% 80%, 100, from(#1a82f7), to(#2F2727));
+
+  /* Safari 5.1+, Chrome 10+ */
+  background: -webkit-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727);
+
+  /* Firefox 3.6+ */
+  background: -moz-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727);
+
+  /* IE 10 */
+  background: -ms-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727);
+
+  /* Opera cannot do radial gradients yet */
+
   position: absolute;
-  top: 5%;
-  bottom: 10px;
-  right: 7%;
-  left: 7%;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
 }
 
-div.logo
+div.header
 {
   background-image: url('../images/TVDeamon_small.png'),url('../images/logo.png');
-  background-position: left+5px top, 115px 57px;
+  background-position: left+5px top,0px 90px;
   background-repeat: no-repeat;
-  width: 500px;
-  height: 90px;
-
+  width: 100%;
+  height: 130px;
+  /* Gradient color1 - color2 - color1  hr.style */
+  #position: absolute;
+  #top: 129px;
+  #right: 0px;
+  #border: 0;
+  #height: 1px;
+  #background: #333;
+  #background-image: -webkit-linear-gradient(left, #ccc, #333, #ccc);
+  #background-image: -moz-linear-gradient(left, #ccc, #333, #ccc);
+  #background-image: -ms-linear-gradient(left, #ccc, #333, #ccc);
+  #background-image: -o-linear-gradient(left, #ccc, #333, #ccc);
 }
 
 div.content
 {
-  position: absolute;
-  top: 100px;
-  left: 1%;
+ position: absolute;
+  top: 131px;
+  left: 2px;
+  padding-bottom:40px;
+  min-height: 100%-171px;
+  height:auto;
 
 }
 
-div.status
+div.footer
 {
   background-image: url('../images/menu_bg.jpg');
-
+  color:red;
   position: absolute;
-  bottom: 10px;
-  right: 20px;
-  left: 20px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
   height: 40px;
+  z-index:+1;
+}
+
+img.iconstyle
+{
+
+ width=70;
+ height=70;
+
 }
 
 img.grey
@@ -106,7 +132,7 @@ td.adapter
 {
   width:8em;
   word-wrap:break-word;
-  border: 1px solid;
+  border: 1px ;
   background-position:left;
   vertical-align: top;
   text-align: right;
@@ -114,26 +140,26 @@ td.adapter
 
 td.frontend
 {
-  width:8em;
+ width:8em;
   word-wrap:break-word;
-  border: 1px solid black;
+  border: 1px ;
   background-position:left;
   vertical-align: top;
 }
 
 td.port
 {
-  width:6em;
+ width:7em;
   word-wrap:break-word;
 
-  border: 1px solid black;
+  border: 1px ;
   background-position:left;
   vertical-align: top;
 }
 
 td.source
 {
-  width:6em;
+ width:8em;
   word-wrap:break-word;
   border: 1px solid black;
   vertical-align: top;
