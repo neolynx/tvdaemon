@@ -23,10 +23,12 @@
 
 #include <wordexp.h>
 #include <sys/stat.h>
-#include <libgen.h> // dirname
-#include <string.h> // strdup
-#include <stdlib.h> // free
-#include <stdio.h>  // snprintf
+#include <libgen.h>  // dirname
+#include <string.h>  // strdup
+#include <stdlib.h>  // free
+#include <stdio.h>   // snprintf
+#include <algorithm> // transform
+#include <locale>
 
 #include "Log.h"
 
@@ -141,5 +143,11 @@ void Utils::dump( const unsigned char *data, int length )
     ascii[j] = '\0';
     Log( "%s %s %s", hex, spaces, ascii );
   }
+}
+
+void Utils::ToLower( const std::string &string, std::string &lower )
+{
+  lower = string;
+  std::transform( lower.begin( ), lower.end( ), lower.begin( ), std::bind2nd( std::ptr_fun( &std::tolower<char> ), std::locale( "" )));
 }
 

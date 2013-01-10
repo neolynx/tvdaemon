@@ -72,6 +72,8 @@ class HTTPServer : public SocketHandler
 
     std::string GetRoot( ) { return _root; }
 
+    static void URLDecode( const std::string &string, std::string &decoded );
+
     class Response
     {
       public:
@@ -120,7 +122,7 @@ class HTTPServer : public SocketHandler
     bool HandleMethodGET( HTTPRequest &request );
     bool HandleMethodPOST( HTTPRequest &request );
 
-    static int Tokenize( const char *string, const char delims[], std::vector<std::string> &tokens, int count = 0 );
+    static int Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count = 0 );
 
 };
 

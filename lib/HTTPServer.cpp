@@ -160,7 +160,7 @@ bool HTTPServer::HandleRequest( HTTPRequest &request )
 bool HTTPServer::HandleMethodGET( HTTPRequest &request )
 {
   std::vector<std::string> tokens;
-  Tokenize( request.header.front( ).c_str( ), " ", tokens );
+  Tokenize( request.header.front( ), " ", tokens );
 
   if( tokens.size( ) < 3 )
   {
@@ -171,15 +171,15 @@ bool HTTPServer::HandleMethodGET( HTTPRequest &request )
 
   std::string url = tokens[1];
   std::vector<std::string> params;
-  Tokenize( url.c_str( ), "?&", params );
+  Tokenize( url, "?&", params );
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
-    Tokenize( params[i].c_str( ), "=", p );
+    Tokenize( params[i], "=", p );
     if( p.size( ) == 1 )
       request.parameters[p[0]] = "1";
     else if( p.size( ) == 2 )
-      request.parameters[p[0]] = p[1];
+      URLDecode( p[1], request.parameters[p[0]] );
     else
     {
       LogWarn( "Ignoring strange parameter: '%s'", params[i].c_str( ));
@@ -277,7 +277,7 @@ bool HTTPServer::HandleMethodGET( HTTPRequest &request )
 bool HTTPServer::HandleMethodPOST( HTTPRequest &request )
 {
   std::vector<std::string> tokens;
-  Tokenize( request.header.front( ).c_str( ), " ", tokens );
+  Tokenize( request.header.front( ), " ", tokens );
 
   if( tokens.size( ) < 3 )
   {
@@ -287,15 +287,15 @@ bool HTTPServer::HandleMethodPOST( HTTPRequest &request )
 
   std::string url = tokens[1];
   std::vector<std::string> params;
-  Tokenize( url.c_str( ), "?&", params );
+  Tokenize( url, "?&", params );
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
-    Tokenize( params[i].c_str( ), "=", p );
+    Tokenize( params[i], "=", p );
     if( p.size( ) == 1 )
       request.parameters[p[0]] = "1";
     else if( p.size( ) == 2 )
-      request.parameters[p[0]] = p[1];
+      URLDecode( p[1], request.parameters[p[0]] );
     else
     {
       LogWarn( "Ignoring strange parameter: '%s'", params[i].c_str( ));
@@ -307,66 +307,16 @@ bool HTTPServer::HandleMethodPOST( HTTPRequest &request )
   if( request.content.length( ) > 0 )
   {
     std::vector<std::string> vars;
-    Tokenize( request.content.c_str( ), "&", vars );
+    Tokenize( request.content, "&", vars );
     for( int i = 0; i < vars.size( ); i++ )
     {
       std::vector<std::string> p;
-      Tokenize( vars[i].c_str( ), "=", p );
+      Tokenize( vars[i], "=", p );
       if( p.size( ) == 1 )
         request.parameters[p[0]] = "1";
       else if( p.size( ) == 2 )
       {
-        int len = p[1].length( );
-        for( int j = 0; j < len; j++ )
-        {
-          if( p[1][j] == '%' )
-          {
-            if( j > len - 3 )
-            {
-              LogError( "HTTPServer: invalid url encoded data: '%s'", p[1].c_str( ));
-              break;
-            }
-            char x = p[1][j+1];
-            switch( x )
-            {
-              case '0' ... '9':
-                x -= '0';
-                break;
-              case 'a' ... 'f':
-                x -= 'a' - 10;
-                break;
-              case 'A' ... 'F':
-                x -= 'A' - 10;
-                break;
-              default:
-                LogError( "HTTPServer: inot a hex value: %c", x );
-            }
-
-            char y = p[1][j+2];
-            switch( y )
-            {
-              case '0' ... '9':
-                y -= '0';
-                break;
-              case 'a' ... 'f':
-                y -= 'a' - 10;
-                break;
-              case 'A' ... 'F':
-                y -= 'A' - 10;
-                break;
-              default:
-                LogError( "HTTPServer: inot a hex value: %c", y );
-            }
-            request.parameters[p[0]] += ( x << 4 ) + y;
-
-            j += 2;
-            continue;
-          }
-          if( p[1][j] == '+' )
-            request.parameters[p[0]] += ' ';
-          else
-            request.parameters[p[0]] += p[1][j];
-        }
+        URLDecode( p[1], request.parameters[p[0]] );
       }
       else
       {
@@ -473,12 +423,12 @@ void HTTPServer::Response::AddMime( const char *mime )
   _buffer.append( "\r\n" );
 }
 
-int HTTPServer::Tokenize( const char *string, const char delims[], std::vector<std::string> &tokens, int count )
+int HTTPServer::Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count )
 {
-  int len = strlen( string );
+  int len = string.length( );
   int dlen = strlen( delims );
   int last = -1;
-  for( int i = 0; i < len; i++ )
+  for( int i = 0; i < len; )
   {
     // eat delimiters
     while( i < len )
@@ -494,7 +444,7 @@ int HTTPServer::Tokenize( const char *string, const char delims[], std::vector<s
         break;
       i++;
     }
-    if( i >= len )
+    if( i > len )
       break;
 
     int j = i;
@@ -514,7 +464,7 @@ int HTTPServer::Tokenize( const char *string, const char delims[], std::vector<s
       i++;
     }
 
-    tokens.push_back( std::string( string + j,  i - j ));
+    tokens.push_back( std::string( string.c_str( ) + j,  i - j ));
 
     if( i == len )
       break;
@@ -603,3 +553,52 @@ void HTTPRequest::Reply( json_object *obj ) const
   Reply( response );
   json_object_put( obj ); // free
 }
+
+inline void nibble( char &x )
+{
+  switch( x )
+  {
+    case '0' ... '9':
+      x -= '0';
+      break;
+    case 'a' ... 'f':
+      x -= 'a' - 10;
+      break;
+    case 'A' ... 'F':
+      x -= 'A' - 10;
+      break;
+    default:
+      LogError( "HTTPServer: not a hex value: %c", x );
+  }
+}
+
+inline void urlhex( char x, char y, std::string &append )
+{
+  nibble( x );
+  nibble( y );
+  append += ( x << 4 ) + y;
+}
+
+void HTTPServer::URLDecode( const std::string &string, std::string &decoded )
+{
+  int len = string.length( );
+  for( int j = 0; j < len; j++ )
+  {
+    if( string[j] == '%' )
+    {
+      if( j > len - 3 )
+      {
+        LogError( "HTTPServer: invalid url encoded data: '%s'", string.c_str( ));
+        break;
+      }
+      urlhex( string[j+1], string[j+2], decoded );
+      j += 2;
+      continue;
+    }
+    if( string[j] == '+' )
+      decoded += ' ';
+    else
+      decoded += string[j];
+  }
+}
+

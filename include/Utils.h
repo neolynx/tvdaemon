@@ -26,20 +26,20 @@
 #include <stdint.h>
 #include <vector>
 
-class Utils
+namespace Utils
 {
-  public:
-    static std::string Expand( std::string path );
-    static bool IsDir( std::string path );
-    static bool IsFile( std::string path );
-    static bool MkDir( std::string path );
-    static std::string DirName( std::string path );
-    static std::string BaseName( std::string path );
-    static void EnsureSlash( std::string &dir );
+  std::string Expand( std::string path );
+  bool IsDir( std::string path );
+  bool IsFile( std::string path );
+  bool MkDir( std::string path );
+  std::string DirName( std::string path );
+  std::string BaseName( std::string path );
+  void EnsureSlash( std::string &dir );
 
-    static std::string GetExtension( std::string &filename );
+  std::string GetExtension( std::string &filename );
 
-    static void dump( const unsigned char *data, int length );
+  void dump( const unsigned char *data, int length );
+  void ToLower( const std::string &string, std::string &lower );
 };
 
 #endif
