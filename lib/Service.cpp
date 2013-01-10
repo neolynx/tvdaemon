@@ -21,7 +21,6 @@
 
 #include "Service.h"
 
-#include <algorithm> // find
 #include <json/json.h>
 #include <strings.h> // strcasecmp
 #include <string.h>  // strlen
@@ -31,18 +30,21 @@
 #include "Transponder.h"
 #include "HTTPServer.h"
 #include "Stream.h"
+#include "Channel.h"
 #include "Log.h"
 
 Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id ) :
   transponder(transponder),
   service_id(service_id),
   pid(pid),
-  scrambled(false)
+  scrambled(false),
+  channel(NULL)
 {
 }
 
 Service::Service( Transponder &transponder ) :
-  transponder(transponder)
+  transponder(transponder),
+  channel(NULL)
 {
 }
 
@@ -54,6 +56,12 @@ Service::~Service( )
   }
 }
 
+void Service::SetName( std::string &s )
+{
+  name = s;
+  Utils::ToLower( name, name_lower );
+}
+
 bool Service::SaveConfig( ConfigBase &config )
 {
   config.WriteConfig( "ServiceID",    service_id );
@@ -62,6 +70,7 @@ bool Service::SaveConfig( ConfigBase &config )
   config.WriteConfig( "Name",         name );
   config.WriteConfig( "Provider",     provider );
   config.WriteConfig( "Scrambled",    scrambled );
+  config.WriteConfig( "Channel",      channel ? channel->GetKey( ) : -1 );
 
   config.DeleteConfig( "Streams" );
   Setting &n = config.ConfigList( "Streams" );
@@ -80,7 +89,9 @@ bool Service::LoadConfig( ConfigBase &config )
   config.ReadConfig( "ServiceID", service_id );
   config.ReadConfig( "PID", pid );
   config.ReadConfig( "Type", (int &) type );
-  config.ReadConfig( "Name", name );
+  std::string t;
+  config.ReadConfig( "Name", t );
+  SetName( t );
   config.ReadConfig( "Provider", provider );
   config.ReadConfig( "Scrambled", scrambled );
 
@@ -138,6 +149,7 @@ const char *Service::GetTypeName( Type type )
 void Service::json( json_object *entry ) const
 {
   json_object_object_add( entry, "name",      json_object_new_string( name.c_str( )));
+  json_object_object_add( entry, "provider",  json_object_new_string( provider.c_str( )));
   json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type",      json_object_new_int( type ));
   json_object_object_add( entry, "scrambled", json_object_new_int( scrambled ));
@@ -200,6 +212,11 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
       request.Reply( h );
       return true;
     }
+    else if( action == "add_channel" )
+    {
+      Log( "Should add channel..." );
+      return true;
+    }
   }
 
   request.NotFound( "RPC transponder: unknown action" );
@@ -211,5 +228,10 @@ bool Service::SortTypeName( Service *s1, Service *s2 )
   if( s1->type != s2->type )
     return s1->type < s2->type;
   return strcasecmp( s1->name.c_str( ), s2->name.c_str( )) < 0;
+}
+
+bool Service::SortByName( const Service *a, const Service *b )
+{
+  return a->name_lower < b->name_lower;
 }
 

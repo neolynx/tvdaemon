@@ -121,6 +121,58 @@ img.grey
   background: #1b435e;
 }
 
+.paginator
+{
+  text-align: right;
+}
+
+.column_scrambled
+{
+  text-align: center;
+}
+
+.column_num
+{
+  text-align: right;
+}
+
+div.services
+{
+  background: #fff;
+  border: 1px solid;
+  border-radius: 15px;
+  padding: 10px;
+  min-width: 400px;
+}
+
+div.services table
+{
+  border-spacing: 0px;
+  border-collapse:collapse;
+  width: 100%;
+}
+
+div.services th
+{
+  border-bottom: 1px solid;
+  text-align: left;
+}
+
+div.services td
+{
+  padding: 2px;
+}
+
+div.services tr:nth-child(odd) td
+{
+  background-color: #dfdfdf;
+}
+
+div.services tr:hover td
+{
+  background-color: #d0d0df;
+}
+
 
 table.configtable
 {

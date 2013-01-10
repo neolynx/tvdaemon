@@ -496,6 +496,15 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
+  if( action == "get_service_types" )
+  {
+    json_object *a = json_object_new_array( );
+    for( int i = 0; i < Service::Type_Last; i++ )
+      json_object_array_add( a, json_object_new_string( Service::GetTypeName((Service::Type) i )));
+    request.Reply( a );
+    return true;
+  }
+
   if( action == "get_sourcetypes" )
   {
     json_object *h = json_object_new_object( );
@@ -610,9 +619,76 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
+  if( action == "get_services" )
+  {
+    json_object *h = json_object_new_object( );
+    json_object *a = json_object_new_array();
+
+    std::string search;
+    if( request.HasParam( "search" ))
+    {
+      std::string t;
+      request.GetParam( "search", t );
+      Utils::ToLower( t, search );
+    }
+
+    std::vector<Service *> result;
+
+    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    {
+      const std::vector<Transponder *> &transponders = (*it)->GetTransponders( );
+      for( std::vector<Transponder *>::const_iterator it2 = transponders.begin( ); it2 != transponders.end( ); it2++ )
+      {
+        const std::map<uint16_t, Service *> &services = (*it2)->GetServices( );
+        for( std::map<uint16_t, Service *>::const_iterator it3 = services.begin( ); it3 != services.end( ); it3++ )
+        {
+          if( !search.empty( ) && it3->second->GetName( true ).find( search.c_str( ), 0, search.length( )) != 0 )
+            continue;
+          result.push_back( it3->second );
+        }
+      }
+    }
+
+    int count = result.size( );
+
+    std::sort( result.begin( ), result.end( ), Service::SortByName );
+
+    int start = -1;
+    if( request.HasParam( "start" ))
+      request.GetParam( "start", start );
+    if( start < 0 )
+      start = 0;
+    if( start > count )
+      start = count;
+
+    int page_size = -1;
+    if( request.HasParam( "page_size" ))
+      request.GetParam( "page_size", page_size );
+    if( page_size <= 0 )
+      page_size = 10;
+
+    int end = start + page_size;
+    if( end > count )
+      end = count;
+    for( int i = start; i < end; i++ )
+    {
+      json_object *entry = json_object_new_object( );
+      result[i]->json( entry );
+      json_object_object_add( entry, "transponder_id", json_object_new_int( result[i]->GetTransponder( ).GetKey( )));
+      json_object_object_add( entry, "source_id", json_object_new_int( result[i]->GetTransponder( ).GetSource( ).GetKey( )));
+      json_object_array_add( a, entry );
+    }
+    json_object_object_add( h, "count", json_object_new_int( count ));
+    json_object_object_add( h, "start", json_object_new_int( start ));
+    json_object_object_add( h, "end", json_object_new_int( end ));
+    json_object_object_add( h, "data", a );
+    request.Reply( h );
+    return true;
+  }
+
   request.NotFound( "RPC unknown action: %s", action.c_str( ));
   return false;
-  }
+}
 
 
 bool TVDaemon::RPC_Source( const HTTPRequest &request, const std::string &cat, const std::string &action )

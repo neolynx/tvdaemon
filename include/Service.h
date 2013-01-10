@@ -31,6 +31,7 @@
 #include "Stream.h"
 
 class Transponder;
+class Channel;
 
 class Service : public RPCObject
 {
@@ -53,11 +54,15 @@ class Service : public RPCObject
     uint16_t GetPID( ) { return pid; }
     void     SetPID( uint16_t pid ) { this->pid = pid; }
     void        SetType( Type type ) { this->type = type; }
-    std::string GetName( ) { return name; }
-    void        SetName( std::string name ) { this->name = name; }
+    std::string GetName( bool lower = false ) { if( lower ) return name_lower; return name; }
+    void        SetName( std::string &name );
     std::string GetProvider( ) { return provider; }
     void        SetProvider( std::string provider ) { this->provider = provider; }
     void        SetScrambled( bool scrambled ) { this->scrambled = scrambled; }
+
+    Transponder &GetTransponder( ) const { return transponder; }
+
+    static bool SortByName( const Service *a, const Service *b );
 
     bool UpdateStream( int pid, Stream::Type type );
     std::map<uint16_t, Stream *> &GetStreams();
@@ -79,8 +84,10 @@ class Service : public RPCObject
     uint16_t pid;
     Type type;
     std::string name;
+    std::string name_lower;
     std::string provider;
     bool scrambled;
+    Channel *channel;
 
     std::map<uint16_t, Stream *> streams;
 };
