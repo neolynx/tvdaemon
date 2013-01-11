@@ -60,9 +60,9 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBa
     std::vector<std::string> GetSourceList( );
     Source *GetSource( int id ) const;
 
-    Channel *CreateChannel( std::string name );
     std::vector<std::string> GetChannelList( );
     Channel *GetChannel( int id );
+    Channel *CreateChannel( Service *service );
 
     std::string GetDir( ) { return dir; }
 

@@ -6,26 +6,15 @@ var sources = [];
 var adapters = [];
 var no_update = false;
 
-function getJSON( url, callback )
-{
-  $.ajax( {
-    url: url,
-    dataType: 'json',
-    success: callback,
-    timeout: 3000,
-    error: function(jqXHR, status, errorThrown ) { callback( null, jqXHR.responseText ); }
-  });
-}
-
 function ready( )
 {
   theme = "";
-  $('#port_popup').jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
+  $('#port_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
   $('#port_popup').bind( 'closed', function ( event ) { no_update = false; } );
   $('#port_ok').bind( 'click', function ( event ) { savePort( ); } );
   $('#port_source').bind( 'change', function ( event ) { if( $(this).val( ) == -2 ) editSource( ); } );
 
-  $('#source_popup').jqxWindow({ width: "auto", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#source_cancel"), modalOpacity: 0.30 });
+  $('#source_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#source_cancel"), modalOpacity: 0.30 });
   $('#source_popup').bind( 'closed', function ( event ) { no_update = false; } );
   $('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
 

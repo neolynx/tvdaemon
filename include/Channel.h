@@ -34,7 +34,7 @@ class Service;
 class Channel : public ConfigObject, public RPCObject
 {
   public:
-    Channel( TVDaemon &tvd, std::string name, int config_id );
+    Channel( TVDaemon &tvd, Service *service, int config_id );
     Channel( TVDaemon &tvd, std::string configfile );
     virtual ~Channel( );
 
@@ -44,6 +44,7 @@ class Channel : public ConfigObject, public RPCObject
     virtual bool LoadConfig( );
 
     bool AddService( Service *service );
+    bool HasService( Service *service ) const;
 
     bool Tune( );
 
@@ -54,6 +55,8 @@ class Channel : public ConfigObject, public RPCObject
   private:
     TVDaemon &tvd;
     std::string name;
+    int number;
+
     std::vector<Service *> services;
 };
 

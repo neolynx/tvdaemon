@@ -26,7 +26,8 @@
 #include <string.h>  // strlen
 #include <fcntl.h>   // open
 
-#include "ConfigObject.h"
+#include "TVDaemon.h"
+//#include "ConfigObject.h"
 #include "Transponder.h"
 #include "HTTPServer.h"
 #include "Stream.h"
@@ -94,6 +95,12 @@ bool Service::LoadConfig( ConfigBase &config )
   SetName( t );
   config.ReadConfig( "Provider", provider );
   config.ReadConfig( "Scrambled", scrambled );
+  int channel_id;
+  config.ReadConfig( "Channel", channel_id );
+  if( channel_id != -1 )
+  {
+    channel = TVDaemon::Instance( )->GetChannel( channel_id );
+  }
 
   Setting &n = config.ConfigList( "Streams" );
   for( int i = 0; i < n.getLength( ); i++ )
@@ -153,6 +160,7 @@ void Service::json( json_object *entry ) const
   json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type",      json_object_new_int( type ));
   json_object_object_add( entry, "scrambled", json_object_new_int( scrambled ));
+  json_object_object_add( entry, "channel", json_object_new_int( channel ? 1 : 0 ));
 }
 
 bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
@@ -214,7 +222,15 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
     }
     else if( action == "add_channel" )
     {
-      Log( "Should add channel..." );
+      if( channel )
+      {
+        LogError( "Channel already assigned" );
+        request.NotFound( "Channel already assigned" );
+        return false;
+      }
+      channel = TVDaemon::Instance( )->CreateChannel( this );
+      request.Reply( HTTP_OK );
+      transponder.SaveConfig( );
       return true;
     }
   }
@@ -223,11 +239,11 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
   return false;
 }
 
-bool Service::SortTypeName( Service *s1, Service *s2 )
+bool Service::SortByTypeName( const Service *a, const Service *b )
 {
-  if( s1->type != s2->type )
-    return s1->type < s2->type;
-  return strcasecmp( s1->name.c_str( ), s2->name.c_str( )) < 0;
+  if( a->type != b->type )
+    return a->type < b->type;
+  return SortByName( a, b );
 }
 
 bool Service::SortByName( const Service *a, const Service *b )

@@ -31,11 +31,13 @@
 #include "Source.h"
 #include "Log.h"
 
-Channel::Channel( TVDaemon &tvd, std::string name, int config_id ) :
+Channel::Channel( TVDaemon &tvd, Service *service, int config_id ) :
   ConfigObject( tvd, "channel", config_id ),
   tvd(tvd),
-  name(name)
+  number(config_id)
 {
+  name = service->GetName( );
+  services.push_back( service );
 }
 
 Channel::Channel( TVDaemon &tvd, std::string configfile ) :
@@ -51,8 +53,8 @@ Channel::~Channel( )
 bool Channel::SaveConfig( )
 {
   WriteConfig( "Name", name );
+  WriteConfig( "Number", number );
 
-  //SaveReferences<Service, Channel>( *this, "Services", services );
   return WriteConfigFile( );
 }
 
@@ -61,40 +63,7 @@ bool Channel::LoadConfig( )
   if( !ReadConfigFile( ))
     return false;
   ReadConfig( "Name", name );
-
-  Log( "Loading Channel '%s'", name.c_str( ));
-
-  Setting &n = ConfigList( "Services" );
-  for( int i = 0; i < n.getLength( ); i++ )
-  {
-    Setting &n2 = n[i];
-    if( n2.getLength( ) != 3 )
-    {
-      LogError( "Error in service path: should be [source, transponder, service] in %s", GetConfigFile( ).c_str( ));
-      continue;
-    }
-    Source      *s = tvd.GetSource( n2[0] );
-    if( !s )
-    {
-      LogError( "Error in service path: source %d not found in %s", (int) n2[0], GetConfigFile( ).c_str( ));
-      continue;
-    }
-    Transponder *t = s->GetTransponder( n2[1] );
-    if( !t )
-    {
-      LogError( "Error in service path: transponder %d not found in %s", (int) n2[1], GetConfigFile( ).c_str( ));
-      continue;
-    }
-    Service     *v = t->GetService((int) n2[2] );
-    if( !v )
-    {
-      LogError( "Error in service path: service %d not found in %s", (int) n2[2], GetConfigFile( ).c_str( ));
-      continue;
-    }
-    // FIXME: verify frontend type
-    Log( "Adding configured service [%d, %d, %d] to channel %s", (int) n2[0], (int) n2[1], (int) n2[2], name.c_str( ));
-    services.push_back( v );
-  }
+  ReadConfig( "Number", number );
   return true;
 }
 
@@ -102,7 +71,7 @@ bool Channel::AddService( Service *service )
 {
   if( !service )
     return false;
-  if( std::find( services.begin( ), services.end( ), service ) != services.end( ))
+  if( HasService( service ))
   {
     LogWarn( "Service already added to Channel %s", name.c_str( ));
     return false;
@@ -110,6 +79,15 @@ bool Channel::AddService( Service *service )
   Log( "Adding Service %d to Channel %s", service->GetKey( ), name.c_str( ));
   services.push_back( service );
   return true;
+}
+
+bool Channel::HasService( Service *service ) const
+{
+  if( std::find( services.begin( ), services.end( ), service ) != services.end( ))
+  {
+    return true;
+  }
+  return false;
 }
 
 bool Channel::Tune( )
@@ -124,8 +102,9 @@ bool Channel::Tune( )
 
 void Channel::json( json_object *entry ) const
 {
-  json_object_array_add( entry, json_object_new_string( name.c_str( )));
-  json_object_array_add( entry, json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "name",   json_object_new_string( name.c_str( )));
+  json_object_object_add( entry, "number", json_object_new_int( number ));
+  json_object_object_add( entry, "id",     json_object_new_int( GetKey( )));
 }
 
 bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const std::string &action )

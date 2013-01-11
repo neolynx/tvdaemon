@@ -136,7 +136,7 @@ img.grey
   text-align: right;
 }
 
-div.services
+div.srvtable
 {
   background: #fff;
   border: 1px solid;
@@ -145,30 +145,30 @@ div.services
   min-width: 400px;
 }
 
-div.services table
+div.srvtable table
 {
   border-spacing: 0px;
   border-collapse:collapse;
   width: 100%;
 }
 
-div.services th
+div.srvtable th
 {
   border-bottom: 1px solid;
   text-align: left;
 }
 
-div.services td
+div.srvtable td
 {
   padding: 2px;
 }
 
-div.services tr:nth-child(odd) td
+div.svrtable tr:nth-child(odd) td
 {
   background-color: #dfdfdf;
 }
 
-div.services tr:hover td
+div.srvtable tr:hover td
 {
   background-color: #d0d0df;
 }

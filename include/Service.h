@@ -62,7 +62,6 @@ class Service : public RPCObject
 
     Transponder &GetTransponder( ) const { return transponder; }
 
-    static bool SortByName( const Service *a, const Service *b );
 
     bool UpdateStream( int pid, Stream::Type type );
     std::map<uint16_t, Stream *> &GetStreams();
@@ -76,7 +75,8 @@ class Service : public RPCObject
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    static bool SortTypeName( Service *s1, Service *s2 );
+    static bool SortByName( const Service *a, const Service *b );
+    static bool SortByTypeName( const Service *a, const Service *b );
 
   private:
     Transponder &transponder;

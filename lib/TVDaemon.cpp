@@ -179,11 +179,11 @@ bool TVDaemon::LoadConfig( )
   if( dir.empty( ))
     dir = "~";
 
+  if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
+    return false;
   if( !CreateFromConfig<Source, TVDaemon>( *this, "source", sources ))
     return false;
   if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
-    return false;
-  if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
     return false;
   return true;
 }
@@ -411,17 +411,17 @@ Source *TVDaemon::GetSource( int id ) const
   return sources[id];
 }
 
-Channel *TVDaemon::CreateChannel( std::string name )
+Channel *TVDaemon::CreateChannel( Service *service )
 {
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
-    if( (*it)->GetName( ) == name )
+    if( (*it)->HasService( service ))
     {
-      LogError( "Channel '%s' already exists", name.c_str( ));
+      LogError( "Channel '%s' already exists", service->GetName( ).c_str( ));
       return NULL;
     }
   }
-  Channel *c = new Channel( *this, name, channels.size( ));
+  Channel *c = new Channel( *this, service, channels.size( ));
   channels.push_back( c );
   return c;
 }
@@ -438,8 +438,11 @@ std::vector<std::string> TVDaemon::GetChannelList( )
 
 Channel *TVDaemon::GetChannel( int id )
 {
-  if( id >= channels.size( ))
+  if( id < 0 or id >= channels.size( ))
+  {
+    LogError( "Channel not found: %d", id );
     return NULL;
+  }
   return channels[id];
 }
 
@@ -598,23 +601,60 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "get_channels" )
   {
-    int count = channels.size( );
-    json_object *h = json_object_new_object();
-    //std::string echo =  parameters["sEcho"];
-    int echo = 1; //atoi( parameters[std::string("sEcho")].c_str( ));
-    json_object_object_add( h, "sEcho", json_object_new_int( echo ));
-    json_object_object_add( h, "iTotalRecords", json_object_new_int( count ));
-    json_object_object_add( h, "iTotalDisplayRecords", json_object_new_int( count ));
+    json_object *h = json_object_new_object( );
     json_object *a = json_object_new_array();
+
+    std::string search;
+    if( request.HasParam( "search" ))
+    {
+      std::string t;
+      request.GetParam( "search", t );
+      Utils::ToLower( t, search );
+    }
+
+    std::vector<Channel *> result;
 
     for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     {
-      json_object *entry = json_object_new_array( );
-      (*it)->json( entry );
-      json_object_array_add( a, entry );
+      std::string t;
+      Utils::ToLower( (*it)->GetName( ), t );
+      if( !search.empty( ) && t.find( search.c_str( ), 0, search.length( )) != 0 )
+        continue;
+      result.push_back( *it );
     }
 
-    json_object_object_add( h, "aaData", a );
+    int count = result.size( );
+
+    //std::sort( result.begin( ), result.end( ), Service::SortByName );
+
+    int start = -1;
+    if( request.HasParam( "start" ))
+      request.GetParam( "start", start );
+    if( start < 0 )
+      start = 0;
+    if( start > count )
+      start = count;
+
+    int page_size = -1;
+    if( request.HasParam( "page_size" ))
+      request.GetParam( "page_size", page_size );
+    if( page_size <= 0 )
+      page_size = 10;
+
+    int end = start + page_size;
+    if( end > count )
+      end = count;
+    for( int i = start; i < end; i++ )
+    {
+      json_object *entry = json_object_new_object( );
+      result[i]->json( entry );
+      json_object_array_add( a, entry );
+    }
+    json_object_object_add( h, "count", json_object_new_int( count ));
+    json_object_object_add( h, "start", json_object_new_int( start ));
+    json_object_object_add( h, "end", json_object_new_int( end ));
+    json_object_object_add( h, "data", a );
+
     request.Reply( h );
     return true;
   }
