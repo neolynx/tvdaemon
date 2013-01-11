@@ -10,9 +10,12 @@ function getJSON( url, callback )
   });
 }
 
-var SRVT_NUMERIC = 1;
 
-function createSRVTable( name, url, page_size )
+/* Server Side Table */
+
+var SST_NUMERIC = 1;
+
+function ServerSideTable( name, url, page_size )
 {
   context = { 'name': name, 'url': url }
   context['page_size'] = page_size || 10;
@@ -29,12 +32,12 @@ function createSRVTable( name, url, page_size )
   context['load'] = loader.bind( context );
 
   paginator = $('<div>');
-  paginator.prop( "id", context['name'] + "_paginator" );
-  paginator.prop( "class", "paginator" );
+  paginator.prop( "id", "sst_paginator_" + context['name'] );
+  paginator.prop( "class", "sst_paginator" );
 
   info = $('<span>');
-  info.prop( "id", context['name'] + "_info" );
-  info.prop( "class", "info" );
+  info.prop( "id", "sst_info_" + context['name'] );
+  info.prop( "class", "sst_info" );
   paginator.append( info );
 
   context['func_info'] = function( context, data ) {
@@ -46,9 +49,9 @@ function createSRVTable( name, url, page_size )
     if( this['start'] < 0 ) this['start'] = 0;
     this['load']( );
   };
-  prev = $('<a>');
+  prev = $('<button>');
   prev.html( "&#x21e7;" );
-  prev.prop( 'href', 'javascript: void( );' );
+  //prev.prop( 'href', 'javascript: void( );' );
   prev.bind( 'click', scroll_up.bind( context ));
   paginator.append( prev );
 
@@ -58,15 +61,14 @@ function createSRVTable( name, url, page_size )
     this['load']( );
   };
 
-
-  next = $('<a>');
+  next = $('<button>');
   next.html( "&#x21e9;" );
-  next.prop( 'href', 'javascript: void( );' );
+  //next.prop( 'href', 'javascript: void( );' );
   next.bind( 'click', scroll_down.bind( context ));
   paginator.append( next );
 
   search_func = function ( ) {
-    search = $('#' + this['name'] + '_search').val( );
+    search = $('#sst_search_' + this['name']).val( );
     if( search == this['search'] )
       return;
     this['search'] = search;
@@ -75,18 +77,18 @@ function createSRVTable( name, url, page_size )
   };
 
   search = $('<input>');
-  search.prop( 'id', context['name'] + '_search' );
+  search.prop( 'id', "sst_search_" + context['name'] );
   search.bind( 'keyup', search_func.bind( context ));
   search.val( context['search'] );
   paginator.append( search );
 
-  srvtable = $('<div>');
-  srvtable.prop( "id", context['name'] + "_srvtable" );
-  srvtable.prop( "class", "srvtable" );
+  sst = $('<div>');
+  sst.prop( "id", "sst_" + context['name'] );
+  sst.prop( "class", "sst" );
 
   $( '#' + context['name'] ).empty( );
   paginator.appendTo( '#' + context['name'] );
-  srvtable.appendTo( '#' + context['name'] );
+  sst.appendTo( '#' + context['name'] );
   return context;
 }
 
@@ -94,12 +96,10 @@ function renderTable( data, errmsg )
 {
   context = this;
   if( !data ) return;
-
   context['count'] = data["count"];
-
-  $( '#' + context['name'] + "_srvtable" ).empty( );
-
-  $( '#' + context['name'] + "_info" ).html( context['func_info']( context, data ));
+  sst = $( '#sst_' + context['name'] );
+  sst.empty( );
+  $( '#sst_info_' + context['name'] ).html( context['func_info']( context, data ));
   table = $('<table>');
   row = $('<tr>');
 
@@ -134,13 +134,13 @@ function renderTable( data, errmsg )
       else
         render = null;
       if( !render )
-        cell.attr( "class", "column_" + key );
+        cell.attr( "class", "sst_" + key );
       else if( render == 1 )
-        cell.attr( "class", "column_num" );
+        cell.attr( "class", "sst_numeric" );
 
       if( render instanceof Function )
       {
-        cell.attr( "class", "column_" + key );
+        cell.attr( "class", "sst_" + key );
         cell.html( render( entry ));
       }
       else
@@ -150,6 +150,6 @@ function renderTable( data, errmsg )
 
     table.append( row );
   }
-  table.appendTo( '#' + context['name'] + "_srvtable" );
+  table.appendTo( sst );
 }
 

@@ -1,0 +1,43 @@
+img.iconstyle
+{
+ width: 70px;
+ height: 70px;
+}
+
+img.grey
+{
+  opacity: 0.2;
+}
+
+
+/* Setup Table */
+
+table.setup
+{
+  padding: 10px;
+  left:10%;
+}
+
+td.adapter
+{
+  word-wrap: break-word;
+  text-align: right;
+}
+
+td.frontend
+{
+  word-wrap: break-word;
+  vertical-align: top;
+}
+
+td.port
+{
+  word-wrap: break-word;
+  vertical-align: top;
+}
+
+td.source
+{
+  word-wrap:break-word;
+}
+

@@ -1,3 +1,6 @@
+
+/* Layout */
+
 div.back
 {
   min-width: 650px; /* activate browser scrollbar if screen is less 650pixels wide */
@@ -70,18 +73,8 @@ div.footer
   z-index:+1;
 }
 
-img.iconstyle
-{
 
- width=70;
- height=70;
-
-}
-
-img.grey
-{
-  opacity: 0.2;
-}
+/* Button */
 
 .button
 {
@@ -121,22 +114,20 @@ img.grey
   background: #1b435e;
 }
 
-.paginator
+
+/* Server Side Table */
+
+.sst_paginator
 {
   text-align: right;
 }
 
-.column_scrambled
-{
-  text-align: center;
-}
-
-.column_num
+.sst_numeric
 {
   text-align: right;
 }
 
-div.srvtable
+div.sst
 {
   background: #fff;
   border: 1px solid;
@@ -145,75 +136,31 @@ div.srvtable
   min-width: 400px;
 }
 
-div.srvtable table
+div.sst table
 {
   border-spacing: 0px;
   border-collapse:collapse;
   width: 100%;
 }
 
-div.srvtable th
+div.sst th
 {
   border-bottom: 1px solid;
   text-align: left;
 }
 
-div.srvtable td
+div.sst td
 {
   padding: 2px;
 }
 
-div.svrtable tr:nth-child(odd) td
+div.svrstable tr:nth-child(odd) td
 {
   background-color: #dfdfdf;
 }
 
-div.srvtable tr:hover td
+div.sst tr:hover td
 {
   background-color: #d0d0df;
-}
-
-
-table.configtable
-{
-  padding: 10px;
-  left:10%;
-}
-
-td.adapter
-{
-  width:8em;
-  word-wrap:break-word;
-  border: 1px ;
-  background-position:left;
-  vertical-align: top;
-  text-align: right;
-}
-
-td.frontend
-{
- width:8em;
-  word-wrap:break-word;
-  border: 1px ;
-  background-position:left;
-  vertical-align: top;
-}
-
-td.port
-{
- width:7em;
-  word-wrap:break-word;
-
-  border: 1px ;
-  background-position:left;
-  vertical-align: top;
-}
-
-td.source
-{
- width:8em;
-  word-wrap:break-word;
-  border: 1px solid black;
-  vertical-align: top;
 }
 
