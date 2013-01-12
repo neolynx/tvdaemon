@@ -30,6 +30,7 @@
 class Frontend;
 class Transponder;
 class Source;
+class Recording;
 
 class Port : public ConfigObject, public RPCObject
 {
@@ -48,12 +49,11 @@ class Port : public ConfigObject, public RPCObject
     bool Tune( Transponder &transponder );
     bool Scan( );
 
-    bool Tune( Transponder &transponder, uint16_t pno );
-    void Untune( );
-
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+
+    bool Record( Recording &rec );
 
   private:
     Frontend &frontend;

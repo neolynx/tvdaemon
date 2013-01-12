@@ -33,6 +33,7 @@
 class Port;
 class HTTPServer;
 class TVDaemon;
+class Recording;
 
 class Source : public ConfigObject, public RPCObject, public ThreadBase
 {
@@ -76,11 +77,11 @@ class Source : public ConfigObject, public RPCObject, public ThreadBase
     bool RemovePort( Port *port );
     bool AddTransponder( Transponder *t );
 
-    bool Tune( Transponder &transponder, uint16_t pno );
-
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+
+    bool Record( Recording &rec );
 
   private:
     TVDaemon &tvd;

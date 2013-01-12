@@ -22,27 +22,81 @@
 #ifndef _Recorder_
 #define _Recorder_
 
-#include <stdint.h> // uint64_t
+//#include <stdint.h> // uint64_t
 
-class Matroska;
-class RingBuffer;
-class Frame;
+#include <vector>
 
-class Recorder
+#include "Thread.h"
+//class Matroska;
+//class RingBuffer;
+//class Frame;
+
+class Channel;
+class Transponder;
+class Service;
+class Frontend;
+
+class Recording
 {
   public:
-    Recorder( struct dvb_v5_fe_parms &fe );
-    ~Recorder( );
+    Recording( Channel &channel );
+    ~Recording( );
 
-    void AddTrack( );
-    void record( uint8_t *data, int size );
+    enum State
+    {
+      State_New,
+      State_Start,
+      State_Started,
+      State_Done,
+      State_Failed,
+      State_Last
+    };
+
+    bool HasState( State state ) { return this->state == state; }
+    State GetState( ) { return state; }
+    void SetTransponder( Transponder *transponder ) { this->transponder = transponder; }
+    Transponder &GetTransponder( ) const { return *transponder; }
+    void SetService( Service *service ) { this->service = service; }
+    Service &GetService( ) const { return *service; }
+
+    void Schedule( ) { state = State_Start; }
+    bool Start( );
+    bool Record( Frontend &frontend );
 
   private:
-    struct dvb_v5_fe_parms &fe;
-    Matroska *mkv;
+    Channel &channel;
+    State state;
+    Transponder *transponder;
+    Service *service;
+    bool up;
+};
 
-    RingBuffer *buffer;
-    Frame *frame;
+class Recorder : public ThreadBase
+{
+  public:
+    //Recorder( struct dvb_v5_fe_parms &fe );
+    Recorder( );
+    ~Recorder( );
+
+    bool RecordNow( Channel &channel );
+
+
+    //void AddTrack( );
+    //void record( uint8_t *data, int size );
+
+
+
+  private:
+    //struct dvb_v5_fe_parms &fe;
+    //Matroska *mkv;
+
+    //RingBuffer *buffer;
+    //Frame *frame;
+    bool up;
+    std::vector<Recording *> recordings;
+    Thread *rec_thread;
+
+    void Rec_Thread( );
 };
 
 #endif

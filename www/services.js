@@ -6,10 +6,11 @@ var service_types = [];
 function readServiceTypes( data, errmsg )
 {
   if( !data )
-    return;
+    return false;
   service_types = [];
   for( s in data )
     service_types[s] = data[s];
+  return true;
 }
 
 var service_table;

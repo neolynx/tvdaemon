@@ -309,21 +309,6 @@ bool Source::ScanTransponder( int id )
 }
 
 
-bool Source::Tune( Transponder &transponder, uint16_t pno )
-{
-  if( this != &transponder.GetSource() )
-  {
-    LogError("Transponder '%d' not in this source '%s'", transponder.GetFrequency(), name.c_str());
-    return false;
-  }
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-  {
-    if( (*it)->Tune( transponder, pno ))
-      return true;
-  }
-  return false;
-}
-
 int Source::CountServices( ) const
 {
   int count = 0;
@@ -473,11 +458,27 @@ std::vector<std::string> Source::GetScanfileList( Type type, std::string country
 
 Transponder *Source::GetTransponderForScanning( )
 {
-  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-  {
+  std::vector<Transponder *>::const_iterator it;
+  Lock( );
+  for( it = transponders.begin( ); it != transponders.end( ); it++ )
     if( (*it)->GetState( ) == Transponder::State_New )
-      return *it;
-  }
+    {
+      (*it)->SetState( Transponder::State_Selected );
+      break;
+    }
+  Unlock( );
+  if( it != transponders.end( ))
+    return *it;
   return NULL;
 }
 
+bool Source::Record( Recording &rec )
+{
+  Log( "Source::Record" );
+  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+  {
+    if( (*it)->Record( rec ))
+      return true;
+  }
+  return false;
+}

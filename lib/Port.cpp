@@ -106,18 +106,6 @@ bool Port::Scan( )
   return frontend.Scan( *t );
 }
 
-bool Port::Tune( Transponder &transponder, uint16_t pno )
-{
-  if( frontend.SetPort( port_num ))
-    return frontend.TunePID( transponder, pno );
-  return false;
-}
-
-void Port::Untune( )
-{
-  frontend.Untune();
-}
-
 void Port::json( json_object *entry ) const
 {
   json_object_object_add( entry, "name",      json_object_new_string( name.c_str( )));
@@ -167,5 +155,13 @@ bool Port::RPC( const HTTPRequest &request, const std::string &cat, const std::s
 
   request.NotFound( "Port::RPC unknown action '%s'", action.c_str( ));
   return false;
+}
+
+bool Port::Record( Recording &rec )
+{
+  Log( "Port::Record" );
+  if( !frontend.SetPort( GetKey( )))
+    return false;
+  return frontend.Record( rec );
 }
 

@@ -4,11 +4,21 @@ var channel_table;
 
 function ready( )
 {
-  channel_table = ServerSideTable( 'channels', 'tvd?c=tvdaemon&a=get_channels', 20 );
-  channel_table["columns"] = {
+  t = ServerSideTable( 'channels', 'tvd?c=tvdaemon&a=get_channels', 20 );
+  t["columns"] = {
     "number"    : "#",
     "name"      : "Channel",
   };
-  channel_table.load( );
+  t["click"] = function( event ) {
+    if( confirm( "Start recording " + this["name"] + " ?" ))
+      getJSON( 'tvd?c=channel&a=record&channel_id=' + this["id"], record );
+  };
+  t.load( );
 }
 
+function record( data, errmsg )
+{
+  if( !data )
+    return false;
+  return true;
+}

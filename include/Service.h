@@ -32,6 +32,7 @@
 
 class Transponder;
 class Channel;
+class Recording;
 
 class Service : public RPCObject
 {
@@ -69,14 +70,14 @@ class Service : public RPCObject
     virtual bool SaveConfig( ConfigBase &config );
     virtual bool LoadConfig( ConfigBase &config );
 
-    bool Tune( );
-
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
     static bool SortByName( const Service *a, const Service *b );
     static bool SortByTypeName( const Service *a, const Service *b );
+
+    bool Record( Recording &rec );
 
   private:
     Transponder &transponder;

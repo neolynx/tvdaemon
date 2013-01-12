@@ -36,6 +36,7 @@
 class Adapter;
 class Transponder;
 class Port;
+class Recording;
 
 #define DMX_BUFSIZE 2 * 1024 * 1024
 
@@ -56,10 +57,10 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     Port *GetPort( int id ); // FIXME: used ?
     Port *GetCurrentPort( );
 
+    struct dvb_v5_fe_parms *GetFE( ) { return fe; }
     static bool GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name = NULL );
     virtual bool SetPort( int port_id );
     virtual bool Tune( Transponder &transponder, int timeout = 1000 );
-    virtual void Untune();
     virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries );
     int OpenDemux( );
     bool Open( );
@@ -72,22 +73,19 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 
     enum State
     {
-      New,
-      Opened,
-      Closed,
-      Closing,
-      Tuning,
-      Tuned,
-      TuningFailed,
-      Scanning,
-      Shutdown,
+      State_New,
+      State_Idle,
+      State_Opened,
+      State_Tuning,
+      State_Recording,
+      State_Last
     };
-
-    bool TunePID( Transponder &t, uint16_t pno );
 
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+
+    bool Record( Recording &rec );
 
   protected:
     Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
@@ -95,10 +93,11 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 
     bool present;
     bool enabled;
-    State state;
     int adapter_id;
     int frontend_id;
     Adapter &adapter;
+
+    void SetState( State state ) { this->state = state; }
 
     struct dvb_v5_fe_parms *fe;
 
@@ -120,6 +119,8 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
     void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
 
+    bool Record( );
+
     uint8_t filter[18];
     uint8_t mask[18];
 
@@ -128,12 +129,16 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
   private:
     void Init( );
 
+    State state;
+
     std::map<uint16_t, uint16_t> pid_map;
     std::deque<uint16_t> pno_list;
     uint16_t curPid;
 
-    Thread *thread_idle;
-    void Thread_idle( );
+    Thread *idle_thread;
+    void Idle_Thread( );
+
+    Recording *recording;
 };
 
 #endif

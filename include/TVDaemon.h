@@ -26,6 +26,7 @@
 #include "HTTPServer.h"
 #include "Thread.h"
 #include "Source.h"
+#include "Recorder.h"
 
 #include <map>
 #include <vector>
@@ -39,7 +40,6 @@
 class Adapter;
 class Source;
 class Channel;
-class HTTPServer;
 
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBase
 {
@@ -69,8 +69,11 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBa
     // RPC
     virtual bool HandleDynamicHTTP( const HTTPRequest &request );
     bool RPC        ( const HTTPRequest &request, const std::string &cat, const std::string &action );
+    bool RPC_Channel( const HTTPRequest &request, const std::string &cat, const std::string &action );
     bool RPC_Source ( const HTTPRequest &request, const std::string &cat, const std::string &action );
     bool RPC_Adapter( const HTTPRequest &request, const std::string &cat, const std::string &action );
+
+    bool Record( Channel &channel );
 
   private:
     TVDaemon( );
@@ -97,6 +100,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBa
     Thread *thread_udev;
     void Thread_udev( );
 
+    Recorder recorder;
 };
 
 #endif

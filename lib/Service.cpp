@@ -100,6 +100,8 @@ bool Service::LoadConfig( ConfigBase &config )
   if( channel_id != -1 )
   {
     channel = TVDaemon::Instance( )->GetChannel( channel_id );
+    if( channel )
+      channel->AddService( this );
   }
 
   Setting &n = config.ConfigList( "Streams" );
@@ -132,11 +134,6 @@ bool Service::UpdateStream( int id, Stream::Type type )
 std::map<uint16_t, Stream *> &Service::GetStreams() // FIXME: const
 {
   return streams;
-}
-
-bool Service::Tune( )
-{
-  return transponder.Tune( service_id );
 }
 
 const char *Service::GetTypeName( Type type )
@@ -249,5 +246,12 @@ bool Service::SortByTypeName( const Service *a, const Service *b )
 bool Service::SortByName( const Service *a, const Service *b )
 {
   return a->name_lower < b->name_lower;
+}
+
+bool Service::Record( Recording &rec )
+{
+  Log( "Service::Record" );
+  rec.SetService( this );
+  return transponder.Record( rec );
 }
 

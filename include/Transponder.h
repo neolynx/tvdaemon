@@ -31,6 +31,7 @@
 #include "dvb-frontend.h"
 
 class Source;
+class Recording;
 struct PAT;
 
 class Transponder : public ConfigObject, public RPCObject
@@ -87,6 +88,7 @@ class Transponder : public ConfigObject, public RPCObject
     enum State
     {
       State_New,
+      State_Selected,
       State_Tuning,
       State_Tuned,
       State_TuningFailed,
@@ -102,11 +104,11 @@ class Transponder : public ConfigObject, public RPCObject
     State GetState( ) { return state; }
     static const char *GetStateName( State state );
 
-    bool Tune( uint16_t pno );
-
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+
+    bool Record( Recording &rec );
 
   protected:
     bool enabled;

@@ -32,6 +32,7 @@
 #include "Transponder_ATSC.h"
 #include "Log.h"
 #include "HTTPServer.h"
+#include "Recorder.h"
 
 Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int config_id ) :
   ConfigObject( source, "transponder", config_id ),
@@ -271,11 +272,6 @@ Service *Transponder::GetService( uint16_t id )
   return it->second;
 }
 
-bool Transponder::Tune( uint16_t pno )
-{
-  return source.Tune( *this, pno );
-}
-
 bool Transponder::GetParams( struct dvb_v5_fe_parms *params ) const
 {
   dvb_fe_store_parm( params, DTV_FREQUENCY, frequency );
@@ -403,5 +399,12 @@ void Transponder::SetTSID( uint16_t TSID )
       SetState( State_Duplicate );
     }
   }
+}
+
+bool Transponder::Record( Recording &rec )
+{
+  Log( "Transponder::Record" );
+  rec.SetTransponder( this );
+  return source.Record( rec );
 }
 

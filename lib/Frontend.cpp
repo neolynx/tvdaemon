@@ -68,7 +68,9 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , frontend_id(frontend_id)
   , present(false)
   , transponder(NULL)
+  , recording(NULL)
   , current_port(0)
+  , state(State_New)
   , up(true)
 {
   ports.push_back( new Port( *this, 0 ));
@@ -82,7 +84,9 @@ Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   , fe(NULL)
   , present(false)
   , transponder(NULL)
+  , recording(NULL)
   , current_port(0)
+  , state(State_New)
   , up(true)
 {
   Init( );
@@ -93,10 +97,8 @@ Frontend::~Frontend( )
   if( fe )
     fe->abort = 1;
 
-  state = Shutdown;
-
   up = false;
-  delete thread_idle;
+  delete idle_thread;
 
   Close( );
 
@@ -108,8 +110,8 @@ Frontend::~Frontend( )
 
 void Frontend::Init( )
 {
-  thread_idle = new Thread( *this, (ThreadFunc) &Frontend::Thread_idle );
-  thread_idle->Run( );
+  idle_thread = new Thread( *this, (ThreadFunc) &Frontend::Idle_Thread );
+  idle_thread->Run( );
 }
 
 Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
@@ -205,7 +207,7 @@ bool Frontend::Open()
     LogError( "Error opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
     return false;
   }
-  state = Opened;
+  state = State_Opened;
   return true;
 }
 
@@ -215,8 +217,9 @@ void Frontend::Close()
   {
     Log( "Closing /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
     dvb_fe_close( fe );
+    transponder = NULL;
     fe = NULL;
-    state = Closed;
+    state = State_Idle;
   }
 }
 
@@ -262,6 +265,7 @@ bool Frontend::LoadConfig( )
 
   if( !CreateFromConfig<Port, Frontend>( *this, "port", ports ))
     return false;
+  state = State_Idle;
   return true;
 }
 
@@ -276,12 +280,13 @@ bool Frontend::SetPort( int id )
 {
   if( current_port == id )
     return true;
-  if( id >= 0 && id < ports.size( )) // FIXME: verify not in use
+  if( id < 0 or id >= ports.size( ))
   {
-    current_port = id;
-    return true;
+    LogError( "Frontend::SetPort unknown port %d", id );
+    return false;
   }
-  return false;
+  current_port = id;
+  return true;
 }
 
 Port *Frontend::GetPort( int id )
@@ -299,48 +304,17 @@ Port *Frontend::GetCurrentPort( )
   return ports[current_port];
 }
 
-
-void Frontend::Untune( )
-{
-  //if( transponder )
-  //{
-    //transponder->SetState( Transponder::State_Idle );
-    //transponder = NULL;
-  //}
-  Close( );
-}
-
-bool Frontend::TunePID( Transponder &t, uint16_t service_id )
+bool Frontend::Record( )
 {
   bool ret = true;
-  if( !Open( ))
-    return false;
-  if( this->transponder != NULL )
-  {
-    if( this->transponder->GetFrequency() != t.GetFrequency() )
-    {
-      LogError( "Transponder already tuned to another frequency" );
-      return false;
-    }
-  }
-  Service *s = t.GetService( service_id );
-  if( !s )
-  {
-    LogError( "No service with id %d found", service_id );
-    return false;
-  }
 
-  if( !Tune( t ))
-  {
-    LogError( "Transponder tune failed" );
-    return false;
-  }
+  Service &service = recording->GetService( );
 
-  Recorder rec( *fe );
+  //Recorder rec( *fe );
   std::vector<int> fds;
 
   int videofd = -1;
-  std::map<uint16_t, Stream *> &streams = s->GetStreams();
+  std::map<uint16_t, Stream *> &streams = service.GetStreams();
   for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++)
   {
     if( it->second->IsVideo( ) || it->second->IsAudio( ))
@@ -351,7 +325,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
         fds.push_back( fd );
       if( it->second->IsVideo( ))
       {
-        rec.AddTrack( );
+        //rec.AddTrack( );
         videofd = fd;
       }
     }
@@ -361,7 +335,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
 
   if( fds.empty( ))
   {
-    LogError( "no audio or video stream for service %d found", service_id );
+    LogError( "no audio or video stream for service %d found", service.GetKey( ));
     return false;
   }
 
@@ -371,7 +345,7 @@ bool Frontend::TunePID( Transponder &t, uint16_t service_id )
   int fd = OpenDemux( );
   Log( "Reading EIT" );
   struct dvb_table_eit *eit;
-  dvb_read_section_with_id( fe, fd, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, 5 );
+  dvb_read_section_with_id( fe, fd, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service.GetKey( ), (uint8_t **) &eit, 5 );
   if( eit )
   {
     dvb_table_eit_print( fe, eit );
@@ -579,7 +553,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
   uint32_t snr = 0, sig = 0;
   uint32_t ber = 0, unc = 0;
 
-  for( int i = 0; i < retries && state == Tuning; i++ )
+  for( int i = 0; i < retries && state == State_Tuning; i++ )
   {
     int r = dvb_fe_get_stats( fe );
     if( r < 0 )
@@ -614,8 +588,19 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
 
 bool Frontend::Tune( Transponder &t, int timeoutms )
 {
+  Log( "Frontend::Tune %p %p", &t, transponder );
+  if( transponder )
+  {
+    if( transponder == &t )
+      return true;
+    LogError( "Frontend already tuned" );
+    return false;
+  }
+
   if( !Open( ))
     return false;
+
+  state = State_Tuning;
 
   t.SetState( Transponder::State_Tuning );
   Log( "Tuning %s", t.toString( ).c_str( ));
@@ -645,7 +630,6 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   //dvb_fe_retrieve_parm( fe, DTV_FREQUENCY, &freq );
   //Log( "tuning to %d", freq );
 
-  state = Tuning;
 
   uint8_t signal, noise;
   if( !GetLockStatus( signal, noise, 1500 ))
@@ -671,6 +655,8 @@ bool Frontend::Scan( Transponder &transponder )
   std::vector<uint16_t> services;
   int fd_demux;
   struct dvb_table_pat *pat = NULL;
+
+  Log( "Frontend::Scan" );
 
   if( !Tune( transponder ))
     return false;
@@ -910,17 +896,17 @@ bool Frontend::Scan( Transponder &transponder )
   //dvb_table_eit_free( eit );
 
   dvb_dmx_close( fd_demux );
-  Untune( );
-  state = Closing;
+  Close( );
   transponder.SetState( Transponder::State_Scanned );
+  transponder.SaveConfig( );
   return true;
 
 scan_failed:
   transponder.SetState( Transponder::State_ScanningFailed );
+  transponder.SaveConfig( );
 scan_aborted:
   dvb_dmx_close( fd_demux );
-  Untune( );
-  state = Closing;
+  Close( );
   return false;
 }
 
@@ -962,14 +948,25 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
   return false;
 }
 
-void Frontend::Thread_idle( )
+void Frontend::Idle_Thread( )
 {
   while( up )
   {
-    for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+    switch( state )
     {
-      if( (*it)->Scan( ))
-        continue;
+      case State_Idle:
+        Log( "Idle" );
+        for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+        {
+          if( (*it)->Scan( ))
+            continue;
+        }
+        break;
+      case State_Recording:
+        Log( "recording now..." );
+        if( recording )
+          Record( );
+        break;
     }
 
     sleep( 1 );
@@ -1004,5 +1001,17 @@ void Frontend::LogError( const char *fmt, ... )
   vsnprintf( msg, sizeof( msg ), fmt, ap );
   va_end( ap );
   TVD_Log( LOG_ERR, "%d.%d %s", adapter.GetKey( ), GetKey( ), msg );
+}
+
+bool Frontend::Record( Recording &rec )
+{
+  Log( "Frontend::Record" );
+  if( !Tune( rec.GetTransponder( )))
+    return false;
+  Log( "State_Recording" );
+  recording = &rec;
+  state = State_Recording;
+  //rec.Record( *this );
+  //Close( );
 }
 

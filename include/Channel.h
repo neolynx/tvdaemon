@@ -30,6 +30,7 @@
 
 class TVDaemon;
 class Service;
+class Recording;
 
 class Channel : public ConfigObject, public RPCObject
 {
@@ -46,11 +47,13 @@ class Channel : public ConfigObject, public RPCObject
     bool AddService( Service *service );
     bool HasService( Service *service ) const;
 
-    bool Tune( );
+    const std::vector<Service *> &GetServices( ) const { return services; };
 
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+
+    bool Record( Recording &rec );
 
   private:
     TVDaemon &tvd;

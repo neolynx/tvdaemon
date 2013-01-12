@@ -92,6 +92,11 @@ TVDaemon::~TVDaemon( )
   if( up ) up = false;
   delete thread_udev;
 
+  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+  {
+    delete *it;
+  }
+
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
     delete *it;
@@ -102,10 +107,6 @@ TVDaemon::~TVDaemon( )
     delete *it;
   }
 
-  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-  {
-    delete *it;
-  }
   instance = NULL;
 }
 
@@ -473,7 +474,7 @@ bool TVDaemon::HandleDynamicHTTP( const HTTPRequest &request )
     return RPC_Adapter( request, cat, action );
 
   if( cat == "channel" )
-    return RPC( request, cat, action );
+    return RPC_Channel( request, cat, action );
 
   request.NotFound( "RPC unknown category: %s", cat.c_str( ));
   return false;
@@ -731,6 +732,23 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 }
 
 
+bool TVDaemon::RPC_Channel( const HTTPRequest &request, const std::string &cat, const std::string &action )
+{
+  std::string t;
+  if( !request.GetParam( "channel_id", t ))
+    return false;
+
+  int i = atoi( t.c_str( ));
+  if( i >= 0 && i < channels.size( ))
+  {
+    return channels[i]->RPC( request, cat, action );
+  }
+
+  request.NotFound( "RPC unknown channel: %d", i );
+  return false;
+}
+
+
 bool TVDaemon::RPC_Source( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
   std::string t;
@@ -761,5 +779,10 @@ bool TVDaemon::RPC_Adapter( const HTTPRequest &request, const std::string &cat, 
 
   request.NotFound( "RPC unknown adapter: %d", i );
   return false;
+}
+
+bool TVDaemon::Record( Channel &channel )
+{
+  return recorder.RecordNow( channel );
 }
 

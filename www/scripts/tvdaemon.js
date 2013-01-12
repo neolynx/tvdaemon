@@ -6,7 +6,7 @@ function getJSON( url, callback )
     dataType: 'json',
     success: callback,
     timeout: 3000,
-    error: function( jqXHR, status, errorThrown ) { callback( null, jqXHR.responseText ); }
+    error: function( jqXHR, status, errorThrown ) { if( !callback( null, jqXHR.responseText )) alert( jqXHR.responseText ); }
   });
 }
 
@@ -51,7 +51,6 @@ function ServerSideTable( name, url, page_size )
   };
   prev = $('<button>');
   prev.html( "&#x21e7;" );
-  //prev.prop( 'href', 'javascript: void( );' );
   prev.bind( 'click', scroll_up.bind( context ));
   paginator.append( prev );
 
@@ -63,7 +62,6 @@ function ServerSideTable( name, url, page_size )
 
   next = $('<button>');
   next.html( "&#x21e9;" );
-  //next.prop( 'href', 'javascript: void( );' );
   next.bind( 'click', scroll_down.bind( context ));
   paginator.append( next );
 
@@ -85,6 +83,7 @@ function ServerSideTable( name, url, page_size )
   sst = $('<div>');
   sst.prop( "id", "sst_" + context['name'] );
   sst.prop( "class", "sst" );
+  sst.html( "loading data ..." );
 
   $( '#' + context['name'] ).empty( );
   paginator.appendTo( '#' + context['name'] );
@@ -95,10 +94,15 @@ function ServerSideTable( name, url, page_size )
 function renderTable( data, errmsg )
 {
   context = this;
-  if( !data ) return;
-  context['count'] = data["count"];
   sst = $( '#sst_' + context['name'] );
   sst.empty( );
+  if( !data )
+  {
+    sst.html( "error loading data: " + errmsg );
+    return true;
+  }
+
+  context['count'] = data["count"];
   $( '#sst_info_' + context['name'] ).html( context['func_info']( context, data ));
   table = $('<table>');
   row = $('<tr>');
@@ -151,5 +155,6 @@ function renderTable( data, errmsg )
     table.append( row );
   }
   table.appendTo( sst );
+  return true;
 }
 
