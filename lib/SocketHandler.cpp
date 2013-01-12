@@ -462,20 +462,20 @@ bool SocketHandler::Send( const char *buffer, int len )
   if( role != CLIENT || !connected )
     return false;
 
-  int n = write( sd, buffer, len );
-  if( n < 0 )
+  int written = 0;
+  while( written < len )
   {
-    SHLogError( "error writing to socket" );
-    Disconnected( sd, true );
-    close( sd );
-    sd = 0;
-    connected = false;
-    return false;
-  }
-  if( n != len )
-  {
-    SHLogError( "short write" );
-    return false;
+    int n = write( sd, buffer, len );
+    if( n < 0 )
+    {
+      SHLogError( "error writing to socket" );
+      Disconnected( sd, true );
+      close( sd );
+      sd = 0;
+      connected = false;
+      return false;
+    }
+    written += n;
   }
   return true;
 }
@@ -485,17 +485,17 @@ bool SocketHandler::SendToClient( int client, const char *buffer, int len )
   if( role != SERVER )
     return false;
 
-  int n = write( client, buffer, len );
-  if( n < 0 )
+  int written = 0;
+  while( written < len )
   {
-    SHLogError( "error writing to socket" );
-    DisconnectClient( client );
-    return false;
-  }
-  if( n != len )
-  {
-    SHLogError( "short write" );
-    return false;
+    int n = write( client, buffer, len );
+    if( n < 0 )
+    {
+      SHLogError( "error writing to socket" );
+      DisconnectClient( client );
+      return false;
+    }
+    written += n;
   }
   return true;
 }
