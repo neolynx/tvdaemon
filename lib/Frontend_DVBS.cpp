@@ -85,6 +85,7 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
   {
     LogError( "Unknown LNB '%s'", LNB.c_str( ));
     t.SetState( Transponder::State_TuningFailed );
+    t.SaveConfig( );
     Close( );
     return false;
   }
@@ -108,6 +109,7 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
   {
     LogError( "dvb_fe_set_parms failed." );
     t.SetState( Transponder::State_TuningFailed );
+    t.SaveConfig( );
     dvb_fe_prt_parms( fe );
     Close( );
     return false;
@@ -117,6 +119,7 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
   if( !GetLockStatus( signal, noise, 10 ))
   {
     t.SetState( Transponder::State_TuningFailed );
+    t.SaveConfig( );
     LogError( "Tuning failed" );
     Close( );
     return false;
