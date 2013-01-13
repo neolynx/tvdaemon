@@ -23,44 +23,52 @@
 
 #include "Log.h"
 
-ThreadBase::ThreadBase( )
+Lockable::Lockable( )
 {
   pthread_mutex_init( (pthread_mutex_t *) &mutex, NULL );
 }
 
-void ThreadBase::Lock( ) const
+void Lockable::Lock( ) const
 {
   pthread_mutex_lock( (pthread_mutex_t *) &mutex );
 }
 
-void ThreadBase::Unlock( ) const
+void Lockable::Unlock( ) const
 {
   pthread_mutex_unlock( (pthread_mutex_t *) &mutex );
 }
 
-ThreadBase::Thread::Thread( ThreadBase &base, ThreadFunc func ) : base(base), func(func)
+Thread::Thread( ) : Lockable( ), started(false)
 {
 }
 
-ThreadBase::Thread::~Thread( )
+Thread::~Thread( )
 {
-  pthread_join( thread, NULL );
 }
 
-bool ThreadBase::Thread::Run( )
+void Thread::JoinThread( )
 {
-  if( pthread_create( &thread, NULL, run, (void *) this ) != 0 )
+  if( started )
+    pthread_join( thread, NULL );
+}
+
+bool Thread::StartThread( )
+{
+  int ret;
+  if(( ret = pthread_create( &thread, NULL, run, (void *) this )) != 0 )
   {
-    LogError( "cannot create thread" );
+    LogError( "error creating thread: %d", ret );
     return false;
   }
   return true;
 }
 
-void *ThreadBase::Thread::run( void *ptr )
+void *Thread::run( void *ptr )
 {
   Thread *t = (Thread *) ptr;
-  (t->base.*t->func)( );
+  t->started = true;
+  t->Run( );
+  t->started = false;
   pthread_exit( NULL );
   return NULL;
 }

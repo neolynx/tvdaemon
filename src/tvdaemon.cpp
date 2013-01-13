@@ -30,7 +30,7 @@ void termination_handler( int signum )
 {
   if( up )
   {
-    printf( "\nSignal received, terminating ...\n" );
+    printf( "\nSignal received\n" );
     up = false;
   }
 }

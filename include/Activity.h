@@ -29,10 +29,10 @@ class Transponder;
 class Service;
 class Frontend;
 
-class Activity : public ThreadBase
+class Activity : public Thread
 {
   public:
-    Activity( Channel &channel );
+    Activity( );
     virtual ~Activity( );
 
     enum State
@@ -49,11 +49,14 @@ class Activity : public ThreadBase
     State GetState( ) { return state; }
     void Schedule( ) { state = State_Start; }
 
-    void SetTransponder( Transponder *transponder ) { this->transponder = transponder; }
-    Transponder &GetTransponder( ) const { return *transponder; }
+    void SetChannel( Channel *channel ) { this->channel = channel; }
+    Channel &GetChannel( ) const { return *channel; }
 
     void SetService( Service *service ) { this->service = service; }
     Service &GetService( ) const { return *service; }
+
+    void SetTransponder( Transponder *transponder ) { this->transponder = transponder; }
+    Transponder &GetTransponder( ) const { return *transponder; }
 
     void SetFrontend( Frontend *frontend ) { this->frontend = frontend; }
     Frontend &GetFrontend( ) const { return *frontend; }
@@ -66,15 +69,16 @@ class Activity : public ThreadBase
     virtual bool Perform( ) = 0;
 
   protected:
-    Channel &channel;
     State state;
-    Transponder *transponder;
+
+    Channel *channel;
     Service *service;
+    Transponder *transponder;
     Frontend *frontend;
 
+    virtual void Run( );
+
   private:
-    void Activity_Thread( );
-    Thread *activity_thread;
     bool up;
 };
 

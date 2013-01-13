@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  Activity_UpdateEPG class
+ *  Activity_Scan class
  *
  *  Copyright (C) 2013 André Roth
  *
@@ -19,21 +19,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Activity_UpdateEPG.h"
+#ifndef _Activity_Scan_
+#define _Activity_Scan_
 
-#include "Log.h"
+#include "Activity.h"
 
-Activity_UpdateEPG::Activity_UpdateEPG( Channel &channel ) : Activity( )
+class Activity_Scan : public Activity
 {
-  SetChannel( &channel );
-}
+  public:
+    Activity_Scan( Transponder *transponder );
+    virtual ~Activity_Scan( );
 
-Activity_UpdateEPG::~Activity_UpdateEPG( )
-{
-}
+    virtual const char *GetName( ) const { return "Scan"; }
 
-bool Activity_UpdateEPG::Perform( )
-{
-  LogError( "should update epg" );
-  return false;
-}
+    virtual void Run( ) { Activity::Run( ); }
+
+  private:
+    virtual bool Perform( );
+};
+
+
+#endif

@@ -73,17 +73,19 @@ TVDaemon *TVDaemon::Instance( )
 
 TVDaemon::TVDaemon( ) :
   ConfigObject( ),
+  Thread( ),
   httpd(NULL),
   up(true)
 {
   recorder = new Recorder( );
-  thread_udev = new Thread( *this, (ThreadFunc) &TVDaemon::Thread_udev );
 }
 
 TVDaemon::~TVDaemon( )
 {
+  Log( "TVDaemon terminating" );
   if( httpd )
   {
+    Log( "Stopping HTTPServer" );
     httpd->Stop( );
     delete httpd;
   }
@@ -93,7 +95,7 @@ TVDaemon::~TVDaemon( )
   SaveConfig( );
 
   if( up ) up = false;
-  delete thread_udev;
+  JoinThread( );
 
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
   {
@@ -301,10 +303,10 @@ void TVDaemon::MonitorAdapters( )
   udev_monitor_enable_receiving( udev_mon );
   udev_fd = udev_monitor_get_fd( udev_mon );
 
-  thread_udev->Run( );
+  StartThread( );
 }
 
-void TVDaemon::Thread_udev( )
+void TVDaemon::Run( )
 {
   fd_set fds;
   struct timeval tv;
@@ -351,7 +353,7 @@ void TVDaemon::Thread_udev( )
       }
       else
       {
-        LogError( "No Device from receive_device(). An error occured." );
+        LogError( "udev: event without device" );
       }
     }
     usleep( 250 * 1000 );

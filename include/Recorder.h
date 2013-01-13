@@ -36,7 +36,7 @@ class Service;
 class Activity_Record;
 class Channel;
 
-class Recorder : public ThreadBase
+class Recorder : public Thread
 {
   public:
     //Recorder( struct dvb_v5_fe_parms &fe );
@@ -59,9 +59,8 @@ class Recorder : public ThreadBase
     //Frame *frame;
     bool up;
     std::vector<Activity_Record *> recordings;
-    Thread *rec_thread;
 
-    void Rec_Thread( );
+    virtual void Run( );
 };
 
 #endif

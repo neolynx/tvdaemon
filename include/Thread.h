@@ -24,33 +24,32 @@
 
 #include <pthread.h>
 
-class ThreadBase;
-typedef void (ThreadBase::*ThreadFunc)( );
-
-class ThreadBase
+class Lockable
 {
   public:
-    ThreadBase( );
+    Lockable( );
     void Lock( ) const;
     void Unlock( ) const;
 
-  protected:
-    class Thread
-    {
-      public:
-        Thread( ThreadBase &base, ThreadFunc func );
-        bool Run( );
-        virtual ~Thread( );
-
-      private:
-        ThreadBase &base;
-        ThreadFunc func;
-        pthread_t thread;
-        static void *run( void *ptr );
-    };
   private:
     volatile pthread_mutex_t mutex;
 };
 
+class Thread : public Lockable
+{
+  protected:
+    Thread( );
+    virtual ~Thread( );
+
+    bool StartThread( );
+    void JoinThread( );
+
+  private:
+    bool started; // FIXME: up should go here
+    pthread_t thread;
+    static void *run( void *ptr );
+
+    virtual void Run( ) = 0;
+};
 
 #endif

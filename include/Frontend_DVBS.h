@@ -33,7 +33,7 @@ class Frontend_DVBS : public Frontend
     Frontend_DVBS( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
     virtual ~Frontend_DVBS( );
 
-    virtual bool Tune( Transponder &transponder, int timeout = 5000 );
+    virtual bool SetTuneParams( Transponder &transponder );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );

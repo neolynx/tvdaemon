@@ -44,25 +44,11 @@
 
 #include "dvb-demux.h"
 #include "dvb-fe.h"
-#include "dvb-scan.h"
-#include "descriptors/pat.h"
-#include "descriptors/pmt.h"
-#include "descriptors/nit.h"
-#include "descriptors/sdt.h"
-#include "descriptors/eit.h"
-#include "descriptors/vct.h"
-#include "descriptors/mpeg_ts.h"
-#include "descriptors/mpeg_pes.h"
-#include "descriptors/desc_service.h"
-#include "descriptors/desc_network_name.h"
-#include "descriptors/desc_event_short.h"
-#include "descriptors/desc_hierarchy.h"
-
 #include <errno.h> // ETIMEDOUT
 
 Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   ConfigObject( adapter, "frontend", config_id )
-  , ThreadBase( )
+  , Thread( )
   , adapter(adapter)
   , fe(NULL)
   , adapter_id(adapter_id)
@@ -72,15 +58,17 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , activity(NULL)
   , current_port(0)
   , state(State_New)
+  , usecount( 0 )
   , up(true)
 {
   ports.push_back( new Port( *this, 0 ));
-  Init( );
+  state = State_Ready;
+  StartThread( );
 }
 
 Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   ConfigObject( adapter, configfile )
-  , ThreadBase( )
+  , Thread( )
   , adapter(adapter)
   , fe(NULL)
   , present(false)
@@ -88,9 +76,10 @@ Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   , activity(NULL)
   , current_port(0)
   , state(State_New)
+  , usecount( 0 )
   , up(true)
 {
-  Init( );
+  StartThread( );
 }
 
 Frontend::~Frontend( )
@@ -99,7 +88,7 @@ Frontend::~Frontend( )
     fe->abort = 1;
 
   up = false;
-  delete idle_thread;
+  JoinThread( );
 
   Close( );
 
@@ -107,12 +96,6 @@ Frontend::~Frontend( )
   {
     delete *it;
   }
-}
-
-void Frontend::Init( )
-{
-  idle_thread = new Thread( *this, (ThreadFunc) &Frontend::Idle_Thread );
-  idle_thread->Run( );
 }
 
 Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
@@ -220,13 +203,13 @@ void Frontend::Close()
     dvb_fe_close( fe );
     transponder = NULL;
     fe = NULL;
-    state = State_Idle;
+    state = State_Ready;
+    usecount = 0;
   }
 }
 
 bool Frontend::GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name )
 {
-  //FIXME: verify this->fe not open
   struct dvb_v5_fe_parms *fe = dvb_fe_open( adapter_id, frontend_id, 0, 0 );
   if( !fe )
   {
@@ -266,7 +249,7 @@ bool Frontend::LoadConfig( )
 
   if( !CreateFromConfig<Port, Frontend>( *this, "port", ports ))
     return false;
-  state = State_Idle;
+  state = State_Ready;
   return true;
 }
 
@@ -305,242 +288,6 @@ Port *Frontend::GetCurrentPort( )
   return ports[current_port];
 }
 
-bool Frontend::Record( )
-{
-  bool ret = true;
-
-  Service &service = activity->GetService( );
-
-  //Recorder rec( *fe );
-  std::vector<int> fds;
-
-  int videofd = -1;
-  std::map<uint16_t, Stream *> &streams = service.GetStreams();
-  for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++)
-  {
-    if( it->second->IsVideo( ) || it->second->IsAudio( ))
-    {
-      Log( "Adding Stream %d: %s", it->first, it->second->GetTypeName( ));
-      int fd = it->second->Open( *this );
-      if( fd )
-        fds.push_back( fd );
-      if( it->second->IsVideo( ))
-      {
-        //rec.AddTrack( );
-        videofd = fd;
-      }
-    }
-    else
-      LogWarn( "Ignoring Stream %d: %s (%d)", it->first, it->second->GetTypeName( ), it->second->GetType( ));
-  }
-
-  if( fds.empty( ))
-  {
-    LogError( "no audio or video stream for service %d found", service.GetKey( ));
-    return false;
-  }
-
-  std::string dumpfile;
-  std::string upcoming;
-
-  int fd = OpenDemux( );
-  Log( "Reading EIT" );
-  struct dvb_table_eit *eit;
-  dvb_read_section_with_id( fe, fd, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service.GetKey( ), (uint8_t **) &eit, 5 );
-  if( eit )
-  {
-    dvb_table_eit_print( fe, eit );
-    dvb_eit_event_foreach(event, eit)
-    {
-      if( event->running_status == 4 ) // now
-      {
-        dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
-        {
-          dumpfile = desc->name;
-          break;
-        }
-      }
-      if( event->running_status == 2 ) // starts in a few seconds
-      {
-        dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
-        {
-          upcoming = desc->name;
-          break;
-        }
-      }
-    }
-    dvb_table_eit_free(eit);
-  }
-
-  if( !upcoming.empty( ))
-  {
-    dumpfile = upcoming;
-  }
-
-  //dvb_read_section_with_id( fe, fd_v, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, &eitlen, 5 );
-  //if( eit )
-  //{
-  //dvb_table_eit_print( fe, eit );
-  //dvb_eit_event_foreach(event, eit)
-  //{
-  //if( event->running_status == 4 ) // now
-  //{
-  //dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
-  //{
-  //dumpfile = desc->name;
-  //dumpfile += ".pes";
-  //break;
-  //}
-  //}
-  //}
-  //free( eit );
-  //}
-
-  if( dumpfile.empty( ))
-    dumpfile = "dump";
-  else
-  {
-    std::replace( dumpfile.begin(), dumpfile.end(), '/', '_');
-    std::replace( dumpfile.begin(), dumpfile.end(), '`', '_');
-    std::replace( dumpfile.begin(), dumpfile.end(), '$', '_');
-  }
-
-  {
-    char file[256];
-
-    std::string dir = Utils::Expand( TVDaemon::Instance( )->GetDir( ));
-    Utils::EnsureSlash( dir );
-    std::string filename = dir + dumpfile + ".pes";
-
-    int i = 0;
-    while( Utils::IsFile( filename ))
-    {
-      char num[16];
-      if( ++i == 1000 )
-      {
-        LogError( "Too many files with same name: %s", filename.c_str( ));
-        ret = false;
-        goto exit;
-      }
-      snprintf( num, sizeof( num ), "_%d", i );
-      filename = dir + dumpfile + num + ".pes";
-    }
-
-    int file_fd = open( filename.c_str( ),
-#ifdef O_LARGEFILE
-        O_LARGEFILE |
-#endif
-        O_WRONLY | O_CREAT | O_TRUNC, 0644 );
-
-    if( file_fd < 0 )
-    {
-      LogError( "Cannot open file '%s'", filename.c_str( ));
-      // FIXME: cleanup
-      ret = false;
-      goto exit;
-    }
-
-    Log( "Recording '%s' ...", filename.c_str( ));
-
-    bool started = false;
-
-    fd_set tmp_fdset;
-    fd_set fdset;
-    FD_ZERO( &fdset );
-    int fdmax = 0;
-    for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
-    {
-      FD_SET ( *it, &fdset );
-      if( *it > fdmax )
-        fdmax = *it;
-    }
-
-    uint8_t *data = (uint8_t *) malloc( DMX_BUFSIZE );
-    int len;
-    up = true;
-    int ac, vc;
-    ac = vc = 0;
-    uint64_t startpts = 0;
-    while( up )
-    {
-      tmp_fdset = fdset;
-
-      struct timeval timeout = { 1, 0 }; // 1 sec
-      if( select( FD_SETSIZE, &tmp_fdset, NULL, NULL, &timeout ) == -1 )
-      {
-        LogError( "select error" );
-        up = false;
-        continue;
-      }
-
-      for( std::vector<int>::iterator it = fds.begin( ); up && it != fds.end( ); it++ )
-      {
-        int fd = *it;
-        if( FD_ISSET( fd, &tmp_fdset ))
-        {
-          len = read( fd, data, DMX_BUFSIZE );
-          if( len < 0 )
-          {
-            LogError( "Error receiving data... %d", errno );
-            continue;
-          }
-
-          if( len == 0 )
-          {
-            Log( "no data received" );
-            continue;
-          }
-
-          int ret = write( file_fd, data, len );
-
-          if( fd == videofd )
-          {
-            //Log( "Video Packet: %d bytes", len );
-            int packets = 0;
-            ssize_t size = 0;
-            ssize_t size2 = 0;
-            uint8_t buf[188];
-            int remaining = len;
-            int pos = 0;
-            uint8_t *p = data;
-            while( up && remaining > 0 )
-            {
-              int chunk = 188;
-              if( remaining < chunk ) chunk = remaining;
-              remaining -= chunk;
-              dvb_mpeg_ts_init( fe, p, chunk, buf, &size );
-              if( size == 0 )
-              {
-                break;
-              }
-              p += size;
-              chunk -= size;
-
-
-              dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
-              if( ts->payload_start )
-                started = true;
-
-              //if( started )
-                //rec.record( p, chunk );
-
-              p += chunk;
-            }
-          }
-        }
-      }
-    }
-    close( file_fd );
-    free( data );
-  }
-
-exit:
-  for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
-    dvb_dmx_close( *it );
-
-  return ret;
-}
-
 int Frontend::OpenDemux( )
 {
   return dvb_dmx_open( adapter_id, frontend_id );
@@ -573,13 +320,13 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
 
       //if( i > 0 )
       //printf( "\n" );
-      Log( "Tuned: signal %3u%% | snr %3u%% | ber %d | unc %d", (sig * 100) / 0xffff, (snr * 100) / 0xffff, ber, unc );
+      Log( "Tuned: signal %3u%% snr %3u%% ber %d unc %d", (sig * 100) / 0xffff, (snr * 100) / 0xffff, ber, unc );
 
       signal = (sig * 100) / 0xffff;
       noise  = (snr * 100) / 0xffff;
       return true;
     }
-    //usleep( 1 );
+    usleep( 10 );
     //printf( "." );
     //fflush( stdout );
   }
@@ -589,331 +336,87 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
 
 bool Frontend::Tune( Transponder &t, int timeoutms )
 {
-  Log( "Frontend::Tune %p %p", &t, transponder );
+  Lock( );
   if( transponder )
   {
     if( transponder == &t )
+    {
+      Unlock( );
+      usecount++;
       return true;
-    LogError( "Frontend already tuned" );
+    }
+    Log( "Frontend busy" );
+    Unlock( );
     return false;
   }
 
   if( !Open( ))
+  {
+    Unlock( );
     return false;
+  }
 
   state = State_Tuning;
+  transponder = &t;
+  usecount++;
+  Unlock( );
 
   t.SetState( Transponder::State_Tuning );
   Log( "Tuning %s", t.toString( ).c_str( ));
+
+  uint8_t signal, noise;
   int r = dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
   if( r != 0 )
   {
     LogError( "dvb_set_compat_delivery_system return %d", r );
-    t.SetState( Transponder::State_TuningFailed );
-    t.SaveConfig( );
-    Close( );
-    return false;
+    goto fail;
   }
+
+  SetTuneParams( t );
   t.GetParams( fe );
-
-  //dvb_fe_prt_parms( fe );
-
   r = dvb_fe_set_parms( fe );
   if( r != 0 )
   {
     LogError( "dvb_fe_set_parms failed with %d.", r );
-    t.SetState( Transponder::State_TuningFailed );
-    t.SaveConfig( );
     dvb_fe_prt_parms( fe );
-    Close( );
-    return false;
+    goto fail;
   }
 
-  //uint32_t freq;
-  //dvb_fe_retrieve_parm( fe, DTV_FREQUENCY, &freq );
-  //Log( "tuning to %d", freq );
-
-
-  uint8_t signal, noise;
   if( !GetLockStatus( signal, noise, 1500 ))
   {
-    t.SetState( Transponder::State_TuningFailed );
-    t.SaveConfig( );
     LogError( "Tuning failed" );
-    Close( );
-    return false;
+    goto fail;
   }
 
   t.SetState( Transponder::State_Tuned );
   t.SetSignal( signal, noise );
-  transponder = &t;
-  return true;
-}
-
-bool Frontend::Scan( Transponder &transponder )
-{
-  struct timeval tv;
-  int ret;
-  const char *err;
-  int time = 5;
-  std::vector<uint16_t> services;
-  int fd_demux;
-  struct dvb_table_pat *pat = NULL;
-
-  Log( "Frontend::Scan" );
-
-  if( !Tune( transponder ))
-    return false;
-
-  transponder.SetState( Transponder::State_Scanning );
-
-  if(( fd_demux = OpenDemux( )) < 0 )
-  {
-    LogError( "unable to open adapter demux" );
-    goto scan_failed;
-  }
-
-  Log( "Reading PAT" );
-  dvb_read_section( fe, fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, time );
-  if( !pat )
-  {
-    LogError( "Error reading PAT table" );
-    goto scan_failed;
-  }
-
-  Log( "  Setting TSID %d", pat->header.id );
-  transponder.SetTSID( pat->header.id );
-  if( transponder.GetState( ) == Transponder::State_Duplicate )
-    goto scan_aborted;
-
-  if( transponder.HasVCT( ))
-  {
-    Log( "Reading VCT" );
-    struct dvb_table_vct *vct;
-    dvb_read_section( fe, fd_demux, DVB_TABLE_VCT, DVB_TABLE_VCT_PID, (uint8_t **) &vct, time );
-    if( vct && up )
-    {
-      dvb_table_vct_print( fe, vct );
-      dvb_vct_channel_foreach( vct, channel )
-      {
-        std::string name = channel->short_name;
-        std::string provider = "unknown";
-        Service::Type type = Service::Type_Unknown;
-        switch( channel->service_type )
-        {
-          default:
-            type = Service::Type_TV;
-            break;
-        }
-
-        if( type == Service::Type_Unknown )
-        {
-          LogWarn( "  Service %5d: %s '%s': unknown type: %d", channel->program_number, channel->access_control ? "§" : " ", name.c_str( ), channel->service_type );
-          continue;
-        }
-
-        transponder.UpdateService( channel->program_number, type, name, provider, channel->access_control );
-        services.push_back( channel->program_number );
-      }
-    }
-    if( vct )
-      dvb_table_vct_free( vct );
-  }
-
-  if( transponder.HasSDT( ))
-  {
-    Log( "Reading SDT" );
-    struct dvb_table_sdt *sdt;
-    dvb_read_section( fe, fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, time );
-    if( sdt )
-    {
-      //dvb_table_sdt_print( fe, sdt );
-      dvb_sdt_service_foreach( service, sdt )
-      {
-        const char *name = "", *provider = "";
-        int service_type = -1;
-        dvb_desc_find( struct dvb_desc_service, desc, service, service_descriptor )
-        {
-          service_type = desc->service_type;
-          if( desc->name )
-            name = desc->name;
-          if( desc->provider )
-            provider = desc->provider;
-          break;
-        }
-        if( service_type == -1 )
-        {
-          LogWarn( "  No service descriptor found for service %d", service->service_id );
-          continue;
-        }
-
-        Service::Type type = Service::Type_Unknown;
-        switch( service_type )
-        {
-          case 0x01:
-          case 0x16:
-            type = Service::Type_TV;
-            break;
-          case 0x02:
-            type = Service::Type_Radio;
-            break;
-          case 0x19:
-            type = Service::Type_TVHD;
-            break;
-          case 0x0c:
-            // Data ignored
-            continue;
-
-        }
-
-        if( type == Service::Type_Unknown )
-        {
-          LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name, service_type );
-          continue;
-        }
-
-        Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
-        transponder.UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
-        services.push_back( service->service_id );
-      }
-
-      dvb_table_sdt_free( sdt );
-    }
-  }
-
-  //dvb_table_pat_print( fe, pat );
-  Log( "Reading PMT's" );
-  dvb_pat_program_foreach( program, pat )
-  {
-    for( std::vector<uint16_t>::iterator it = services.begin( ); it != services.end( ); it++ )
-    {
-      if( *it == program->service_id )
-      {
-        if( program->service_id == 0 )
-        {
-          LogWarn( "  Ignoring PMT of service 0" );
-          break;
-        }
-
-        transponder.UpdateProgram( program->service_id, program->pid );
-
-        struct dvb_table_pmt *pmt;
-        dvb_read_section( fe, fd_demux, DVB_TABLE_PMT, program->pid, (uint8_t **) &pmt, time );
-        if( !pmt )
-        {
-          LogWarn( "  No PMT for pid %d", program->pid );
-          break;
-        }
-
-        //dvb_table_pmt_print( fe, pmt );
-
-        dvb_pmt_stream_foreach( stream, pmt )
-        {
-          Stream::Type type = Stream::Type_Unknown;
-          switch( stream->type )
-          {
-            case stream_video:            // 0x01
-              type = Stream::Type_Video;
-              break;
-            case stream_video_h262:       // 0x02
-              type = Stream::Type_Video_H262;
-              break;
-            case 0x1b:                    // 0x1b H.264 AVC
-              type = Stream::Type_Video_H264;
-              break;
-
-            case stream_audio:            // 0x03
-              type = Stream::Type_Audio;
-              break;
-            case stream_audio_13818_3:    // 0x04
-              type = Stream::Type_Audio_13818_3;
-              break;
-            case stream_audio_adts:       // 0x0F
-              type = Stream::Type_Audio_ADTS;
-              break;
-            case stream_audio_latm:       // 0x11
-              type = Stream::Type_Audio_LATM;
-              break;
-            case stream_private + 1:      // 0x81  user private - in general ATSC Dolby - AC-3
-              type = Stream::Type_Audio_AC3;
-              break;
-
-            case stream_private_sections: // 0x05
-            case stream_private_data:     // 0x06
-              dvb_desc_find( struct dvb_desc, desc, stream, AC_3_descriptor )
-              {
-                type = Stream::Type_Audio_AC3;
-                break;
-              }
-              dvb_desc_find( struct dvb_desc, desc, stream, enhanced_AC_3_descriptor )
-              {
-                type = Stream::Type_Audio_AC3;
-                LogWarn( "  Found AC3 enhanced" );
-                break;
-              }
-              break;
-
-            default:
-              LogWarn( "  Ignoring stream type %d: %s", stream->type, pmt_stream_name[stream->type] );
-              break;
-          }
-          if( type != Stream::Type_Unknown )
-            transponder.UpdateStream( program->service_id, stream->elementary_pid, type );
-        }
-
-        dvb_table_pmt_free( pmt );
-        break;
-      }
-    }
-  }
-  if( pat )
-    dvb_table_pat_free( pat );
-
-  if( transponder.HasNIT( ))
-  {
-    Log( "Reading NIT" );
-    struct dvb_table_nit *nit;
-    dvb_read_section( fe, fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, time );
-    if( nit )
-    {
-      dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
-      {
-        Log( "  Network Name: %s", desc->network_name );
-        //transponder->SetNetwork( desc->network_name );
-        break;
-      }
-      //dvb_table_nit_print( fe, nit );
-      HandleNIT( nit );
-    }
-    if( nit )
-      dvb_table_nit_free( nit );
-  }
-
-  //Log( "Reading EIT" );
-  //struct dvb_table_eit *eit;
-  //dvb_read_section_with_id( fe, fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, 1, (uint8_t **) &eit, time );
-  //if( eit && up )
-  //{
-  //dvb_table_eit_print( fe, eit );
-  //}
-  //if( eit )
-  //dvb_table_eit_free( eit );
-
-  dvb_dmx_close( fd_demux );
-  Close( );
-  transponder.SetState( Transponder::State_Scanned );
-  transponder.SaveConfig( );
   return true;
 
-scan_failed:
-  transponder.SetState( Transponder::State_ScanningFailed );
-  transponder.SaveConfig( );
-scan_aborted:
-  dvb_dmx_close( fd_demux );
-  Close( );
+fail:
+  t.SetState( Transponder::State_TuningFailed );
+  t.SaveConfig( );
+  Release( );
   return false;
 }
 
+void Frontend::Release( )
+{
+  Lock( );
+  if( usecount <= 0 )
+  {
+    LogError( "Cannot release unused Frontend" );
+    Unlock( );
+    return;
+  }
+  if( --usecount == 0 )
+    Close( );
+  Unlock( );
+}
+
+bool Frontend::SetTuneParams( Transponder & )
+{
+  return true;
+}
 
 void Frontend::json( json_object *entry ) const
 {
@@ -952,7 +455,7 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
   return false;
 }
 
-void Frontend::Idle_Thread( )
+void Frontend::Run( )
 {
   Channel *channel;
   while( up )
@@ -960,7 +463,7 @@ void Frontend::Idle_Thread( )
     bool idle = true;
     switch( state )
     {
-      case State_Idle:
+      case State_Ready:
         for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
         {
           if( (*it)->Scan( ))
@@ -979,15 +482,6 @@ void Frontend::Idle_Thread( )
           //channel->UpdateEPG( );
         //}
 
-        break;
-      case State_Recording:
-        if( !activity )
-        {
-          LogError( "No recording found" );
-          break;
-        }
-        idle = false;
-        Record( );
         break;
     }
 

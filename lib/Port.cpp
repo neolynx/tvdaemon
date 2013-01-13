@@ -25,7 +25,7 @@
 #include "TVDaemon.h"
 #include "Frontend.h"
 #include "Log.h"
-#include "Activity.h"
+#include "Activity_Scan.h"
 
 #include <json/json.h>
 #include <stdlib.h> // atoi
@@ -90,16 +90,12 @@ bool Port::Scan( )
   Transponder *t = source->GetTransponderForScanning( );
   if( !t )
     return false;
+  Log( "Scanning Transponder %d: %s", t->GetKey( ), t->toString( ).c_str( ));
 
-  // FIXME: !!!!!!!!!!!!!!!!!
-  //
-  //if( !frontend.SetPort( port_num ))
-  //{
-    //LogError( "Error setting port %d on frontend", port_num );
-    //return false;
-  //}
-
-  return frontend.Scan( *t );
+  Activity_Scan *act = new Activity_Scan( t );
+  act->Run( );
+  delete act;
+  return true;
 }
 
 void Port::json( json_object *entry ) const

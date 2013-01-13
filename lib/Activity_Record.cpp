@@ -37,8 +37,9 @@
 #include <errno.h>
 #include <algorithm> // replace
 
-Activity_Record::Activity_Record( Channel &channel ) : Activity( channel )
+Activity_Record::Activity_Record( Channel &channel ) : Activity( )
 {
+  SetChannel( &channel );
 }
 
 Activity_Record::~Activity_Record( )
@@ -48,6 +49,8 @@ Activity_Record::~Activity_Record( )
 bool Activity_Record::Perform( )
 {
   // FIXME: verify all pointers...
+  Log( "Recording Channel %s", channel->GetName( ).c_str( ));
+
   bool ret = true;
   std::vector<int> fds;
 

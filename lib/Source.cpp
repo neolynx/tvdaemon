@@ -38,7 +38,7 @@
 
 Source::Source( TVDaemon &tvd, std::string name, Type type, int config_id ) :
   ConfigObject( tvd, "source", config_id ),
-  ThreadBase( ),
+  Lockable( ),
   tvd(tvd), name(name),
   type(type)
 {
@@ -166,7 +166,7 @@ bool Source::AddTransponder( Transponder *t )
   {
     if( (*it)->IsSame( *t ))
     {
-      //LogWarn( "Already known transponder: %s", t->toString( ).c_str( ));
+      //LogWarn( "Ignoring already known transponder: %s", t->toString( ).c_str( ));
       Unlock( );
       return false;
     }

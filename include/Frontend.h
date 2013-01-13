@@ -40,7 +40,7 @@ class Activity;
 
 #define DMX_BUFSIZE 2 * 1024 * 1024
 
-class Frontend : public ConfigObject, public RPCObject, public ThreadBase
+class Frontend : public ConfigObject, public RPCObject, public Thread
 {
   public:
     static Frontend *Create( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
@@ -59,13 +59,8 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 
     struct dvb_v5_fe_parms *GetFE( ) { return fe; }
     static bool GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name = NULL );
-    virtual bool Tune( Transponder &transponder, int timeout = 1000 );
     virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries );
     int OpenDemux( );
-    bool Open( );
-    void Close( );
-
-    bool Scan( Transponder &transponder );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
@@ -73,10 +68,9 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     enum State
     {
       State_New,
-      State_Idle,
+      State_Ready,
       State_Opened,
       State_Tuning,
-      State_Recording,
       State_Last
     };
 
@@ -85,6 +79,9 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
     bool Tune( Port &port, Activity &act );
+    void Release( );
+
+    virtual bool HandleNIT( struct dvb_table_nit *nit ) = 0;
 
   protected:
     Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
@@ -98,6 +95,7 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 
     void SetState( State state ) { this->state = state; }
 
+    virtual bool SetTuneParams( Transponder &transponder );
 
     struct dvb_v5_fe_parms *fe;
 
@@ -110,16 +108,9 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 
     Source::Type type;
 
-    bool HandlePAT( struct section *section );
-    virtual bool HandleNIT( struct dvb_table_nit *nit ) = 0;
-    bool HandleSDT( struct section *section );
-    bool HandlePMT( struct section *section, uint16_t pid );
-
     void Log( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
     void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
     void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
-
-    bool Record( );
 
     uint8_t filter[18];
     uint8_t mask[18];
@@ -127,17 +118,21 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     bool up;
 
   private:
-    void Init( );
     bool SetPort( int port_id );
 
     State state;
+    int usecount;
 
     std::map<uint16_t, uint16_t> pid_map;
     std::deque<uint16_t> pno_list;
     uint16_t curPid;
 
     Thread *idle_thread;
-    void Idle_Thread( );
+    virtual void Run( );
+
+    bool Open( );
+    bool Tune( Transponder &transponder, int timeout = 1000 );
+    void Close( );
 
     Activity *activity;
 };

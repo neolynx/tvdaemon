@@ -62,23 +62,8 @@ bool Frontend_DVBS::LoadConfig( )
   return true;
 }
 
-bool Frontend_DVBS::Tune( Transponder &t, int timeout )
+bool Frontend_DVBS::SetTuneParams( Transponder &t )
 {
-  if( transponder )
-  {
-    if( transponder == &t )
-      return true;
-    LogError( "Frontend already tuned" );
-    return false;
-  }
-
-  if( !Open( ))
-    return false;
-
-  SetState( State_Tuning );
-  Log( "Tuning %s", t.toString( ).c_str( ));
-  t.SetState( Transponder::State_Tuning );
-
   int satpos = GetCurrentPort( )->GetPortNum( );
   int lnb = dvb_sat_search_lnb( LNB.c_str( ));
   if( lnb < 0 )
@@ -86,7 +71,6 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
     LogError( "Unknown LNB '%s'", LNB.c_str( ));
     t.SetState( Transponder::State_TuningFailed );
     t.SaveConfig( );
-    Close( );
     return false;
   }
 
@@ -97,37 +81,6 @@ bool Frontend_DVBS::Tune( Transponder &t, int timeout )
   fe->diseqc_wait = 0;
   fe->freq_bpf = 0;
 
-  dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
-  t.GetParams( fe );
-
-  //dvb_fe_prt_parms( fe );
-
-  //fe->verbose = 1;
-
-  int r = dvb_fe_set_parms( fe );
-  if( r != 0 )
-  {
-    LogError( "dvb_fe_set_parms failed." );
-    t.SetState( Transponder::State_TuningFailed );
-    t.SaveConfig( );
-    dvb_fe_prt_parms( fe );
-    Close( );
-    return false;
-  }
-
-  uint8_t signal, noise;
-  if( !GetLockStatus( signal, noise, 10 ))
-  {
-    t.SetState( Transponder::State_TuningFailed );
-    t.SaveConfig( );
-    LogError( "Tuning failed" );
-    Close( );
-    return false;
-  }
-
-  t.SetSignal( signal, noise );
-  t.SetState( Transponder::State_Tuned );
-  transponder = &t;
   return true;
 }
 

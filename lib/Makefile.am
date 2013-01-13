@@ -27,6 +27,7 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Thread.cpp \
 			  Activity.cpp \
 			  Activity_Record.cpp \
+			  Activity_Scan.cpp \
 			  Activity_UpdateEPG.cpp \
 			  Log.cpp
 

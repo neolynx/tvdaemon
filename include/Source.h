@@ -35,7 +35,7 @@ class HTTPServer;
 class TVDaemon;
 class Activity;
 
-class Source : public ConfigObject, public RPCObject, public ThreadBase
+class Source : public ConfigObject, public RPCObject, public Lockable
 {
   public:
     enum Type

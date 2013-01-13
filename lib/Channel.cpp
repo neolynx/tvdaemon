@@ -79,7 +79,6 @@ bool Channel::AddService( Service *service )
     LogWarn( "Service already added to Channel %s", name.c_str( ));
     return false;
   }
-  Log( "Adding Service %d to Channel %s", service->GetKey( ), name.c_str( ));
   services.push_back( service );
   return true;
 }

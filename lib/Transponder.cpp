@@ -172,7 +172,6 @@ bool Transponder::SaveConfig( )
   WriteConfig( "Signal",    signal );
   WriteConfig( "Noise",     noise );
 
-  Log( "Transponder::SaveConfig %d: %s", GetKey( ), GetStateName( state ));
   DeleteConfig( "Services" );
   Setting &n = ConfigList( "Services" );
   ConfigBase c( n );
@@ -281,7 +280,6 @@ bool Transponder::GetParams( struct dvb_v5_fe_parms *params ) const
 
 void Transponder::SetState( State state )
 {
-  Log( "Transponder::SetState: %s", GetStateName( state ));
   this->state = state;
 }
 

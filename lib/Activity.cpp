@@ -26,44 +26,66 @@
 
 #include <unistd.h> // NULL
 
-Activity::Activity( Channel &channel ) : channel(channel), state(state), transponder(NULL), service(NULL), frontend(NULL), up(true)
+Activity::Activity( ) : Thread( ), state(state), channel(NULL), service(NULL), transponder(NULL), frontend(NULL), up(true)
 {
-  activity_thread = new Thread( *this, (ThreadFunc) &Activity::Activity_Thread );
 }
 
 Activity::~Activity( )
 {
   up = false;
-  delete activity_thread;
+  JoinThread( );
 }
 
 bool Activity::Start( )
 {
   state = State_Starting;
-  activity_thread->Run( );
+  StartThread( );
 }
 
-void Activity::Activity_Thread( )
+void Activity::Run( )
 {
   const char *name = GetName( );
-  Log( "Activity %s started", name );
+  std::string context;
   state = State_Started;
-  if( !channel.Tune( *this ))
+  if( channel )
   {
-    Log( "Activity %s failed", name );
-    state = State_Failed;
-    return;
+    context = channel->GetName( );
+    Log( "Activity started: %s( %s )", name, context.c_str( ));
+    if( !channel->Tune( *this ))
+    {
+      Log( "Activity failed:  %s( %s ) failed", name, context.c_str( ));
+      goto fail;
+    }
   }
-  if( !Perform( ))
+  else if( transponder )
   {
-    Log( "Activity %s failed", name );
-    state = State_Failed;
+    context = transponder->toString( );
+    Log( "Activity started: %s( %s )", name, context.c_str( ));
+    if( !transponder->Tune( *this ))
+    {
+      Log( "Activity failed:  %s( %s )", name, context.c_str( ));
+      goto fail;
+    }
   }
   else
   {
-    Log( "Activity %s done", name );
-    state = State_Done;
+    LogError( "Activity %s unable to start: no channel or transponder found", name );
+    goto fail;
   }
+
+  if( !Perform( ))
+    state = State_Failed;
+  else
+    state = State_Done;
+
   if( frontend )
-    frontend->Close( );
+    frontend->Release( );
+
+  Log( "Activity %s %s( %s )", state == State_Done ? "done:    " : "failed:  ", name, context.c_str( ));
+  return;
+
+fail:
+  state = State_Failed;
+  return;
 }
+

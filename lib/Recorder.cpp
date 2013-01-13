@@ -26,15 +26,16 @@
 
 #include <unistd.h> // sleep
 
-Recorder::Recorder( ) : up(true)
+Recorder::Recorder( ) : Thread( ), up(true)
 {
-  rec_thread = new Thread( *this, (ThreadFunc) &Recorder::Rec_Thread );
-  rec_thread->Run( );
+  StartThread( );
 }
 
 Recorder::~Recorder( )
 {
-  delete rec_thread;
+  Log( "Stopping Recorder" );
+  up = false;
+  JoinThread( );
   for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
   {
     delete *it;
@@ -52,7 +53,7 @@ bool Recorder::RecordNow( Channel &channel )
 }
 
 
-void Recorder::Rec_Thread( )
+void Recorder::Run( )
 {
   while( up )
   {

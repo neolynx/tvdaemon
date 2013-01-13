@@ -41,7 +41,7 @@ class Source;
 class Channel;
 class Recorder;
 
-class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBase
+class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
 {
   public:
     static TVDaemon *Instance( );
@@ -99,8 +99,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBa
 
     HTTPServer *httpd;
 
-    Thread *thread_udev;
-    void Thread_udev( );
+    virtual void Run( );
 
     Recorder *recorder;
 };
