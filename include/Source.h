@@ -33,7 +33,7 @@
 class Port;
 class HTTPServer;
 class TVDaemon;
-class Recording;
+class Activity;
 
 class Source : public ConfigObject, public RPCObject, public ThreadBase
 {
@@ -62,8 +62,6 @@ class Source : public ConfigObject, public RPCObject, public ThreadBase
 
     Transponder *CreateTransponder( const struct dvb_entry &info );
     Transponder *GetTransponder( int id );
-    bool TuneTransponder( int id );
-    bool ScanTransponder( int id );
     uint GetTransponderCount() { return transponders.size(); }
     Type GetType( ) const { return type; }
 
@@ -81,7 +79,7 @@ class Source : public ConfigObject, public RPCObject, public ThreadBase
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    bool Record( Recording &rec );
+    bool Tune( Activity &rec );
 
   private:
     TVDaemon &tvd;

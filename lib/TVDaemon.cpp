@@ -37,6 +37,7 @@
 #include "Channel.h"
 #include "Adapter.h"
 #include "Frontend.h"
+#include "Recorder.h"
 
 #include "SocketHandler.h"
 #include "Log.h"
@@ -75,19 +76,21 @@ TVDaemon::TVDaemon( ) :
   httpd(NULL),
   up(true)
 {
+  recorder = new Recorder( );
   thread_udev = new Thread( *this, (ThreadFunc) &TVDaemon::Thread_udev );
 }
 
 TVDaemon::~TVDaemon( )
 {
-
-  SaveConfig( );
-
   if( httpd )
   {
     httpd->Stop( );
     delete httpd;
   }
+
+  delete recorder;
+
+  SaveConfig( );
 
   if( up ) up = false;
   delete thread_udev;
@@ -783,6 +786,16 @@ bool TVDaemon::RPC_Adapter( const HTTPRequest &request, const std::string &cat, 
 
 bool TVDaemon::Record( Channel &channel )
 {
-  return recorder.RecordNow( channel );
+  return recorder->RecordNow( channel );
+}
+
+Channel *TVDaemon::GetChannelForEPG( )
+{
+  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+  {
+    if( !(*it)->epg )
+      return *it;
+  }
+  return NULL;
 }
 

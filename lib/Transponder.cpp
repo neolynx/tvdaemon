@@ -32,7 +32,7 @@
 #include "Transponder_ATSC.h"
 #include "Log.h"
 #include "HTTPServer.h"
-#include "Recorder.h"
+#include "Activity.h"
 
 Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int config_id ) :
   ConfigObject( source, "transponder", config_id ),
@@ -172,6 +172,7 @@ bool Transponder::SaveConfig( )
   WriteConfig( "Signal",    signal );
   WriteConfig( "Noise",     noise );
 
+  Log( "Transponder::SaveConfig %d: %s", GetKey( ), GetStateName( state ));
   DeleteConfig( "Services" );
   Setting &n = ConfigList( "Services" );
   ConfigBase c( n );
@@ -278,30 +279,29 @@ bool Transponder::GetParams( struct dvb_v5_fe_parms *params ) const
   return true;
 }
 
+void Transponder::SetState( State state )
+{
+  Log( "Transponder::SetState: %s", GetStateName( state ));
+  this->state = state;
+}
+
 const char *Transponder::GetStateName( State state )
 {
   switch( state )
   {
-    case State_New:
-      return "New";
-    case State_Tuning:
-      return "Tuning";
-    case State_Tuned:
-      return "Tuned";
-    case State_TuningFailed:
-      return "Tuning Failed";
-    case State_Scanning:
-      return "Scanning";
-    case State_Scanned:
-      return "Scanned";
-    case State_ScanningFailed:
-      return "Scanning Failed";
-    case State_Idle:
-      return "Idle";
-    default:
-      return "Unknown";
+    case State_New:            return "New";
+    case State_Selected:       return "Selected";
+    case State_Tuning:         return "Tuning";
+    case State_Tuned:          return "Tuned";
+    case State_TuningFailed:   return "Tuning Failed";
+    case State_Scanning:       return "Scanning";
+    case State_Scanned:        return "Scanned";
+    case State_ScanningFailed: return "Scanning Failed";
+    case State_Idle:           return "Idle";
+    case State_Duplicate:      return "Duplicate";
+    case State_Last:           return NULL;
   }
-  return "Unknown";
+  return NULL;
 }
 
 void Transponder::json( json_object *entry ) const
@@ -397,14 +397,14 @@ void Transponder::SetTSID( uint16_t TSID )
       LogWarn( "Disabling dupplicate transponder %s: same as %s", toString( ).c_str( ), (*it)->toString( ).c_str( ));
       Disable( );
       SetState( State_Duplicate );
+      SaveConfig( );
     }
   }
 }
 
-bool Transponder::Record( Recording &rec )
+bool Transponder::Tune( Activity &act )
 {
-  Log( "Transponder::Record" );
-  rec.SetTransponder( this );
-  return source.Record( rec );
+  act.SetTransponder( this );
+  return source.Tune( act );
 }
 

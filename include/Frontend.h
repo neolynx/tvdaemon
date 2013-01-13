@@ -36,7 +36,7 @@
 class Adapter;
 class Transponder;
 class Port;
-class Recording;
+class Activity;
 
 #define DMX_BUFSIZE 2 * 1024 * 1024
 
@@ -59,7 +59,6 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 
     struct dvb_v5_fe_parms *GetFE( ) { return fe; }
     static bool GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name = NULL );
-    virtual bool SetPort( int port_id );
     virtual bool Tune( Transponder &transponder, int timeout = 1000 );
     virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries );
     int OpenDemux( );
@@ -85,7 +84,7 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    bool Record( Recording &rec );
+    bool Tune( Port &port, Activity &act );
 
   protected:
     Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
@@ -98,6 +97,7 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     Adapter &adapter;
 
     void SetState( State state ) { this->state = state; }
+
 
     struct dvb_v5_fe_parms *fe;
 
@@ -128,6 +128,7 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
 
   private:
     void Init( );
+    bool SetPort( int port_id );
 
     State state;
 
@@ -138,7 +139,7 @@ class Frontend : public ConfigObject, public RPCObject, public ThreadBase
     Thread *idle_thread;
     void Idle_Thread( );
 
-    Recording *recording;
+    Activity *activity;
 };
 
 #endif

@@ -31,7 +31,7 @@
 #include "dvb-frontend.h"
 
 class Source;
-class Recording;
+class Activity;
 struct PAT;
 
 class Transponder : public ConfigObject, public RPCObject
@@ -100,7 +100,7 @@ class Transponder : public ConfigObject, public RPCObject
       State_Last
     };
 
-    void SetState( State state ) { this->state = state; }
+    void SetState( State state );
     State GetState( ) { return state; }
     static const char *GetStateName( State state );
 
@@ -108,11 +108,10 @@ class Transponder : public ConfigObject, public RPCObject
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    bool Record( Recording &rec );
+    bool Tune( Activity &act );
 
   protected:
     bool enabled;
-    State state;
     uint8_t signal;
     uint8_t noise;
     Source &source;
@@ -127,6 +126,9 @@ class Transponder : public ConfigObject, public RPCObject
     bool has_nit;
     bool has_sdt;
     bool has_vct;
+
+  private:
+    State state;
 };
 
 #endif

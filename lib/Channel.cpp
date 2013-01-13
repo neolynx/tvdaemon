@@ -29,6 +29,7 @@
 #include "Service.h"
 #include "Transponder.h"
 #include "Source.h"
+#include "Activity_UpdateEPG.h"
 #include "Log.h"
 
 Channel::Channel( TVDaemon &tvd, Service *service, int config_id ) :
@@ -38,12 +39,14 @@ Channel::Channel( TVDaemon &tvd, Service *service, int config_id ) :
 {
   name = service->GetName( );
   services.push_back( service );
+  epg = false;
 }
 
 Channel::Channel( TVDaemon &tvd, std::string configfile ) :
   ConfigObject( tvd, configfile ),
   tvd(tvd)
 {
+  epg = false;
 }
 
 Channel::~Channel( )
@@ -114,12 +117,11 @@ bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const st
   return false;
 }
 
-bool Channel::Record( Recording &rec )
+bool Channel::Tune( Activity &act )
 {
-  Log( "Channel::Record" );
   for( std::vector<Service *>::const_iterator it = services.begin( ); it != services.end( ); it++ )
   {
-    if( (*it)->Record( rec ))
+    if( (*it)->Tune( act ))
       return true;
   }
   return false;

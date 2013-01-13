@@ -25,6 +25,7 @@
 #include "TVDaemon.h"
 #include "Frontend.h"
 #include "Log.h"
+#include "Activity.h"
 
 #include <json/json.h>
 #include <stdlib.h> // atoi
@@ -82,13 +83,6 @@ bool Port::LoadConfig( )
   return true;
 }
 
-bool Port::Tune( Transponder &transponder )
-{
-  if( frontend.SetPort( port_num ))
-    return frontend.Tune( transponder );
-  return false;
-}
-
 bool Port::Scan( )
 {
   if( !source )
@@ -97,11 +91,13 @@ bool Port::Scan( )
   if( !t )
     return false;
 
-  if( !frontend.SetPort( port_num ))
-  {
-    LogError( "Error setting port %d on frontend", port_num );
-    return false;
-  }
+  // FIXME: !!!!!!!!!!!!!!!!!
+  //
+  //if( !frontend.SetPort( port_num ))
+  //{
+    //LogError( "Error setting port %d on frontend", port_num );
+    //return false;
+  //}
 
   return frontend.Scan( *t );
 }
@@ -157,11 +153,8 @@ bool Port::RPC( const HTTPRequest &request, const std::string &cat, const std::s
   return false;
 }
 
-bool Port::Record( Recording &rec )
+bool Port::Tune( Activity &act )
 {
-  Log( "Port::Record" );
-  if( !frontend.SetPort( GetKey( )))
-    return false;
-  return frontend.Record( rec );
+  return frontend.Tune( *this, act );
 }
 

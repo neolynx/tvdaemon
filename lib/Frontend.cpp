@@ -32,8 +32,9 @@
 #include "Source.h"
 #include "Service.h"
 #include "Log.h"
-#include "Recorder.h"
+#include "Activity.h"
 #include "Utils.h" // dump
+#include "Channel.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -68,7 +69,7 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , frontend_id(frontend_id)
   , present(false)
   , transponder(NULL)
-  , recording(NULL)
+  , activity(NULL)
   , current_port(0)
   , state(State_New)
   , up(true)
@@ -84,7 +85,7 @@ Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   , fe(NULL)
   , present(false)
   , transponder(NULL)
-  , recording(NULL)
+  , activity(NULL)
   , current_port(0)
   , state(State_New)
   , up(true)
@@ -308,7 +309,7 @@ bool Frontend::Record( )
 {
   bool ret = true;
 
-  Service &service = recording->GetService( );
+  Service &service = activity->GetService( );
 
   //Recorder rec( *fe );
   std::vector<int> fds;
@@ -609,6 +610,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   {
     LogError( "dvb_set_compat_delivery_system return %d", r );
     t.SetState( Transponder::State_TuningFailed );
+    t.SaveConfig( );
     Close( );
     return false;
   }
@@ -621,6 +623,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   {
     LogError( "dvb_fe_set_parms failed with %d.", r );
     t.SetState( Transponder::State_TuningFailed );
+    t.SaveConfig( );
     dvb_fe_prt_parms( fe );
     Close( );
     return false;
@@ -635,6 +638,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   if( !GetLockStatus( signal, noise, 1500 ))
   {
     t.SetState( Transponder::State_TuningFailed );
+    t.SaveConfig( );
     LogError( "Tuning failed" );
     Close( );
     return false;
@@ -950,26 +954,45 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
 
 void Frontend::Idle_Thread( )
 {
+  Channel *channel;
   while( up )
   {
+    bool idle = true;
     switch( state )
     {
       case State_Idle:
-        Log( "Idle" );
         for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
         {
           if( (*it)->Scan( ))
-            continue;
+          {
+            idle = false;
+            break;
+          }
         }
+
+        if( !idle )
+          break;
+
+        //channel = TVDaemon::Instance( )->GetChannelForEPG( );
+        //if( channel )
+        //{
+          //channel->UpdateEPG( );
+        //}
+
         break;
       case State_Recording:
-        Log( "recording now..." );
-        if( recording )
-          Record( );
+        if( !activity )
+        {
+          LogError( "No recording found" );
+          break;
+        }
+        idle = false;
+        Record( );
         break;
     }
 
-    sleep( 1 );
+    if( idle )
+      sleep( 1 );
   }
 }
 
@@ -1003,15 +1026,13 @@ void Frontend::LogError( const char *fmt, ... )
   TVD_Log( LOG_ERR, "%d.%d %s", adapter.GetKey( ), GetKey( ), msg );
 }
 
-bool Frontend::Record( Recording &rec )
+bool Frontend::Tune( Port &port, Activity &act )
 {
-  Log( "Frontend::Record" );
-  if( !Tune( rec.GetTransponder( )))
+  if( !SetPort( port.GetKey( )))
     return false;
-  Log( "State_Recording" );
-  recording = &rec;
-  state = State_Recording;
-  //rec.Record( *this );
-  //Close( );
+  if( !Tune( act.GetTransponder( )))
+    return false;
+  act.SetFrontend( this );
+  return true;
 }
 

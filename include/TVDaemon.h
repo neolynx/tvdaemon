@@ -26,7 +26,6 @@
 #include "HTTPServer.h"
 #include "Thread.h"
 #include "Source.h"
-#include "Recorder.h"
 
 #include <map>
 #include <vector>
@@ -40,6 +39,7 @@
 class Adapter;
 class Source;
 class Channel;
+class Recorder;
 
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBase
 {
@@ -63,6 +63,8 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBa
     std::vector<std::string> GetChannelList( );
     Channel *GetChannel( int id );
     Channel *CreateChannel( Service *service );
+
+    Channel *GetChannelForEPG( );
 
     std::string GetDir( ) { return dir; }
 
@@ -100,7 +102,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public ThreadBa
     Thread *thread_udev;
     void Thread_udev( );
 
-    Recorder recorder;
+    Recorder *recorder;
 };
 
 #endif

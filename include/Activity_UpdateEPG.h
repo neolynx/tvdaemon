@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  Thread class
+ *  Activity_UpdateEPG class
  *
  *  Copyright (C) 2013 André Roth
  *
@@ -19,37 +19,19 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _Thread_
-#define _Thread_
+#ifndef _Activity_UpdateEPG_
+#define _Activity_UpdateEPG_
 
-#include <pthread.h>
+#include "Activity.h"
 
-class ThreadBase;
-typedef void (ThreadBase::*ThreadFunc)( );
-
-class ThreadBase
+class Activity_UpdateEPG : public Activity
 {
   public:
-    ThreadBase( );
-    void Lock( ) const;
-    void Unlock( ) const;
+    Activity_UpdateEPG( Channel &channel );
+    virtual ~Activity_UpdateEPG( );
 
-  protected:
-    class Thread
-    {
-      public:
-        Thread( ThreadBase &base, ThreadFunc func );
-        bool Run( );
-        virtual ~Thread( );
-
-      private:
-        ThreadBase &base;
-        ThreadFunc func;
-        pthread_t thread;
-        static void *run( void *ptr );
-    };
-  private:
-    volatile pthread_mutex_t mutex;
+    virtual const char *GetName( ) const { return "UpdateEPG"; }
+    virtual bool Perform( );
 };
 
 

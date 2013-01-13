@@ -30,6 +30,7 @@
 #include "Frontend.h"
 #include "Port.h"
 #include "Log.h"
+#include "Activity.h"
 
 #include "dvb-file.h"
 #include "descriptors.h"
@@ -268,47 +269,6 @@ bool Source::RemovePort( Port *port )
     ports.erase( it );
 }
 
-bool Source::TuneTransponder( int id )
-{
-  Transponder* t = GetTransponder( id );
-  if( !t )
-    return false;
-
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-  {
-    if( (*it)->Tune( *t ))
-      return true;
-  }
-  return false;
-}
-
-bool Source::ScanTransponder( int id )
-{
-  //Transponder *t = GetTransponder( id );
-  //if( !t )
-  //{
-    //LogError( "Transponder with id %d not found", id );
-    //return false;
-  //}
-
-  //if( t->Disabled( ))
-  //{
-    //LogWarn( "Transponder is disabled" );
-    //return false;
-  //}
-
-  //// FIXME: support scanning on next free transponder
-  //for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-  //{
-    //if( !(*it)->Scan( *t ))
-      //return false;
-    //t->SaveConfig( );
-    //return true;
-  //}
-  return false;
-}
-
-
 int Source::CountServices( ) const
 {
   int count = 0;
@@ -472,12 +432,11 @@ Transponder *Source::GetTransponderForScanning( )
   return NULL;
 }
 
-bool Source::Record( Recording &rec )
+bool Source::Tune( Activity &act )
 {
-  Log( "Source::Record" );
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
   {
-    if( (*it)->Record( rec ))
+    if( (*it)->Tune( act ))
       return true;
   }
   return false;

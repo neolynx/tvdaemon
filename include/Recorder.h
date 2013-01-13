@@ -31,45 +31,10 @@
 //class RingBuffer;
 //class Frame;
 
-class Channel;
 class Transponder;
 class Service;
-class Frontend;
-
-class Recording
-{
-  public:
-    Recording( Channel &channel );
-    ~Recording( );
-
-    enum State
-    {
-      State_New,
-      State_Start,
-      State_Started,
-      State_Done,
-      State_Failed,
-      State_Last
-    };
-
-    bool HasState( State state ) { return this->state == state; }
-    State GetState( ) { return state; }
-    void SetTransponder( Transponder *transponder ) { this->transponder = transponder; }
-    Transponder &GetTransponder( ) const { return *transponder; }
-    void SetService( Service *service ) { this->service = service; }
-    Service &GetService( ) const { return *service; }
-
-    void Schedule( ) { state = State_Start; }
-    bool Start( );
-    bool Record( Frontend &frontend );
-
-  private:
-    Channel &channel;
-    State state;
-    Transponder *transponder;
-    Service *service;
-    bool up;
-};
+class Activity_Record;
+class Channel;
 
 class Recorder : public ThreadBase
 {
@@ -93,7 +58,7 @@ class Recorder : public ThreadBase
     //RingBuffer *buffer;
     //Frame *frame;
     bool up;
-    std::vector<Recording *> recordings;
+    std::vector<Activity_Record *> recordings;
     Thread *rec_thread;
 
     void Rec_Thread( );

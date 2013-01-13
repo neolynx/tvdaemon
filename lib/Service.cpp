@@ -27,12 +27,12 @@
 #include <fcntl.h>   // open
 
 #include "TVDaemon.h"
-//#include "ConfigObject.h"
 #include "Transponder.h"
 #include "HTTPServer.h"
 #include "Stream.h"
 #include "Channel.h"
 #include "Log.h"
+#include "Activity.h"
 
 Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id ) :
   transponder(transponder),
@@ -248,10 +248,9 @@ bool Service::SortByName( const Service *a, const Service *b )
   return a->name_lower < b->name_lower;
 }
 
-bool Service::Record( Recording &rec )
+bool Service::Tune( Activity &act )
 {
-  Log( "Service::Record" );
-  rec.SetService( this );
-  return transponder.Record( rec );
+  act.SetService( this );
+  return transponder.Tune( act );
 }
 

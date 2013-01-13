@@ -30,7 +30,7 @@
 
 class TVDaemon;
 class Service;
-class Recording;
+class Activity;
 
 class Channel : public ConfigObject, public RPCObject
 {
@@ -53,7 +53,9 @@ class Channel : public ConfigObject, public RPCObject
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    bool Record( Recording &rec );
+    bool Tune( Activity &act );
+
+    bool epg;
 
   private:
     TVDaemon &tvd;

@@ -32,7 +32,7 @@
 
 class Transponder;
 class Channel;
-class Recording;
+class Activity;
 
 class Service : public RPCObject
 {
@@ -77,7 +77,7 @@ class Service : public RPCObject
     static bool SortByName( const Service *a, const Service *b );
     static bool SortByTypeName( const Service *a, const Service *b );
 
-    bool Record( Recording &rec );
+    bool Tune( Activity &act );
 
   private:
     Transponder &transponder;

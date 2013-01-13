@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  Thread class
+ *  Activity_Record class
  *
  *  Copyright (C) 2013 André Roth
  *
@@ -19,37 +19,19 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _Thread_
-#define _Thread_
+#ifndef _Activity_Record_
+#define _Activity_Record_
 
-#include <pthread.h>
+#include "Activity.h"
 
-class ThreadBase;
-typedef void (ThreadBase::*ThreadFunc)( );
-
-class ThreadBase
+class Activity_Record : public Activity
 {
   public:
-    ThreadBase( );
-    void Lock( ) const;
-    void Unlock( ) const;
+    Activity_Record( Channel &channel );
+    virtual ~Activity_Record( );
 
-  protected:
-    class Thread
-    {
-      public:
-        Thread( ThreadBase &base, ThreadFunc func );
-        bool Run( );
-        virtual ~Thread( );
-
-      private:
-        ThreadBase &base;
-        ThreadFunc func;
-        pthread_t thread;
-        static void *run( void *ptr );
-    };
-  private:
-    volatile pthread_mutex_t mutex;
+    virtual const char *GetName( ) const { return "Record"; }
+    virtual bool Perform( );
 };
 
 
