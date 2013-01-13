@@ -6,7 +6,10 @@ function getJSON( url, callback )
     dataType: 'json',
     success: callback,
     timeout: 3000,
-    error: function( jqXHR, status, errorThrown ) { if( !callback( null, jqXHR.responseText )) alert( jqXHR.responseText ); }
+    error: function( jqXHR, status, errorThrown ) {
+      if( !callback( null, jqXHR.responseText ) && jqXHR.responseText != "" && jqXHR.responseText != "undefined" )
+        alert( jqXHR.responseText );
+    }
   });
 }
 
