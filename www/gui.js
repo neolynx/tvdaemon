@@ -34,7 +34,7 @@ function readSources( data )
 
 function readDevices( data )
 {
-  $( '#plant' ).empty( );
+  $( '#config' ).empty( );
   if( !data ) return;
   for( a in data )
   {
@@ -42,15 +42,18 @@ function readDevices( data )
     row = $('<tr>');
     cell = $('<td>');
     cell.html( getAdapter( adapter ));
+    cell.attr( "class", "adapter" );
     row.append( cell );
 
     adapterports = 0;
+
     for( f in adapter["frontends"] )
     {
       frontend = adapter["frontends"][f];
 
       cell2 = $('<td>');
       cell2.html( getFrontend( frontend ));
+      cell2.attr( "class", "frontend" );
       row.append( cell2 );
 
       ports = Object.keys( frontend["ports"] ).length;
@@ -63,19 +66,42 @@ function readDevices( data )
 
         cell3 = $('<td>');
         cell3.html( getPort( port ));
+        cell3.attr( "class", "port" );
         row.append( cell3 );
 
         cell4 = $('<td>');
         cell4.html( getSource( port["source_id"] ));
+        cell4.attr( "class", "source" );
         row.append( cell4 );
 
-        row.appendTo( '#plant' );
+
+        row.appendTo( '#config' );
         row = $('<tr>');
       }
 
     }
     cell.attr( "rowspan", adapterports );
   }
+
+  // end row
+  row = $('<tr>');
+  cell = $('<td>');
+  cell.html( "<div id=\"button1\"> <a href=\"#\" class=\"button\">Add Tuner </a></div>" );
+  row.append( cell );
+
+  cell2 = $('<td>');
+  cell2.html( "<div id=\"return frontend\"> <a href=\"\"class=\"button\">Select DVB-S/T/C</a></div>" );
+  row.append( cell2 );
+
+  cell3 = $('<td>');
+  cell3.html( "<div id=\"return port\"> <a href=\"\"class=\"button\"> Add LNB  </a></div>" );
+  row.append( cell3 );
+
+  cell4 = $('<td>');
+  cell4.html( "<div id=\"return sat\"> <a href=\"\"class=\"button\"> Add Location</a></div>" );
+  row.append( cell4 );
+
+  row.appendTo( '#config' );
 }
 
 function getAdapter( adapter )
@@ -83,7 +109,7 @@ function getAdapter( adapter )
   if( adapter["present"] == 1 )
     imgstyle = "";
   else
-    imgstyle = "opacity:0.2";
+    imgstyle = content; // this should use class as well, and take style from css !
   if( adapter["path"].indexOf( "/usb" ) != -1 )
     icon = "<img src=\"images/usb-icon.png\" style=\"" + imgstyle + "\"/>";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
@@ -93,7 +119,7 @@ function getAdapter( adapter )
 
 function getFrontend( frontend )
 {
-  return frontend["name"] + "<br/><a href=\"\">add port</a>";
+  return frontend["name"] + "<br/><a href=\"\"class=\"button\">Add port</a>";
 }
 
 function getPort( port )
