@@ -133,7 +133,17 @@ function getAdapter( adapter )
 
 function getFrontend( frontend )
 {
-  return "<b>" + frontend["name"] + "</b></br>Type: " + frontend["type"]
+  adapter = adapters[frontend["adapter_id"]];
+  imgstyle = "";
+  if( adapter["present"] != 1 )
+    imgstyle = "alt=\"not present\" class=\"grey\";";
+  if( frontend["type"] == 0 )
+    icon = "<img src=\"images/antenna-icon.png\" style=\"" + imgstyle + "\"/>";
+  else if( frontend["type"] == 1 )
+    icon = "<img src=\"images/antenna-cable.smal.png\" style=\"" + imgstyle + "\"/>";
+  else if( frontend["type"] == 2 )
+    icon = "<img src=\"images/antenna-oldstyle.png\" style=\"" + imgstyle + "\"/>";
+  return icon;
 }
 
 function getPort( port )
@@ -182,12 +192,12 @@ function editPort( adapter_id, frontend_id, port_id )
 function savePort( )
 {
   $.ajax( {
-            type: 'POST',
-            cache: false,
-            url: 'tvd?c=port&a=set',
-            data: $('#port_form').serialize( ),
-            success: function(msg) { $("#popup_port").jqxWindow( 'hide' ); },
-            error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
-          } );
+    type: 'POST',
+  cache: false,
+  url: 'tvd?c=port&a=set',
+  data: $('#port_form').serialize( ),
+  success: function(msg) { $("#popup_port").jqxWindow( 'hide' ); },
+  error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
+  } );
 }
 

@@ -10,24 +10,30 @@ div.main
   background-image: url('../images/center_bg.jpg');
   background-attachment:fixed;
   background-repeat: repeat;
+  background-position:center;
   position: absolute;
-  top: 10px;
+  top: 5%;
   bottom: 10px;
-  right: 10px;
-  left: 10px;
+  right: 7%;
+  left: 7%;
 }
 
 div.logo
 {
   background-image: url('../images/TVDeamon_small.png'),url('../images/logo.png');
-  background-position: left top, 115px 57px;
+  background-position: left+5px top, 115px 57px;
   background-repeat: no-repeat;
-  width: 300px;
+  width: 500px;
   height: 90px;
+  
 }
 
 div.content
 {
+ position: absolute;
+  top: 100px;
+  left: 1%;
+
 }
 
 div.status
@@ -36,14 +42,9 @@ div.status
 
   position: absolute;
   bottom: 10px;
-  right: 10px;
-  left: 10px;
+  right: 20px;
+  left: 20px;
   height: 40px;
-}
-
-.right
-{
-  text-align: right;
 }
 
 img.grey
@@ -73,6 +74,7 @@ img.grey
   font-family: Georgia, serif;
   text-decoration: none;
   vertical-align: bottom;
+white-space:nowrap;
 }
 
 .button:hover
@@ -97,6 +99,8 @@ table.configtable
 
 td.adapter
 {
+  width:8em; 
+  word-wrap:break-word;
   border: 1px solid;
   background-position:left;
   vertical-align: top;
@@ -105,6 +109,8 @@ td.adapter
 
 td.frontend
 {
+ width:8em; 
+  word-wrap:break-word;
   border: 1px solid black;
   background-position:left;
   vertical-align: top;
@@ -112,6 +118,9 @@ td.frontend
 
 td.port
 {
+ width:6em; 
+  word-wrap:break-word;
+
   border: 1px solid black;
   background-position:left;
   vertical-align: top;
@@ -119,6 +128,8 @@ td.port
 
 td.source
 {
+ width:6em; 
+  word-wrap:break-word;
   border: 1px solid black;
   vertical-align: top;
 }
