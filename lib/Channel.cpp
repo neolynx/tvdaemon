@@ -51,12 +51,23 @@ Channel::Channel( TVDaemon &tvd, std::string configfile ) :
 
 Channel::~Channel( )
 {
+  ClearEPG( );
 }
 
 bool Channel::SaveConfig( )
 {
   WriteConfig( "Name", name );
   WriteConfig( "Number", number );
+
+  DeleteConfig( "EPG" );
+  Setting &n = ConfigList( "EPG" );
+  ConfigBase c( n );
+  for( int i = 0; i < events.size( ); i++ )
+  {
+    Setting &n2 = c.ConfigGroup( );
+    ConfigBase c2( n2 );
+    events[i]->SaveConfig( c2 );
+  }
 
   return WriteConfigFile( );
 }
@@ -67,6 +78,15 @@ bool Channel::LoadConfig( )
     return false;
   ReadConfig( "Name", name );
   ReadConfig( "Number", number );
+
+  Setting &n = ConfigList( "EPG" );
+  for( int i = 0; i < n.getLength( ); i++ )
+  {
+    ConfigBase c2( n[i] );
+    Event *e = new Event( *this );
+    e->LoadConfig( c2 );
+    events.push_back (e );
+  }
   return true;
 }
 
@@ -101,15 +121,21 @@ void Channel::json( json_object *entry ) const
 
 bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const std::string &action )
 {
-  if( action == "record" )
+  if( action == "schedule" )
   {
-    if( !TVDaemon::Instance( )->Record( *this ))
+    int event_id;
+    request.GetParam( "event_id", event_id );
+    for( int i = 0; i < events.size( ); i++ )
     {
-      request.NotFound( "Error starting recording" );
-      return false;
+      if( events[i]->GetID( ) == event_id )
+      {
+        tvd.Schedule( *events[i] );
+        request.Reply( HTTP_OK );
+        return true;
+      }
     }
-    request.Reply( HTTP_OK );
-    return true;
+    request.NotFound( "Event %d not found", event_id );
+    return false;
   }
 
   request.NotFound( "RPC: unknown action: '%s'", action.c_str( ));
@@ -125,4 +151,25 @@ bool Channel::Tune( Activity &act )
   }
   return false;
 }
+
+void Channel::UpdateEPG( )
+{
+  Log( "Channel::UpdateEPG %s", name.c_str( ));
+  for( std::vector<Service *>::const_iterator it = services.begin( ); it != services.end( ); it++ )
+  {
+    (*it)->GetTransponder( ).UpdateEPG( );
+  }
+}
+
+void Channel::ClearEPG( )
+{
+  events.clear( );
+}
+
+void Channel::AddEPGEvent( const struct dvb_table_eit_event *event )
+{
+  Event *e = new Event( *this, event );
+  events.push_back( e );
+}
+
 

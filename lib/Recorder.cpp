@@ -23,11 +23,20 @@
 
 #include "Log.h"
 #include "Activity_Record.h"
+#include "Channel.h"
+#include "TVDaemon.h"
 
 #include <unistd.h> // sleep
 
-Recorder::Recorder( ) : Thread( ), up(true)
+Recorder::Recorder( TVDaemon &tvd ) :
+  Thread( ),
+  ConfigObject( ),
+  tvd(tvd),
+  up(true)
 {
+  std::string d = tvd.GetConfigDir( );
+  d += "recorder/";
+  SetConfigFile( d + "config" );
   StartThread( );
 }
 
@@ -36,22 +45,46 @@ Recorder::~Recorder( )
   Log( "Stopping Recorder" );
   up = false;
   JoinThread( );
+  Lock( );
   for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
   {
     delete *it;
   }
+  Unlock( );
 }
 
-bool Recorder::RecordNow( Channel &channel )
+bool Recorder::SaveConfig( )
 {
+  WriteConfig( "Directory", dir );
+  WriteConfigFile( );
+
   Lock( );
-  Activity_Record *act = new Activity_Record( channel );
-  recordings.push_back( act );
-  act->Start( );
+  for( int i = 0; i < recordings.size( ); i++ )
+  {
+    recordings[i]->SaveConfig( );
+  }
   Unlock( );
+}
+
+bool Recorder::LoadConfig( )
+{
+  if( !ReadConfigFile( ))
+    return false;
+  ReadConfig( "Directory", dir );
+  if( dir.empty( ))
+    dir = "~";
+  if( !CreateFromConfig<Activity_Record, Recorder>( *this, "recording", recordings ))
+    return false;
   return true;
 }
 
+bool Recorder::Schedule( Event &event )
+{
+  ScopeLock t;
+  Activity_Record *act = new Activity_Record( *this, event, recordings.size( ));
+  recordings.push_back( act );
+  return true;
+}
 
 void Recorder::Run( )
 {
@@ -60,10 +93,17 @@ void Recorder::Run( )
     Lock( );
     for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
     {
-      if( (*it)->HasState( Activity::State_Start ))
+      switch( (*it)->GetState( ))
       {
-        if( !(*it)->Start( ))
-          LogError( "Error starting recording" );
+        case Activity::State_Scheduled:
+          if( time( NULL ) + 5 > (*it)->GetStart( ))
+            (*it)->Start( );
+          break;
+
+        case Activity::State_Running:
+          if( time( NULL ) > (*it)->GetEnd( ) + 60 )
+            (*it)->Stop( );
+          break;
       }
     }
     Unlock( );
@@ -71,3 +111,10 @@ void Recorder::Run( )
   }
 }
 
+void Recorder::Stop( )
+{
+  ScopeLock _l;
+  up = false;
+  for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
+    (*it)->Abort( );
+}

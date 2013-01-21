@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "Thread.h"
+#include "ConfigObject.h"
 //class Matroska;
 //class RingBuffer;
 //class Frame;
@@ -35,16 +36,22 @@ class Transponder;
 class Service;
 class Activity_Record;
 class Channel;
+class Event;
+class TVDaemon;
 
-class Recorder : public Thread
+class Recorder : public Thread, public ConfigObject
 {
   public:
-    //Recorder( struct dvb_v5_fe_parms &fe );
-    Recorder( );
+    Recorder( TVDaemon &tvd );
     ~Recorder( );
 
-    bool RecordNow( Channel &channel );
+    virtual bool SaveConfig( );
+    virtual bool LoadConfig( );
 
+    bool Schedule( Event &event );
+    void Stop( );
+
+    std::string GetDir( ) const { return dir; }
 
     //void AddTrack( );
     //void record( uint8_t *data, int size );
@@ -52,12 +59,14 @@ class Recorder : public Thread
 
 
   private:
+    TVDaemon &tvd;
     //struct dvb_v5_fe_parms &fe;
     //Matroska *mkv;
 
     //RingBuffer *buffer;
     //Frame *frame;
     bool up;
+    std::string dir;
     std::vector<Activity_Record *> recordings;
 
     virtual void Run( );

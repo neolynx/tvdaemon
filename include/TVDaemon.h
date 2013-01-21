@@ -29,6 +29,7 @@
 
 #include <map>
 #include <vector>
+#include <queue>
 #include <libudev.h>
 #include <pthread.h>
 
@@ -40,6 +41,7 @@ class Adapter;
 class Source;
 class Channel;
 class Recorder;
+class Event;
 
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
 {
@@ -64,10 +66,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     Channel *GetChannel( int id );
     Channel *CreateChannel( Service *service );
 
-    Channel *GetChannelForEPG( );
-
-    std::string GetDir( ) { return dir; }
-
     // RPC
     virtual bool HandleDynamicHTTP( const HTTPRequest &request );
     bool RPC        ( const HTTPRequest &request, const std::string &cat, const std::string &action );
@@ -75,7 +73,8 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     bool RPC_Source ( const HTTPRequest &request, const std::string &cat, const std::string &action );
     bool RPC_Adapter( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    bool Record( Channel &channel );
+    bool Schedule( Event &event );
+    void UpdateEPG( );
 
   private:
     TVDaemon( );
@@ -88,7 +87,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     std::vector<Channel *> channels;
 
     bool up;
-    std::string dir;
 
     // udev
     Adapter *UdevAdd( struct udev_device *dev, const char *path );
@@ -102,6 +100,9 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     virtual void Run( );
 
     Recorder *recorder;
+
+    bool epg;
+    std::vector<Transponder *> epg_transponders;
 };
 
 #endif

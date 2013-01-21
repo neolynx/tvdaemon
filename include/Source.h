@@ -35,7 +35,7 @@ class HTTPServer;
 class TVDaemon;
 class Activity;
 
-class Source : public ConfigObject, public RPCObject, public Lockable
+class Source : public ConfigObject, public RPCObject, public Mutex
 {
   public:
     enum Type
@@ -65,7 +65,8 @@ class Source : public ConfigObject, public RPCObject, public Lockable
     uint GetTransponderCount() { return transponders.size(); }
     Type GetType( ) const { return type; }
 
-    Transponder *GetTransponderForScanning( );
+    bool GetTransponderForScanning( Activity *act );
+    bool GetTransponderForEPGScan( Activity *act );
 
     int CountServices( ) const;
 

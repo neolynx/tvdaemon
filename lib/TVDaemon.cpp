@@ -60,7 +60,7 @@ bool TVDaemon::Create( std::string confdir )
   SetConfigFile( d + "config" );
   if( !Utils::IsFile( GetConfigFile( )))
     SaveConfig( );
-  Log( "TVDconfig: %s", GetConfigFile( ).c_str( ));
+  Log( "Config directory: %s", d.c_str( ));
   return true;
 }
 
@@ -75,9 +75,9 @@ TVDaemon::TVDaemon( ) :
   ConfigObject( ),
   Thread( ),
   httpd(NULL),
-  up(true)
+  up(true),
+  recorder(NULL)
 {
-  recorder = new Recorder( );
 }
 
 TVDaemon::~TVDaemon( )
@@ -89,10 +89,11 @@ TVDaemon::~TVDaemon( )
     httpd->Stop( );
     delete httpd;
   }
-
-  delete recorder;
+  recorder->Stop( );
 
   SaveConfig( );
+
+  delete recorder;
 
   if( up ) up = false;
   JoinThread( );
@@ -117,6 +118,8 @@ TVDaemon::~TVDaemon( )
 
 bool TVDaemon::Start( )
 {
+  recorder = new Recorder( *this );
+
   if( !LoadConfig( ))
   {
     LogError( "Error loading config directory '%s'", GetConfigDir( ).c_str( ));
@@ -145,14 +148,15 @@ bool TVDaemon::Start( )
     httpd->Start( );
     Log( "HTTP Server listening on port %d", HTTPDPORT );
   }
+  //UpdateEPG( );
   return true;
 }
 
 bool TVDaemon::SaveConfig( )
 {
+  ScopeLock _l;
   float version = atof( PACKAGE_VERSION );
   WriteConfig( "Version", version );
-  WriteConfig( "Dir", dir );
   WriteConfigFile( );
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
@@ -169,6 +173,10 @@ bool TVDaemon::SaveConfig( )
   {
     (*it)->SaveConfig( );
   }
+
+  if( recorder )
+    recorder->SaveConfig( );
+
   return true;
 }
 
@@ -179,11 +187,8 @@ bool TVDaemon::LoadConfig( )
 
   float version = NAN;
   ReadConfig( "Version", version );
-  ReadConfig( "Dir", dir );
 
   Log( "Found config version: %f", version );
-  if( dir.empty( ))
-    dir = "~";
 
   if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
     return false;
@@ -191,6 +196,9 @@ bool TVDaemon::LoadConfig( )
     return false;
   if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
     return false;
+
+  recorder->LoadConfig( );
+
   return true;
 }
 
@@ -419,6 +427,7 @@ Source *TVDaemon::GetSource( int id ) const
 
 Channel *TVDaemon::CreateChannel( Service *service )
 {
+  ScopeLock _l;
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
     if( (*it)->HasService( service ))
@@ -434,6 +443,7 @@ Channel *TVDaemon::CreateChannel( Service *service )
 
 std::vector<std::string> TVDaemon::GetChannelList( )
 {
+  ScopeLock _l;
   std::vector<std::string> result;
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
@@ -444,6 +454,7 @@ std::vector<std::string> TVDaemon::GetChannelList( )
 
 Channel *TVDaemon::GetChannel( int id )
 {
+  ScopeLock _l;
   if( id < 0 or id >= channels.size( ))
   {
     LogError( "Channel not found: %d", id );
@@ -607,6 +618,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "get_channels" )
   {
+    ScopeLock _l;
     json_object *h = json_object_new_object( );
     json_object *a = json_object_new_array();
 
@@ -732,6 +744,76 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
+  if( action == "get_epg" )
+  {
+    json_object *h = json_object_new_object( );
+    json_object *a = json_object_new_array();
+
+    std::string search;
+    if( request.HasParam( "search" ))
+    {
+      std::string t;
+      request.GetParam( "search", t );
+      Utils::ToLower( t, search );
+    }
+
+    std::vector<Event *> result;
+
+    for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    {
+      const std::vector<Event *> &events = (*it)->GetEvents( );
+      for( std::vector<Event *>::const_iterator it2 = events.begin( ); it2 != events.end( ); it2++ )
+      {
+        //Log( "time : %d", time( NULL ));
+        //Log( "start: %d", (*it2)->GetStart( ));
+        if( (*it2)->GetStart( ) + (*it2)->GetDuration( ) < time( NULL )) // FIXME: stop
+          continue;
+        std::string name;
+        Utils::ToLower( (*it2)->GetName( ), name );
+        std::string description;
+        Utils::ToLower( (*it2)->GetDescription( ), description );
+        if( !search.empty( ) and name.find( search.c_str( ), 0, search.length( )) == std::string::npos
+                             and description.find( search.c_str( ), 0, search.length( )) == std::string::npos )
+          continue;
+        result.push_back( *it2 );
+      }
+    }
+
+    int count = result.size( );
+
+    std::sort( result.begin( ), result.end( ), Event::SortByStart );
+
+    int start = -1;
+    if( request.HasParam( "start" ))
+      request.GetParam( "start", start );
+    if( start < 0 )
+      start = 0;
+    if( start > count )
+      start = count;
+
+    int page_size = -1;
+    if( request.HasParam( "page_size" ))
+      request.GetParam( "page_size", page_size );
+    if( page_size <= 0 )
+      page_size = 10;
+
+    int end = start + page_size;
+    if( end > count )
+      end = count;
+    for( int i = start; i < end; i++ )
+    {
+      json_object *entry = json_object_new_object( );
+      result[i]->json( entry );
+      json_object_array_add( a, entry );
+    }
+    json_object_object_add( h, "count", json_object_new_int( count ));
+    json_object_object_add( h, "start", json_object_new_int( start ));
+    json_object_object_add( h, "end", json_object_new_int( end ));
+    json_object_object_add( h, "data", a );
+    request.Reply( h );
+    return true;
+  }
+
   request.NotFound( "RPC unknown action: %s", action.c_str( ));
   return false;
 }
@@ -739,6 +821,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
 bool TVDaemon::RPC_Channel( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
+  ScopeLock _l;
   std::string t;
   if( !request.GetParam( "channel_id", t ))
     return false;
@@ -786,18 +869,16 @@ bool TVDaemon::RPC_Adapter( const HTTPRequest &request, const std::string &cat, 
   return false;
 }
 
-bool TVDaemon::Record( Channel &channel )
+bool TVDaemon::Schedule( Event &event )
 {
-  return recorder->RecordNow( channel );
+  return recorder->Schedule( event );
 }
 
-Channel *TVDaemon::GetChannelForEPG( )
+void TVDaemon::UpdateEPG( )
 {
+  ScopeLock _l;
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
-    if( !(*it)->epg )
-      return *it;
+    (*it)->UpdateEPG( );
   }
-  return NULL;
 }
-

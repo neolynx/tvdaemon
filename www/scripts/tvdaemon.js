@@ -7,7 +7,7 @@ function getJSON( url, callback )
     success: callback,
     timeout: 3000,
     error: function( jqXHR, status, errorThrown ) {
-      if( !callback( null, jqXHR.responseText ) && jqXHR.responseText != "" && jqXHR.responseText != "undefined" )
+      if( !callback( null, jqXHR.responseText ) && jqXHR.responseText != "" && errorThrown != "undefined" )
         alert( jqXHR.responseText );
     }
   });

@@ -27,10 +27,11 @@
 class Activity_UpdateEPG : public Activity
 {
   public:
-    Activity_UpdateEPG( Channel &channel );
+    Activity_UpdateEPG( );
     virtual ~Activity_UpdateEPG( );
 
-    virtual const char *GetName( ) const { return "UpdateEPG"; }
+    virtual std::string GetName( ) const;
+
     virtual bool Perform( );
 };
 

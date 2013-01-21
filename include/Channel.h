@@ -24,6 +24,7 @@
 
 #include "ConfigObject.h"
 #include "RPCObject.h"
+#include "Event.h"
 
 #include <string>
 #include <vector>
@@ -31,6 +32,8 @@
 class TVDaemon;
 class Service;
 class Activity;
+class Transponder;
+struct dvb_table_eit_event;
 
 class Channel : public ConfigObject, public RPCObject
 {
@@ -48,6 +51,7 @@ class Channel : public ConfigObject, public RPCObject
     bool HasService( Service *service ) const;
 
     const std::vector<Service *> &GetServices( ) const { return services; };
+    const std::vector<Event *> &GetEvents( ) const { return events; };
 
     // RPC
     void json( json_object *entry ) const;
@@ -57,12 +61,28 @@ class Channel : public ConfigObject, public RPCObject
 
     bool epg;
 
+    enum State
+    {
+      State_Ready,
+      State_NeedsEPG,
+      State_UpdatingEPG,
+      State_EPGFailed
+    };
+
+    void UpdateEPG( );
+
+    void ClearEPG( );
+    void AddEPGEvent( const struct dvb_table_eit_event *event );
+
   private:
     TVDaemon &tvd;
     std::string name;
     int number;
+    State state;
 
     std::vector<Service *> services;
+
+    std::vector<Event *> events;
 };
 
 #endif

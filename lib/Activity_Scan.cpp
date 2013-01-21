@@ -31,7 +31,6 @@
 #include "descriptors/pmt.h"
 #include "descriptors/nit.h"
 #include "descriptors/sdt.h"
-#include "descriptors/eit.h"
 #include "descriptors/vct.h"
 #include "descriptors/mpeg_ts.h"
 #include "descriptors/mpeg_pes.h"
@@ -42,13 +41,20 @@
 #include <vector>
 
 
-Activity_Scan::Activity_Scan( Transponder *transponder ) : Activity( )
+Activity_Scan::Activity_Scan( ) : Activity( )
 {
-  SetTransponder( transponder );
 }
 
 Activity_Scan::~Activity_Scan( )
 {
+}
+
+std::string Activity_Scan::GetName( ) const
+{
+  std::string t = "Scan";
+  if( transponder )
+    t += " - " + transponder->toString( );
+  return t;
 }
 
 bool Activity_Scan::Perform( )
@@ -284,16 +290,6 @@ bool Activity_Scan::Perform( )
     if( nit )
       dvb_table_nit_free( nit );
   }
-
-  //Log( "Reading EIT" );
-  //struct dvb_table_eit *eit;
-  //dvb_read_section_with_id( fe, fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, 1, (uint8_t **) &eit, time );
-  //if( eit && up )
-  //{
-  //dvb_table_eit_print( fe, eit );
-  //}
-  //if( eit )
-  //dvb_table_eit_free( eit );
 
   dvb_dmx_close( fd_demux );
   transponder->SetState( Transponder::State_Scanned );

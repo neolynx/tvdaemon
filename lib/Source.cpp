@@ -38,7 +38,7 @@
 
 Source::Source( TVDaemon &tvd, std::string name, Type type, int config_id ) :
   ConfigObject( tvd, "source", config_id ),
-  Lockable( ),
+  Mutex( ),
   tvd(tvd), name(name),
   type(type)
 {
@@ -91,34 +91,34 @@ bool Source::LoadConfig( )
   //Setting &n = ConfigList( "Ports" );
   //for( int i = 0; i < n.getLength( ); i++ )
   //{
-    //Setting &n2 = n[i];
-    //if( n2.getLength( ) != 3 )
-    //{
-      //LogError( "Error in port path: should be [adapter, frontend, port] in %s", GetConfigFile( ).c_str( ));
-      //continue;
-    //}
-    //Adapter  *a = tvd.GetAdapter( n2[0] );
-    //if( !a )
-    //{
-      //LogError( "Error in port path: adapter %d not found in %s", (int) n2[0], GetConfigFile( ).c_str( ));
-      //continue;
-    //}
-    //Frontend *f = a->GetFrontend( n2[1] );
-    //if( !f )
-    //{
-      //LogError( "Error in port path: frontend %d not found in %s", (int) n2[1], GetConfigFile( ).c_str( ));
-      //continue;
-    //}
-    //Port     *p = f->GetPort( n2[2] );
-    //if( !f )
-    //{
-      //LogError( "Error in port path: port %d not found in %s", (int) n2[2], GetConfigFile( ).c_str( ));
-      //continue;
-    //}
-    //// FIXME: verify frontend type
-    //Log( "  Adding configured port [%d, %d, %d] to source %s", (int) n2[0], (int) n2[1], (int) n2[2], name.c_str( ));
-    //ports.push_back( p );
-    //p->SetSource( GetKey( ));
+  //Setting &n2 = n[i];
+  //if( n2.getLength( ) != 3 )
+  //{
+  //LogError( "Error in port path: should be [adapter, frontend, port] in %s", GetConfigFile( ).c_str( ));
+  //continue;
+  //}
+  //Adapter  *a = tvd.GetAdapter( n2[0] );
+  //if( !a )
+  //{
+  //LogError( "Error in port path: adapter %d not found in %s", (int) n2[0], GetConfigFile( ).c_str( ));
+  //continue;
+  //}
+  //Frontend *f = a->GetFrontend( n2[1] );
+  //if( !f )
+  //{
+  //LogError( "Error in port path: frontend %d not found in %s", (int) n2[1], GetConfigFile( ).c_str( ));
+  //continue;
+  //}
+  //Port     *p = f->GetPort( n2[2] );
+  //if( !f )
+  //{
+  //LogError( "Error in port path: port %d not found in %s", (int) n2[2], GetConfigFile( ).c_str( ));
+  //continue;
+  //}
+  //// FIXME: verify frontend type
+  //Log( "  Adding configured port [%d, %d, %d] to source %s", (int) n2[0], (int) n2[1], (int) n2[2], name.c_str( ));
+  //ports.push_back( p );
+  //p->SetSource( GetKey( ));
   //}
   return true;
 }
@@ -416,22 +416,6 @@ std::vector<std::string> Source::GetScanfileList( Type type, std::string country
   return result;
 }
 
-Transponder *Source::GetTransponderForScanning( )
-{
-  std::vector<Transponder *>::const_iterator it;
-  Lock( );
-  for( it = transponders.begin( ); it != transponders.end( ); it++ )
-    if( (*it)->GetState( ) == Transponder::State_New )
-    {
-      (*it)->SetState( Transponder::State_Selected );
-      break;
-    }
-  Unlock( );
-  if( it != transponders.end( ))
-    return *it;
-  return NULL;
-}
-
 bool Source::Tune( Activity &act )
 {
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
@@ -441,3 +425,31 @@ bool Source::Tune( Activity &act )
   }
   return false;
 }
+
+bool Source::GetTransponderForScanning( Activity *act )
+{
+  ScopeLock t;
+  std::vector<Transponder *>::const_iterator it;
+  for( it = transponders.begin( ); it != transponders.end( ); it++ )
+    if( (*it)->GetState( ) == Transponder::State_New )
+    {
+      (*it)->SetState( Transponder::State_Selected );
+      act->SetTransponder( *it );
+      return true;
+    }
+  return false;
+}
+
+bool Source::GetTransponderForEPGScan( Activity *act )
+{
+  ScopeLock t;
+  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+    if( (*it)->GetState( ) == Transponder::State_NeedsEPG )
+    {
+      (*it)->SetState( Transponder::State_Selected );
+      act->SetTransponder( *it );
+      return true;
+    }
+  return false;
+}
+

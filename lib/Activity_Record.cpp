@@ -27,6 +27,7 @@
 #include "Service.h"
 #include "Frontend.h"
 #include "TVDaemon.h" // GetDir .. use ref to recorder !
+#include "Recorder.h"
 
 #include "descriptors/eit.h"
 #include "descriptors/desc_event_short.h"
@@ -37,19 +38,69 @@
 #include <errno.h>
 #include <algorithm> // replace
 
-Activity_Record::Activity_Record( Channel &channel ) : Activity( )
+Activity_Record::Activity_Record( Recorder &recorder, Event &event, int config_id ) :
+  Activity( ),
+  ConfigObject( recorder, "recording", config_id ),
+  recorder(recorder)
 {
-  SetChannel( &channel );
+  SetChannel( &event.GetChannel( ));
+  state = State_Scheduled;
+  start = event.GetStart( );
+  end   = event.GetEnd( );
+  name  = event.GetName( );
+}
+
+Activity_Record::Activity_Record( Recorder &recorder, std::string configfile ) :
+  Activity( ),
+  ConfigObject( recorder, configfile ),
+  recorder(recorder)
+{
 }
 
 Activity_Record::~Activity_Record( )
 {
 }
 
+std::string Activity_Record::GetName( ) const
+{
+  std::string t = "Record";
+  t += " - " + channel->GetName( ) + " \"" + name + "\"";
+  return t;
+}
+
+bool Activity_Record::SaveConfig( )
+{
+  WriteConfig( "Name",    name );
+  WriteConfig( "Channel", channel->GetKey( ));
+  WriteConfig( "Start",   (int) start );
+  WriteConfig( "End",     (int) end );
+  WriteConfig( "State",   state );
+
+  return WriteConfigFile( );
+}
+
+bool Activity_Record::LoadConfig( )
+{
+  if( !ReadConfigFile( ))
+    return false;
+  int channel_id;
+  ReadConfig( "Name",    name );
+  ReadConfig( "Channel", channel_id );
+  ReadConfig( "Start",   (int &) start );
+  ReadConfig( "End",     (int &) end );
+  ReadConfig( "State",   (int &) state );
+
+  if( end > time( NULL ))
+    state = State_Scheduled;
+
+  if( channel_id != -1 )
+    channel = TVDaemon::Instance( )->GetChannel( channel_id );
+  return true;
+}
+
 bool Activity_Record::Perform( )
 {
   // FIXME: verify all pointers...
-  Log( "Recording Channel %s", channel->GetName( ).c_str( ));
 
   bool ret = true;
   std::vector<int> fds;
@@ -84,60 +135,40 @@ bool Activity_Record::Perform( )
   std::string upcoming;
 
   int fd = frontend->OpenDemux( );
-  Log( "Reading EIT" );
-  struct dvb_table_eit *eit;
-  dvb_read_section_with_id( frontend->GetFE( ), fd, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service->GetKey( ), (uint8_t **) &eit, 5 );
-  if( eit )
-  {
-    //dvb_table_eit_print( frontend->GetFE( ), eit );
-    dvb_eit_event_foreach(event, eit)
-    {
-      if( event->running_status == 4 ) // now
-      {
-        dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
-        {
-          dumpfile = desc->name;
-          break;
-        }
-      }
-      if( event->running_status == 2 ) // starts in a few seconds
-      {
-        dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
-        {
-          upcoming = desc->name;
-          break;
-        }
-      }
-    }
-    dvb_table_eit_free(eit);
-  }
-
-  if( !upcoming.empty( ))
-  {
-    dumpfile = upcoming;
-  }
-
-  //dvb_read_section_with_id( fe, fd_v, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, service_id, (uint8_t **) &eit, &eitlen, 5 );
+  //Log( "Reading EIT" );
+  //struct dvb_table_eit *eit;
+  //dvb_read_section_with_id( frontend->GetFE( ), fd, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service->GetKey( ), (uint8_t **) &eit, 5 );
   //if( eit )
   //{
-  //dvb_table_eit_print( fe, eit );
-  //dvb_eit_event_foreach(event, eit)
-  //{
-  //if( event->running_status == 4 ) // now
-  //{
-  //dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
-  //{
-  //dumpfile = desc->name;
-  //dumpfile += ".pes";
-  //break;
+    //dvb_eit_event_foreach(event, eit)
+    //{
+      //if( event->running_status == 4 ) // now
+      //{
+        //dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
+        //{
+          //dumpfile = desc->name;
+          //break;
+        //}
+      //}
+      //if( event->running_status == 2 ) // starts in a few seconds
+      //{
+        //dvb_desc_find( struct dvb_desc_event_short, desc, event, short_event_descriptor )
+        //{
+          //upcoming = desc->name;
+          //break;
+        //}
+      //}
+    //}
+    //dvb_table_eit_free(eit);
   //}
-  //}
-  //}
-  //free( eit );
+
+  //if( !upcoming.empty( ))
+  //{
+    //dumpfile = upcoming;
   //}
 
   if( dumpfile.empty( ))
-    dumpfile = "dump";
+    dumpfile = name;
   else
   {
     std::replace( dumpfile.begin(), dumpfile.end(), '/', '_');
@@ -148,7 +179,7 @@ bool Activity_Record::Perform( )
   {
     char file[256];
 
-    std::string dir = Utils::Expand( TVDaemon::Instance( )->GetDir( ));
+    std::string dir = recorder.GetDir( );
     Utils::EnsureSlash( dir );
     std::string filename = dir + dumpfile + ".pes";
 
@@ -156,7 +187,7 @@ bool Activity_Record::Perform( )
     while( Utils::IsFile( filename ))
     {
       char num[16];
-      if( ++i == 1000 )
+      if( ++i == 65535 )
       {
         LogError( "Too many files with same name: %s", filename.c_str( ));
         ret = false;

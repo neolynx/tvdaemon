@@ -25,7 +25,7 @@
 #include "TVDaemon.h"
 #include "Frontend.h"
 #include "Log.h"
-#include "Activity_Scan.h"
+#include "Activity.h"
 
 #include <json/json.h>
 #include <stdlib.h> // atoi
@@ -83,18 +83,23 @@ bool Port::LoadConfig( )
   return true;
 }
 
-bool Port::Scan( )
+bool Port::Scan( Activity *act )
 {
   if( !source )
     return false;
-  Transponder *t = source->GetTransponderForScanning( );
-  if( !t )
+  act->SetPort( this );
+  if( !source->GetTransponderForScanning( act ))
     return false;
-  Log( "Scanning Transponder %d: %s", t->GetKey( ), t->toString( ).c_str( ));
+  return true;
+}
 
-  Activity_Scan *act = new Activity_Scan( t );
-  act->Run( );
-  delete act;
+bool Port::ScanEPG( Activity *act )
+{
+  if( !source )
+    return false;
+  act->SetPort( this );
+  if( !source->GetTransponderForEPGScan( act ))
+    return false;
   return true;
 }
 
@@ -151,6 +156,7 @@ bool Port::RPC( const HTTPRequest &request, const std::string &cat, const std::s
 
 bool Port::Tune( Activity &act )
 {
-  return frontend.Tune( *this, act );
+  act.SetPort( this );
+  return frontend.Tune( act );
 }
 

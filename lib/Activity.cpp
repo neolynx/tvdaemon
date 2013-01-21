@@ -26,7 +26,7 @@
 
 #include <unistd.h> // NULL
 
-Activity::Activity( ) : Thread( ), state(state), channel(NULL), service(NULL), transponder(NULL), frontend(NULL), up(true)
+Activity::Activity( ) : Thread( ), state(State_New), channel(NULL), service(NULL), transponder(NULL), frontend(NULL), up(true)
 {
 }
 
@@ -44,44 +44,45 @@ bool Activity::Start( )
 
 void Activity::Run( )
 {
-  const char *name = GetName( );
-  std::string context;
-  state = State_Started;
+  bool ret;
+  std::string name = GetName( );
+  state = State_Running;
+  Log( "Activity starting: %s", name.c_str( ));
   if( channel )
   {
-    context = channel->GetName( );
-    Log( "Activity started: %s( %s )", name, context.c_str( ));
     if( !channel->Tune( *this ))
     {
-      Log( "Activity failed:  %s( %s ) failed", name, context.c_str( ));
+      LogError( "Activity %s unable to start: tuning failed", name.c_str( ));
       goto fail;
     }
   }
-  else if( transponder )
+  else if( frontend and port and transponder )
   {
-    context = transponder->toString( );
-    Log( "Activity started: %s( %s )", name, context.c_str( ));
-    if( !transponder->Tune( *this ))
+    if( !frontend->Tune( *this ))
     {
-      Log( "Activity failed:  %s( %s )", name, context.c_str( ));
+      LogError( "Activity %s unable to start: tuning failed", name.c_str( ));
       goto fail;
     }
   }
   else
   {
-    LogError( "Activity %s unable to start: no channel or transponder found", name );
+    LogError( "Activity %s unable to start: no channel or no frontend, port and transponder found", name.c_str( ));
     goto fail;
   }
 
-  if( !Perform( ))
-    state = State_Failed;
-  else
-    state = State_Done;
+  ret = Perform( );
+  if( state == State_Running )
+  {
+    if( ret )
+      state = State_Done;
+    else
+      state = State_Failed;
+  }
 
   if( frontend )
     frontend->Release( );
 
-  Log( "Activity %s %s( %s )", state == State_Done ? "done:    " : "failed:  ", name, context.c_str( ));
+  Log( "Activity %s %s", state == State_Done ? "done:    " : "failed:  ", name.c_str( ));
   return;
 
 fail:
@@ -89,3 +90,9 @@ fail:
   return;
 }
 
+void Activity::Abort( )
+{
+  if( state == State_Running )
+    state = State_Aborted;
+  up = false;
+}

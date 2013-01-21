@@ -95,6 +95,7 @@ class Transponder : public ConfigObject, public RPCObject
       State_Scanning,
       State_Scanned,
       State_ScanningFailed,
+      State_NeedsEPG,
       State_Idle,
       State_Duplicate,
       State_Last
@@ -109,6 +110,8 @@ class Transponder : public ConfigObject, public RPCObject
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
     bool Tune( Activity &act );
+
+    bool UpdateEPG( );
 
   protected:
     bool enabled;

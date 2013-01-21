@@ -23,22 +23,22 @@
 
 #include "Log.h"
 
-Lockable::Lockable( )
+Mutex::Mutex( )
 {
   pthread_mutex_init( (pthread_mutex_t *) &mutex, NULL );
 }
 
-void Lockable::Lock( ) const
+void Mutex::Lock( ) const
 {
   pthread_mutex_lock( (pthread_mutex_t *) &mutex );
 }
 
-void Lockable::Unlock( ) const
+void Mutex::Unlock( ) const
 {
   pthread_mutex_unlock( (pthread_mutex_t *) &mutex );
 }
 
-Thread::Thread( ) : Lockable( ), started(false)
+Thread::Thread( ) : Mutex( ), started(false)
 {
 }
 

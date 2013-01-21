@@ -27,12 +27,10 @@
 class Activity_Scan : public Activity
 {
   public:
-    Activity_Scan( Transponder *transponder );
+    Activity_Scan( );
     virtual ~Activity_Scan( );
 
-    virtual const char *GetName( ) const { return "Scan"; }
-
-    virtual void Run( ) { Activity::Run( ); }
+    virtual std::string GetName( ) const;
 
   private:
     virtual bool Perform( );

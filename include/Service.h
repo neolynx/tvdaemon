@@ -60,6 +60,7 @@ class Service : public RPCObject
     std::string GetProvider( ) { return provider; }
     void        SetProvider( std::string provider ) { this->provider = provider; }
     void        SetScrambled( bool scrambled ) { this->scrambled = scrambled; }
+    Channel    *GetChannel( ) { return channel; }
 
     Transponder &GetTransponder( ) const { return transponder; }
 
@@ -67,8 +68,8 @@ class Service : public RPCObject
     bool UpdateStream( int pid, Stream::Type type );
     std::map<uint16_t, Stream *> &GetStreams();
 
-    virtual bool SaveConfig( ConfigBase &config );
-    virtual bool LoadConfig( ConfigBase &config );
+    bool SaveConfig( ConfigBase &config );
+    bool LoadConfig( ConfigBase &config );
 
     // RPC
     void json( json_object *entry ) const;

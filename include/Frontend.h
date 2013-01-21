@@ -71,6 +71,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
       State_Ready,
       State_Opened,
       State_Tuning,
+      State_ScanEPG,
       State_Last
     };
 
@@ -78,7 +79,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    bool Tune( Port &port, Activity &act );
+    bool Tune( Activity &act );
     void Release( );
 
     virtual bool HandleNIT( struct dvb_table_nit *nit ) = 0;
@@ -135,6 +136,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     void Close( );
 
     Activity *activity;
+    Mutex activity_lock;
 };
 
 #endif

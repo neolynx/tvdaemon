@@ -44,8 +44,7 @@ int main( int argc, char *argv[] )
   sigaction( SIGINT, &action, NULL );
   sigaction( SIGTERM, &action, NULL );
 
-  Log( "TVDaemon starting ...\n" );
-
+  Log( "TVDaemon starting ..." );
   TVDaemon *tvd = TVDaemon::Instance( );
   if( !tvd->Create( "~/.tvdaemon" ))
   {

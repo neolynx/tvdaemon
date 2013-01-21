@@ -23,15 +23,32 @@
 #define _Activity_Record_
 
 #include "Activity.h"
+#include "ConfigObject.h"
 
-class Activity_Record : public Activity
+class Event;
+class Recorder;
+
+class Activity_Record : public Activity, public ConfigObject
 {
   public:
-    Activity_Record( Channel &channel );
+    Activity_Record( Recorder &recorder, Event &event, int config_id );
+    Activity_Record( Recorder &recorder, std::string configfile );
     virtual ~Activity_Record( );
 
-    virtual const char *GetName( ) const { return "Record"; }
+    virtual bool SaveConfig( );
+    virtual bool LoadConfig( );
+
+    virtual std::string GetName( ) const;
+
     virtual bool Perform( );
+
+    time_t GetStart( )          { return start; }
+    time_t GetEnd( )            { return end; }
+
+  private:
+    Recorder &recorder;
+    time_t start, end;
+    std::string name;
 };
 
 

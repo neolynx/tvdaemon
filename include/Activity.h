@@ -24,10 +24,13 @@
 
 #include "Thread.h"
 
+#include <string>
+
 class Channel;
 class Transponder;
 class Service;
 class Frontend;
+class Port;
 
 class Activity : public Thread
 {
@@ -38,35 +41,41 @@ class Activity : public Thread
     enum State
     {
       State_New,
-      State_Start,
+      State_Scheduled,
       State_Starting,
-      State_Started,
+      State_Running,
       State_Done,
+      State_Aborted,
       State_Failed,
       State_Last
     };
     bool HasState( State state ) { return this->state == state; }
     State GetState( ) { return state; }
-    void Schedule( ) { state = State_Start; }
 
     void SetChannel( Channel *channel ) { this->channel = channel; }
-    Channel &GetChannel( ) const { return *channel; }
+    Channel *GetChannel( ) const { return channel; }
 
     void SetService( Service *service ) { this->service = service; }
-    Service &GetService( ) const { return *service; }
+    Service *GetService( ) const { return service; }
 
     void SetTransponder( Transponder *transponder ) { this->transponder = transponder; }
-    Transponder &GetTransponder( ) const { return *transponder; }
+    Transponder *GetTransponder( ) const { return transponder; }
 
     void SetFrontend( Frontend *frontend ) { this->frontend = frontend; }
-    Frontend &GetFrontend( ) const { return *frontend; }
+    Frontend *GetFrontend( ) const { return frontend; }
+
+    void SetPort( Port *port ) { this->port = port; }
+    Port *GetPort( ) const { return port; }
 
     bool Start( );
-
+    void Stop( ) { up = false; }
+    void Abort( );
     bool IsActive( ) { return up; }
 
-    virtual const char *GetName( ) const = 0;
+    virtual std::string GetName( ) const = 0;
     virtual bool Perform( ) = 0;
+
+    void Run( );
 
   protected:
     State state;
@@ -75,8 +84,8 @@ class Activity : public Thread
     Service *service;
     Transponder *transponder;
     Frontend *frontend;
+    Port *port;
 
-    virtual void Run( );
 
   private:
     bool up;

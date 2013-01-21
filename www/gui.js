@@ -65,6 +65,7 @@ function readDevices( data, errmsg )
       cell2 = $('<td>');
       cell2.html( getFrontend( frontend ));
       cell2.attr( "class", "frontend" );
+      cell2.bind( "click", function( ) { alert ( 'bla' ); } );
       row.append( cell2 );
 
       ports = Object.keys( frontend["ports"] ).length;

@@ -406,3 +406,8 @@ bool Transponder::Tune( Activity &act )
   return source.Tune( act );
 }
 
+bool Transponder::UpdateEPG( )
+{
+  SetState( State_NeedsEPG );
+}
+

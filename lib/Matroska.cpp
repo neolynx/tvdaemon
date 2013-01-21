@@ -68,7 +68,7 @@ void Matroska::WriteSegment( )
 
 void Matroska::WriteHeader( )
 {
-  std::string dir = Utils::Expand( TVDaemon::Instance( )->GetDir( ));
+  std::string dir; // FIXME
   Utils::EnsureSlash( dir );
   std::string filename = dir + name + ".mkv";
 

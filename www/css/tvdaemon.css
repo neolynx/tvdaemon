@@ -120,6 +120,7 @@ div.footer
 .sst_paginator
 {
   text-align: right;
+  width: 400px;
 }
 
 .sst_numeric
@@ -152,15 +153,16 @@ div.sst th
 div.sst td
 {
   padding: 2px;
-}
-
-div.svrstable tr:nth-child(odd) td
-{
-  background-color: #dfdfdf;
+  vertical-align: top;
 }
 
 div.sst tr:hover td
 {
   background-color: #d0d0df;
+}
+
+div.sst table tr:nth-child(odd) td
+{
+  background-color: #dfdfdf;
 }
 

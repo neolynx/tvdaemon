@@ -24,10 +24,10 @@
 
 #include <pthread.h>
 
-class Lockable
+class Mutex
 {
   public:
-    Lockable( );
+    Mutex( );
     void Lock( ) const;
     void Unlock( ) const;
 
@@ -35,7 +35,14 @@ class Lockable
     volatile pthread_mutex_t mutex;
 };
 
-class Thread : public Lockable
+class ScopeLock : public Mutex
+{
+  public:
+    ScopeLock( ) : Mutex( ) { Lock( ); }
+    ~ScopeLock( ) { Unlock( ); }
+};
+
+class Thread : public Mutex
 {
   protected:
     Thread( );

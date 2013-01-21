@@ -35,6 +35,8 @@
 #include "Activity.h"
 #include "Utils.h" // dump
 #include "Channel.h"
+#include "Activity_UpdateEPG.h"
+#include "Activity_Scan.h"
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -464,24 +466,50 @@ void Frontend::Run( )
     switch( state )
     {
       case State_Ready:
-        for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
         {
-          if( (*it)->Scan( ))
+          activity_lock.Lock( );
+          Activity_Scan *act = new Activity_Scan( );
+          act->SetFrontend( this );
+          for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
           {
-            idle = false;
-            break;
+            if( (*it)->Scan( act ))
+            {
+              activity_lock.Unlock( );
+              act->Run( );
+              idle = false;
+              break;
+            }
           }
+          delete act;
+
+          if( !idle )
+            break;
+          activity_lock.Unlock( );
+          state = State_ScanEPG;
         }
+        break;
 
-        if( !idle )
-          break;
-
-        //channel = TVDaemon::Instance( )->GetChannelForEPG( );
-        //if( channel )
-        //{
-          //channel->UpdateEPG( );
-        //}
-
+      case State_ScanEPG:
+        {
+          activity_lock.Lock( );
+          Activity_UpdateEPG *act = new Activity_UpdateEPG( );
+          act->SetFrontend( this );
+          for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+          {
+            if( (*it)->ScanEPG( act ))
+            {
+              activity_lock.Unlock( );
+              act->Run( );
+              idle = false;
+              break;
+            }
+          }
+          delete act;
+          if( !idle )
+            break;
+          activity_lock.Unlock( );
+          state = State_Ready;
+        }
         break;
     }
 
@@ -520,13 +548,19 @@ void Frontend::LogError( const char *fmt, ... )
   TVD_Log( LOG_ERR, "%d.%d %s", adapter.GetKey( ), GetKey( ), msg );
 }
 
-bool Frontend::Tune( Port &port, Activity &act )
+bool Frontend::Tune( Activity &act )
 {
-  if( !SetPort( port.GetKey( )))
+  Port *port = act.GetPort( );
+  if( !port )
     return false;
-  if( !Tune( act.GetTransponder( )))
+  Transponder *transponder = act.GetTransponder( );
+  if( !transponder )
     return false;
   act.SetFrontend( this );
+  if( !SetPort( port->GetKey( )))
+    return false;
+  if( !Tune( *transponder ))
+    return false;
   return true;
 }
 
