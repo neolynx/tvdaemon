@@ -1,12 +1,23 @@
+html, body
+{
+  margin: 0;
+  padding: 0;
+}
+
+a
+{
+  text-decoration: none;
+}
+
 
 /* Layout */
 
 div.back
 {
   min-width: 650px; /* activate browser scrollbar if screen is less 650pixels wide */
-  padding: 1px;
+  position: relative;
+  /* Fallback background */
   background-image: url('../images/center_bg.jpg');
-  background-attachment:fixed;
   background-repeat: repeat;
   background-position:center;
   /* Safari 4-5, Chrome 1-9 */
@@ -23,41 +34,56 @@ div.back
 
   /* Opera cannot do radial gradients yet */
 
-  position: absolute;
-  top: 0px;
-  bottom: 0px;
-  right: 0px;
-  left: 0px;
+
 }
 
-div.header
+.header
 {
-  background-image: url('../images/TVDeamon_small.png'),url('../images/logo.png');
-  background-position: left+5px top,0px 90px;
+  background-image: url('../images/TVDeamon_small.png'), url('../images/TVDeamon_large_configure.png'), url('../images/TVDeamon_large_users.png'), url('../images/TVDeamon_large_promt.png');
+  background-size:80px 80px,80px 80px;
+  background-position: left+25px top,115px top,200px top,285px top;
   background-repeat: no-repeat;
-  width: 100%;
-  height: 130px;
-  /* Gradient color1 - color2 - color1  hr.style */
-  #position: absolute;
-  #top: 129px;
-  #right: 0px;
-  #border: 0;
-  #height: 1px;
-  #background: #333;
-  #background-image: -webkit-linear-gradient(left, #ccc, #333, #ccc);
-  #background-image: -moz-linear-gradient(left, #ccc, #333, #ccc);
-  #background-image: -ms-linear-gradient(left, #ccc, #333, #ccc);
-  #background-image: -o-linear-gradient(left, #ccc, #333, #ccc);
+  height: 67px;
+
+  /* Logo */
+  position: relative;
+  margin: 0px;
+  width: 650px;
+  color: transparent;
+  font: italic 4em "Helvetica Neue";
+  font-weight:lighter;
+  padding-top: 8px;
+  letter-spacing: -2px;
+  text-shadow:-1px -1px 0 black, 1px 1px 0 black, -1px 0 0 black, 1px 0 0 black, 0 3px 4px rgba(167, 221, 255, 1), 0 -6px 7px rgba(0, 0, 0, 0.5);
+}
+
+.header::before
+{
+  content:"TVDaemon";
+  position:absolute;
+  color:#fff;
+  left:200;
+  right:0;
+}
+
+.header::after
+{
+  content:"TVDaemon";
+  position:absolute;
+  color:#525b73;
+  -webkit-mask-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
+  left:200;
+  right:0;
 }
 
 div.content
 {
- position: absolute;
-  top: 131px;
-  left: 2px;
-  padding-bottom:40px;
-  min-height: 100%-171px;
-  height:auto;
+  border-top: 3px solid gray;
+  padding-left: 25px;
+  top: 80px;
+  padding-bottom: 45px;
+  min-height: 100%-125px;
+
 
 }
 
