@@ -1,7 +1,7 @@
-From 31668a0f3682d5ce57d3012ea09ce469b410f643 Mon Sep 17 00:00:00 2001
+From b151cacc4234cbc6aa89d8da203a47d54d4d38f0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 21 Jan 2013 23:23:55 +0100
-Subject: [PATCH] libdvbv5: eit parsing updated
+Subject: [PATCH 6/6] libdvbv5: eit parsing updated
 
 ---
  lib/include/descriptors.h      |    6 ++++++
@@ -44,10 +44,10 @@ index 2af9696..d2ebdb4 100644
  
  struct dvb_table_eit {
 diff --git a/lib/include/dvb-fe.h b/lib/include/dvb-fe.h
-index 444d500..e053455 100644
+index d725a42..05c0134 100644
 --- a/lib/include/dvb-fe.h
 +++ b/lib/include/dvb-fe.h
-@@ -100,6 +100,8 @@ struct dvb_v5_fe_parms {
+@@ -120,6 +120,8 @@ struct dvb_v5_fe_parms {
  extern "C" {
  #endif
  
@@ -129,10 +129,10 @@ index ccfe1a6..d13b14c 100644
  		dvb_log("|   Duration              %dh %dm %ds", event->duration / 3600, (event->duration % 3600) / 60, event->duration % 60);
  		dvb_log("|   free CA mode          %d", event->free_CA_mode);
 diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
-index e1abe86..c65f45c 100644
+index 83aaed2..407762c 100644
 --- a/lib/libdvbv5/dvb-fe.c
 +++ b/lib/libdvbv5/dvb-fe.c
-@@ -33,6 +33,13 @@ static void dvb_v5_free(struct dvb_v5_fe_parms *parms)
+@@ -35,6 +35,13 @@ static void dvb_v5_free(struct dvb_v5_fe_parms *parms)
  	free(parms);
  }
  

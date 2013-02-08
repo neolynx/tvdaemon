@@ -1,7 +1,7 @@
-From d08879d5b6c25d7137d998aaa342cc2dea5aff50 Mon Sep 17 00:00:00 2001
+From 35fe706d35ab3592bbf970aee875bdf3b2272b30 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 13 Jan 2013 23:23:33 +0100
-Subject: [PATCH 4/5] fix reading multisection tables
+Subject: [PATCH 5/6] fix reading multisection tables
 
 ---
  lib/libdvbv5/dvb-scan.c |   19 +++++++++++--------
