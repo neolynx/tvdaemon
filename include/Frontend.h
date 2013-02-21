@@ -60,7 +60,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
 
     struct dvb_v5_fe_parms *GetFE( ) { return fe; }
     static bool GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name = NULL );
-    virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int retries );
+    virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout /* miliseconds */ );
     int OpenDemux( );
 
     virtual bool SaveConfig( );

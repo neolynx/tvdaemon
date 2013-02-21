@@ -47,6 +47,7 @@
 #include "dvb-demux.h"
 #include "dvb-fe.h"
 #include <errno.h> // ETIMEDOUT
+#include <sys/time.h>
 
 Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   ConfigObject( adapter, "frontend", config_id )
@@ -295,23 +296,27 @@ int Frontend::OpenDemux( )
   return dvb_dmx_open( adapter_id, frontend_id );
 }
 
-bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
+bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
 {
   if( !fe )
     return false;
-  uint32_t status;
   uint32_t snr = 0, sig = 0;
   uint32_t ber = 0, unc = 0;
 
-  for( int i = 0; i < retries && state == State_Tuning; i++ )
+  struct timeval ts;
+  gettimeofday( &ts, NULL );
+  long start = ts.tv_sec * 1000 + ts.tv_usec / 1000; // mili seconds
+
+  while( state == State_Tuning && up )
   {
     int r = dvb_fe_get_stats( fe );
-    if( r < 0 )
+    if( r != 0 )
     {
       LogError( "Error getting frontend status" );
       return false;
     }
 
+    uint32_t status = 0;
     dvb_fe_retrieve_stats( fe, DTV_STATUS, &status );
     if( status & FE_HAS_LOCK )
     {
@@ -328,6 +333,12 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int retries )
       noise  = (snr * 100) / 0xffff;
       return true;
     }
+
+    struct timeval ts2;
+    gettimeofday( &ts2, NULL );
+
+    if(( ts2.tv_sec * 1000 + ts2.tv_usec / 1000 ) - start > timeout )
+      break;
     usleep( 10 );
     //printf( "." );
     //fflush( stdout );
