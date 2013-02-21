@@ -18,6 +18,9 @@ function ready( )
   $('#source_popup').bind( 'closed', function ( event ) { no_update = false; } );
   $('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
 
+  $('#setup').attr( 'class', 'setup' );
+
+  Menu( "Setup" );
   update( );
 }
 
@@ -43,8 +46,10 @@ function readSources( data, errmsg )
 
 function readDevices( data, errmsg )
 {
-  $( '#config' ).empty( );
+  $( '#setup' ).empty( );
   if( !data ) return;
+  table = $('<table>');
+  table.attr( 'class', 'setup' );
   adapters = data;
   for( a in adapters )
   {
@@ -52,44 +57,58 @@ function readDevices( data, errmsg )
     row = $('<tr>');
     cell = $('<td>');
     cell.html( getAdapter( adapter ));
-    cell.attr( "class", "adapter" );
+    if( a != adapters.length - 1 )
+      cell.attr( "class", "adapter" );
+    else
+      cell.attr( "class", "adapter_last" );
     row.append( cell );
 
     adapterports = 0;
 
-    for( f in adapter["frontends"] )
+    frontends = adapter["frontends"]
+    for( f in frontends )
     {
-      frontend = adapter["frontends"][f];
+      frontend = frontends[f];
       frontend["adapter_id"] = adapter["id"];
 
       cell2 = $('<td>');
       cell2.html( getFrontend( frontend ));
-      cell2.attr( "class", "frontend" );
-      cell2.bind( "click", function( ) { alert ( 'bla' ); } );
+      if( f != frontends.length - 1 || a != adapters.length - 1 )
+        cell2.attr( "class", "frontend" );
+      else
+        cell2.attr( "class", "frontend_last" );
+      //cell2.bind( "click", function( ) { alert ( 'bla' ); } );
       row.append( cell2 );
 
       ports = Object.keys( frontend["ports"] ).length;
       adapterports += ports;
       cell2.attr( "rowspan", ports );
 
-      for( p in frontend["ports"] )
+      ports = frontend["ports"];
+      for( p in ports )
       {
-        port = frontend["ports"][p];
+        port = ports[p];
         port["frontend_id"] = frontend["id"];
         port["adapter_id"] = adapter["id"];
 
         cell3 = $('<td>');
         cell3.html( getPort( port ));
-        cell3.attr( "class", "port" );
+        if( p != ports.length - 1 || a != adapters.length - 1 || f != frontends.length -1 )
+          cell3.attr( "class", "port" );
+        else
+          cell3.attr( "class", "port_last" );
         row.append( cell3 );
 
         cell4 = $('<td>');
         cell4.html( getSource( port ));
-        cell4.attr( "class", "source" );
+        if( p != ports.length - 1 || a != adapters.length - 1 || f != frontends.length -1 )
+          cell4.attr( "class", "source" );
+        else
+          cell4.attr( "class", "source_last" );
         row.append( cell4 );
 
 
-        row.appendTo( '#config' );
+        row.appendTo( table );
         row = $('<tr>');
       }
 
@@ -100,7 +119,7 @@ function readDevices( data, errmsg )
   // end row
   row = $('<tr>');
   cell = $('<td>');
-  cell.html( "<div id=\"button1\"> <a href=\"#\" class=\"button\">Add Tuner </a></div>" );
+  cell.html( "<div id=\"button1\"> <a href=\"javascript: scan( );\" class=\"button\">Scan</a></div>" );
   row.append( cell );
 
   cell2 = $('<td>');
@@ -112,50 +131,53 @@ function readDevices( data, errmsg )
   cell4 = $('<td>');
   row.append( cell4 );
 
-  row.appendTo( '#config' );
+  row.appendTo( table );
+  table.appendTo( '#setup' );
 }
 
 function getAdapter( adapter )
 {
   imgstyle = "";
   if( adapter["present"] != 1 )
-    imgstyle = "alt=\"not present\" class=\"grey\";";
+    imgstyle = "alt=\"not present\" class=\"icon_gray\";";
+  else
+    imgstyle = "class=\"icon\";";
   if( adapter["path"].indexOf( "/usb" ) != -1 )
-    icon = "<img src=\"images/usb-icon.png\" style=\"" + imgstyle + "\"/>";
+    icon = "<img src=\"images/usb-icon.png\" " + imgstyle + "/>";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
-    icon = "<img src=\"images/pci-icon.png\" style=\"" + imgstyle + "\"/>";
-  return "<b>" + adapter["name"] + "<br/>" + icon;
+    icon = "<img src=\"images/pci-icon.png\" " + imgstyle + "/>";
+  return icon;
 }
 
 function getFrontend( frontend )
 {
   adapter = adapters[frontend["adapter_id"]];
-  imgstyle = "";
-  if( adapter["present"] != 1 )
-    imgstyle = "alt=\"not present\" class=\"grey\";";
-  if( frontend["type"] == 0 )
-    icon = "<img src=\"images/antenna-icon.png\" style=\"" + imgstyle + "\"/>";
-  else if( frontend["type"] == 1 )
-    icon = "<img src=\"images/antenna-cable.smal.png\" style=\"" + imgstyle + "\"/>";
-  else if( frontend["type"] == 2 )
-    icon = "<img src=\"images/antenna-oldstyle.png\" style=\"" + imgstyle + "\"/>";
-  return icon;
+  return "<a href=\"javascript: click_frontend( " + frontend["adapter_id"] + ", " + frontend["id"] + " );\">" + adapter["name"] + "</a>";
 }
 
 function getPort( port )
 {
-  frontend = adapters[port["adapter_id"]]["frontends"][port["frontend_id"]];
-  //if( frontend["type"] == 0 ) // Sat
-  return "<a href=\"javascript: editPort( " + port["adapter_id"] + ", " + port["frontend_id"] + ",  " + port["id"] + " );\"><b>" + port["name"] + "</b></a>";
-  //return "";
+  adapter = adapters[port["adapter_id"]];
+  frontend = adapter["frontends"][port["frontend_id"]];
+  imgstyle = "";
+  if( adapter["present"] != 1 )
+    imgstyle = "alt=\"not present\" class=\"icon_gray\";";
+  else
+    imgstyle = "class=\"icon\";";
+  if( frontend["type"] == 0 )
+    icon = "<img src=\"images/antenna-icon.png\" " + imgstyle + "/>";
+  else if( frontend["type"] == 1 )
+    icon = "<img src=\"images/antenna-cable.smal.png\" " + imgstyle + "/>";
+  else if( frontend["type"] == 2 )
+    icon = "<img src=\"images/antenna-oldstyle.png\" " + imgstyle + "/>";
+  return "<a href=\"javascript: editPort( " + port["adapter_id"] + ", " + port["frontend_id"] + ",  " + port["id"] + " );\">" + icon + "</a>";
 }
 
 function getSource( port )
 {
   source_id = port["source_id"];
   if( source_id >= 0 )
-    return "<a href=\"tvd?c=source&a=show&source_id=" + source_id + "\"><b>" + sources[source_id]["name"]
-      + "</b></a><br/>Type: " + sources[source_id]["type"]
+    return "<a href=\"tvd?c=source&a=show&source_id=" + source_id + "\"><b>" + sources[source_id]["name"] + "</b></a>"
       + "<br/>Transponders: " + sources[source_id]["transponders"]
       + "<br/>Services: " + sources[source_id]["services"];
   else
@@ -198,13 +220,17 @@ function editPortGetSources( data, errmsg )
 
 function savePort( )
 {
+  if( $("#port_port_id").val( ))
+    u = 'tvd?c=port&a=set';
+  else
+    u = 'tvd?c=frontend&a=create_port';
   $.ajax( {
     type: 'POST',
     cache: false,
-    url: 'tvd?c=port&a=set',
+    url: u,
     data: $('#port_form').serialize( ),
     success: function(msg) { $("#port_popup").jqxWindow( 'hide' ); },
-    error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
+    error: function( jqXHR, status, errorThrown ) { alert( 'Error: ' + jqXHR.responseText ); }
   } );
 }
 
@@ -250,5 +276,30 @@ function saveSource( )
       },
     error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
   } );
+}
+
+function scan( )
+{
+  $.ajax( {
+    type: 'GET',
+    cache: false,
+    url: 'tvd?c=tvdaemon&a=scan',
+  } );
+}
+
+function click_frontend( adapter_id, frontend_id )
+{
+  no_update = true;
+  $("#port_popup").jqxWindow('show');
+  frontend = adapters[adapter_id]["frontends"][frontend_id];
+  $("#port_name").focus( );
+  $("#port_name").val( "" );
+  $("#port_num").val( frontend["ports"].length );
+  $("#port_adapter_id").val( adapter_id );
+  $("#port_frontend_id").val( frontend_id );
+  $("#port_port_id").val( null );
+  $("#port_type").val( frontend["type"] );
+
+  getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
 }
 

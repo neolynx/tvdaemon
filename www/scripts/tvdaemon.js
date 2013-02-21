@@ -84,12 +84,14 @@ function ServerSideTable( name, url, page_size )
   paginator.append( search );
 
   sst = $('<div>');
-  sst.prop( "id", "sst_" + context['name'] );
   sst.prop( "class", "sst" );
-  sst.html( "loading data ..." );
+  //sst.html( "loading data ..." );
 
   $( '#' + context['name'] ).empty( );
-  paginator.appendTo( '#' + context['name'] );
+  sst.append( paginator );
+  table = $('<table>');
+  table.attr( 'id', 'sst_' + context['name'] );
+  sst.append( table );
   sst.appendTo( '#' + context['name'] );
   return context;
 }
@@ -97,8 +99,8 @@ function ServerSideTable( name, url, page_size )
 function renderTable( data, errmsg )
 {
   context = this;
-  sst = $( '#sst_' + context['name'] );
-  sst.empty( );
+  table = $( '#sst_' + context['name'] );
+  table.empty( );
   if( !data )
   {
     sst.html( "error loading data: " + errmsg );
@@ -107,7 +109,6 @@ function renderTable( data, errmsg )
 
   context['count'] = data["count"];
   $( '#sst_info_' + context['name'] ).html( context['func_info']( context, data ));
-  table = $('<table>');
   row = $('<tr>');
 
   for( key in context["columns"] )
@@ -159,5 +160,31 @@ function renderTable( data, errmsg )
   }
   table.appendTo( sst );
   return true;
+}
+
+/* Menu */
+
+function Menu( selected )
+{
+  menu = { Setup   : "gui.html",
+           Services: "services.html",
+           Channels: "channels.html",
+           EPG     : "epg.html",
+           Recorder: "recorder.html"
+         };
+
+  ul = $('<ul>');
+  for( m in menu )
+  {
+    li = $('<li>');
+    li.html( m );
+    if( m == selected )
+      li.attr( 'class', 'selected' );
+    click = function( ) { window.location = this; }
+    li.bind( 'click', click.bind( menu[m] ));
+    ul.append( li );
+  }
+  div = $('#menu');
+  div.append( ul );
 }
 

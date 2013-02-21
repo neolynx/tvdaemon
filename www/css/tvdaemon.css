@@ -1,106 +1,109 @@
-html, body
+/* Layout */
+
+html, body, div.container
 {
+  height: 100%;
   margin: 0;
   padding: 0;
 }
+
+body > div.container
+{
+  height: auto;
+  min-height: 100%;
+  background: -webkit-gradient(radial, 20% 20%, 80%, 40% 80%, 100, from(#1a82f7), to(#2F2727)); /* Safari 4-5, Chrome 1-9 */
+  background: -webkit-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727); /* Safari 5.1+, Chrome 10+ */
+  background: -moz-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727); /* Firefox 3.6+ */
+  background: -ms-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727); /* IE 10 */
+}
+
+div.header
+{
+  height: 40px;
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0)), color-stop(66%,rgba(0,0,0,0.39)), color-stop(100%,rgba(0,0,0,0.76))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.39) 66%,rgba(0,0,0,0.76) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.39) 66%,rgba(0,0,0,0.76) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.39) 66%,rgba(0,0,0,0.76) 100%); /* IE10+ */
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%,rgba(0,0,0,0.39) 66%,rgba(0,0,0,0.76) 100%); /* W3C */
+
+}
+
+div.logo
+{
+  text-shadow:-1px -1px 0 black, 1px 1px 0 black, -1px 0 0 black, 1px 0 0 black, 0 3px 4px rgba(167, 221, 255, 1), 0 -6px 7px rgba(0, 0, 0, 0.5);
+  font: italic 30px "Helvetica";
+  display: inline;
+}
+
+div#menu
+{
+  padding-left: 20px;
+  padding-top: 10px;
+  display: inline;
+}
+
+div#menu > ul
+{
+  list-style-type: none;
+  display: inline;
+  margin: 0px;
+  padding: 0px;
+}
+
+div#menu > ul > li
+{
+  position: relative;
+  display: inline;
+  padding: 3px 5px;
+  /*margin: 10px 5px;*/
+  cursor: pointer;
+  border-top: 1px solid;
+  border-left: 1px solid;
+  border-right: 1px solid;
+  background: #e0e0e0;
+  border-top-left-radius:  8px;
+  border-top-right-radius: 8px;
+}
+
+div#menu > ul > li:hover,
+div#menu > ul > li.selected
+{
+  background: #A3CDFC;
+}
+
+div.content
+{
+  padding-bottom: 20px;
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+div.footer
+{
+  clear: both;
+  position: relative;
+  z-index: 10;
+  height: 20px;
+  margin-top: -20px;
+  background: -moz-linear-gradient(top, rgba(216,216,216,1) 0%, rgba(242,242,242,1) 15%, rgba(104,104,104,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(216,216,216,1)), color-stop(15%,rgba(242,242,242,1)), color-stop(100%,rgba(104,104,104,1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, rgba(216,216,216,1) 0%,rgba(242,242,242,1) 15%,rgba(104,104,104,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, rgba(216,216,216,1) 0%,rgba(242,242,242,1) 15%,rgba(104,104,104,1) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, rgba(216,216,216,1) 0%,rgba(242,242,242,1) 15%,rgba(104,104,104,1) 100%); /* IE10+ */
+  background: linear-gradient(to bottom, rgba(216,216,216,1) 0%,rgba(242,242,242,1) 15%,rgba(104,104,104,1) 100%); /* W3C */
+}
+
+
+
+
+/* Button */
 
 a
 {
   text-decoration: none;
 }
 
-
-/* Layout */
-
-div.back
-{
-  min-width: 650px; /* activate browser scrollbar if screen is less 650pixels wide */
-  position: relative;
-  /* Fallback background */
-  background-image: url('../images/center_bg.jpg');
-  background-repeat: repeat;
-  background-position:center;
-  /* Safari 4-5, Chrome 1-9 */
-  background: -webkit-gradient(radial, 20% 20%, 80%, 40% 80%, 100, from(#1a82f7), to(#2F2727));
-
-  /* Safari 5.1+, Chrome 10+ */
-  background: -webkit-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727);
-
-  /* Firefox 3.6+ */
-  background: -moz-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727);
-
-  /* IE 10 */
-  background: -ms-radial-gradient(20% 20%, farthest-corner, #1a82f7, #2F2727);
-
-  /* Opera cannot do radial gradients yet */
-
-
-}
-
-.header
-{
-  background-image: url('../images/TVDeamon_small.png'), url('../images/TVDeamon_large_configure.png'), url('../images/TVDeamon_large_users.png'), url('../images/TVDeamon_large_promt.png');
-  background-size:80px 80px,80px 80px;
-  background-position: left+25px top,115px top,200px top,285px top;
-  background-repeat: no-repeat;
-  height: 67px;
-
-  /* Logo */
-  position: relative;
-  margin: 0px;
-  width: 650px;
-  color: transparent;
-  font: italic 4em "Helvetica Neue";
-  font-weight:lighter;
-  padding-top: 8px;
-  letter-spacing: -2px;
-  text-shadow:-1px -1px 0 black, 1px 1px 0 black, -1px 0 0 black, 1px 0 0 black, 0 3px 4px rgba(167, 221, 255, 1), 0 -6px 7px rgba(0, 0, 0, 0.5);
-}
-
-.header::before
-{
-  content:"TVDaemon";
-  position:absolute;
-  color:#fff;
-  left:200;
-  right:0;
-}
-
-.header::after
-{
-  content:"TVDaemon";
-  position:absolute;
-  color:#525b73;
-  -webkit-mask-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
-  left:200;
-  right:0;
-}
-
-div.content
-{
-  border-top: 3px solid gray;
-  padding-left: 25px;
-  top: 80px;
-  padding-bottom: 45px;
-  min-height: 100%-125px;
-
-
-}
-
-div.footer
-{
-  background-image: url('../images/menu_bg.jpg');
-  color:red;
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  left: 0px;
-  height: 40px;
-  z-index:+1;
-}
-
-
-/* Button */
 
 .button
 {
@@ -147,6 +150,7 @@ div.footer
 {
   text-align: right;
   width: 400px;
+  padding-bottom: 5px;
 }
 
 .sst_numeric
@@ -160,7 +164,7 @@ div.sst
   border: 1px solid;
   border-radius: 15px;
   padding: 10px;
-  min-width: 400px;
+  display: inline-block;
 }
 
 div.sst table

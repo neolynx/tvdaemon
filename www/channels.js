@@ -4,6 +4,7 @@ var channel_table;
 
 function ready( )
 {
+  Menu( "Channels" );
   t = ServerSideTable( 'channels', 'tvd?c=tvdaemon&a=get_channels', 20 );
   t["columns"] = {
     "number"    : "#",

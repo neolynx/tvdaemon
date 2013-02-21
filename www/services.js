@@ -17,6 +17,7 @@ var service_table;
 
 function ready( )
 {
+  Menu( "Services" );
   getJSON( 'tvd?c=tvdaemon&a=get_service_types', readServiceTypes );
   service_table = ServerSideTable( 'services', 'tvd?c=tvdaemon&a=get_services', 20 );
   service_table["columns"] = {

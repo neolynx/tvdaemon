@@ -1,10 +1,10 @@
-img.iconstyle
+img.icon
 {
  width: 70px;
  height: 70px;
 }
 
-img.grey
+img.icon_gray
 {
   opacity: 0.2;
 }
@@ -12,32 +12,62 @@ img.grey
 
 /* Setup Table */
 
+div.setup
+{
+  background: #fff;
+  border: 1px solid;
+  border-radius: 15px;
+  padding: 10px;
+  display: inline-block;
+}
+
 table.setup
 {
   padding: 10px;
   left:10%;
+  border-collapse: collapse;
 }
 
-td.adapter
+table.setup td
 {
-  word-wrap: break-word;
+  padding: 8px;
+}
+
+table.setup td.adapter
+{
+  vertical-align: middle;
+  text-align: right;
+  border-bottom: 1px solid LightGray;
+  width: 50px;
+}
+
+td.adapter_last
+{
+  vertical-align: middle;
   text-align: right;
 }
 
 td.frontend
 {
-  word-wrap: break-word;
-  vertical-align: top;
+  border-bottom: 1px solid LightGray;
+  font-size: 8pt;
+  width: 30px;
 }
+
+td.frontend_last
+{
+  font-size: 8pt;
+  width: 30px;
+}
+
 
 td.port
 {
-  word-wrap: break-word;
-  vertical-align: top;
+  border-bottom: 1px solid LightGray;
 }
 
 td.source
 {
-  word-wrap:break-word;
+  border-bottom: 1px solid LightGray;
 }
 

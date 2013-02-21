@@ -2,19 +2,14 @@ $(document).ready( ready );
 
 function ready( )
 {
-  Menu( "EPG" );
-  t = ServerSideTable( 'epg', 'tvd?c=tvdaemon&a=get_epg', 10 );
+  t = ServerSideTable( 'recorder', 'tvd?c=tvdaemon&a=get_recordings', 10 );
   t["columns"] = {
     ""         : [ "Start", start ],
     "channel"  : "Channel",
-    "duration" : [ "Duration", duration ],
     "name"     : [ "Name", function ( event ) { return "<b>" + event["name"] + "</b><br/>" + event["description"] } ]
   };
-  t["click"] = function( event ) {
-    if( confirm( "Record " + this["name"] + " ?" ))
-      getJSON( 'tvd?c=channel&a=schedule&channel_id=' + this["channel_id"] + "&event_id=" + this["id"], schedule );
-  };
   t.load( );
+  Menu( "Recorder" );
 }
 
 function schedule( data, errmsg )
