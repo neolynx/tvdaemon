@@ -818,6 +818,44 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
   return false;
 }
 
+void TVDaemon::ServerSideTable( const HTTPRequest &request, const std::vector<JSONObject *> &data ) const
+{
+  int count = data.size( );
+
+  int start = -1;
+  if( request.HasParam( "start" ))
+    request.GetParam( "start", start );
+  if( start < 0 )
+    start = 0;
+  if( start > count )
+    start = count;
+
+  int page_size = -1;
+  if( request.HasParam( "page_size" ))
+    request.GetParam( "page_size", page_size );
+  if( page_size <= 0 )
+    page_size = 10;
+
+  int end = start + page_size;
+  if( end > count )
+    end = count;
+
+  json_object *h = json_object_new_object( );
+  json_object *a = json_object_new_array();
+
+  for( int i = start; i < end; i++ )
+  {
+    json_object *entry = json_object_new_object( );
+    Log( "data[i]->json( entry ); %p", data[i] );
+    data[i]->json( entry );
+    json_object_array_add( a, entry );
+  }
+  json_object_object_add( h, "count", json_object_new_int( count ));
+  json_object_object_add( h, "start", json_object_new_int( start ));
+  json_object_object_add( h, "end", json_object_new_int( end ));
+  json_object_object_add( h, "data", a );
+  request.Reply( h );
+}
 
 bool TVDaemon::RPC_Channel( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
