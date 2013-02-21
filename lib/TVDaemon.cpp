@@ -101,19 +101,13 @@ TVDaemon::~TVDaemon( )
   JoinThread( );
 
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-  {
     delete *it;
-  }
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
-  {
     delete *it;
-  }
 
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
-  {
     delete *it;
-  }
 
   instance = NULL;
 }

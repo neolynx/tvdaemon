@@ -30,4 +30,6 @@ void TVD_Log( int level, char *msg );
 void Log( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
 void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
 void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
+
 #endif
+
