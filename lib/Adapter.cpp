@@ -52,9 +52,13 @@ Adapter::Adapter( TVDaemon &tvd, std::string configfile ) :
 Adapter::~Adapter( )
 {
   for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
-  {
     delete *it;
-  }
+}
+
+void Adapter::Shutdown( )
+{
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+    (*it)->Shutdown( );
 }
 
 bool Adapter::SaveConfig( )

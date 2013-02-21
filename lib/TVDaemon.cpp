@@ -89,6 +89,8 @@ TVDaemon::~TVDaemon( )
     httpd->Stop( );
     delete httpd;
   }
+  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    (*it)->Shutdown( );
   recorder->Stop( );
 
   SaveConfig( );
