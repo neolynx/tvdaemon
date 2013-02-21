@@ -97,6 +97,14 @@ void ConfigBase::ReadConfig( const char *key, uint32_t &u32 )
     u32 = settings->add( key, Setting::TypeInt );
 }
 
+void ConfigBase::ReadConfig( const char *key, time_t &t )
+{
+  if( settings->exists( key ))
+    settings->lookupValue( key, t );
+  else
+    t = settings->add( key, Setting::TypeInt );
+}
+
 void ConfigBase::ReadConfig( const char *key, bool &b )
 {
   int i;
@@ -159,6 +167,14 @@ void ConfigBase::WriteConfig( const char *key, uint32_t u32 )
     (*settings)[key] = (int) u32;
   else
     settings->add( key, Setting::TypeInt ) = (int) u32;
+}
+
+void ConfigBase::WriteConfig( const char *key, time_t t )
+{
+  if( settings->exists( key ))
+    (*settings)[key] = (long int) t;
+  else
+    settings->add( key, Setting::TypeInt ) = (long int) t;
 }
 
 void ConfigBase::WriteConfig( const char *key, bool b )

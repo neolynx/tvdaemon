@@ -44,6 +44,7 @@ class ConfigBase
     void     ReadConfig  ( const char *key, uint8_t &u8 );
     void     ReadConfig  ( const char *key, uint16_t &u16 );
     void     ReadConfig  ( const char *key, uint32_t &u32 );
+    void     ReadConfig  ( const char *key, time_t &t );
     void     ReadConfig  ( const char *key, float &f );
     void     ReadConfig  ( const char *key, std::string &s );
     void     WriteConfig ( const char *key, int i );
@@ -51,6 +52,7 @@ class ConfigBase
     void     WriteConfig ( const char *key, uint8_t u8 );
     void     WriteConfig ( const char *key, uint16_t u16 );
     void     WriteConfig ( const char *key, uint32_t u32 );
+    void     WriteConfig ( const char *key, time_t t );
     void     WriteConfig ( const char *key, float f );
     void     WriteConfig ( const char *key, std::string &s );
     bool     DeleteConfig( const char *key );
