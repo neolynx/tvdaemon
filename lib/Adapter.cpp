@@ -162,7 +162,7 @@ void Adapter::json( json_object *entry ) const
 
 bool Adapter::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  if( cat == "port" )
+  if( cat == "port" or cat == "frontend" )
   {
     std::string t;
     if( !request.GetParam( "frontend_id", t ))
