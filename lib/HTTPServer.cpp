@@ -370,11 +370,12 @@ void HTTPServer::Response::AddStatus( HTTPStatus status )
 
 void HTTPServer::Response::AddTimeStamp( )
 {
-  time_t rawtime;
-  time( &rawtime );
-  struct tm *timeinfo = gmtime( &rawtime );
+  time_t now;
+  time( &now );
+  struct tm tm_now;
+  gmtime_r( &now, &tm_now );
   char date_buffer[512];
-  strftime( date_buffer, sizeof( date_buffer ), "%A, %e %B %Y %H:%M:%S GMT\r\n", timeinfo );
+  strftime( date_buffer, sizeof( date_buffer ), "%A, %e %B %Y %H:%M:%S GMT\r\n", &tm_now );
   _buffer.append( date_buffer );
 }
 
