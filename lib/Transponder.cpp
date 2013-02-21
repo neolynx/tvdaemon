@@ -22,7 +22,7 @@
 #include "Transponder.h"
 
 #include "dvb-file.h"
-#include <json/json.h>
+#include <RPCObject.h>
 
 #include "Source.h"
 #include "Service.h"
@@ -42,9 +42,12 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
   TSID(0),
   enabled(true),
   state(State_New),
+  last_epg_update(0),
+  has_channels(false),
   has_nit(false),
   has_sdt(false),
-  has_vct(false)
+  has_vct(false),
+  epg_state(EPGState_Missing)
 {
   SetModified( );
 }
@@ -52,9 +55,11 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
 Transponder::Transponder( Source &source, std::string configfile ) :
   ConfigObject( source, configfile ),
   source(source),
+  has_channels(false),
   has_nit(false),
   has_sdt(false),
-  has_vct(false)
+  has_vct(false),
+  epg_state(EPGState_Missing)
 {
 }
 
@@ -171,6 +176,7 @@ bool Transponder::SaveConfig( )
   WriteConfig( "State",     state );
   WriteConfig( "Signal",    signal );
   WriteConfig( "Noise",     noise );
+  WriteConfig( "LastEPGUpdate", last_epg_update );
 
   DeleteConfig( "Services" );
   Setting &n = ConfigList( "Services" );
@@ -197,6 +203,7 @@ bool Transponder::LoadConfig( )
   ReadConfig( "State",  (int &) state );
   ReadConfig( "Signal",         signal );
   ReadConfig( "Noise",          noise );
+  ReadConfig( "LastEPGUpdate",  last_epg_update );
 
   Setting &n = ConfigList( "Services" );
   for( int i = 0; i < n.getLength( ); i++ )
@@ -282,6 +289,12 @@ void Transponder::SetState( State state )
 {
   this->state = state;
 }
+
+void Transponder::SetEPGState( EPGState state )
+{
+  epg_state = state;
+}
+
 
 const char *Transponder::GetStateName( State state )
 {
@@ -392,7 +405,7 @@ void Transponder::SetTSID( uint16_t TSID )
   {
     if( *it != this && (*it)->Enabled( ) && (*it)->GetTSID( ) == TSID )
     {
-      LogWarn( "Disabling dupplicate transponder %s: same as %s", toString( ).c_str( ), (*it)->toString( ).c_str( ));
+      LogWarn( "Disabling duplicate transponder %s: same as %s", toString( ).c_str( ), (*it)->toString( ).c_str( ));
       Disable( );
       SetState( State_Duplicate );
       SaveConfig( );
@@ -408,6 +421,15 @@ bool Transponder::Tune( Activity &act )
 
 bool Transponder::UpdateEPG( )
 {
-  SetState( State_NeedsEPG );
+  last_epg_update = 0;
+}
+
+bool Transponder::ReadEPG( const struct dvb_table_eit_event *event )
+{
+  for( std::map<uint16_t, Service *>::const_iterator it = services.begin( ); it != services.end( ); it++ )
+    it->second->ReadEPG( event );
+  last_epg_update = time( NULL );
+  SaveConfig( );
+  return true;
 }
 

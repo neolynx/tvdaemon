@@ -10,7 +10,7 @@
 #include "Log.h"
 
 #include <string.h>
-#include <json/json.h>
+#include <RPCObject.h>
 #include <sstream>
 #include <istream>
 #include <iterator>

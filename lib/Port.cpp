@@ -27,7 +27,7 @@
 #include "Log.h"
 #include "Activity.h"
 
-#include <json/json.h>
+#include <RPCObject.h>
 #include <stdlib.h> // atoi
 
 Port::Port( Frontend &frontend, int config_id, std::string name, int port_num ) :
@@ -83,21 +83,21 @@ bool Port::LoadConfig( )
   return true;
 }
 
-bool Port::Scan( Activity *act )
+bool Port::Scan( Activity &act )
 {
   if( !source )
     return false;
-  act->SetPort( this );
+  act.SetPort( this );
   if( !source->GetTransponderForScanning( act ))
     return false;
   return true;
 }
 
-bool Port::ScanEPG( Activity *act )
+bool Port::ScanEPG( Activity &act )
 {
   if( !source )
     return false;
-  act->SetPort( this );
+  act.SetPort( this );
   if( !source->GetTransponderForEPGScan( act ))
     return false;
   return true;

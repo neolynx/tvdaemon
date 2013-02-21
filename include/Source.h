@@ -65,8 +65,11 @@ class Source : public ConfigObject, public RPCObject, public Mutex
     uint GetTransponderCount() { return transponders.size(); }
     Type GetType( ) const { return type; }
 
-    bool GetTransponderForScanning( Activity *act );
-    bool GetTransponderForEPGScan( Activity *act );
+    bool GetTransponderForScanning( Activity &act );
+    bool GetTransponderForEPGScan( Activity &act );
+    bool GetNextEPGUpdate( time_t &next );
+
+    void Scan( );
 
     int CountServices( ) const;
 

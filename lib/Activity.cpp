@@ -60,7 +60,7 @@ void Activity::Run( )
   {
     if( !frontend->Tune( *this ))
     {
-      LogError( "Activity %s unable to start: tuning failed", name.c_str( ));
+      frontend->LogError( "Activity %s unable to start: tuning failed", name.c_str( ));
       goto fail;
     }
   }

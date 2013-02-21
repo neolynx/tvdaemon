@@ -67,30 +67,29 @@ bool Activity_Scan::Perform( )
   int fd_demux;
   struct dvb_table_pat *pat = NULL;
 
-  transponder->SetState( Transponder::State_Scanning );
-
   if(( fd_demux = frontend->OpenDemux( )) < 0 )
   {
-    LogError( "unable to open adapter demux" );
-    goto scan_failed;
+    frontend->LogError( "unable to open adapter demux" );
+    goto open_failed;
   }
 
-  Log( "Reading PAT" );
+  transponder->SetState( Transponder::State_Scanning );
+
+  frontend->Log( "Reading PAT" );
   dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, time );
   if( !pat )
   {
-    LogError( "Error reading PAT table" );
+    frontend->LogError( "Error reading PAT table" );
     goto scan_failed;
   }
 
-  Log( "  Setting TSID %d", pat->header.id );
   transponder->SetTSID( pat->header.id );
   if( transponder->GetState( ) == Transponder::State_Duplicate )
     goto scan_aborted;
 
   if( transponder->HasVCT( ))
   {
-    Log( "Reading VCT" );
+    frontend->Log( "Reading VCT" );
     struct dvb_table_vct *vct;
     dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_VCT, DVB_TABLE_VCT_PID, (uint8_t **) &vct, time );
     if( vct && IsActive( ))
@@ -110,7 +109,7 @@ bool Activity_Scan::Perform( )
 
         if( type == Service::Type_Unknown )
         {
-          LogWarn( "  Service %5d: %s '%s': unknown type: %d", channel->program_number, channel->access_control ? "§" : " ", name.c_str( ), channel->service_type );
+          frontend->LogWarn( "  Service %5d: %s '%s': unknown type: %d", channel->program_number, channel->access_control ? "§" : " ", name.c_str( ), channel->service_type );
           continue;
         }
 
@@ -124,7 +123,7 @@ bool Activity_Scan::Perform( )
 
   if( transponder->HasSDT( ))
   {
-    Log( "Reading SDT" );
+    frontend->Log( "Reading SDT" );
     struct dvb_table_sdt *sdt;
     dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, time );
     if( sdt )
@@ -145,7 +144,7 @@ bool Activity_Scan::Perform( )
         }
         if( service_type == -1 )
         {
-          LogWarn( "  No service descriptor found for service %d", service->service_id );
+          frontend->LogWarn( "  No service descriptor found for service %d", service->service_id );
           continue;
         }
 
@@ -170,11 +169,11 @@ bool Activity_Scan::Perform( )
 
         if( type == Service::Type_Unknown )
         {
-          LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name, service_type );
+          frontend->LogWarn( "  Service %5d: %s '%s': unknown type: %d", service->service_id, service->free_CA_mode ? "§" : " ", name, service_type );
           continue;
         }
 
-        Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
+        frontend->Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
         transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
         services.push_back( service->service_id );
       }
@@ -184,16 +183,18 @@ bool Activity_Scan::Perform( )
   }
 
   //dvb_table_pat_print( fe, pat );
-  Log( "Reading PMT's" );
+  frontend->Log( "Reading PMT's" );
   dvb_pat_program_foreach( program, pat )
   {
     for( std::vector<uint16_t>::iterator it = services.begin( ); it != services.end( ); it++ )
     {
+      if( !IsActive( ))
+        break;
       if( *it == program->service_id )
       {
         if( program->service_id == 0 )
         {
-          LogWarn( "  Ignoring PMT of service 0" );
+          frontend->LogWarn( "  Ignoring PMT of service 0" );
           break;
         }
 
@@ -203,7 +204,7 @@ bool Activity_Scan::Perform( )
         dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_PMT, program->pid, (uint8_t **) &pmt, time );
         if( !pmt )
         {
-          LogWarn( "  No PMT for pid %d", program->pid );
+          frontend->LogWarn( "  No PMT for pid %d", program->pid );
           break;
         }
 
@@ -211,6 +212,8 @@ bool Activity_Scan::Perform( )
 
         dvb_pmt_stream_foreach( stream, pmt )
         {
+          if( !IsActive( ))
+            break;
           Stream::Type type = Stream::Type_Unknown;
           switch( stream->type )
           {
@@ -250,13 +253,13 @@ bool Activity_Scan::Perform( )
               dvb_desc_find( struct dvb_desc, desc, stream, enhanced_AC_3_descriptor )
               {
                 type = Stream::Type_Audio_AC3;
-                LogWarn( "  Found AC3 enhanced" );
+                frontend->LogWarn( "  Found AC3 enhanced" );
                 break;
               }
               break;
 
             default:
-              LogWarn( "  Ignoring stream type %d: %s", stream->type, pmt_stream_name[stream->type] );
+              frontend->LogWarn( "  Ignoring stream type %d: %s", stream->type, pmt_stream_name[stream->type] );
               break;
           }
           if( type != Stream::Type_Unknown )
@@ -271,16 +274,16 @@ bool Activity_Scan::Perform( )
   if( pat )
     dvb_table_pat_free( pat );
 
-  if( transponder->HasNIT( ))
+  if( IsActive( ) && transponder->HasNIT( ))
   {
-    Log( "Reading NIT" );
+    frontend->Log( "Reading NIT" );
     struct dvb_table_nit *nit;
     dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, time );
     if( nit )
     {
       dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
       {
-        Log( "  Network Name: %s", desc->network_name );
+        frontend->Log( "  Network Name: %s", desc->network_name );
         //transponder->SetNetwork( desc->network_name );
         break;
       }
@@ -301,6 +304,7 @@ scan_failed:
   transponder->SaveConfig( );
 scan_aborted:
   dvb_dmx_close( fd_demux );
+open_failed:
   return false;
 }
 

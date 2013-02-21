@@ -95,15 +95,27 @@ class Transponder : public ConfigObject, public RPCObject
       State_Scanning,
       State_Scanned,
       State_ScanningFailed,
-      State_NeedsEPG,
       State_Idle,
       State_Duplicate,
       State_Last
     };
 
+    enum EPGState
+    {
+      EPGState_Missing,
+      EPGState_Updated,
+      EPGState_Updating,
+      EPGState_NotAvailable
+    };
+
     void SetState( State state );
-    State GetState( ) { return state; }
+    State GetState( ) const { return state; }
+    void SetEPGState( EPGState state );
+    EPGState GetEPGState( ) const { return epg_state; }
+
     static const char *GetStateName( State state );
+    bool HasChannels( ) const { return has_channels; }
+    bool HasChannels( bool b ) { has_channels = b; }
 
     // RPC
     void json( json_object *entry ) const;
@@ -112,6 +124,8 @@ class Transponder : public ConfigObject, public RPCObject
     bool Tune( Activity &act );
 
     bool UpdateEPG( );
+    time_t LastEPGUpdate( ) const { return last_epg_update; }
+    bool ReadEPG( const struct dvb_table_eit_event *event );
 
   protected:
     bool enabled;
@@ -132,6 +146,10 @@ class Transponder : public ConfigObject, public RPCObject
 
   private:
     State state;
+    EPGState epg_state;
+    time_t last_epg_update;
+    bool has_channels;
+
 };
 
 #endif

@@ -27,6 +27,7 @@
 #include "TVDaemon.h"
 
 #include <unistd.h> // sleep
+#include <algorithm> // sort
 
 Recorder::Recorder( TVDaemon &tvd ) :
   Thread( ),
@@ -69,7 +70,10 @@ bool Recorder::SaveConfig( )
 bool Recorder::LoadConfig( )
 {
   if( !ReadConfigFile( ))
+  {
+    dir = "~";
     return false;
+  }
   ReadConfig( "Directory", dir );
   if( dir.empty( ))
     dir = "~";
@@ -80,28 +84,50 @@ bool Recorder::LoadConfig( )
 
 bool Recorder::Schedule( Event &event )
 {
-  ScopeLock t;
+  ScopeMutex t;
+  for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
+    if( (*it)->GetEventID( ) == event.GetID( ) and
+        (*it)->GetState( ) == Activity::State_Scheduled and
+        (*it)->GetChannel( ) == &event.GetChannel( ))
+    {
+      LogError( "Event already scheduled" );
+      return false;
+    }
   Activity_Record *act = new Activity_Record( *this, event, recordings.size( ));
+  recordings.push_back( act );
+  return true;
+}
+
+bool Recorder::Record( Channel &channel )
+{
+  ScopeMutex t;
+  Activity_Record *act = new Activity_Record( *this, channel, recordings.size( ));
   recordings.push_back( act );
   return true;
 }
 
 void Recorder::Run( )
 {
+  double before = 5;
+  double after = 5 * 60;
   while( up )
   {
+    time_t now = time( NULL );
     Lock( );
     for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
     {
+      time_t start = (*it)->GetStart( );
+      time_t end   = (*it)->GetEnd( );
       switch( (*it)->GetState( ))
       {
         case Activity::State_Scheduled:
-          if( time( NULL ) + 5 > (*it)->GetStart( ))
+          if( difftime( start, now ) <= before &&
+              difftime( now, end ) < -5.0 + after )
             (*it)->Start( );
           break;
 
         case Activity::State_Running:
-          if( time( NULL ) > (*it)->GetEnd( ) + 60 )
+          if( difftime( now, end ) >= after )
             (*it)->Stop( );
           break;
       }
@@ -113,8 +139,22 @@ void Recorder::Run( )
 
 void Recorder::Stop( )
 {
-  ScopeLock _l;
+  ScopeMutex _l;
   up = false;
   for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
     (*it)->Abort( );
 }
+
+void Recorder::GetRecordings( std::vector<JSONObject *> &result ) const
+{
+  ScopeMutex _l;
+  std::vector<Activity_Record *> &data = (std::vector<Activity_Record *> &) result;
+  for( std::vector<Activity_Record *>::const_iterator it = recordings.begin( ); it != recordings.end( ); it++ )
+  {
+    Log( "Recorder::GetRecordings %p", *it );
+    data.push_back( *it );
+  }
+
+  std::sort( data.begin( ), data.end( ), Activity_Record::SortByStart );
+}
+

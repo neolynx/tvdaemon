@@ -21,10 +21,11 @@
 
 #include "Service.h"
 
-#include <json/json.h>
+#include <RPCObject.h>
 #include <strings.h> // strcasecmp
 #include <string.h>  // strlen
 #include <fcntl.h>   // open
+#include "descriptors/eit.h"
 
 #include "TVDaemon.h"
 #include "Transponder.h"
@@ -101,7 +102,10 @@ bool Service::LoadConfig( ConfigBase &config )
   {
     channel = TVDaemon::Instance( )->GetChannel( channel_id );
     if( channel )
+    {
       channel->AddService( this );
+      transponder.HasChannels( true );
+    }
   }
 
   Setting &n = config.ConfigList( "Streams" );
@@ -227,6 +231,7 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
       }
       channel = TVDaemon::Instance( )->CreateChannel( this );
       request.Reply( HTTP_OK );
+      transponder.HasChannels( true );
       transponder.SaveConfig( );
       return true;
     }
@@ -252,5 +257,22 @@ bool Service::Tune( Activity &act )
 {
   act.SetService( this );
   return transponder.Tune( act );
+}
+
+bool Service::ReadEPG( const struct dvb_table_eit_event *event )
+{
+  if( !channel )
+    return false;
+  channel->ClearEPG( );
+  while( event )
+  {
+    if( event->service_id == GetKey( ))
+    {
+      channel->AddEPGEvent( event );
+    }
+    event = event->next;
+  }
+  channel->SaveConfig( );
+  return true;
 }
 

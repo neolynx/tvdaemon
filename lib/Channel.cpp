@@ -22,7 +22,7 @@
 #include "Channel.h"
 
 #include <algorithm> // find
-#include <json/json.h>
+#include <RPCObject.h>
 
 #include "RPCObject.h"
 #include "TVDaemon.h"
@@ -136,6 +136,13 @@ bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const st
     }
     request.NotFound( "Event %d not found", event_id );
     return false;
+  }
+
+  if( action == "record" )
+  {
+    tvd.Record( *this );
+    request.Reply( HTTP_OK );
+    return true;
   }
 
   request.NotFound( "RPC: unknown action: '%s'", action.c_str( ));

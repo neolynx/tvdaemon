@@ -23,8 +23,8 @@
 #include "Log.h"
 #include "ConfigObject.h"
 #include "Channel.h"
+#include "RPCObject.h"
 
-#include <json/json.h>
 #include <sys/time.h>
 #include "descriptors/eit.h"
 #include "descriptors/desc_event_short.h"
@@ -81,7 +81,7 @@ Event::~Event( )
 
 bool operator<( const Event &a, const Event &b )
 {
-  return a.start < b.start;
+  return difftime( a.start, b.start ) < 0.0;
 }
 
 bool Event::SaveConfig( ConfigBase &config )
@@ -106,24 +106,10 @@ bool Event::LoadConfig( ConfigBase &config )
 
 void Event::json( json_object *entry ) const
 {
-  struct tm t, tnow;
-  time_t now;
-  time( &now );
-  localtime_r( &start, &t );
-  localtime_r( &now, &tnow );
   json_object_object_add( entry, "name",          json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "description",   json_object_new_string( description.c_str( )));
   json_object_object_add( entry, "id",            json_object_new_int( id ));
-  json_object_object_add( entry, "start_sec",     json_object_new_int( t.tm_sec ));
-  json_object_object_add( entry, "start_min",     json_object_new_int( t.tm_min ));
-  json_object_object_add( entry, "start_hour",    json_object_new_int( t.tm_hour ));
-  json_object_object_add( entry, "start_day",     json_object_new_int( t.tm_mday ));
-  json_object_object_add( entry, "start_month",   json_object_new_int( t.tm_mon + 1 ));
-  json_object_object_add( entry, "start_year",    json_object_new_int( t.tm_year ));
-  json_object_object_add( entry, "start_wday",    json_object_new_int( t.tm_wday ));
-  json_object_object_add( entry, "start_istoday", json_object_new_int( t.tm_mday == tnow.tm_mday &&
-                                                                       t.tm_mon == tnow.tm_mon &&
-                                                                       t.tm_year == tnow.tm_year ));
+  json_object_time_add  ( entry, "start",         start );
   json_object_object_add( entry, "duration",      json_object_new_int( duration ));
   json_object_object_add( entry, "channel",       json_object_new_string( channel.GetName( ).c_str( )));
   json_object_object_add( entry, "channel_id",    json_object_new_int( channel.GetKey( )));
@@ -131,6 +117,6 @@ void Event::json( json_object *entry ) const
 
 bool Event::SortByStart( const Event *a, const Event *b )
 {
-  return a->start < b->start;
+  return difftime( a->start, b->start ) < 0.0;
 }
 

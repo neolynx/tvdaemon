@@ -46,8 +46,8 @@ class Port : public ConfigObject, public RPCObject
     void SetSource( Source *source ) { this->source = source; }
     Source *GetSource( ) { return source; }
 
-    bool Scan( Activity *act );
-    bool ScanEPG( Activity *act );
+    bool Scan( Activity &act );
+    bool ScanEPG( Activity &act );
 
     // RPC
     void json( json_object *entry ) const;

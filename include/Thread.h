@@ -35,11 +35,11 @@ class Mutex
     volatile pthread_mutex_t mutex;
 };
 
-class ScopeLock : public Mutex
+class ScopeMutex : public Mutex
 {
   public:
-    ScopeLock( ) : Mutex( ) { Lock( ); }
-    ~ScopeLock( ) { Unlock( ); }
+    ScopeMutex( ) : Mutex( ) { Lock( ); }
+    ~ScopeMutex( ) { Unlock( ); }
 };
 
 class Thread : public Mutex

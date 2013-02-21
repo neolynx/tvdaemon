@@ -30,6 +30,7 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Activity_Scan.cpp \
 			  Activity_UpdateEPG.cpp \
 			  Event.cpp \
+			  RPCObject.cpp \
 			  Log.cpp
 
 libtvdaemon_la_LIBADD = -ludev -lconfig++ -lrt -lpthread -ljson ../v4l-utils/lib/libdvbv5/libdvbv5.la -lmatroska

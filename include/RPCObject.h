@@ -24,14 +24,22 @@
 
 #include <string>
 #include <map>
+#include <json/json.h>
 
-struct json_object;
 class HTTPRequest;
 
-class RPCObject
+class JSONObject
 {
   public:
     virtual void json( json_object *j ) const = 0;
+
+};
+
+void json_object_time_add( json_object *j, std::string name, time_t tt );
+
+class RPCObject : public JSONObject
+{
+  public:
     virtual bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action ) = 0;
 };
 

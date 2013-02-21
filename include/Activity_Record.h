@@ -24,14 +24,16 @@
 
 #include "Activity.h"
 #include "ConfigObject.h"
+#include "RPCObject.h"
 
 class Event;
 class Recorder;
 
-class Activity_Record : public Activity, public ConfigObject
+class Activity_Record : public Activity, public ConfigObject, public JSONObject
 {
   public:
     Activity_Record( Recorder &recorder, Event &event, int config_id );
+    Activity_Record( Recorder &recorder, Channel &channel, int config_id );
     Activity_Record( Recorder &recorder, std::string configfile );
     virtual ~Activity_Record( );
 
@@ -42,12 +44,19 @@ class Activity_Record : public Activity, public ConfigObject
 
     virtual bool Perform( );
 
-    time_t GetStart( )          { return start; }
-    time_t GetEnd( )            { return end; }
+    time_t GetStart( )   const { return start; }
+    time_t GetEnd( )     const { return end; }
+    int    GetEventID( ) const { return event_id; }
+
+    static bool SortByStart( const Activity_Record *a, const Activity_Record *b );
+
+    virtual void json( json_object *j ) const;
 
   private:
     Recorder &recorder;
     time_t start, end;
+    int duration;
+    int event_id;
     std::string name;
 };
 

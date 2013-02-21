@@ -42,7 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm> // replace
-#include <json/json.h>
+#include <RPCObject.h>
 
 #include "dvb-demux.h"
 #include "dvb-fe.h"
@@ -349,6 +349,11 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
 
 bool Frontend::Tune( Transponder &t, int timeoutms )
 {
+  if( !adapter.IsPresent( ))
+  {
+    LogWarn( "Adapter not present" );
+    return false;
+  }
   Lock( );
   if( transponder )
   {
@@ -464,7 +469,32 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
     return false;
   }
 
-  request.NotFound( "RPC transponder: unknown action" );
+  if( action == "create_port" )
+  {
+    int port_num;
+    if( !request.GetParam( "port_num", port_num ))
+      return false;
+    std::string name;
+    if( !request.GetParam( "name", name ))
+      return false;
+    int source_id;
+    if( !request.GetParam( "source_id", source_id ))
+      return false;
+
+    Port *port = AddPort( name, port_num );
+    if( source_id >= 0 )
+    {
+      Source *source = TVDaemon::Instance( )->GetSource( source_id );
+      if( !source )
+        return false;
+      source->AddPort( port );
+      port->SetSource( source );
+    }
+    request.Reply( HTTP_OK, port->GetKey( ));
+    return true;
+  }
+
+  request.NotFound( "RPC unknown action: '%s'", action.c_str( ));
   return false;
 }
 
@@ -483,7 +513,7 @@ void Frontend::Run( )
           act->SetFrontend( this );
           for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
           {
-            if( (*it)->Scan( act ))
+            if( (*it)->Scan( *act ))
             {
               activity_lock.Unlock( );
               act->Run( );
@@ -507,7 +537,7 @@ void Frontend::Run( )
           act->SetFrontend( this );
           for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
           {
-            if( (*it)->ScanEPG( act ))
+            if( (*it)->ScanEPG( *act ))
             {
               activity_lock.Unlock( );
               act->Run( );

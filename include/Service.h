@@ -80,6 +80,8 @@ class Service : public RPCObject
 
     bool Tune( Activity &act );
 
+    bool ReadEPG( const struct dvb_table_eit_event *event );
+
   private:
     Transponder &transponder;
     uint16_t service_id;

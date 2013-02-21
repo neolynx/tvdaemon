@@ -27,7 +27,7 @@
 #include "Frontend.h"
 #include "dvb-demux.h"
 
-#include <json/json.h>
+#include <RPCObject.h>
 
 Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
   service(service),

@@ -26,7 +26,7 @@
 #include <dirent.h>
 #include <sstream>  // ostringstream
 #include <unistd.h> // usleep
-#include <json/json.h>
+#include <RPCObject.h>
 #include <math.h>   // NAN
 #include <string>
 #include <algorithm> // sort
@@ -144,15 +144,15 @@ bool TVDaemon::Start( )
     httpd->Start( );
     Log( "HTTP Server listening on port %d", HTTPDPORT );
   }
-  //UpdateEPG( );
   return true;
 }
 
 bool TVDaemon::SaveConfig( )
 {
-  ScopeLock _l;
-  float version = atof( PACKAGE_VERSION );
+  ScopeMutex _l;
+  std::string version = PACKAGE_VERSION;
   WriteConfig( "Version", version );
+  WriteConfig( "EPGUpdateInterval", epg_update_interval );
   WriteConfigFile( );
 
   for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
@@ -181,10 +181,14 @@ bool TVDaemon::LoadConfig( )
   if( !ReadConfigFile( ))
     return false;
 
-  float version = NAN;
+  std::string version = "";
   ReadConfig( "Version", version );
 
-  Log( "Found config version: %f", version );
+  ReadConfig( "EPGUpdateInterval", epg_update_interval );
+  if( epg_update_interval == 0 )
+    epg_update_interval = 12 * 60 * 60; // 12h
+
+  Log( "Found config version: %s", version.c_str( ));
 
   if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
     return false;
@@ -306,61 +310,71 @@ void TVDaemon::MonitorAdapters( )
 {
   udev_monitor_enable_receiving( udev_mon );
   udev_fd = udev_monitor_get_fd( udev_mon );
+  if( udev_fd < 0 )
+  {
+    LogError( "Error opening UDEV monitoring socket" );
+  }
 
   StartThread( );
 }
 
-void TVDaemon::Run( )
+void TVDaemon::HandleUdev( )
 {
   fd_set fds;
   struct timeval tv;
   int ret;
   struct udev_device *dev;
 
-  while( up )
+  FD_ZERO( &fds );
+  FD_SET( udev_fd, &fds );
+  tv.tv_sec = 2;
+  tv.tv_usec = 0;
+
+  ret = select( udev_fd + 1, &fds, NULL, NULL, &tv );
+
+  /* Check if our file descriptor has received data. */
+  if( ret > 0 && FD_ISSET( udev_fd, &fds ))
   {
-    FD_ZERO( &fds );
-    FD_SET( udev_fd, &fds );
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-
-    ret = select( udev_fd + 1, &fds, NULL, NULL, &tv );
-
-    /* Check if our file descriptor has received data. */
-    if( ret > 0 && FD_ISSET( udev_fd, &fds ))
+    dev = udev_monitor_receive_device( udev_mon );
+    if( dev )
     {
-      dev = udev_monitor_receive_device( udev_mon );
-      if( dev )
+      const char *type = udev_device_get_property_value( dev, "DVB_DEVICE_TYPE" );
+      if( strcmp( type, "frontend" ) == 0 )
       {
-        const char *type = udev_device_get_property_value( dev, "DVB_DEVICE_TYPE" );
-        if( strcmp( type, "frontend" ) == 0 )
+        const char *path = udev_device_get_devpath( dev );
+        const char *action = udev_device_get_action( dev );
+        if( strcmp( action, "add" ) == 0 )
         {
-          const char *path = udev_device_get_devpath( dev );
-          const char *action = udev_device_get_action( dev );
-          if( strcmp( action, "add" ) == 0 )
-          {
-            Log( "Frontend added: %s", path );
-            Adapter *a = UdevAdd( dev, path );
-          }
-          else if( strcmp( action, "remove" ) == 0 )
-          {
-            Log( "Frontend removed: %s", path );
-            UdevRemove( path );
-          }
-          else
-          {
-            LogError( "Unknown udev action '%s' on %s", action, path );
-          }
-
-          udev_device_unref( dev );
+          Log( "Frontend added: %s", path );
+          Adapter *a = UdevAdd( dev, path );
         }
-      }
-      else
-      {
-        LogError( "udev: event without device" );
+        else if( strcmp( action, "remove" ) == 0 )
+        {
+          Log( "Frontend removed: %s", path );
+          UdevRemove( path );
+        }
+        else
+        {
+          LogError( "Unknown udev action '%s' on %s", action, path );
+        }
+
+        udev_device_unref( dev );
       }
     }
-    usleep( 250 * 1000 );
+    else
+    {
+      LogError( "udev: event without device" );
+    }
+  }
+}
+
+void TVDaemon::Run( )
+{
+  while( up )
+  {
+    HandleUdev( );
+
+    //usleep( 250 * 1000 );
   }
 }
 
@@ -423,7 +437,7 @@ Source *TVDaemon::GetSource( int id ) const
 
 Channel *TVDaemon::CreateChannel( Service *service )
 {
-  ScopeLock _l;
+  ScopeMutex _l;
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
     if( (*it)->HasService( service ))
@@ -439,7 +453,7 @@ Channel *TVDaemon::CreateChannel( Service *service )
 
 std::vector<std::string> TVDaemon::GetChannelList( )
 {
-  ScopeLock _l;
+  ScopeMutex _l;
   std::vector<std::string> result;
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
@@ -450,7 +464,7 @@ std::vector<std::string> TVDaemon::GetChannelList( )
 
 Channel *TVDaemon::GetChannel( int id )
 {
-  ScopeLock _l;
+  ScopeMutex _l;
   if( id < 0 or id >= channels.size( ))
   {
     LogError( "Channel not found: %d", id );
@@ -614,7 +628,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "get_channels" )
   {
-    ScopeLock _l;
+    ScopeMutex _l;
     json_object *h = json_object_new_object( );
     json_object *a = json_object_new_array();
 
@@ -768,45 +782,52 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
         Utils::ToLower( (*it2)->GetName( ), name );
         std::string description;
         Utils::ToLower( (*it2)->GetDescription( ), description );
+        std::string channel;
+        Utils::ToLower( (*it2)->GetChannel( ).GetName( ), channel );
         if( !search.empty( ) and name.find( search.c_str( ), 0, search.length( )) == std::string::npos
-                             and description.find( search.c_str( ), 0, search.length( )) == std::string::npos )
+            and description.find( search.c_str( ), 0, search.length( )) == std::string::npos
+            and channel.find( search.c_str( ), 0, search.length( )) == std::string::npos )
           continue;
         result.push_back( *it2 );
       }
     }
 
-    int count = result.size( );
-
     std::sort( result.begin( ), result.end( ), Event::SortByStart );
 
-    int start = -1;
-    if( request.HasParam( "start" ))
-      request.GetParam( "start", start );
-    if( start < 0 )
-      start = 0;
-    if( start > count )
-      start = count;
+    ServerSideTable( request, (std::vector<JSONObject *> &) result );
+    return true;
+  }
 
-    int page_size = -1;
-    if( request.HasParam( "page_size" ))
-      request.GetParam( "page_size", page_size );
-    if( page_size <= 0 )
-      page_size = 10;
+  if( action == "scan" )
+  {
+    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+      (*it)->Scan( );
+    request.Reply( HTTP_OK );
+    return true;
+  }
 
-    int end = start + page_size;
-    if( end > count )
-      end = count;
-    for( int i = start; i < end; i++ )
+  if( action == "update_epg" )
+  {
+    //UpdateEPG( );
+    request.Reply( HTTP_OK );
+    return true;
+  }
+
+  if( action == "get_recordings" )
+  {
+    std::string search;
+    if( request.HasParam( "search" ))
     {
-      json_object *entry = json_object_new_object( );
-      result[i]->json( entry );
-      json_object_array_add( a, entry );
+      std::string t;
+      request.GetParam( "search", t );
+      Utils::ToLower( t, search );
     }
-    json_object_object_add( h, "count", json_object_new_int( count ));
-    json_object_object_add( h, "start", json_object_new_int( start ));
-    json_object_object_add( h, "end", json_object_new_int( end ));
-    json_object_object_add( h, "data", a );
-    request.Reply( h );
+
+    std::vector<JSONObject *> result;
+
+    recorder->GetRecordings( result );
+
+    ServerSideTable( request, result );
     return true;
   }
 
@@ -855,7 +876,7 @@ void TVDaemon::ServerSideTable( const HTTPRequest &request, const std::vector<JS
 
 bool TVDaemon::RPC_Channel( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  ScopeLock _l;
+  ScopeMutex _l;
   std::string t;
   if( !request.GetParam( "channel_id", t ))
     return false;
@@ -908,11 +929,8 @@ bool TVDaemon::Schedule( Event &event )
   return recorder->Schedule( event );
 }
 
-void TVDaemon::UpdateEPG( )
+bool TVDaemon::Record( Channel &channel )
 {
-  ScopeLock _l;
-  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
-  {
-    (*it)->UpdateEPG( );
-  }
+  return recorder->Record( channel );
 }
+

@@ -76,7 +76,9 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     void ServerSideTable( const HTTPRequest &request, const std::vector<JSONObject *> &data ) const;
 
     bool Schedule( Event &event );
+    bool Record( Channel &channel );
     void UpdateEPG( );
+    int GetEPGUpdateInterval( ) const { return epg_update_interval; }
 
   private:
     TVDaemon( );
@@ -84,6 +86,8 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     void MonitorAdapters( );
 
     static TVDaemon *instance;
+    int epg_update_interval;
+
     std::vector<Adapter *> adapters;
     std::vector<Source *>  sources;
     std::vector<Channel *> channels;
@@ -100,11 +104,12 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     HTTPServer *httpd;
 
     virtual void Run( );
+    void HandleUdev( );
 
     Recorder *recorder;
 
-    bool epg;
     std::vector<Transponder *> epg_transponders;
 };
 
 #endif
+

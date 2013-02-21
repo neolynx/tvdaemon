@@ -38,6 +38,7 @@ class Activity_Record;
 class Channel;
 class Event;
 class TVDaemon;
+class JSONObject;
 
 class Recorder : public Thread, public ConfigObject
 {
@@ -49,6 +50,7 @@ class Recorder : public Thread, public ConfigObject
     virtual bool LoadConfig( );
 
     bool Schedule( Event &event );
+    bool Record( Channel &channel );
     void Stop( );
 
     std::string GetDir( ) const { return dir; }
@@ -56,6 +58,7 @@ class Recorder : public Thread, public ConfigObject
     //void AddTrack( );
     //void record( uint8_t *data, int size );
 
+    void GetRecordings( std::vector<JSONObject *> &result ) const;
 
 
   private:

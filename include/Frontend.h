@@ -85,6 +85,10 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
 
     virtual bool HandleNIT( struct dvb_table_nit *nit ) = 0;
 
+    void Log( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
+    void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
+    void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
+
   protected:
     Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
     Frontend( Adapter &adapter, std::string configfile );
@@ -109,10 +113,6 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     Transponder *transponder; // current tuned transponder
 
     Source::Type type;
-
-    void Log( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
-    void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
-    void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
 
     uint8_t filter[18];
     uint8_t mask[18];

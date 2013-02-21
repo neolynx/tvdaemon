@@ -22,7 +22,7 @@
 #include "Source.h"
 
 #include <algorithm> // find
-#include <json/json.h>
+#include <RPCObject.h>
 
 #include "TVDaemon.h"
 #include "Transponder.h"
@@ -161,18 +161,16 @@ bool Source::ReadScanfile( std::string scanfile )
 
 bool Source::AddTransponder( Transponder *t )
 {
-  Lock( );
+  ScopeMutex _l;
   for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
     if( (*it)->IsSame( *t ))
     {
       //LogWarn( "Ignoring already known transponder: %s", t->toString( ).c_str( ));
-      Unlock( );
       return false;
     }
   }
   transponders.push_back( t );
-  Unlock( );
   return true;
 }
 
@@ -418,7 +416,7 @@ std::vector<std::string> Source::GetScanfileList( Type type, std::string country
 
 bool Source::Tune( Activity &act )
 {
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+  for( std::vector<Port *>::iterator it = ports.begin( ); act.IsActive( ) && it != ports.end( ); it++ )
   {
     if( (*it)->Tune( act ))
       return true;
@@ -426,30 +424,42 @@ bool Source::Tune( Activity &act )
   return false;
 }
 
-bool Source::GetTransponderForScanning( Activity *act )
+void Source::Scan( )
 {
-  ScopeLock t;
+  ScopeMutex t;
   std::vector<Transponder *>::const_iterator it;
   for( it = transponders.begin( ); it != transponders.end( ); it++ )
+    if( (*it)->GetState( ) != Transponder::State_Duplicate )
+      (*it)->SetState( Transponder::State_New );
+}
+
+bool Source::GetTransponderForScanning( Activity &act )
+{
+  ScopeMutex t;
+  std::vector<Transponder *>::const_iterator it;
+  for( it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
     if( (*it)->GetState( ) == Transponder::State_New )
     {
       (*it)->SetState( Transponder::State_Selected );
-      act->SetTransponder( *it );
+      act.SetTransponder( *it );
       return true;
     }
   return false;
 }
 
-bool Source::GetTransponderForEPGScan( Activity *act )
+bool Source::GetTransponderForEPGScan( Activity &act )
 {
-  ScopeLock t;
-  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-    if( (*it)->GetState( ) == Transponder::State_NeedsEPG )
+  ScopeMutex t;
+  time_t now = time( NULL );
+  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
+  {
+    if( (*it)->HasChannels( ) && (*it)->GetEPGState( ) != Transponder::EPGState_Updating && difftime( now, (*it)->LastEPGUpdate( )) >= TVDaemon::Instance( )->GetEPGUpdateInterval( ))
     {
-      (*it)->SetState( Transponder::State_Selected );
-      act->SetTransponder( *it );
+      (*it)->SetEPGState( Transponder::EPGState_Updating );
+      act.SetTransponder( *it );
       return true;
     }
+  }
   return false;
 }
 

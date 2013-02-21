@@ -59,34 +59,11 @@ bool Activity_UpdateEPG::Perform( )
   }
 
   dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, (uint8_t **) &eit, time );
-  if( eit && IsActive( ))
-  {
-    const struct dvb_table_eit_event *event = eit->event;
-    int events = 0;
-
-    const std::map<uint16_t, Service *> &services = transponder->GetServices( );
-    for( std::map<uint16_t, Service *>::const_iterator it = services.begin( ); it != services.end( ); it++ )
-    {
-      Channel *c = it->second->GetChannel( );
-      if( !c )
-        continue;
-      c->ClearEPG( );
-      event = eit->event;
-      while( event )
-      {
-        if( event->service_id == it->first )
-        {
-          c->AddEPGEvent( event );
-          events++;
-        }
-        event = event->next;
-      }
-      c->SaveConfig( );
-    }
-    Log( "EPG: got %d events", events );
-  }
   if( eit )
+  {
+    transponder->ReadEPG( eit->event );
     dvb_table_eit_free( eit );
+  }
 
   dvb_dmx_close( fd_demux );
   return eit != NULL;
