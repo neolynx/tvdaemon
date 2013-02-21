@@ -35,7 +35,7 @@
 Channel::Channel( TVDaemon &tvd, Service *service, int config_id ) :
   ConfigObject( tvd, "channel", config_id ),
   tvd(tvd),
-  number(config_id)
+  number(config_id + 1)
 {
   name = service->GetName( );
   services.push_back( service );
