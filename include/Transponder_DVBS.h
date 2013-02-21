@@ -35,8 +35,8 @@ class Transponder_DVBS : public Transponder
 		    dvb_sat_polarization polarization,
 		    uint32_t symbol_rate,
 		    fe_code_rate fec,
-		    int modulation,
-		    int roll_off,
+		    fe_modulation modulation,
+		    fe_rolloff roll_off,
 		    int config_id );
     Transponder_DVBS( Source &source, std::string configfile );
     virtual ~Transponder_DVBS( );
@@ -58,9 +58,9 @@ class Transponder_DVBS : public Transponder
     dvb_sat_polarization polarization;
 
     uint32_t symbol_rate;
-    int fec;
-    int modulation;
-    int roll_off;
+    fe_code_rate fec;
+    fe_modulation modulation;
+    fe_rolloff roll_off;
 
 };
 

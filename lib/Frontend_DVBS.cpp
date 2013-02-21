@@ -101,7 +101,7 @@ bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
 
       fe_delivery_system delsys = desc->modulation_system ? SYS_DVBS2 : SYS_DVBS;
 
-      fe_rolloff rolloff = ROLLOFF_AUTO;
+      fe_rolloff rolloff = ROLLOFF_35;
       switch( desc->roll_off )
       {
         case 0:

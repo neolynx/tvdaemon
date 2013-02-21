@@ -25,12 +25,24 @@
 #include "dvb-fe.h"
 #include "descriptors/desc_sat.h"
 
-Transponder_DVBS::Transponder_DVBS( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
+Transponder_DVBS::Transponder_DVBS( Source &source, const fe_delivery_system_t delsys, int config_id ) :
+  Transponder( source, delsys, config_id ),
+  polarization(POLARIZATION_OFF),
+  symbol_rate(0),
+  fec(FEC_NONE),
+  modulation(QPSK),
+  roll_off(ROLLOFF_35)
 {
   Init( );
 }
 
-Transponder_DVBS::Transponder_DVBS( Source &source, std::string configfile ) : Transponder( source, configfile )
+Transponder_DVBS::Transponder_DVBS( Source &source, std::string configfile ) :
+  Transponder( source, configfile ),
+  polarization(POLARIZATION_OFF),
+  symbol_rate(0),
+  fec(FEC_NONE),
+  modulation(QPSK),
+  roll_off(ROLLOFF_35)
 {
   Init( );
 }
@@ -40,8 +52,8 @@ Transponder_DVBS::Transponder_DVBS( Source &source,
 		    dvb_sat_polarization polarization,
 		    uint32_t symbol_rate,
 		    fe_code_rate fec,
-		    int modulation,
-		    int roll_off,
+		    fe_modulation modulation,
+		    fe_rolloff roll_off,
 		    int config_id ) :
   Transponder( source, delsys, config_id ),
   polarization(polarization),
@@ -76,7 +88,7 @@ void Transponder_DVBS::AddProperty( const struct dtv_property &prop )
       symbol_rate = prop.u.data;
       break;
     case DTV_INNER_FEC:
-      fec = prop.u.data;
+      fec = (fe_code_rate) prop.u.data;
       break;
   }
 }
@@ -107,12 +119,12 @@ bool Transponder_DVBS::LoadConfig( )
   switch( delsys )
   {
     case SYS_DVBS2:
-      ReadConfig( "Modulation",  modulation );
-      ReadConfig( "Roll-Off",    roll_off );
+      ReadConfig( "Modulation",  (int &) modulation );
+      ReadConfig( "Roll-Off",    (int &) roll_off );
       // fall through
     case SYS_DVBS:
       ReadConfig( "Symbol-Rate",  symbol_rate );
-      ReadConfig( "FEC",          fec );
+      ReadConfig( "FEC",          (int &) fec );
       ReadConfig( "Polarization", (int &) polarization );
       break;
   }
@@ -155,18 +167,18 @@ std::string Transponder_DVBS::toString( ) const
 
 bool Transponder_DVBS::IsSame( const Transponder &t )
 {
-  if( t.GetDelSys( ) != delsys )
+  const Transponder_DVBS &other = (const Transponder_DVBS &) t;
+  if( other.delsys != delsys )
     return false;
-  if( t.GetFrequency( ) != frequency )
+  if( other.frequency != frequency )
     return false;
-  const Transponder_DVBS &t2 = (const Transponder_DVBS &) t;
-  if( t2.polarization != polarization )
+  if( other.polarization != polarization )
     return false;
-  if( t2.symbol_rate != symbol_rate )
+  if( other.symbol_rate != symbol_rate )
     return false;
-  if( t2.fec != fec )
+  if( other.fec != fec )
     return false;
-  if( t2.roll_off != roll_off )
+  if( other.roll_off != roll_off )
     return false;
   return true;
 }
