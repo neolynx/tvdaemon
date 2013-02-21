@@ -153,10 +153,10 @@ std::string Transponder_DVBS::toString( ) const
   switch( delsys )
   {
     case SYS_DVBS2:
-      snprintf( tmp, sizeof(tmp), "DVB-S2 %d %c %d %s %s roll off: %s", frequency, dvb_sat_pol_name[polarization][0], symbol_rate, fe_code_rate_name[fec], fe_modulation_name[modulation], fe_rolloff_name[roll_off] );
+      snprintf( tmp, sizeof(tmp), "DVB-S2 %.3f GHz %c %d %s %s roll off: %s", frequency / 1000000.0, dvb_sat_pol_name[polarization][0], symbol_rate, fe_code_rate_name[fec], fe_modulation_name[modulation], fe_rolloff_name[roll_off] );
       break;
     case SYS_DVBS:
-      snprintf( tmp, sizeof(tmp), "DVB-S  %d %c %d %s", frequency, dvb_sat_pol_name[polarization][0], symbol_rate, fe_code_rate_name[fec] );
+      snprintf( tmp, sizeof(tmp), "DVB-S  %.3f GHz %c %d %s", frequency / 1000000.0, dvb_sat_pol_name[polarization][0], symbol_rate, fe_code_rate_name[fec] );
       break;
     default:
       strcpy( tmp, "Unknown Transponder type" );

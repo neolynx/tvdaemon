@@ -122,7 +122,7 @@ bool Transponder_DVBT::GetParams( struct dvb_v5_fe_parms *params ) const
 std::string Transponder_DVBT::toString( ) const
 {
   char tmp[256];
-  snprintf(tmp, sizeof(tmp), "DVB-T  %d %s %s %s %s", frequency, fe_code_rate_name[code_rate_HP],
+  snprintf(tmp, sizeof(tmp), "DVB-T  %.2f MHz %s %s %s %s", frequency / 1000000.0, fe_code_rate_name[code_rate_HP],
       fe_modulation_name[modulation],
       fe_guard_interval_name[guard_interval],
       fe_transmission_mode_name[transmission_mode]
