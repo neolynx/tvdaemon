@@ -1,11 +1,13 @@
 img.icon
 {
- width: 70px;
- height: 70px;
+  width: 70px;
+  height: 70px;
 }
 
 img.icon_gray
 {
+  width: 70px;
+  height: 70px;
   opacity: 0.2;
 }
 
