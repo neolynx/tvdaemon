@@ -100,9 +100,13 @@ void ConfigBase::ReadConfig( const char *key, uint32_t &u32 )
 void ConfigBase::ReadConfig( const char *key, time_t &t )
 {
   if( settings->exists( key ))
-    settings->lookupValue( key, t );
+  {
+    long long l;
+    settings->lookupValue( key, l );
+    t = l;
+  }
   else
-    t = settings->add( key, Setting::TypeInt );
+    t = settings->add( key, Setting::TypeInt64 );
 }
 
 void ConfigBase::ReadConfig( const char *key, bool &b )
