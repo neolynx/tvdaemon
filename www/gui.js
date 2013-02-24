@@ -146,6 +146,7 @@ function getAdapter( adapter )
     icon = "<img src=\"images/usb-icon.png\" " + imgstyle + "/>";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
     icon = "<img src=\"images/pci-icon.png\" " + imgstyle + "/>";
+  //else FIXME
   return icon;
 }
 
@@ -168,7 +169,7 @@ function getPort( port )
     icon = "<img src=\"images/antenna-icon.png\" " + imgstyle + "/>";
   else if( frontend["type"] == 1 )
     icon = "<img src=\"images/antenna-cable.smal.png\" " + imgstyle + "/>";
-  else if( frontend["type"] == 2 )
+  else
     icon = "<img src=\"images/antenna-oldstyle.png\" " + imgstyle + "/>";
   return "<a href=\"javascript: editPort( " + port["adapter_id"] + ", " + port["frontend_id"] + ",  " + port["id"] + " );\">" + icon + "</a>";
 }
