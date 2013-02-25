@@ -503,6 +503,11 @@ void Frontend::Run( )
   Channel *channel;
   while( up )
   {
+    if( !IsPresent( ))
+    {
+      sleep( 1 );
+      continue;
+    }
     bool idle = true;
     switch( state )
     {
