@@ -27,11 +27,13 @@
 Transponder_ATSC::Transponder_ATSC( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
 {
   has_vct = true;
+  has_mgt = true;
 }
 
 Transponder_ATSC::Transponder_ATSC( Source &source, std::string configfile ) : Transponder( source, configfile )
 {
   has_vct = true;
+  has_mgt = true;
 }
 
 Transponder_ATSC::~Transponder_ATSC( )

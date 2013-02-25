@@ -47,6 +47,7 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
   has_nit(false),
   has_sdt(false),
   has_vct(false),
+  has_mgt(false),
   epg_state(EPGState_Missing)
 {
   SetModified( );
@@ -59,6 +60,7 @@ Transponder::Transponder( Source &source, std::string configfile ) :
   has_nit(false),
   has_sdt(false),
   has_vct(false),
+  has_mgt(false),
   epg_state(EPGState_Missing)
 {
 }

@@ -54,6 +54,7 @@ class Transponder : public ConfigObject, public RPCObject
     bool HasNIT( ) { return has_nit; }
     bool HasSDT( ) { return has_sdt; }
     bool HasVCT( ) { return has_vct; }
+    bool HasMGT( ) { return has_mgt; }
 
     virtual void AddProperty( const struct dtv_property &prop );
 
@@ -143,6 +144,7 @@ class Transponder : public ConfigObject, public RPCObject
     bool has_nit;
     bool has_sdt;
     bool has_vct;
+    bool has_mgt;
 
   private:
     State state;

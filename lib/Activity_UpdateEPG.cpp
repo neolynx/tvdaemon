@@ -26,6 +26,7 @@
 #include "Channel.h"
 
 #include "descriptors/eit.h"
+#include "descriptors/mgt.h"
 #include "dvb-scan.h"
 #include "dvb-demux.h"
 
@@ -50,23 +51,56 @@ bool Activity_UpdateEPG::Perform( )
 {
   int time = 5;
   int fd_demux;
-  struct dvb_table_eit *eit = NULL;
 
   if(( fd_demux = frontend->OpenDemux( )) < 0 )
   {
-    LogError( "unable to open adapter demux" );
+    frontend->LogError( "unable to open adapter demux" );
     goto fail;
   }
-
-  dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, (uint8_t **) &eit, time );
-  if( eit )
+  if( transponder->HasMGT( ))
   {
-    transponder->ReadEPG( eit->event );
-    dvb_table_eit_free( eit );
-  }
+    frontend->Log( "Reading MGT" );
+    struct dvb_table_mgt *mgt = NULL;
+    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_MGT, 0x1FFB, (uint8_t **) &mgt, time );
+    if( mgt )
+    {
+      dvb_table_mgt_print( frontend->GetFE( ), mgt );
+      const struct dvb_table_mgt_table *table = mgt->table;
+      while( table )
+      {
+        if( table->type >= 0x200 and table->type < 0x300 )
+        {
+          frontend->Log( "Reading EIT %x", table->type );
+          struct dvb_table_eit *eit = NULL;
+          dvb_read_section( frontend->GetFE( ), fd_demux, 0xCB, table->pid, (uint8_t **) &eit, time );
+          if( eit )
+          {
+            //transponder->ReadEPG( eit->event );
+            dvb_table_eit_print( frontend->GetFE( ), eit );
+            dvb_table_eit_free( eit );
+          }
 
-  dvb_dmx_close( fd_demux );
-  return eit != NULL;
+        }
+        table = table->next;
+      }
+    }
+    dvb_dmx_close( fd_demux );
+    return true;
+  }
+  else
+  {
+    frontend->Log( "Reading EIT" );
+    struct dvb_table_eit *eit = NULL;
+    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, (uint8_t **) &eit, time );
+    if( eit )
+    {
+      transponder->ReadEPG( eit->event );
+      dvb_table_eit_free( eit );
+    }
+
+    dvb_dmx_close( fd_demux );
+    return eit != NULL;
+  }
 
 fail:
   return false;
