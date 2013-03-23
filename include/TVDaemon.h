@@ -73,7 +73,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     bool RPC_Source ( const HTTPRequest &request, const std::string &cat, const std::string &action );
     bool RPC_Adapter( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
-    void ServerSideTable( const HTTPRequest &request, const std::vector<JSONObject *> &data ) const;
+    void ServerSideTable( const HTTPRequest &request, std::vector<const JSONObject *> &data ) const;
 
     bool Schedule( Event &event );
     bool Record( Channel &channel );

@@ -33,6 +33,7 @@ class JSONObject
   public:
     virtual void json( json_object *j ) const = 0;
 
+    virtual bool compare( const JSONObject &other, const int &p ) const = 0;
 };
 
 void json_object_time_add( json_object *j, std::string name, time_t tt );
@@ -41,6 +42,20 @@ class RPCObject : public JSONObject
 {
   public:
     virtual bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action ) = 0;
+};
+
+class JSONObjectComparator : public std::binary_function<JSONObject, JSONObject, bool>
+{
+  public:
+    JSONObjectComparator( const int &p ) : p(p) { }
+
+    inline bool operator()( const JSONObject *a, const JSONObject *b )
+    {
+      return a->compare( *b, p );
+    }
+
+  private:
+    const int &p;
 };
 
 #endif

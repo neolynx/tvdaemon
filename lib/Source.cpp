@@ -463,3 +463,9 @@ bool Source::GetTransponderForEPGScan( Activity &act )
   return false;
 }
 
+bool Source::compare( const JSONObject &other, const int &p ) const
+{
+  const Source &b = (const Source &) other;
+  return name < b.name;
+}
+

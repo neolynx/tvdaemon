@@ -74,6 +74,7 @@ class Service : public RPCObject
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+    virtual bool compare( const JSONObject &other, const int &p ) const;
 
     static bool SortByName( const Service *a, const Service *b );
     static bool SortByTypeName( const Service *a, const Service *b );

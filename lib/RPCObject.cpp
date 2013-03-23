@@ -38,5 +38,10 @@ void json_object_time_add( json_object *j, std::string name, time_t tt )
   json_object_object_add( j, ( name + "_istoday" ).c_str( ), json_object_new_int( t.tm_mday == tnow.tm_mday &&
                                                                                   t.tm_mon  == tnow.tm_mon &&
                                                                                   t.tm_year == tnow.tm_year ));
+  tnow.tm_mday++;
+  mktime( &tnow );
+  json_object_object_add( j, ( name + "_istomorrow" ).c_str( ), json_object_new_int( t.tm_mday == tnow.tm_mday &&
+                                                                                  t.tm_mon  == tnow.tm_mon &&
+                                                                                  t.tm_year == tnow.tm_year ));
 }
 

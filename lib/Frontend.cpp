@@ -610,3 +610,9 @@ bool Frontend::Tune( Activity &act )
   return true;
 }
 
+bool Frontend::compare( const JSONObject &other, const int &p ) const
+{
+  const Frontend &b = (const Frontend &) other;
+  return GetKey( ) < b.GetKey( );
+}
+

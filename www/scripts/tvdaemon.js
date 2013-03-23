@@ -188,3 +188,26 @@ function Menu( selected )
   div.append( ul );
 }
 
+/* misc */
+
+function print_time( time )
+{
+  start = "";
+  start_hour = time["start_hour"];
+  start_min  = time["start_min"];
+  start_day  = time["start_day"];
+  start_month  = time["start_month"];
+  if( start_hour < 10 ) start_hour = "0" + start_hour;
+  if( start_min < 10 ) start_min = "0" + start_min;
+  if( start_day < 10 ) start_day = "0" + start_day;
+  if( start_month < 10 ) start_month = "0" + start_month;
+
+  if( time["start_istoday"] == 1 )
+    start = start_hour + ":" + start_min;
+  else if( time["start_istomorrow"] == 1 )
+    start = "tomorrow " + start_hour + ":" + start_min;
+  else
+    start = start_day + "." + start_month + " " + start_hour + ":" + start_min;
+  return start;
+}
+

@@ -276,3 +276,9 @@ bool Service::ReadEPG( const struct dvb_table_eit_event *event )
   return true;
 }
 
+bool Service::compare( const JSONObject &other, const int &p ) const
+{
+  const Service &b = (const Service &) other;
+  return GetKey( ) < b.GetKey( );
+}
+

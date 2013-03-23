@@ -178,3 +178,9 @@ bool Adapter::RPC( const HTTPRequest &request, const std::string &cat, const std
   return false;
 }
 
+bool Adapter::compare( const JSONObject &other, const int &p ) const
+{
+  const Adapter &b = (const Adapter &) other;
+  return GetKey( ) < b.GetKey( );
+}
+

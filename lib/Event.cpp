@@ -115,8 +115,12 @@ void Event::json( json_object *entry ) const
   json_object_object_add( entry, "channel_id",    json_object_new_int( channel.GetKey( )));
 }
 
-bool Event::SortByStart( const Event *a, const Event *b )
+bool Event::compare( const JSONObject &other, const int &p ) const
 {
-  return difftime( a->start, b->start ) < 0.0;
+  const Event &b = (const Event &) other;
+  double delta = difftime( start, b.start );
+  if( delta < -0.9 || delta > 0.9 )
+    return delta < 0.0;
+  return channel.compare((const JSONObject &) b.channel, p );
 }
 

@@ -58,7 +58,7 @@ class Recorder : public Thread, public ConfigObject
     //void AddTrack( );
     //void record( uint8_t *data, int size );
 
-    void GetRecordings( std::vector<JSONObject *> &result ) const;
+    void GetRecordings( std::vector<const JSONObject *> &result ) const;
 
 
   private:

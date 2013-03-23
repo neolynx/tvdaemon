@@ -50,7 +50,9 @@ class Activity_Record : public Activity, public ConfigObject, public JSONObject
 
     static bool SortByStart( const Activity_Record *a, const Activity_Record *b );
 
+    // RPC
     virtual void json( json_object *j ) const;
+    virtual bool compare( const JSONObject &other, const int &p ) const;
 
   private:
     Recorder &recorder;

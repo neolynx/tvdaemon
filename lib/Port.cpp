@@ -160,3 +160,9 @@ bool Port::Tune( Activity &act )
   return frontend.Tune( act );
 }
 
+bool Port::compare( const JSONObject &other, const int &p ) const
+{
+  const Port &b = (const Port &) other;
+  return port_num < b.port_num;
+}
+

@@ -431,7 +431,15 @@ bool Transponder::ReadEPG( const struct dvb_table_eit_event *event )
   for( std::map<uint16_t, Service *>::const_iterator it = services.begin( ); it != services.end( ); it++ )
     it->second->ReadEPG( event );
   last_epg_update = time( NULL );
+  SetEPGState( EPGState_Updated );
   SaveConfig( );
   return true;
 }
+
+bool Transponder::compare( const JSONObject &other, const int &p ) const
+{
+  const Transponder &b = (const Transponder &) other;
+  return frequency < b.frequency;
+}
+
 

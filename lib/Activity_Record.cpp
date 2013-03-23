@@ -376,17 +376,24 @@ exit:
 
 void Activity_Record::json( json_object *j ) const
 {
-  Log( "Activity_Record::json" );
-  json_object_object_add( j, "name",   json_object_new_string( name.c_str( )));
-  json_object_object_add( j, "channel",json_object_new_int( channel->GetKey( )));
-  json_object_time_add  ( j, "start",  start );
-  json_object_object_add( j, "end",    json_object_new_int( end ));
-  json_object_object_add( j, "state",  json_object_new_int( state ));
+  json_object_object_add( j, "name",    json_object_new_string( name.c_str( )));
+  json_object_object_add( j, "channel", json_object_new_int( channel->GetKey( )));
+  json_object_time_add  ( j, "start",   start );
+  json_object_object_add( j, "end",     json_object_new_int( end ));
+  json_object_object_add( j, "state",   json_object_new_int( state ));
+  if( channel )
+    json_object_object_add( j, "channel", json_object_new_string( channel->GetName( ).c_str( )));
 }
 
-bool Activity_Record::SortByStart( const Activity_Record *a, const Activity_Record *b )
+bool Activity_Record::compare( const JSONObject &other, const int &p ) const
 {
-  return difftime( a->start, b->start ) < 0.0;
+  const Activity_Record &b = (const Activity_Record &) other;
+  double delta = difftime( start, b.start );
+  if( delta < -0.9 || delta > 0.9 )
+    return delta > 0.0;
+  if( channel && b.channel )
+    return channel->compare((const JSONObject &) *b.channel, p );
+  return false;
 }
 
 //Recorder::Recorder( struct dvb_v5_fe_parms &fe ): fe(fe), mkv(NULL)

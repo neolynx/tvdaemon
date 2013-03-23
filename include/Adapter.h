@@ -57,6 +57,7 @@ class Adapter : public ConfigObject, public RPCObject
 
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+    virtual bool compare( const JSONObject &other, const int &p ) const;
 
   private:
     TVDaemon &tvd;

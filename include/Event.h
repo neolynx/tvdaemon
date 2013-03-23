@@ -48,10 +48,11 @@ class Event : public RPCObject
     time_t GetStart( )            { return start; }
     time_t GetEnd( )              { return start + duration; }
     uint32_t GetDuration( )       { return duration; }
+
+    // RPC
     virtual void json( json_object *j ) const;
     virtual bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action ) { return false; }
-
-    static bool SortByStart( const Event *a, const Event *b );
+    virtual bool compare( const JSONObject &other, const int &p ) const;
 
   private:
     Channel &channel;

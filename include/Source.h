@@ -82,6 +82,7 @@ class Source : public ConfigObject, public RPCObject, public Mutex
     // RPC
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+    virtual bool compare( const JSONObject &other, const int &p ) const;
 
     bool Tune( Activity &rec );
 

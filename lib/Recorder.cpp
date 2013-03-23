@@ -145,16 +145,10 @@ void Recorder::Stop( )
     (*it)->Abort( );
 }
 
-void Recorder::GetRecordings( std::vector<JSONObject *> &result ) const
+void Recorder::GetRecordings( std::vector<const JSONObject *> &data ) const
 {
   ScopeMutex _l;
-  std::vector<Activity_Record *> &data = (std::vector<Activity_Record *> &) result;
   for( std::vector<Activity_Record *>::const_iterator it = recordings.begin( ); it != recordings.end( ); it++ )
-  {
-    Log( "Recorder::GetRecordings %p", *it );
     data.push_back( *it );
-  }
-
-  std::sort( data.begin( ), data.end( ), Activity_Record::SortByStart );
 }
 

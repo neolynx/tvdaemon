@@ -473,6 +473,15 @@ Channel *TVDaemon::GetChannel( int id )
   return channels[id];
 }
 
+void TVDaemon::UpdateEPG( )
+{
+  ScopeMutex _l;
+  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+  {
+    (*it)->UpdateEPG( );
+  }
+}
+
 bool TVDaemon::HandleDynamicHTTP( const HTTPRequest &request )
 {
   std::string cat;
@@ -792,9 +801,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       }
     }
 
-    std::sort( result.begin( ), result.end( ), Event::SortByStart );
-
-    ServerSideTable( request, (std::vector<JSONObject *> &) result );
+    ServerSideTable( request, (std::vector<const JSONObject *> &) result );
     return true;
   }
 
@@ -808,7 +815,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "update_epg" )
   {
-    //UpdateEPG( );
+    UpdateEPG( );
     request.Reply( HTTP_OK );
     return true;
   }
@@ -823,7 +830,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       Utils::ToLower( t, search );
     }
 
-    std::vector<JSONObject *> result;
+    std::vector<const JSONObject *> result;
 
     recorder->GetRecordings( result );
 
@@ -835,9 +842,12 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
   return false;
 }
 
-void TVDaemon::ServerSideTable( const HTTPRequest &request, const std::vector<JSONObject *> &data ) const
+void TVDaemon::ServerSideTable( const HTTPRequest &request, std::vector<const JSONObject *> &data ) const
 {
   int count = data.size( );
+
+  int p = 7;
+  std::sort( data.begin( ), data.end( ), JSONObjectComparator( p ));
 
   int start = -1;
   if( request.HasParam( "start" ))
@@ -863,7 +873,6 @@ void TVDaemon::ServerSideTable( const HTTPRequest &request, const std::vector<JS
   for( int i = start; i < end; i++ )
   {
     json_object *entry = json_object_new_object( );
-    Log( "data[i]->json( entry ); %p", data[i] );
     data[i]->json( entry );
     json_object_array_add( a, entry );
   }
