@@ -87,7 +87,7 @@ bool Recorder::Schedule( Event &event )
   ScopeMutex t;
   for( std::vector<Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
     if( (*it)->GetEventID( ) == event.GetID( ) and
-        (*it)->GetState( ) == Activity::State_Scheduled and
+        (*it)->GetStart( ) == event.GetStart( ) and
         (*it)->GetChannel( ) == &event.GetChannel( ))
     {
       LogError( "Event already scheduled" );
