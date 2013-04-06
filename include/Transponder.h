@@ -127,6 +127,7 @@ class Transponder : public ConfigObject, public RPCObject
 
     bool UpdateEPG( );
     time_t LastEPGUpdate( ) const { return last_epg_update; }
+    time_t LastEPGFailed( ) const { return last_epg_failed; }
     bool ReadEPG( const struct dvb_table_eit_event *event );
 
   protected:
@@ -151,6 +152,7 @@ class Transponder : public ConfigObject, public RPCObject
     State state;
     EPGState epg_state;
     time_t last_epg_update;
+    time_t last_epg_failed;
     bool has_channels;
 
 };

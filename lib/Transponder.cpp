@@ -43,6 +43,7 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
   enabled(true),
   state(State_New),
   last_epg_update(0),
+  last_epg_failed(0),
   has_channels(false),
   has_nit(false),
   has_sdt(false),
@@ -295,6 +296,8 @@ void Transponder::SetState( State state )
 void Transponder::SetEPGState( EPGState state )
 {
   epg_state = state;
+  if( state != EPGState_Updated && state != EPGState_Updating )
+    last_epg_failed = time( NULL );
 }
 
 
@@ -431,6 +434,7 @@ bool Transponder::Tune( Activity &act )
 bool Transponder::UpdateEPG( )
 {
   last_epg_update = 0;
+  last_epg_failed = 0;
 }
 
 bool Transponder::ReadEPG( const struct dvb_table_eit_event *event )

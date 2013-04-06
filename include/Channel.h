@@ -73,7 +73,7 @@ class Channel : public ConfigObject, public RPCObject
     void UpdateEPG( );
 
     void ClearEPG( );
-    void AddEPGEvent( const struct dvb_table_eit_event *event );
+    bool AddEPGEvent( const struct dvb_table_eit_event *event );
 
   private:
     TVDaemon &tvd;

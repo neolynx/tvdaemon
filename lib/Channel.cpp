@@ -31,6 +31,7 @@
 #include "Source.h"
 #include "Activity_UpdateEPG.h"
 #include "Log.h"
+#include "descriptors/eit.h"
 
 Channel::Channel( TVDaemon &tvd, Service *service, int config_id ) :
   ConfigObject( tvd, "channel", config_id ),
@@ -114,9 +115,15 @@ bool Channel::HasService( Service *service ) const
 
 void Channel::json( json_object *entry ) const
 {
-  json_object_object_add( entry, "name",   json_object_new_string( name.c_str( )));
-  json_object_object_add( entry, "number", json_object_new_int( number ));
-  json_object_object_add( entry, "id",     json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "name",      json_object_new_string( name.c_str( )));
+  json_object_object_add( entry, "number",    json_object_new_int( number ));
+  json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
+  for( std::vector<Service *>::const_iterator it = services.begin( ); it != services.end( ); it++ )
+  {
+    Transponder::EPGState epg_state = (*it)->GetTransponder( ).GetEPGState( );
+    json_object_object_add( entry, "epg_state", json_object_new_int( epg_state ));
+    break; //FIXME: merge states
+  }
 }
 
 bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const std::string &action )
@@ -173,8 +180,17 @@ void Channel::ClearEPG( )
   events.clear( );
 }
 
-void Channel::AddEPGEvent( const struct dvb_table_eit_event *event )
+bool Channel::AddEPGEvent( const struct dvb_table_eit_event *event )
 {
+  ScopeMutex _l;
+  for( int i = 0; i < events.size( ); i++ )
+  {
+    if( events[i]->GetID( ) == event->event_id )
+    {
+      LogError( "Event %d already registered", event->event_id );
+      return false;
+    }
+  }
   Event *e = new Event( *this, event );
   events.push_back( e );
 }

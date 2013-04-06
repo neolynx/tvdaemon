@@ -453,7 +453,10 @@ bool Source::GetTransponderForEPGScan( Activity &act )
   time_t now = time( NULL );
   for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
   {
-    if( (*it)->HasChannels( ) && (*it)->GetEPGState( ) != Transponder::EPGState_Updating && difftime( now, (*it)->LastEPGUpdate( )) >= TVDaemon::Instance( )->GetEPGUpdateInterval( ))
+    if( (*it)->HasChannels( ) &&
+        (*it)->GetEPGState( ) != Transponder::EPGState_Updating &&
+        difftime( now, (*it)->LastEPGUpdate( )) >= TVDaemon::Instance( )->GetEPGUpdateInterval( ) &&
+        difftime( now, (*it)->LastEPGFailed( )) >= 3600.0 )
     {
       (*it)->SetEPGState( Transponder::EPGState_Updating );
       act.SetTransponder( *it );
