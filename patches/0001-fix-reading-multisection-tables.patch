@@ -1,17 +1,17 @@
-From 35fe706d35ab3592bbf970aee875bdf3b2272b30 Mon Sep 17 00:00:00 2001
+From 0122169a556411bc3580887211839e3907d6a9d3 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 13 Jan 2013 23:23:33 +0100
-Subject: [PATCH 5/6] fix reading multisection tables
+Subject: [PATCH 1/7] fix reading multisection tables
 
 ---
  lib/libdvbv5/dvb-scan.c |   19 +++++++++++--------
  1 files changed, 11 insertions(+), 8 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 72d0263..58de864 100755
+index 22893c8..05eb34c 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -401,16 +401,19 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -379,16 +379,19 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  		if (id != -1 && h->id != id) { /* search for a specific table id */
  			free(buf);
  			continue;
