@@ -20,6 +20,8 @@
  */
 
 #include <signal.h>
+#include <stdlib.h> // exit
+#include <unistd.h> // getopt
 
 #include "TVDaemon.h"
 #include "Daemon.h"
@@ -36,8 +38,16 @@ void termination_handler( int signum )
   }
 }
 
+void usage( char *prog )
+{
+  printf( "Usage: %s [-d]\n", prog );
+  printf( "  -d     debug, do not fork, log to console\n" );
+  exit( -1 );
+}
+
 int main( int argc, char *argv[] )
 {
+  Logger *logger = NULL;
   struct sigaction action;
   action.sa_handler = termination_handler;
   sigemptyset( &action.sa_mask );
@@ -45,11 +55,29 @@ int main( int argc, char *argv[] )
   sigaction( SIGINT, &action, NULL );
   sigaction( SIGTERM, &action, NULL );
 
-  Logger *logger = new LoggerSyslog( "tvdaemon" );
-  if( !Daemon::Instance( )->daemonize( "tvdaemon", "/var/run/tvdaemon.pid" ))
+  bool debug = false;
+
+  int opt;
+  while(( opt = getopt( argc, argv, "d" )) != -1 )
   {
-    delete logger;
-    return -1;
+    switch( opt )
+    {
+      case 'd':
+        debug = true;
+        break;
+      default:
+        usage( argv[0] );
+    }
+  }
+
+  if( !debug )
+  {
+    Logger *logger = new LoggerSyslog( "tvdaemon" );
+    if( !Daemon::Instance( )->daemonize( "tvdaemon", "/var/run/tvdaemon.pid" ))
+    {
+      delete logger;
+      return -1;
+    }
   }
 
   Log( "TVDaemon starting ..." );
