@@ -22,6 +22,7 @@
 #include <signal.h>
 
 #include "TVDaemon.h"
+#include "Daemon.h"
 #include "Log.h"
 
 bool up = true;
@@ -30,7 +31,7 @@ void termination_handler( int signum )
 {
   if( up )
   {
-    printf( "\nSignal received\n" );
+    Log( "Signal received, terminating ..." );
     up = false;
   }
 }
@@ -43,6 +44,13 @@ int main( int argc, char *argv[] )
   action.sa_flags = 0;
   sigaction( SIGINT, &action, NULL );
   sigaction( SIGTERM, &action, NULL );
+
+  Logger *logger = new LoggerSyslog( "tvdaemon" );
+  if( !Daemon::Instance( )->daemonize( "tvdaemon", "/var/run/tvdaemon.pid" ))
+  {
+    delete logger;
+    return -1;
+  }
 
   Log( "TVDaemon starting ..." );
   TVDaemon *tvd = TVDaemon::Instance( );
@@ -62,6 +70,8 @@ int main( int argc, char *argv[] )
     sleep( 1 );
   }
   delete tvd;
+  Log( "TVDaemon terminated" );
+  delete logger;
   return 0;
 }
 

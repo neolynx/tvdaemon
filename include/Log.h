@@ -22,10 +22,41 @@
 #ifndef _Log_
 #define _Log_
 
+#include <stdio.h>
 #include <syslog.h>
 
+typedef void (*logfnc)( int level, const char *fmt, ... );
+
+class Logger
+{
+  public:
+    static Logger *Instance( );
+    virtual ~Logger( );
+
+    virtual void Log( int level, char *log );
+
+  protected:
+    static Logger *logger;
+    struct loglevel
+    {
+      const char *name;
+      const char *color;
+      FILE *io;
+    };
+
+    Logger( );
+};
+
+class LoggerSyslog : public Logger
+{
+  public:
+    LoggerSyslog( const char *ident );
+    virtual ~LoggerSyslog( );
+
+    virtual void Log( int level, char *log );
+};
+
 void TVD_Log( int level, const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
-void TVD_Log( int level, char *msg );
 
 void Log( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
 void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
