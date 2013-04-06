@@ -395,7 +395,7 @@ void HTTPServer::Response::AddContents( std::string buffer )
 {
   size_t length = buffer.size( );
   char length_str[10];
-  snprintf( length_str, sizeof( length_str ), "%d", length );
+  snprintf( length_str, sizeof( length_str ), "%d", (int) length );
 
   AddAttribute( "Content-Length", length_str );
   _buffer.append( "\r\n" );

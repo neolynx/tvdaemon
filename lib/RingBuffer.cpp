@@ -55,7 +55,7 @@ bool RingBuffer::append( uint8_t *data, size_t length )
   count += length;
   if( count > size )
   {
-    LogWarn( "RingBuffer: buffer overflow: %d > %d", count, size );
+    LogWarn( "RingBuffer: buffer overflow: %d > %d", (int) count, (int) size );
     readpos += count - size;
     if( readpos >= size) readpos -= size;
     count = size;

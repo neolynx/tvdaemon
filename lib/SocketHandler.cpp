@@ -602,7 +602,7 @@ void SocketHandler::StdLog( int level, const char *fmt, ... )
   vfprintf(   loglevels[level].io, fmt, ap );
   fprintf(    loglevels[level].io, "\n" );
   if( isatty( loglevels[level].io->_fileno ))
-    fprintf(  loglevels[level].io, loglevels[LOG_COLOROFF].color );
+    fputs( loglevels[LOG_COLOROFF].color, loglevels[level].io );
   va_end( ap );
 }
 

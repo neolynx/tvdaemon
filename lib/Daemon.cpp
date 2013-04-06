@@ -74,7 +74,7 @@ bool Daemon::daemonize( const char *user, const char *pidfile, bool change_cwd )
       {
         char buf[16];
         snprintf( buf, sizeof( buf ), "%d\n", pid );
-        (void) write( fd, buf, strlen( buf ));
+        int i =  write( fd, buf, strlen( buf ));
         close( fd );
       }
       else
@@ -116,9 +116,9 @@ bool Daemon::daemonize( const char *user, const char *pidfile, bool change_cwd )
       LogError( "cannot chdir( \"/\" )" );
       return false;
     }
-    (void) freopen( "/dev/null", "r", stdin );
-    (void) freopen( "/dev/null", "w", stdout );
-    (void) freopen( "/dev/null", "w", stderr );
+    FILE *f = freopen( "/dev/null", "r", stdin );
+    f       = freopen( "/dev/null", "w", stdout );
+    f       = freopen( "/dev/null", "w", stderr );
     return true;
   }
 }
