@@ -508,6 +508,7 @@ void Frontend::Run( )
       sleep( 1 );
       continue;
     }
+
     bool idle = true;
     switch( state )
     {
