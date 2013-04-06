@@ -53,6 +53,12 @@ autoreconf -vfis
 make
 
 
+Start tvdaemon
+===============
+
+src/tvdaemon -d
+
+
 GDB
 ====
 
