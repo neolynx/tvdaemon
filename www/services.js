@@ -19,8 +19,8 @@ function ready( )
 {
   Menu( "Services" );
   getJSON( 'tvd?c=tvdaemon&a=get_service_types', readServiceTypes );
-  service_table = ServerSideTable( 'services', 'tvd?c=tvdaemon&a=get_services', 20 );
-  service_table["columns"] = {
+  t = ServerSideTable( 'services', 'tvd?c=tvdaemon&a=get_services', 20 );
+  t["columns"] = {
     "channel"   : [ "", function( service ) { if( service["channel"] == 1 ) return "C"; } ],
     "scrambled" : [ "", function( service ) { if( service["scrambled"] == 1 ) return "&#9911;"; } ],
     "name"      : "Service",
@@ -28,11 +28,12 @@ function ready( )
     "type"      : [ "Type", function( service ) { return service_types[service['type']]; } ],
     "id"        : [ "PID", SST_NUMERIC ]
   };
-  service_table["click"] = function( event ) {
+  t["click"] = function( row ) {
     getJSON( 'tvd?c=service&a=add_channel&source_id=' + this["source_id"] +
         '&transponder_id=' + this["transponder_id"] + '&service_id=' + this["id"], addChannel );
   };
-  service_table.load( );
+  t.load( );
+  service_table = t;
 }
 
 function addChannel( data, errmsg )

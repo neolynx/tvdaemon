@@ -156,12 +156,14 @@ const char *Service::GetTypeName( Type type )
 
 void Service::json( json_object *entry ) const
 {
-  json_object_object_add( entry, "name",      json_object_new_string( name.c_str( )));
-  json_object_object_add( entry, "provider",  json_object_new_string( provider.c_str( )));
-  json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
-  json_object_object_add( entry, "type",      json_object_new_int( type ));
-  json_object_object_add( entry, "scrambled", json_object_new_int( scrambled ));
-  json_object_object_add( entry, "channel", json_object_new_int( channel ? 1 : 0 ));
+  json_object_object_add( entry, "name",           json_object_new_string( name.c_str( )));
+  json_object_object_add( entry, "provider",       json_object_new_string( provider.c_str( )));
+  json_object_object_add( entry, "id",             json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "type",           json_object_new_int( type ));
+  json_object_object_add( entry, "scrambled",      json_object_new_int( scrambled ));
+  json_object_object_add( entry, "channel",        json_object_new_int( channel ? 1 : 0 ));
+  json_object_object_add( entry, "transponder_id", json_object_new_int( transponder.GetKey( )));
+  json_object_object_add( entry, "source_id",      json_object_new_int( transponder.GetSource( ).GetKey( )));
 }
 
 bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
@@ -279,6 +281,10 @@ bool Service::ReadEPG( const struct dvb_table_eit_event *event )
 bool Service::compare( const JSONObject &other, const int &p ) const
 {
   const Service &b = (const Service &) other;
-  return GetKey( ) < b.GetKey( );
+  std::string a1;
+  std::string b1;
+  Utils::ToLower( name, a1 );
+  Utils::ToLower( b.name, b1 );
+  return a1 < b1;
 }
 
