@@ -9,6 +9,7 @@ function ready( )
   t["columns"] = {
     "number"    : "#",
     "name"      : "Channel",
+    "epg_state" : [ "EPG", epg_state ],
   };
   t["click"] = function( event ) {
     if( confirm( "Start recording " + this["name"] + " ?" ))

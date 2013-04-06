@@ -637,10 +637,6 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "get_channels" )
   {
-    ScopeMutex _l;
-    json_object *h = json_object_new_object( );
-    json_object *a = json_object_new_array();
-
     std::string search;
     if( request.HasParam( "search" ))
     {
@@ -649,8 +645,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       Utils::ToLower( t, search );
     }
 
-    std::vector<Channel *> result;
-
+    std::vector<const JSONObject *> result;
     for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     {
       std::string t;
@@ -659,48 +654,12 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
         continue;
       result.push_back( *it );
     }
-
-    int count = result.size( );
-
-    //std::sort( result.begin( ), result.end( ), Service::SortByName );
-
-    int start = -1;
-    if( request.HasParam( "start" ))
-      request.GetParam( "start", start );
-    if( start < 0 )
-      start = 0;
-    if( start > count )
-      start = count;
-
-    int page_size = -1;
-    if( request.HasParam( "page_size" ))
-      request.GetParam( "page_size", page_size );
-    if( page_size <= 0 )
-      page_size = 10;
-
-    int end = start + page_size;
-    if( end > count )
-      end = count;
-    for( int i = start; i < end; i++ )
-    {
-      json_object *entry = json_object_new_object( );
-      result[i]->json( entry );
-      json_object_array_add( a, entry );
-    }
-    json_object_object_add( h, "count", json_object_new_int( count ));
-    json_object_object_add( h, "start", json_object_new_int( start ));
-    json_object_object_add( h, "end", json_object_new_int( end ));
-    json_object_object_add( h, "data", a );
-
-    request.Reply( h );
+    ServerSideTable( request, result );
     return true;
   }
 
-  if( action == "get_services" )
+  if( action == "get_transponders" )
   {
-    json_object *h = json_object_new_object( );
-    json_object *a = json_object_new_array();
-
     std::string search;
     if( request.HasParam( "search" ))
     {
@@ -709,8 +668,32 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       Utils::ToLower( t, search );
     }
 
-    std::vector<Service *> result;
+    std::vector<const JSONObject *> result;
+    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    {
+      const std::vector<Transponder *> &transponders = (*it)->GetTransponders( );
+      for( std::vector<Transponder *>::const_iterator it2 = transponders.begin( ); it2 != transponders.end( ); it2++ )
+      {
+        if( !search.empty( ) && (*it2)->toString( ).find( search.c_str( ), 0, search.length( )) != 0 )
+          continue;
+        result.push_back( *it2 );
+      }
+    }
+    ServerSideTable( request, result );
+    return true;
+  }
 
+  if( action == "get_services" )
+  {
+    std::string search;
+    if( request.HasParam( "search" ))
+    {
+      std::string t;
+      request.GetParam( "search", t );
+      Utils::ToLower( t, search );
+    }
+
+    std::vector<const JSONObject *> result;
     for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
     {
       const std::vector<Transponder *> &transponders = (*it)->GetTransponders( );
@@ -725,49 +708,12 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
         }
       }
     }
-
-    int count = result.size( );
-
-    std::sort( result.begin( ), result.end( ), Service::SortByName );
-
-    int start = -1;
-    if( request.HasParam( "start" ))
-      request.GetParam( "start", start );
-    if( start < 0 )
-      start = 0;
-    if( start > count )
-      start = count;
-
-    int page_size = -1;
-    if( request.HasParam( "page_size" ))
-      request.GetParam( "page_size", page_size );
-    if( page_size <= 0 )
-      page_size = 10;
-
-    int end = start + page_size;
-    if( end > count )
-      end = count;
-    for( int i = start; i < end; i++ )
-    {
-      json_object *entry = json_object_new_object( );
-      result[i]->json( entry );
-      json_object_object_add( entry, "transponder_id", json_object_new_int( result[i]->GetTransponder( ).GetKey( )));
-      json_object_object_add( entry, "source_id", json_object_new_int( result[i]->GetTransponder( ).GetSource( ).GetKey( )));
-      json_object_array_add( a, entry );
-    }
-    json_object_object_add( h, "count", json_object_new_int( count ));
-    json_object_object_add( h, "start", json_object_new_int( start ));
-    json_object_object_add( h, "end", json_object_new_int( end ));
-    json_object_object_add( h, "data", a );
-    request.Reply( h );
+    ServerSideTable( request, result );
     return true;
   }
 
   if( action == "get_epg" )
   {
-    json_object *h = json_object_new_object( );
-    json_object *a = json_object_new_array();
-
     std::string search;
     if( request.HasParam( "search" ))
     {
@@ -776,8 +722,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       Utils::ToLower( t, search );
     }
 
-    std::vector<Event *> result;
-
+    std::vector<const JSONObject *> result;
     for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     {
       const std::vector<Event *> &events = (*it)->GetEvents( );
@@ -800,8 +745,22 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
         result.push_back( *it2 );
       }
     }
+    ServerSideTable( request, result );
+    return true;
+  }
 
-    ServerSideTable( request, (std::vector<const JSONObject *> &) result );
+  if( action == "get_recordings" )
+  {
+    //std::string search;
+    //if( request.HasParam( "search" ))
+    //{
+      //std::string t;
+      //request.GetParam( "search", t );
+      //Utils::ToLower( t, search );
+    //}
+    std::vector<const JSONObject *> result;
+    recorder->GetRecordings( result );
+    ServerSideTable( request, result );
     return true;
   }
 
@@ -817,24 +776,6 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
   {
     UpdateEPG( );
     request.Reply( HTTP_OK );
-    return true;
-  }
-
-  if( action == "get_recordings" )
-  {
-    std::string search;
-    if( request.HasParam( "search" ))
-    {
-      std::string t;
-      request.GetParam( "search", t );
-      Utils::ToLower( t, search );
-    }
-
-    std::vector<const JSONObject *> result;
-
-    recorder->GetRecordings( result );
-
-    ServerSideTable( request, result );
     return true;
   }
 

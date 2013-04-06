@@ -322,7 +322,14 @@ void Transponder::json( json_object *entry ) const
   json_object_object_add( entry, "name",    json_object_new_string( toString( ).c_str( )));
   json_object_object_add( entry, "id",      json_object_new_int( GetKey( )));
   json_object_object_add( entry, "state",   json_object_new_int( state ));
+  json_object_object_add( entry, "epg_state",   json_object_new_int( epg_state ));
   json_object_object_add( entry, "enabled", json_object_new_int( enabled ));
+  json_object_object_add( entry, "delsys", json_object_new_int( delsys ));
+  json_object_object_add( entry, "frequency", json_object_new_int( frequency ));
+  json_object_object_add( entry, "tsid", json_object_new_int( TSID ));
+  json_object_object_add( entry, "signal", json_object_new_int( signal ));
+  json_object_object_add( entry, "noise", json_object_new_int( noise ));
+  json_object_object_add( entry, "services", json_object_new_int( services.size( )));
 }
 
 bool Transponder::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
@@ -439,7 +446,9 @@ bool Transponder::ReadEPG( const struct dvb_table_eit_event *event )
 bool Transponder::compare( const JSONObject &other, const int &p ) const
 {
   const Transponder &b = (const Transponder &) other;
-  return frequency < b.frequency;
+  if( delsys == b.delsys )
+    return frequency < b.frequency;
+  return delsys < b.delsys;
 }
 
 

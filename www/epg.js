@@ -7,6 +7,7 @@ function ready( )
   t["columns"] = {
     ""         : [ "Start", print_time ],
     "channel"  : "Channel",
+    "id"  : "ID",
     "duration" : [ "Duration", duration ],
     "name"     : [ "Name", function ( event ) { return "<b>" + event["name"] + "</b><br/>" + event["description"] } ]
   };

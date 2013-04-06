@@ -167,6 +167,7 @@ function renderTable( data, errmsg )
 function Menu( selected )
 {
   menu = { Setup   : "gui.html",
+           Transponders: "transponders.html",
            Services: "services.html",
            Channels: "channels.html",
            EPG     : "epg.html",
@@ -211,3 +212,13 @@ function print_time( time )
   return start;
 }
 
+function epg_state( row )
+{
+  switch( row["epg_state"] )
+  {
+    case 0: return "Missing";
+    case 1: return "ok";
+    case 2: return "Updating";
+    case 3: return "N/A";
+  }
+}
