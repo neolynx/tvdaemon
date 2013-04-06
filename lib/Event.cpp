@@ -36,16 +36,31 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
 
   id = event->event_id;
 
-  struct tm t = event->start;
+  struct tm t;
+
   time_t now;
   time( &now );
-  int offset;
-  start = mktime( &t );
   gmtime_r( &now, &t );
-  offset = mktime( &t );
+  //printf( "utc: %s\n", asctime( &t ));
+  t.tm_isdst = 1; // dst in effect, do not adjust
+  time_t utc = mktime( &t );
+
+  time( &now );
   localtime_r( &now, &t );
-  offset -= mktime( &t );
-  start -= offset;
+  //printf( "local: %s\n", asctime( &t ));
+  t.tm_isdst = 1; // dst in effect, do not adjust
+  time_t local = mktime( &t );
+
+  double diff = difftime( utc, local );
+  //printf( "diff: %f\n", diff );
+
+  t = event->start;
+  mktime( &t );
+  //printf( "event utc: %s\n", asctime( &t ));
+  t.tm_hour  -= (int)( diff / 3600.0 );
+  start = mktime( &t );
+  //printf( "event local: %s\n", asctime( &t ));
+
   duration = event->duration;
 
   struct dvb_desc *desc = event->descriptor;
