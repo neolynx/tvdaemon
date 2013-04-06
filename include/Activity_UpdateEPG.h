@@ -32,7 +32,9 @@ class Activity_UpdateEPG : public Activity
 
     virtual std::string GetName( ) const;
 
+  private:
     virtual bool Perform( );
+    virtual void Failed( );
 };
 
 

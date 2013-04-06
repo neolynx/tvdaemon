@@ -87,6 +87,7 @@ void Activity::Run( )
 
 fail:
   state = State_Failed;
+  Failed( );
   return;
 }
 

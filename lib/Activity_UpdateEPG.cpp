@@ -46,7 +46,6 @@ std::string Activity_UpdateEPG::GetName( ) const
   return t;
 }
 
-
 bool Activity_UpdateEPG::Perform( )
 {
   int time = 5;
@@ -97,6 +96,8 @@ bool Activity_UpdateEPG::Perform( )
       transponder->ReadEPG( eit->event );
       dvb_table_eit_free( eit );
     }
+    else
+      transponder->SetEPGState( Transponder::EPGState_NotAvailable );
 
     dvb_dmx_close( fd_demux );
     return eit != NULL;
@@ -105,3 +106,10 @@ bool Activity_UpdateEPG::Perform( )
 fail:
   return false;
 }
+
+void Activity_UpdateEPG::Failed( )
+{
+  if( transponder )
+    transponder->SetEPGState( Transponder::EPGState_Missing );
+}
+

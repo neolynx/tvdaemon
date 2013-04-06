@@ -34,6 +34,7 @@ class Activity_Scan : public Activity
 
   private:
     virtual bool Perform( );
+    virtual void Failed( ) { };
 };
 
 

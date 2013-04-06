@@ -42,8 +42,6 @@ class Activity_Record : public Activity, public ConfigObject, public JSONObject
 
     virtual std::string GetName( ) const;
 
-    virtual bool Perform( );
-
     time_t GetStart( )   const { return start; }
     time_t GetEnd( )     const { return end; }
     int    GetEventID( ) const { return event_id; }
@@ -60,6 +58,10 @@ class Activity_Record : public Activity, public ConfigObject, public JSONObject
     int duration;
     int event_id;
     std::string name;
+
+    virtual bool Perform( );
+    virtual void Failed( ) { }
+
 };
 
 

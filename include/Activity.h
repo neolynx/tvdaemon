@@ -74,6 +74,7 @@ class Activity : public Thread
 
     virtual std::string GetName( ) const = 0;
     virtual bool Perform( ) = 0;
+    virtual void Failed( ) = 0;
 
     void Run( );
 
