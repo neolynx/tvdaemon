@@ -66,26 +66,29 @@ void ConfigBase::ReadConfig( const char *key, int &i )
   if( settings->exists( key ))
     settings->lookupValue( key, i );
   else
-    i = settings->add( key, Setting::TypeInt );
+  {
+    settings->add( key, Setting::TypeInt );
+    i = 0;
+  }
 }
 
 void ConfigBase::ReadConfig( const char *key, uint8_t &u8 )
 {
-  int i;
+  int i = 0;
   if( settings->exists( key ))
     settings->lookupValue( key, i );
   else
-    i = settings->add( key, Setting::TypeInt );
+    settings->add( key, Setting::TypeInt );
   u8 = i;
 }
 
 void ConfigBase::ReadConfig( const char *key, uint16_t &u16 )
 {
-  int i;
+  int i = 0;
   if( settings->exists( key ))
     settings->lookupValue( key, i );
   else
-    i = settings->add( key, Setting::TypeInt );
+    settings->add( key, Setting::TypeInt );
   u16 = i;
 }
 
@@ -94,28 +97,29 @@ void ConfigBase::ReadConfig( const char *key, uint32_t &u32 )
   if( settings->exists( key ))
     settings->lookupValue( key, u32 );
   else
-    u32 = settings->add( key, Setting::TypeInt );
+  {
+    settings->add( key, Setting::TypeInt );
+    u32 = 0;
+  }
 }
 
 void ConfigBase::ReadConfig( const char *key, time_t &t )
 {
+  uint64_t u64 = 0;
   if( settings->exists( key ))
-  {
-    long long l;
-    settings->lookupValue( key, l );
-    t = l;
-  }
+    settings->lookupValue( key, u64 );
   else
-    t = settings->add( key, Setting::TypeInt64 );
+    settings->add( key, Setting::TypeInt64 );
+  t = u64;
 }
 
 void ConfigBase::ReadConfig( const char *key, bool &b )
 {
-  int i;
+  int i = 0;
   if( settings->exists( key ))
     settings->lookupValue( key, i );
   else
-    i = settings->add( key, Setting::TypeInt );
+    settings->add( key, Setting::TypeInt );
   b = i != 0;
 }
 
