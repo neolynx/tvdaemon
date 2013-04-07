@@ -243,18 +243,6 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
   return false;
 }
 
-bool Service::SortByTypeName( const Service *a, const Service *b )
-{
-  if( a->type != b->type )
-    return a->type < b->type;
-  return SortByName( a, b );
-}
-
-bool Service::SortByName( const Service *a, const Service *b )
-{
-  return a->name_lower < b->name_lower;
-}
-
 bool Service::Tune( Activity &act )
 {
   act.SetService( this );
@@ -281,10 +269,8 @@ bool Service::ReadEPG( const struct dvb_table_eit_event *event )
 bool Service::compare( const JSONObject &other, const int &p ) const
 {
   const Service &b = (const Service &) other;
-  std::string a1;
-  std::string b1;
-  Utils::ToLower( name, a1 );
-  Utils::ToLower( b.name, b1 );
-  return a1 < b1;
+  if( type != b.type )
+    return type < b.type;
+  return name_lower < b.name_lower;
 }
 
