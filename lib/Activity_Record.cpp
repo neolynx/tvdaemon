@@ -219,6 +219,7 @@ bool Activity_Record::Perform( )
     char file[256];
 
     std::string dir = recorder.GetDir( );
+    dir = Utils::Expand( dir.c_str( ));
     Utils::EnsureSlash( dir );
     std::string filename = dir + dumpfile + ".pes";
 
