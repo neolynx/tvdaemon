@@ -105,12 +105,12 @@ void ConfigBase::ReadConfig( const char *key, uint32_t &u32 )
 
 void ConfigBase::ReadConfig( const char *key, time_t &t )
 {
-  uint64_t u64 = 0;
+  long long ll = 0;
   if( settings->exists( key ))
-    settings->lookupValue( key, u64 );
+    settings->lookupValue( key, ll );
   else
     settings->add( key, Setting::TypeInt64 );
-  t = u64;
+  t = ll;
 }
 
 void ConfigBase::ReadConfig( const char *key, bool &b )
