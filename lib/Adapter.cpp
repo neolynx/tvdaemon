@@ -116,7 +116,6 @@ void Adapter::SetFrontend( std::string frontend, int adapter_id, int frontend_id
   if( f )
     f->SetPresence( true );
 
-  this->adapter_id = adapter_id;
 }
 
 void Adapter::SetPresence( bool present )

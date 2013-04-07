@@ -54,6 +54,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     bool IsPresent( ) { return present; }
 
     void SetIDs( int adapter_id, int frontend_id );
+    void GetIDs( int &adapter_id, int &frontend_id ) const;
 
     Port *GetPort( int id ); // FIXME: used ?
     Port *GetCurrentPort( );

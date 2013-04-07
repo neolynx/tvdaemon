@@ -263,6 +263,12 @@ void Frontend::SetIDs( int adapter_id, int frontend_id )
   Log( "  Frontend on /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
 }
 
+void Frontend::GetIDs( int &adapter_id, int &frontend_id ) const
+{
+  adapter_id  = this->adapter_id;
+  frontend_id = this->frontend_id;
+}
+
 bool Frontend::SetPort( int id )
 {
   if( current_port == id )

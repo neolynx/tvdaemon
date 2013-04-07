@@ -238,39 +238,44 @@ int TVDaemon::FindAdapters( )
     int adapter_id;
     if( sscanf( dp.d_name, "adapter%d", &adapter_id ) == 1 )
     {
-      bool found = false;
-      for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+      DIR *dir2;
+      struct dirent dp2;
+      struct dirent *result2 = NULL;
+      char adapter[255];
+      snprintf( adapter, sizeof( adapter ), "/dev/dvb/adapter%d", adapter_id );
+      dir2 = opendir( adapter );
+      if( !dir2 )
       {
-        if( (*it)->GetAdapterID( ) == adapter_id )
-        {
-          found = true;
-          break;
-        }
+        LogError( "cannot open directory %s", adapter );
+        continue;
       }
-      if( !found )
+      for( readdir_r( dir2, &dp2, &result2 ); result2 != NULL; readdir_r( dir2, &dp2, &result2 ))
       {
-        DIR *dir2;
-        struct dirent dp2;
-        struct dirent *result2 = NULL;
-        char adapter[255];
-        snprintf( adapter, sizeof( adapter ), "/dev/dvb/adapter%d", adapter_id );
-        dir2 = opendir( adapter );
-        if( !dir2 )
-        {
-          LogError( "cannot open directory %s", adapter );
+        if( dp2.d_name[0] == '.' )
           continue;
-        }
-        for( readdir_r( dir2, &dp2, &result2 ); result2 != NULL; readdir_r( dir2, &dp2, &result2 ))
+        int frontend_id;
+        if( sscanf( dp2.d_name, "frontend%d", &frontend_id ) == 1 )
         {
-          if( dp2.d_name[0] == '.' )
-            continue;
-          int frontend_id;
-          if( sscanf( dp2.d_name, "frontend%d", &frontend_id ) == 1 )
+          bool found = false;
+          for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
           {
-            NonUdevAdd( adapter_id, frontend_id );
+            for( int i = 0; i < (*it)->GetFrontendCount( ); i++ )
+            {
+              Frontend *f = (*it)->GetFrontend( i );
+              int aid, fid;
+              f->GetIDs( aid, fid );
+              if( aid == adapter_id && fid == frontend_id )
+              {
+                found = true;
+                break;
+              }
+            }
           }
+          if( !found )
+            NonUdevAdd( adapter_id, frontend_id );
         }
       }
+      closedir( dir2 );
     }
   }
   closedir( dir );
