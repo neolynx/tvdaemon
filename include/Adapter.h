@@ -41,7 +41,7 @@ class Adapter : public ConfigObject, public RPCObject
     virtual ~Adapter( );
     void Shutdown( );
 
-    void SetFrontend( std::string frontend, int adapterId, int frontendId );
+    void SetFrontend( std::string frontend, int adapter_id, int frontend_id );
 
     void FindConfig( );
 
@@ -54,6 +54,7 @@ class Adapter : public ConfigObject, public RPCObject
     Frontend *GetFrontend( int id );
     void SetPresence( bool present );
     bool IsPresent( ) const { return present; }
+    int GetAdapterID( ) const { return adapter_id; }
 
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
@@ -62,6 +63,7 @@ class Adapter : public ConfigObject, public RPCObject
   private:
     TVDaemon &tvd;
     std::string uid;
+    int adapter_id;
     bool present;
 
     std::vector<Frontend *> frontends;

@@ -224,7 +224,94 @@ int TVDaemon::FindAdapters( )
       count++;
     }
   }
+
+  DIR *dir;
+  struct dirent dp;
+  struct dirent *result = NULL;
+  dir = opendir( "/dev/dvb" );
+  if( !dir )
+    return count;
+  for( readdir_r( dir, &dp, &result ); result != NULL; readdir_r( dir, &dp, &result ))
+  {
+    if( dp.d_name[0] == '.' )
+      continue;
+    int adapter_id;
+    if( sscanf( dp.d_name, "adapter%d", &adapter_id ) == 1 )
+    {
+      bool found = false;
+      for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+      {
+        if( (*it)->GetAdapterID( ) == adapter_id )
+        {
+          found = true;
+          break;
+        }
+      }
+      if( !found )
+      {
+        DIR *dir2;
+        struct dirent dp2;
+        struct dirent *result2 = NULL;
+        char adapter[255];
+        snprintf( adapter, sizeof( adapter ), "/dev/dvb/adapter%d", adapter_id );
+        dir2 = opendir( adapter );
+        if( !dir2 )
+        {
+          LogError( "cannot open directory %s", adapter );
+          continue;
+        }
+        for( readdir_r( dir2, &dp2, &result2 ); result2 != NULL; readdir_r( dir2, &dp2, &result2 ))
+        {
+          if( dp2.d_name[0] == '.' )
+            continue;
+          int frontend_id;
+          if( sscanf( dp2.d_name, "frontend%d", &frontend_id ) == 1 )
+          {
+            NonUdevAdd( adapter_id, frontend_id );
+          }
+        }
+      }
+    }
+  }
+  closedir( dir );
   return count;
+}
+
+Adapter *TVDaemon::NonUdevAdd( int adapter_id, int frontend_id )
+{
+  std::string name;
+  if( !Frontend::GetInfo( adapter_id, frontend_id, NULL, &name ))
+    return NULL;
+
+  Log( "Found non-udev frontend: /dev/adapter%d/frontend%d \"%s\"", adapter_id, frontend_id, name.c_str( ));
+
+  Adapter *a = NULL;
+  // Search by name
+  // if one adapter with the same name is found, take it
+  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    // FIXME: search only non present adapters, optimization
+  {
+    if( (*it)->GetName( ) == name )
+    {
+      if( a == NULL )
+        a = *it;
+      else // we have multiple adapters with the same name
+      {
+        LogError( "Multiple non-udev adapters not supported" );
+        return NULL;
+      }
+    }
+  }
+
+  if( a == NULL ) // Adapter not found, create new
+  {
+    a = new Adapter( *this, "non-udev", name, adapters.size( ));
+    adapters.push_back( a );
+  }
+
+  a->SetPresence( true );
+  a->SetFrontend( "non-udev", adapter_id, frontend_id );
+  return a;
 }
 
 Adapter *TVDaemon::UdevAdd( struct udev_device *dev, const char *path )
@@ -251,7 +338,8 @@ Adapter *TVDaemon::UdevAdd( struct udev_device *dev, const char *path )
   }
 
   std::string name;
-  Frontend::GetInfo( adapter_id, frontend_id, NULL, &name );
+  if( !Frontend::GetInfo( adapter_id, frontend_id, NULL, &name ))
+    return NULL;
 
   Adapter *c = NULL;
   if( a == NULL ) // maybe adapter moved ?

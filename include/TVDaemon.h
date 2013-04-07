@@ -101,6 +101,9 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     struct udev_monitor *udev_mon;
     int udev_fd;
 
+    // non-udev
+    Adapter *NonUdevAdd( int adapter_id, int frontend_id );
+
     HTTPServer *httpd;
 
     virtual void Run( );
