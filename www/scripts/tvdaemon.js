@@ -166,7 +166,7 @@ function renderTable( data, errmsg )
 
 function Menu( selected )
 {
-  menu = { Setup   : "gui.html",
+  menu = { Setup   : "index.html",
            Transponders: "transponders.html",
            Services: "services.html",
            Channels: "channels.html",
