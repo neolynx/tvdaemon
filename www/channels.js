@@ -10,8 +10,9 @@ function ready( )
     "number"    : "#",
     "name"      : "Channel",
     "epg_state" : [ "EPG", epg_state ],
+    "last_epg" : [ "Last Update", print_time ],
   };
-  t["click"] = function( event ) {
+  t["click"] = function( ) {
     if( confirm( "Start recording " + this["name"] + " ?" ))
       getJSON( 'tvd?c=channel&a=record&channel_id=' + this["id"], record );
   };

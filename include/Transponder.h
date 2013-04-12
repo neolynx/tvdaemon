@@ -113,6 +113,7 @@ class Transponder : public ConfigObject, public RPCObject
     State GetState( ) const { return state; }
     void SetEPGState( EPGState state );
     EPGState GetEPGState( ) const { return epg_state; }
+    time_t GetLastEPGUpdate( ) const { return last_epg_update; }
 
     static const char *GetStateName( State state );
     bool HasChannels( ) const { return has_channels; }

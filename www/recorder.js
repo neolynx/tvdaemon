@@ -4,8 +4,8 @@ function ready( )
 {
   t = ServerSideTable( 'recorder', 'tvd?c=tvdaemon&a=get_recordings', 10 );
   t["columns"] = {
-    ""         : [ "Start", print_time ],
-    "channel"  : "Channel",
+    "start"    : [ "Start", print_time ],
+    "channel"  :   "Channel",
     "name"     : [ "Name", function ( event ) { return "<b>" + event["name"] + "</b>"; } ]
   };
   t.load( );

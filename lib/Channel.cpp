@@ -122,6 +122,7 @@ void Channel::json( json_object *entry ) const
   {
     Transponder::EPGState epg_state = (*it)->GetTransponder( ).GetEPGState( );
     json_object_object_add( entry, "epg_state", json_object_new_int( epg_state ));
+    json_object_time_add  ( entry, "last_epg",  (*it)->GetTransponder( ).GetLastEPGUpdate( ));
     break; //FIXME: merge states
   }
 }
@@ -185,7 +186,7 @@ bool Channel::AddEPGEvent( const struct dvb_table_eit_event *event )
   ScopeMutex _l;
   for( int i = 0; i < events.size( ); i++ )
   {
-    if( events[i]->GetID( ) == event->event_id )
+    if( events[i]->GetID( ) == event->event_id ) // FIXME: check start time
     {
       LogError( "Event %d already registered", event->event_id );
       return false;

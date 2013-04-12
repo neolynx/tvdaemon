@@ -453,15 +453,17 @@ bool Source::GetTransponderForEPGScan( Activity &act )
   time_t now = time( NULL );
   for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
   {
-    if( (*it)->HasChannels( ) &&
-        (*it)->GetEPGState( ) != Transponder::EPGState_Updating &&
-        difftime( now, (*it)->LastEPGUpdate( )) >= TVDaemon::Instance( )->GetEPGUpdateInterval( ) &&
-        difftime( now, (*it)->LastEPGFailed( )) >= 3600.0 )
+    if((*it)->HasChannels( ) &&
+       (*it)->GetEPGState( ) != Transponder::EPGState_Updating &&
+       ((*it)->LastEPGUpdate( ) == 0 or difftime( now, (*it)->LastEPGUpdate( )) >= TVDaemon::Instance( )->GetEPGUpdateInterval( )) and
+        ((*it)->LastEPGFailed( ) == 0 or difftime( now, (*it)->LastEPGFailed( )) >= 3600.0 ))
     {
       (*it)->SetEPGState( Transponder::EPGState_Updating );
       act.SetTransponder( *it );
       return true;
     }
+    //else
+      //Log( "Last: %d %f >= %d, failed: %d %f : %d", (*it)->LastEPGUpdate( ), difftime( now, (*it)->LastEPGUpdate( )), TVDaemon::Instance( )->GetEPGUpdateInterval( ), (*it)->LastEPGFailed( ), difftime( now, (*it)->LastEPGFailed( )), (*it)->GetEPGState( ));
   }
   return false;
 }

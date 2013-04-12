@@ -149,7 +149,7 @@ function renderTable( data, errmsg )
       if( render instanceof Function )
       {
         cell.attr( "class", "sst_" + key );
-        cell.html( render( entry ));
+        cell.html( render( entry, key ));
       }
       else
         cell.html( entry[key] );
@@ -191,25 +191,25 @@ function Menu( selected )
 
 /* misc */
 
-function print_time( time )
+function print_time( time, key )
 {
-  start = "";
-  start_hour = time["start_hour"];
-  start_min  = time["start_min"];
-  start_day  = time["start_day"];
-  start_month  = time["start_month"];
-  if( start_hour < 10 ) start_hour = "0" + start_hour;
-  if( start_min < 10 ) start_min = "0" + start_min;
-  if( start_day < 10 ) start_day = "0" + start_day;
-  if( start_month < 10 ) start_month = "0" + start_month;
+  t = "";
+  t_hour = time[key + "_hour"];
+  t_min  = time[key + "_min"];
+  t_day  = time[key + "_day"];
+  t_month  = time[key + "_month"];
+  if( t_hour  < 10 ) t_hour = "0"  + t_hour;
+  if( t_min   < 10 ) t_min = "0"   + t_min;
+  if( t_day   < 10 ) t_day = "0"   + t_day;
+  if( t_month < 10 ) t_month = "0" + t_month;
 
-  if( time["start_istoday"] == 1 )
-    start = start_hour + ":" + start_min;
-  else if( time["start_istomorrow"] == 1 )
-    start = "tomorrow " + start_hour + ":" + start_min;
+  if( time[key + "_istoday"] == 1 )
+    t = t_hour + ":" + t_min;
+  else if( time[key + "_istomorrow"] == 1 )
+    t = "tomorrow " + t_hour + ":" + t_min;
   else
-    start = start_day + "." + start_month + " " + start_hour + ":" + start_min;
-  return start;
+    t = t_day + "." + t_month + " " + t_hour + ":" + t_min;
+  return t;
 }
 
 function epg_state( row )

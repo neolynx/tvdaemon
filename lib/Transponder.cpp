@@ -57,6 +57,7 @@ Transponder::Transponder( Source &source, const fe_delivery_system_t delsys, int
 Transponder::Transponder( Source &source, std::string configfile ) :
   ConfigObject( source, configfile ),
   source(source),
+  last_epg_failed(0),
   has_channels(false),
   has_nit(false),
   has_sdt(false),
