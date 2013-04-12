@@ -114,8 +114,6 @@ TVDaemon::~TVDaemon( )
 
 bool TVDaemon::Start( )
 {
-  recorder = new Recorder( *this );
-
   if( !LoadConfig( ))
   {
     LogError( "Error loading config directory '%s'", GetConfigDir( ).c_str( ));
@@ -128,6 +126,9 @@ bool TVDaemon::Start( )
   udev_monitor_filter_add_match_subsystem_devtype( udev_mon, "dvb", NULL );
 
   FindAdapters( );
+
+  recorder = new Recorder( *this );
+  recorder->LoadConfig( );
 
   MonitorAdapters( );
 
@@ -196,8 +197,6 @@ bool TVDaemon::LoadConfig( )
     return false;
   if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
     return false;
-
-  recorder->LoadConfig( );
 
   return true;
 }
