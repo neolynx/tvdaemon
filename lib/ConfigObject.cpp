@@ -105,12 +105,19 @@ void ConfigBase::ReadConfig( const char *key, uint32_t &u32 )
 
 void ConfigBase::ReadConfig( const char *key, time_t &t )
 {
-  long long ll = 0;
+  std::string tstr;
   if( settings->exists( key ))
-    settings->lookupValue( key, ll );
+    settings->lookupValue( key, tstr );
   else
-    settings->add( key, Setting::TypeInt64 );
-  t = ll;
+  {
+    settings->add( key, Setting::TypeString );
+    t = 0;
+    return;
+  }
+
+  struct tm tm;
+  strptime( tstr.c_str( ), "%Y-%m-%d %H:%M:%S", &tm );
+  t = mktime( &tm );
 }
 
 void ConfigBase::ReadConfig( const char *key, bool &b )
@@ -179,10 +186,21 @@ void ConfigBase::WriteConfig( const char *key, uint32_t u32 )
 
 void ConfigBase::WriteConfig( const char *key, time_t t )
 {
+  struct tm tm;
+  char tstr[255];
+  localtime_r( &t, &tm );
+  strftime( tstr, sizeof( tstr ), "%Y-%m-%d %H:%M:%S", &tm );
   if( settings->exists( key ))
-    (*settings)[key] = (long int) t;
+  {
+    if( (*settings)[key].getType( ) != Setting::TypeString )
+    {
+      DeleteConfig( key );
+      settings->add( key, Setting::TypeString ) = tstr;
+    }
+    (*settings)[key] = tstr;
+  }
   else
-    settings->add( key, Setting::TypeInt ) = (long int) t;
+    settings->add( key, Setting::TypeString ) = tstr;
 }
 
 void ConfigBase::WriteConfig( const char *key, bool b )

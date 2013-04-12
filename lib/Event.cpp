@@ -102,7 +102,7 @@ bool operator<( const Event &a, const Event &b )
 bool Event::SaveConfig( ConfigBase &config )
 {
   config.WriteConfig( "EventID",     id );
-  config.WriteConfig( "Start", (int) start );
+  config.WriteConfig( "Start",       start );
   config.WriteConfig( "Duration",    duration );
   config.WriteConfig( "Name",        name );
   config.WriteConfig( "Description", description );
@@ -112,7 +112,7 @@ bool Event::SaveConfig( ConfigBase &config )
 bool Event::LoadConfig( ConfigBase &config )
 {
   config.ReadConfig( "EventID",     id );
-  config.ReadConfig( "Start", (int &) start );
+  config.ReadConfig( "Start",       start );
   config.ReadConfig( "Duration",    duration );
   config.ReadConfig( "Name",        name );
   config.ReadConfig( "Description", description );
