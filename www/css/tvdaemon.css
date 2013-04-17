@@ -172,6 +172,7 @@ div.sst table
   border-spacing: 0px;
   border-collapse:collapse;
   width: 100%;
+  cursor: default;
 }
 
 div.sst th
@@ -186,13 +187,13 @@ div.sst td
   vertical-align: top;
 }
 
-div.sst tr:hover td
-{
-  background-color: #d0d0df;
-}
-
 div.sst table tr:nth-child(odd) td
 {
   background-color: #dfdfdf;
+}
+
+div.sst table tr:hover td
+{
+  background-color: #d0d0df;
 }
 
