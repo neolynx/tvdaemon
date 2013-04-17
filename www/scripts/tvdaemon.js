@@ -212,13 +212,30 @@ function print_time( time, key )
   return t;
 }
 
-function epg_state( row )
+function epg_state( row, key )
 {
-  switch( row["epg_state"] )
+  switch( row[key] )
   {
     case 0: return "Missing";
     case 1: return "ok";
     case 2: return "Updating";
     case 3: return "N/A";
   }
+  return "?";
 }
+
+function recording_state( row, key )
+{
+  switch( row[key] )
+  {
+    case 0: return "New";
+    case 1: return "Scheduled";
+    case 2: return "Starting";
+    case 3: return "Running";
+    case 4: return "Done";
+    case 5: return "Aborted";
+    case 6: return "Failed";
+  }
+  return "?";
+}
+

@@ -6,7 +6,8 @@ function ready( )
   t["columns"] = {
     "start"    : [ "Start", print_time ],
     "channel"  :   "Channel",
-    "name"     : [ "Name", function ( event ) { return "<b>" + event["name"] + "</b>"; } ]
+    "name"     : [ "Name", function ( row ) { return "<b>" + row["name"] + "</b>"; } ],
+    "state"    : [ "State", recording_state ],
   };
   t.load( );
   Menu( "Recorder" );
