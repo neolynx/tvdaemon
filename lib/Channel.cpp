@@ -153,6 +153,13 @@ bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const st
     return true;
   }
 
+  if( action == "update_epg" )
+  {
+    UpdateEPG( );
+    request.Reply( HTTP_OK );
+    return true;
+  }
+
   request.NotFound( "RPC: unknown action: '%s'", action.c_str( ));
   return false;
 }
