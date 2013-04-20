@@ -97,7 +97,17 @@ bool Activity_UpdateEPG::Perform( )
       dvb_table_eit_free( eit );
     }
     else
-      transponder->SetEPGState( Transponder::EPGState_NotAvailable );
+    {
+      frontend->Log( "Reading EIT now/next" );
+      dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, (uint8_t **) &eit, time );
+      if( eit )
+      {
+        transponder->ReadEPG( eit->event );
+        dvb_table_eit_free( eit );
+      }
+      else
+        transponder->SetEPGState( Transponder::EPGState_NotAvailable );
+    }
 
     dvb_dmx_close( fd_demux );
     return eit != NULL;
