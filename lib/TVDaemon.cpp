@@ -740,9 +740,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     std::vector<const JSONObject *> result;
     for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     {
-      std::string t;
-      Utils::ToLower( (*it)->GetName( ), t );
-      if( !search.empty( ) && t.find( search.c_str( ), 0, search.length( )) != 0 )
+      if( !search.empty( ) && (*it)->GetName( ).find( search.c_str( ), 0, search.length( )) != 0 )
         continue;
       result.push_back( *it );
     }
@@ -794,7 +792,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
         const std::map<uint16_t, Service *> &services = (*it2)->GetServices( );
         for( std::map<uint16_t, Service *>::const_iterator it3 = services.begin( ); it3 != services.end( ); it3++ )
         {
-          if( !search.empty( ) && it3->second->GetName( true ).find( search.c_str( ), 0, search.length( )) != 0 )
+          if( !search.empty( ) && it3->second->GetName( ).find( search.c_str( ), 0, search.length( )) != 0 )
             continue;
           result.push_back( it3->second );
         }
@@ -824,12 +822,9 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
         //Log( "start: %d", (*it2)->GetStart( ));
         if( (*it2)->GetStart( ) + (*it2)->GetDuration( ) < time( NULL )) // FIXME: stop
           continue;
-        std::string name;
-        Utils::ToLower( (*it2)->GetName( ), name );
-        std::string description;
-        Utils::ToLower( (*it2)->GetDescription( ), description );
-        std::string channel;
-        Utils::ToLower( (*it2)->GetChannel( ).GetName( ), channel );
+        const Name &name = (*it2)->GetName( );
+        const Name &description = (*it2)->GetDescription( );
+        const Name &channel = (*it2)->GetChannel( ).GetName( );
         if( !search.empty( ) and name.find( search.c_str( ), 0, search.length( )) == std::string::npos
             and description.find( search.c_str( ), 0, search.length( )) == std::string::npos
             and channel.find( search.c_str( ), 0, search.length( )) == std::string::npos )

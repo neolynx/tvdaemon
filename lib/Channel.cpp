@@ -206,10 +206,6 @@ bool Channel::AddEPGEvent( const struct dvb_table_eit_event *event )
 bool Channel::compare( const JSONObject &other, const int &p ) const
 {
   const Channel &b = (const Channel &) other;
-  std::string a1;
-  std::string b1;
-  Utils::ToLower( name, a1 );
-  Utils::ToLower( b.name, b1 );
-  return a1 < b1;
+  return name < b.name;
 }
 

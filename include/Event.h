@@ -23,6 +23,7 @@
 #define _Event_
 
 #include "RPCObject.h"
+#include "Utils.h" // Name
 
 #include <time.h>
 #include <stdint.h>
@@ -42,8 +43,8 @@ class Event : public RPCObject
     bool LoadConfig( ConfigBase &config );
 
     int GetID( )                  { return id; }
-    std::string GetName( )        { return name; }
-    std::string GetDescription( ) { return description; }
+    const Name &GetName( ) const  { return name; }
+    const Name &GetDescription( ) const { return description; }
     Channel &GetChannel( )        { return channel; }
     time_t GetStart( )            { return start; }
     time_t GetEnd( )              { return start + duration; }
@@ -59,8 +60,8 @@ class Event : public RPCObject
     int id;
     time_t start;
     uint32_t duration;
-    std::string name;
-    std::string description;
+    Name name;
+    Name description;
     std::string language;
 
   friend bool operator<( const Event &a, const Event &b );

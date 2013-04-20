@@ -42,4 +42,27 @@ namespace Utils
   void ToLower( const std::string &string, std::string &lower );
 };
 
+class Name : public std::string
+{
+  public:
+    Name( );
+    Name( const char *str );
+    Name( const std::string &str );
+    Name( std::string &str );
+    Name( Name &other );
+    virtual ~Name( );
+
+    virtual size_t find( const char *s, size_t pos, size_t n ) const;
+    virtual Name &operator=( const std::string &other );
+    virtual Name &operator=( const Name &other );
+    virtual Name &operator=( const char *str );
+
+    const std::string &GetLower( ) const { return lower; }
+
+  protected:
+    std::string lower;
+
+  friend bool operator<( const Name &a, const Name &b );
+};
+
 #endif

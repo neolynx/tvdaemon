@@ -47,6 +47,7 @@ class ConfigBase
     void     ReadConfig  ( const char *key, time_t &t );
     void     ReadConfig  ( const char *key, float &f );
     void     ReadConfig  ( const char *key, std::string &s );
+    void     ReadConfig  ( const char *key, Name &n );
     void     WriteConfig ( const char *key, int i );
     void     WriteConfig ( const char *key, bool b );
     void     WriteConfig ( const char *key, uint8_t u8 );

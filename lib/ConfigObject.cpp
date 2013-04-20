@@ -144,11 +144,23 @@ void ConfigBase::ReadConfig( const char *key, std::string &s )
     settings->lookupValue( key, s );
   else
   {
-    const char *tmp = settings->add( key, Setting::TypeString );
-    if( tmp )
-      s = tmp;
-    else
-      s = "";
+    settings->add( key, Setting::TypeString );
+    s = "";
+  }
+}
+
+void ConfigBase::ReadConfig( const char *key, Name &n )
+{
+  if( settings->exists( key ))
+  {
+    std::string t;
+    settings->lookupValue( key, t );
+    n = t;
+  }
+  else
+  {
+    settings->add( key, Setting::TypeString );
+    n = "";
   }
 }
 

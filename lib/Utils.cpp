@@ -151,3 +151,72 @@ void Utils::ToLower( const std::string &string, std::string &lower )
   std::transform( lower.begin( ), lower.end( ), lower.begin( ), std::bind2nd( std::ptr_fun( &std::tolower<char> ), std::locale( "" )));
 }
 
+
+Name::Name( ) : std::string( )
+{
+}
+
+Name::Name( const char *str ) : std::string( str )
+{
+  lower = str;
+  Utils::ToLower( lower, lower );
+}
+
+Name::Name( const std::string &str ) : std::string( str )
+{
+  lower = str;
+  Utils::ToLower( lower, lower );
+}
+
+Name::Name( std::string &str ) : std::string( str )
+{
+  lower = str;
+  Utils::ToLower( lower, lower );
+}
+
+Name::Name( Name &other ) : std::string( other )
+{
+  lower = *this;
+  Utils::ToLower( lower, lower );
+}
+
+Name::~Name( )
+{
+}
+
+size_t Name::find( const char *s, size_t pos, size_t n ) const
+{
+  return lower.find( s, pos, n );
+}
+
+bool operator<( const Name &a, const Name &b )
+{
+  return a.lower < b.lower;
+}
+
+Name &Name::operator=( const Name &other )
+{
+  if( this == &other )
+    return *this;
+  *((std::string *) this) = other;
+  lower = other;
+  Utils::ToLower( lower, lower );
+  return *this;
+}
+
+Name &Name::operator=( const std::string &other )
+{
+  *((std::string *) this) = other;
+  lower = other;
+  Utils::ToLower( lower, lower );
+  return *this;
+}
+
+Name &Name::operator=( const char *str )
+{
+  *((std::string *) this) = str;
+  lower = str;
+  Utils::ToLower( lower, lower );
+  return *this;
+}
+

@@ -25,6 +25,7 @@
 #include "ConfigObject.h"
 #include "RPCObject.h"
 #include "Event.h"
+#include "Utils.h" // Name
 
 #include <string>
 #include <vector>
@@ -42,7 +43,7 @@ class Channel : public ConfigObject, public RPCObject
     Channel( TVDaemon &tvd, std::string configfile );
     virtual ~Channel( );
 
-    std::string GetName( ) { return name; }
+    const Name &GetName( ) const { return name; }
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
@@ -77,7 +78,7 @@ class Channel : public ConfigObject, public RPCObject
 
   private:
     TVDaemon &tvd;
-    std::string name;
+    Name name;
     int number;
     State state;
 

@@ -29,6 +29,7 @@
 #include <stdint.h>
 
 #include "Stream.h"
+#include "Utils.h" // Name
 
 class Transponder;
 class Channel;
@@ -54,8 +55,8 @@ class Service : public RPCObject
     virtual int GetKey( ) const { return service_id; }
     uint16_t GetPID( ) { return pid; }
     void     SetPID( uint16_t pid ) { this->pid = pid; }
-    void        SetType( Type type ) { this->type = type; }
-    std::string GetName( bool lower = false ) { if( lower ) return name_lower; return name; }
+    void     SetType( Type type ) { this->type = type; }
+    const Name &GetName( ) { return name; }
     void        SetName( std::string &name );
     std::string GetProvider( ) { return provider; }
     void        SetProvider( std::string provider ) { this->provider = provider; }
@@ -85,8 +86,7 @@ class Service : public RPCObject
     uint16_t service_id;
     uint16_t pid;
     Type type;
-    std::string name;
-    std::string name_lower;
+    Name name;
     std::string provider;
     bool scrambled;
     Channel *channel;

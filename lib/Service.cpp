@@ -61,7 +61,6 @@ Service::~Service( )
 void Service::SetName( std::string &s )
 {
   name = s;
-  Utils::ToLower( name, name_lower );
 }
 
 bool Service::SaveConfig( ConfigBase &config )
@@ -271,6 +270,6 @@ bool Service::compare( const JSONObject &other, const int &p ) const
   const Service &b = (const Service &) other;
   if( type != b.type )
     return type < b.type;
-  return name_lower < b.name_lower;
+  return name < b.name;
 }
 
