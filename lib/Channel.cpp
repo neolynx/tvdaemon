@@ -137,9 +137,16 @@ bool Channel::RPC( const HTTPRequest &request,  const std::string &cat, const st
     {
       if( events[i]->GetID( ) == event_id )
       {
-        tvd.Schedule( *events[i] );
-        request.Reply( HTTP_OK );
-        return true;
+        if( tvd.Schedule( *events[i] ))
+        {
+          request.Reply( HTTP_OK );
+          return true;
+        }
+        else
+        {
+          request.NotFound( "Event already scheduled" );
+          return false;
+        }
       }
     }
     request.NotFound( "Event %d not found", event_id );
