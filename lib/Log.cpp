@@ -93,7 +93,7 @@ void TVD_Log( int level, const char *fmt, ... )
   va_start( ap, fmt );
   vsnprintf( msg, sizeof( msg ), fmt, ap );
   va_end( ap );
-  Logger::Instance( )->Log( LOG_INFO, msg );
+  Logger::Instance( )->Log( level, msg );
 }
 
 void Log( const char *fmt, ... )
