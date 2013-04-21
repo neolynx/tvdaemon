@@ -45,6 +45,13 @@ static const struct mime_type mime_types[] = {
 
 HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root)
 {
+  methods["GET"] = &HTTPServer::GET;
+  methods["POST"] = &HTTPServer::POST;
+  methods["OPTIONS"] = &HTTPServer::OPTIONS;
+  methods["DESCRIBE"] = &HTTPServer::DESCRIBE;
+  methods["SETUP"] = &HTTPServer::SETUP;
+  methods["PLAY"] = &HTTPServer::PLAY;
+  methods["TEARDOWN"] = &HTTPServer::TEARDOWN;
 }
 
 HTTPServer::~HTTPServer( )
@@ -91,35 +98,80 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
   const char *buffer = msg.getLine( ).c_str( );
   int length = msg.getLine( ).length( );
   //LogWarn( "Got: '%s' from client %d", msg.getLine( ).c_str( ), client );
-
+  HTTPRequest *request = NULL;
   if( _requests.find( client ) == _requests.end( ))
-    _requests[client] = new HTTPRequest( *this, client );
+  {
+    request = new HTTPRequest( *this, client ); // freed on disconnect
+    _requests[client] = request;
+  }
+  else
+    request = _requests[client];
 
   if( msg.getLine( ).empty( ))
   {
-    if( _requests[client]->content_length == -1 )
-      for( std::list<std::string>::iterator it = _requests[client]->header.begin( ); it != _requests[client]->header.end( ); it++ )
-      {
-        int content_length = -1;
-        if( sscanf( it->c_str( ), "Content-Length: %d", &content_length ) == 1 && content_length > 0 )
-        {
-          _requests[client]->content_length = content_length;
-          return;
-        }
-      }
-    HandleRequest( *_requests[client] );
-    DisconnectClient( client );
+    if( request->content_length == -1 and request->HasHeader( "Content-Length" ))
+    {
+      request->GetHeader( "Content-Length", request->content_length );
+      DisconnectClient( client );
+      return;
+    }
+    if( request->http_method.empty( ))
+    {
+      LogError( "HTTPServer: no http method '%s'", msg.getLine( ).c_str( ));
+      DisconnectClient( client );
+      return;
+    }
+
+    if( !HandleRequest( *request ) or !request->KeepAlive( ))
+      DisconnectClient( client );
+    else
+      request->Reset( );
   }
   else
   {
-    if( _requests[client]->content_length > 0 && _requests[client]->content.length( ) < _requests[client]->content_length )
+    if( request->content_length > 0 && request->content.length( ) < request->content_length )
     {
-      _requests[client]->content += msg.getLine( );
-      HandleRequest( *_requests[client] );
-      DisconnectClient( client );
+      request->content += msg.getLine( );
+      if( request->http_method.empty( ))
+      {
+        LogError( "HTTPServer: no http method '%s'", msg.getLine( ).c_str( ));
+        DisconnectClient( client );
+        return;
+      }
+
+      if( !HandleRequest( *request ) or !request->KeepAlive( ))
+        DisconnectClient( client );
+      else
+        request->Reset( );
     }
     else
-      _requests[client]->header.push_back( msg.getLine( ));
+    {
+      if( request->http_method.empty( )) // handle HTTP request (GET, ...)
+      {
+        std::vector<std::string> tokens;
+        Tokenize( msg.getLine( ), " ", tokens, 3 );
+        if( tokens.size( ) < 3 )
+        {
+          LogError( "HTTPServer: invalid http request '%s'", msg.getLine( ).c_str( ));
+          DisconnectClient( client );
+          return;
+        }
+        request->http_method = tokens[0];
+        request->url = tokens[1];
+        request->http_version = tokens[2];
+        //Log( "HTTPServer: request: '%s', '%s' (%s)", request->http_method.c_str( ), request->url.c_str( ), request->http_version.c_str( ));
+        return;
+      }
+      std::vector<std::string> tokens; // handle HTTP headers
+      Tokenize( msg.getLine( ), ": ", tokens, 2 );
+      if( tokens.size( ) < 2 )
+      {
+        LogError( "HTTPServer: unknown http message '%s'", msg.getLine( ).c_str( ));
+        DisconnectClient( client );
+        return;
+      }
+      request->headers[tokens[0]] = tokens[1];
+    }
   }
 }
 
@@ -129,49 +181,33 @@ void HTTPServer::AddDynamicHandler( std::string url, HTTPDynamicHandler *handler
   dynamic_handlers[url] = handler;
 }
 
+void HTTPServer::NotImplemented( HTTPRequest &request, const char *method )
+{
+  Response response;
+  response.AddStatus( HTTP_NOT_IMPLEMENTED );
+  response.AddTimeStamp( );
+  response.AddMime( "html" );
+  response.AddContent( "<html><body><h1>501 Method not implemented</h1></body></html>" );
+  LogError( "HTTPServer: method not implemented: %s", method );
+  request.Reply( response );
+}
+
 bool HTTPServer::HandleRequest( HTTPRequest &request )
 {
-  if( request.header.empty( ))
-    return false;
+  for( std::map<const char *, Method>::iterator it = methods.begin( ); it != methods.end( ); it++ )
+    if( strncmp( request.http_method.c_str( ), it->first, strlen( it->first )) == 0 ) // FIXME: remove strlen for speed
+    {
+      return (this->*it->second)( request );
+    }
 
-  const char *method = request.header.front( ).c_str( );
-
-  if( strncmp( method, "GET ", 4 ) == 0 )
-  {
-    HandleMethodGET( request );
-  }
-  else if( strncmp( method, "POST ", 5 ) == 0 )
-  {
-    HandleMethodPOST( request );
-  }
-  else
-  {
-    Response *err_response = new Response( );
-    err_response->AddStatus( HTTP_NOT_IMPLEMENTED );
-    err_response->AddTimeStamp( );
-    err_response->AddMime( "html" );
-    err_response->AddContents( "<html><body><h1>501 Method not implemented</h1></body></html>" );
-    LogError( "HTTPServer: method not implemented: %s", method );
-    request.Reply( *err_response );
-  }
+  NotImplemented( request, request.http_method.c_str( )); // FIXME: pass method as std::string
   return false;
 }
 
-bool HTTPServer::HandleMethodGET( HTTPRequest &request )
+bool HTTPServer::GET( HTTPRequest &request )
 {
-  std::vector<std::string> tokens;
-  Tokenize( request.header.front( ), " ", tokens );
-
-  if( tokens.size( ) < 3 )
-  {
-    LogError( "HTTPServer: unknown http message '%s'", request.header.front( ).c_str( ));
-    // FIXME: http error
-    return false;
-  }
-
-  std::string url = tokens[1];
   std::vector<std::string> params;
-  Tokenize( url, "?&", params );
+  Tokenize( request.url, "?&", params );
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
@@ -193,7 +229,7 @@ bool HTTPServer::HandleMethodGET( HTTPRequest &request )
     {
       if( !it->second->HandleDynamicHTTP( request ))
       {
-        LogError( "RPC Error %s", url.c_str( ));
+        LogError( "RPC Error %s", request.url.c_str( ));
         return false;
       }
       //Log( "RPC %s", url.c_str( ));
@@ -202,20 +238,20 @@ bool HTTPServer::HandleMethodGET( HTTPRequest &request )
 
   // Handle http files
 
-  url = _root;
-  if( tokens[1][0] != '/' )
+  std::string url = _root;
+  if( request.url[0] != '/' )
     url += "/";
-  url += tokens[1];
+  url += request.url;
   url = Utils::Expand( url.c_str( ));
 
   if( url.empty( ))
   {
-    LogError( "HTTPServer: file not found: %s", tokens[1].c_str( ));
+    LogError( "HTTPServer: file not found: %s", request.url.c_str( ));
     Response err_response;
     err_response.AddStatus( HTTP_NOT_FOUND );
     err_response.AddTimeStamp( );
     err_response.AddMime( "html" );
-    err_response.AddContents( "<html><body><h1>404 Not found</h1></body></html>" );
+    err_response.AddContent( "<html><body><h1>404 Not found</h1></body></html>" );
     //LogWarn( "Sending: %s", err_response->GetBuffer( ).c_str( ));
     request.Reply( err_response );
     return false;
@@ -244,7 +280,7 @@ bool HTTPServer::HandleMethodGET( HTTPRequest &request )
     err_response.AddStatus( HTTP_NOT_FOUND );
     err_response.AddTimeStamp( );
     err_response.AddMime( "html" );
-    err_response.AddContents( "<html><body><h1>404 Not found</h1></body></html>" );
+    err_response.AddContent( "<html><body><h1>404 Not found</h1></body></html>" );
     //LogWarn( "Sending: %s", err_response->GetBuffer( ).c_str( ));
     request.Reply( err_response );
     return false;
@@ -267,27 +303,17 @@ bool HTTPServer::HandleMethodGET( HTTPRequest &request )
   response.AddStatus( HTTP_OK );
   response.AddTimeStamp( );
   response.AddMime( extension.c_str( ));
-  response.AddContents( file_contents );
+  response.AddContent( file_contents );
   //LogWarn( "Sending %s", response->GetBuffer( ).c_str( ));
 
   request.Reply( response );
   return true;
 }
 
-bool HTTPServer::HandleMethodPOST( HTTPRequest &request )
+bool HTTPServer::POST( HTTPRequest &request )
 {
-  std::vector<std::string> tokens;
-  Tokenize( request.header.front( ), " ", tokens );
-
-  if( tokens.size( ) < 3 )
-  {
-    // FIXME: http error
-    return false;
-  }
-
-  std::string url = tokens[1];
   std::vector<std::string> params;
-  Tokenize( url, "?&", params );
+  Tokenize( request.url, "?&", params );
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
@@ -332,7 +358,7 @@ bool HTTPServer::HandleMethodPOST( HTTPRequest &request )
     {
       if( !it->second->HandleDynamicHTTP( request ))
       {
-        LogError( "RPC Error %s", url.c_str( ));
+        LogError( "RPC Error %s", request.url.c_str( ));
         return false;
       }
       return true;
@@ -342,12 +368,152 @@ bool HTTPServer::HandleMethodPOST( HTTPRequest &request )
   return false;
 }
 
-HTTPServer::Response::Response( )
+bool HTTPServer::OPTIONS( HTTPRequest &request )
+{
+  int seq;
+  if( !request.GetHeader( "CSeq", seq ))
+  {
+    LogError( "HTTPServer::OPTIONS no Cseq found" );
+    return false;
+  }
+
+  Response response;
+  response.AddStatus( RTSP_OK );
+  response.AddHeader( "Supported", "play.basic, con.persistent" );
+  response.AddHeader( "Cseq", "%d", seq );
+  response.AddHeader( "Server", "TVDaemon" );
+  response.AddHeader( "Public", "DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, OPTIONS, ANNOUNCE, RECORD, GET_PARAMETER" );
+  response.AddHeader( "Cache-Control", "no-cache" );
+  request.Reply( response );
+  request.KeepAlive( true );
+  return true;
+}
+
+bool HTTPServer::DESCRIBE( HTTPRequest &request )
+{
+  int seq;
+  if( !request.GetHeader( "CSeq", seq ))
+  {
+    LogError( "HTTPServer::OPTIONS no Cseq found" );
+    return false;
+  }
+
+  Response response;
+  response.AddStatus( RTSP_OK );
+  response.AddTimeStamp( );
+  response.AddHeader( "Content-Base", "rtsp://exciton:7777/3+" ); // FIXME: from header
+  response.AddHeader( "Cseq", "%d", seq );
+  response.AddHeader( "Server", "TVDaemon" );
+  response.AddHeader( "Cache-Control", "no-cache" );
+  //response.AddContent( "v=0\r\n\
+//o=- 1487767593 1487767593 IN IP4 127.0.0.1\r\n\
+//s=B.mov\r\n\
+//c=IN IP4 0.0.0.0\r\n\
+//t=0 0\r\n\
+//a=sdplang:en\r\n\
+//a=range:npt=0- 596.48\r\n\
+//a=control:*\r\n\
+//m=audio 0 RTP/AVP 96\r\n\
+//a=rtpmap:96 mpeg4-generic/12000/2\r\n\
+//a=fmtp:96 profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3;config=1490\r\n\
+//a=control:trackID=1\r\n\
+//m=video 0 RTP/AVP 97\r\n\
+//a=rtpmap:97 H264/90000\r\n\
+//a=fmtp:97 packetization-mode=1;profile-level-id=42C01E;sprop-parameter-sets=Z0LAHtkDxWhAAAADAEAAAAwDxYuS,aMuMsg==\r\n\
+//a=cliprect:0,0,160,240\r\n\
+//a=framesize:97 240-160\r\n\
+//a=framerate:24.0\r\n\
+//a=control:trackID=2\r\n\
+//");
+
+  response.AddContent( "v=0\r\n\
+o=- 1487767593 1487767593 IN IP4 127.0.0.1\r\n\
+s=B.mov\r\n\
+c=IN IP4 0.0.0.0\r\n\
+t=0 0\r\n\
+a=sdplang:en\r\n\
+a=range:npt=0- 596.48\r\n\
+a=control:*\r\n\
+m=video 0 RTP/AVP 97\r\n\
+a=rtpmap:97 H264/90000\r\n\
+a=fmtp:97 packetization-mode=1;profile-level-id=42C01E;sprop-parameter-sets=Z0LAHtkDxWhAAAADAEAAAAwDxYuS,aMuMsg==\r\n\
+a=cliprect:0,0,160,240\r\n\
+a=framesize:97 240-160\r\n\
+a=framerate:24.0\r\n\
+a=control:trackID=1\r\n\
+");
+  request.KeepAlive( true );
+  request.Reply( response );
+  return true;
+}
+
+bool HTTPServer::SETUP( HTTPRequest &request )
+{
+  int seq;
+  if( !request.GetHeader( "CSeq", seq ))
+  {
+    LogError( "HTTPServer::SETUP no Cseq found" );
+    return false;
+  }
+
+  std::string transport;
+  if( !request.GetHeader( "Transport", transport ))
+  {
+    LogError( "HTTPServer::SETUP no Transport found" );
+    return false;
+  }
+
+  Response response;
+  response.AddStatus( RTSP_OK );
+  response.AddTimeStamp( );
+  response.AddHeader( "Cseq", "%d", seq ); // FIXME: AddCSeq
+  response.AddHeader( "Server", "TVDaemon" );
+  transport += ";source=exciton;server_port=7066-7067;ssrc=02E34D2C";
+  response.AddHeader( "Transport", transport.c_str( ));
+  char session[256];
+  snprintf( session, sizeof( session ), "%d;timeout=60", request.client );
+  response.AddHeader( "Session", session );
+  // FIXME: Expires
+  response.AddHeader( "Cache-Control", "no-cache" );
+
+  request.KeepAlive( true );
+  request.Reply( response );
+  return true;
+}
+
+bool HTTPServer::PLAY( HTTPRequest &request )
+{
+  Response response;
+  response.AddStatus( RTSP_OK );
+  request.KeepAlive( true );
+  request.Reply( response );
+  return true;
+}
+
+bool HTTPServer::TEARDOWN( HTTPRequest &request )
+{
+  Response response;
+  response.AddStatus( RTSP_OK );
+  request.KeepAlive( false );
+  request.Reply( response );
+  return true;
+}
+
+HTTPServer::Response::Response( ) : header_closed(false)
 {
 }
 
 HTTPServer::Response::~Response( )
 {
+}
+
+void HTTPServer::Response::Finalize( )
+{
+  if( !header_closed )
+  {
+    _buffer.append( "\r\n" );
+    header_closed = true;
+  }
 }
 
 void HTTPServer::Response::AddStatus( HTTPStatus status )
@@ -368,6 +534,24 @@ void HTTPServer::Response::AddStatus( HTTPStatus status )
   _buffer.append( tmp );
 }
 
+void HTTPServer::Response::AddStatus( RTSPStatus status )
+{
+  char tmp[128];
+  uint8_t pos = 0;
+
+  for( uint8_t i = 0; i < ( sizeof( response_status ) / sizeof( http_status )); i++ ) // FIXME: use proper lookup
+  {
+    if( response_status[i].code == (HTTPStatus) status )
+    {
+      pos = i;
+      break;
+    }
+  }
+
+  snprintf( tmp, sizeof( tmp ), "%s %d %s\r\n", RTSP_VERSION, status, response_status[pos].description );
+  _buffer.append( tmp );
+}
+
 void HTTPServer::Response::AddTimeStamp( )
 {
   time_t now;
@@ -379,10 +563,15 @@ void HTTPServer::Response::AddTimeStamp( )
   _buffer.append( date_buffer );
 }
 
-void HTTPServer::Response::AddAttribute( const char *attrib_name, const char *attrib_value )
+void HTTPServer::Response::AddHeader( const char *header, const char *fmt, ... )
 {
   char tmp[256];
-  snprintf( tmp, sizeof( tmp ), "%s: %s\r\n", attrib_name, attrib_value );
+  char value[256];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( value, sizeof( value ), fmt, ap );
+  snprintf( tmp, sizeof( tmp ), "%s: %s\r\n", header, value );
+  va_end( ap );
   _buffer.append( tmp );
 }
 
@@ -391,14 +580,15 @@ void HTTPServer::Response::FreeResponseBuffer( )
   _buffer.clear( );
 }
 
-void HTTPServer::Response::AddContents( std::string buffer )
+void HTTPServer::Response::AddContent( std::string buffer )
 {
   size_t length = buffer.size( );
   char length_str[10];
   snprintf( length_str, sizeof( length_str ), "%d", (int) length );
 
-  AddAttribute( "Content-Length", length_str );
-  _buffer.append( "\r\n" );
+  AddHeader( "Content-Length", length_str );
+
+  Finalize( );
   _buffer += buffer;
 }
 
@@ -476,6 +666,16 @@ int HTTPServer::Tokenize( const std::string &string, const char delims[], std::v
   }
 }
 
+void HTTPRequest::Reset( )
+{
+  http_method = "";
+  url = "";
+  http_version = "";
+  headers.clear( );
+  parameters.clear( );
+  content = "";
+}
+
 void HTTPRequest::NotFound( const char *fmt, ... ) const
 {
   HTTPServer::Response response;
@@ -486,24 +686,51 @@ void HTTPRequest::NotFound( const char *fmt, ... ) const
   va_start( ap, fmt );
   char buf[1024];
   vsnprintf( buf, sizeof( buf ), fmt, ap );
-  response.AddContents( buf );
+  response.AddContent( buf );
   va_end( ap );
   Reply( response );
 }
 
-bool HTTPRequest::GetParam( std::string key, std::string &value ) const
+bool HTTPRequest::GetHeader( const char *key, std::string &value ) const
 {
-  const std::map<std::string, std::string>::const_iterator p = parameters.find( key );
-  if( p == parameters.end( ))
+  const std::map<std::string, std::string>::const_iterator p = headers.find( std::string( key ));
+  if( p == headers.end( ))
   {
-    NotFound( "RPC param '%s' not found", key.c_str( ));
+    NotFound( "RPC param '%s' not found", key );
     return false;
   }
   value = p->second;
   return true;
 }
 
-bool HTTPRequest::GetParam( std::string key, int &value ) const
+bool HTTPRequest::GetHeader( const char *key, int &value ) const
+{
+  std::string t;
+  if( !GetHeader( key, t ))
+    return false;
+  value = atoi( t.c_str( ));
+  return true;
+}
+
+bool HTTPRequest::HasHeader( const char *key ) const
+{
+  const std::map<std::string, std::string>::const_iterator p = headers.find( std::string( key ));
+  return p != headers.end( );
+}
+
+bool HTTPRequest::GetParam( const char *key, std::string &value ) const
+{
+  const std::map<std::string, std::string>::const_iterator p = parameters.find( key );
+  if( p == parameters.end( ))
+  {
+    NotFound( "RPC param '%s' not found", key );
+    return false;
+  }
+  value = p->second;
+  return true;
+}
+
+bool HTTPRequest::GetParam( const char *key, int &value ) const
 {
   std::string t;
   if( !GetParam( key, t ))
@@ -512,14 +739,15 @@ bool HTTPRequest::GetParam( std::string key, int &value ) const
   return true;
 }
 
-bool HTTPRequest::HasParam( std::string key ) const
+bool HTTPRequest::HasParam( const char *key ) const
 {
   const std::map<std::string, std::string>::const_iterator p = parameters.find( key );
   return p != parameters.end( );
 }
 
-void HTTPRequest::Reply( const HTTPServer::Response &response ) const
+void HTTPRequest::Reply( HTTPServer::Response &response ) const
 {
+  response.Finalize( );
   server.SendToClient( client, response.GetBuffer( ).c_str( ), response.GetBuffer( ).size( ));
 }
 
@@ -539,7 +767,7 @@ void HTTPRequest::Reply( HTTPStatus status, int ret ) const
   response.AddMime( "txt" );
   char buf[32];
   snprintf( buf, sizeof( buf ), "%d", ret );
-  response.AddContents( buf );
+  response.AddContent( buf );
   Reply( response );
 }
 
@@ -550,7 +778,7 @@ void HTTPRequest::Reply( json_object *obj ) const
   response.AddStatus( HTTP_OK );
   response.AddTimeStamp( );
   response.AddMime( "json" );
-  response.AddContents( json );
+  response.AddContent( json );
   Reply( response );
   json_object_put( obj ); // free
 }

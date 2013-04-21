@@ -200,7 +200,7 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
       snprintf( tmp, sizeof( tmp ), "%d", GetKey( ));
       if(( pos = data.find( "@service_id@" )) != std::string::npos )
         data.replace( pos, strlen( "@service_id@" ), tmp );
-      response.AddContents( data );
+      response.AddContent( data );
       request.Reply( response );
       return true;
     }

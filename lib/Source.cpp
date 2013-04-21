@@ -315,7 +315,7 @@ bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std:
       size_t pos = 0;
       if(( pos = data.find( "@source_id@" )) != std::string::npos )
         data.replace( pos, strlen( "@source_id@" ), tmp );
-      response.AddContents( data );
+      response.AddContent( data );
       request.Reply( response );
       return true;
     }

@@ -368,7 +368,7 @@ bool Transponder::RPC( const HTTPRequest &request, const std::string &cat, const
       snprintf( tmp, sizeof( tmp ), "%d", GetKey( ));
       if(( pos = data.find( "@transponder_id@" )) != std::string::npos )
         data.replace( pos, strlen( "@transponder_id@" ), tmp );
-      response.AddContents( data );
+      response.AddContent( data );
       request.Reply( response );
       return true;
     }

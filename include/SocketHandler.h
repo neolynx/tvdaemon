@@ -97,7 +97,7 @@ class SocketHandler
         virtual int AccumulateData( const char *buffer, int length );
         void Submit( );// { submitted = true; };
         bool isSubmitted( ) { return submitted; }
-        const std::string getLine( ) const { return line; }
+        const std::string &getLine( ) const { return line; }
     };
 
     SocketHandler( );

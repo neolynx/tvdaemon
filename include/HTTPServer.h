@@ -17,6 +17,7 @@
 #include <stdint.h>
 
 #define HTTP_VERSION  "HTTP/1.0"
+#define RTSP_VERSION  "RTSP/1.0"
 
 struct json_object;
 
@@ -45,6 +46,11 @@ typedef enum
   HTTP_INTERNAL_SRV_ERROR  = 500,
   HTTP_NOT_IMPLEMENTED     = 501,
 } HTTPStatus;
+
+typedef enum
+{
+  RTSP_OK                  = 200,
+  } RTSPStatus;
 
 struct http_status
 {
@@ -81,15 +87,19 @@ class HTTPServer : public SocketHandler
         ~Response( );
 
         void AddStatus( HTTPStatus status );
+        void AddStatus( RTSPStatus status );
         void AddTimeStamp( );
         void AddMime( const char *mime );
-        void AddAttribute( const char *attrib_name, const char *attrib_value );
-        void AddContents( std::string buffer );
+        void AddHeader( const char *header, const char *fmt, ... ) __attribute__ (( format( printf, 3, 4 )));
+        void AddContent( std::string buffer );
+
+        void Finalize( );
 
         void FreeResponseBuffer( );
         std::string GetBuffer( ) const;
       private:
         std::string _buffer;
+        bool header_closed;
     };
 
   protected:
@@ -110,17 +120,28 @@ class HTTPServer : public SocketHandler
 
     virtual SocketHandler::Message *CreateMessage( int client ) const;
 
+    typedef bool (HTTPServer::*Method)( HTTPRequest &request );
+
+    void NotImplemented( HTTPRequest &request, const char *method );
+
   private:
     std::string _root;
     std::map<int, HTTPRequest *> _requests;
 
     std::map<std::string, HTTPDynamicHandler *> dynamic_handlers;
 
+    std::map<const char *, Method> methods;
+
     bool HandleRequest( HTTPRequest &request );
 
     // Handle HTTP methods
-    bool HandleMethodGET( HTTPRequest &request );
-    bool HandleMethodPOST( HTTPRequest &request );
+    bool GET( HTTPRequest &request );
+    bool POST( HTTPRequest &request );
+    bool OPTIONS( HTTPRequest &request );
+    bool DESCRIBE( HTTPRequest &request );
+    bool SETUP( HTTPRequest &request );
+    bool PLAY( HTTPRequest &request );
+    bool TEARDOWN( HTTPRequest &request );
 
     static int Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count = 0 );
 
@@ -135,27 +156,40 @@ class HTTPDynamicHandler
 class HTTPRequest
 {
   public:
-    HTTPRequest( HTTPServer &server, int client ) : server(server), client(client), content_length(-1) { }
+    HTTPRequest( HTTPServer &server, int client ) : server(server), client(client), content_length(-1), keep_alive(false) { }
 
-    bool HasParam( std::string key ) const;
-    bool GetParam( std::string key, std::string &value ) const;
-    bool GetParam( std::string key, int &value ) const;
+    bool HasHeader( const char *key ) const;
+    bool GetHeader( const char *key, std::string &value ) const;
+    bool GetHeader( const char *key, int &value ) const;
 
-    void Reply( const HTTPServer::Response &response ) const;
+    bool HasParam( const char *key ) const;
+    bool GetParam( const char *key, std::string &value ) const;
+    bool GetParam( const char *key, int &value ) const;
+
+    void Reply( HTTPServer::Response &response ) const;
     void Reply( json_object *obj ) const;
     void Reply( HTTPStatus status ) const;
     void Reply( HTTPStatus status, int ret ) const;
     void NotFound( const char *fmt, ... ) const __attribute__ (( format( printf, 2, 3 )));
 
+    void KeepAlive( bool b ) { keep_alive = b; }
+    bool KeepAlive( ) const { return keep_alive; }
+
     std::string GetDocRoot( ) const { return server.GetRoot( ); }
+
+    void Reset( );
 
   private:
     HTTPServer &server;
     int client;
-    std::list<std::string> header;
+    std::string http_method;
+    std::string url;
+    std::string http_version;
+    std::map<std::string, std::string> headers;
     int content_length;
     std::string content;
     std::map<std::string, std::string> parameters;
+    bool keep_alive;
   friend class HTTPServer;
 };
 
