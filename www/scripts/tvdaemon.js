@@ -235,6 +235,7 @@ function recording_state( row, key )
     case 4: return "Done";
     case 5: return "Aborted";
     case 6: return "Failed";
+    case 7: return "Missed";
   }
   return "?";
 }

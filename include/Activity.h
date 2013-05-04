@@ -47,6 +47,7 @@ class Activity : public Thread
       State_Done,
       State_Aborted,
       State_Failed,
+      State_Missed,
       State_Last
     };
     bool HasState( State state ) { return this->state == state; }

@@ -114,6 +114,8 @@ bool Activity_Record::LoadConfig( )
 
   if( end > time( NULL ))
     state = State_Scheduled;
+  else if( state == State_Scheduled )
+    state = State_Missed;
 
   if( channel_id != -1 )
   {
