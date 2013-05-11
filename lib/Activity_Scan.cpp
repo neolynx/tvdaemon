@@ -90,12 +90,12 @@ bool Activity_Scan::Perform( )
   if( transponder->HasVCT( ))
   {
     frontend->Log( "Reading VCT" );
-    struct dvb_table_vct *vct;
-    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_VCT, DVB_TABLE_VCT_PID, (uint8_t **) &vct, time );
+    struct atsc_table_vct *vct;
+    dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_VCT_TERRESTRIAL, ATSC_BASE_PID, (uint8_t **) &vct, time );
     if( vct && IsActive( ))
     {
-      dvb_table_vct_print( frontend->GetFE( ), vct );
-      dvb_vct_channel_foreach( vct, channel )
+      atsc_table_vct_print( frontend->GetFE( ), vct );
+      atsc_vct_channel_foreach( vct, channel )
       {
         std::string name = channel->short_name;
         std::string provider = "unknown";
@@ -118,7 +118,7 @@ bool Activity_Scan::Perform( )
       }
     }
     if( vct )
-      dvb_table_vct_free( vct );
+      atsc_table_vct_free( vct );
   }
 
   if( transponder->HasSDT( ))

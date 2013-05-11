@@ -27,6 +27,7 @@
 
 #include "descriptors/eit.h"
 #include "descriptors/mgt.h"
+#include "descriptors/atsc_eit.h"
 #include "dvb-scan.h"
 #include "dvb-demux.h"
 
@@ -48,7 +49,7 @@ std::string Activity_UpdateEPG::GetName( ) const
 
 bool Activity_UpdateEPG::Perform( )
 {
-  int time = 5;
+  int time = 15;
   int fd_demux;
 
   if(( fd_demux = frontend->OpenDemux( )) < 0 )
@@ -59,26 +60,40 @@ bool Activity_UpdateEPG::Perform( )
   if( transponder->HasMGT( ))
   {
     frontend->Log( "Reading MGT" );
-    struct dvb_table_mgt *mgt = NULL;
-    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_MGT, 0x1FFB, (uint8_t **) &mgt, time );
+    struct atsc_table_mgt *mgt = NULL;
+    dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_MGT, ATSC_BASE_PID, (uint8_t **) &mgt, time );
     if( mgt )
     {
-      dvb_table_mgt_print( frontend->GetFE( ), mgt );
-      const struct dvb_table_mgt_table *table = mgt->table;
+      atsc_table_mgt_print( frontend->GetFE( ), mgt );
+      const struct atsc_table_mgt_table *table = mgt->table;
       while( table )
       {
-        if( table->type >= 0x200 and table->type < 0x300 )
+        switch( table->type )
         {
-          frontend->Log( "Reading EIT %x", table->type );
-          struct dvb_table_eit *eit = NULL;
-          dvb_read_section( frontend->GetFE( ), fd_demux, 0xCB, table->pid, (uint8_t **) &eit, time );
-          if( eit )
-          {
-            //transponder->ReadEPG( eit->event );
-            dvb_table_eit_print( frontend->GetFE( ), eit );
-            dvb_table_eit_free( eit );
-          }
+          case 0x100 ... 0x17F: // EIT
+            {
+              frontend->Log( "Reading EIT %d\t(pid: %d)", table->type - 0x100, table->pid );
+              struct atsc_table_eit *eit = NULL;
+              dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_EIT, table->pid, (uint8_t **) &eit, time );
+              if( eit )
+              {
+                //transponder->ReadEPG( eit->event );
+                atsc_table_eit_print( frontend->GetFE( ), eit );
+                atsc_table_eit_free( eit );
+              }
 
+            }
+            break;
+          case 0x200 ... 0x27F: // ETT
+            {
+              frontend->LogWarn( "Reading ETT %d\t(pid: %d)", table->type - 0x200, table->pid );
+              //struct dvb_table_eit *eit = NULL;
+              //dvb_read_section( frontend->GetFE( ), fd_demux, 0xCB, table->pid, (uint8_t **) &eit, time );
+              //if( eit )
+              //{
+              //}
+            }
+            break;
         }
         table = table->next;
       }
@@ -86,7 +101,7 @@ bool Activity_UpdateEPG::Perform( )
     dvb_dmx_close( fd_demux );
     return true;
   }
-  else
+  else // no MGT
   {
     frontend->Log( "Reading EIT" );
     struct dvb_table_eit *eit = NULL;
