@@ -21,6 +21,15 @@
 #include <sstream>
 #include <stdlib.h> // atoi
 
+#include <ccrtp/rtp.h>
+
+#ifdef	CCXX_NAMESPACES
+using namespace ost;
+using namespace std;
+#endif
+
+int rtp_port;
+
 static const struct http_status response_status[] = {
   { HTTP_OK, "OK" },
   { HTTP_REDIRECT, "Redirect" },
@@ -406,25 +415,25 @@ bool HTTPServer::DESCRIBE( HTTPRequest &request )
   response.AddHeader( "Server", "TVDaemon" );
   response.AddHeader( "Cache-Control", "no-cache" );
   //response.AddContent( "v=0\r\n\
-//o=- 1487767593 1487767593 IN IP4 127.0.0.1\r\n\
-//s=B.mov\r\n\
-//c=IN IP4 0.0.0.0\r\n\
-//t=0 0\r\n\
-//a=sdplang:en\r\n\
-//a=range:npt=0- 596.48\r\n\
-//a=control:*\r\n\
-//m=audio 0 RTP/AVP 96\r\n\
-//a=rtpmap:96 mpeg4-generic/12000/2\r\n\
-//a=fmtp:96 profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3;config=1490\r\n\
-//a=control:trackID=1\r\n\
-//m=video 0 RTP/AVP 97\r\n\
-//a=rtpmap:97 H264/90000\r\n\
-//a=fmtp:97 packetization-mode=1;profile-level-id=42C01E;sprop-parameter-sets=Z0LAHtkDxWhAAAADAEAAAAwDxYuS,aMuMsg==\r\n\
-//a=cliprect:0,0,160,240\r\n\
-//a=framesize:97 240-160\r\n\
-//a=framerate:24.0\r\n\
-//a=control:trackID=2\r\n\
-//");
+  //o=- 1487767593 1487767593 IN IP4 127.0.0.1\r\n\
+  //s=B.mov\r\n\
+  //c=IN IP4 0.0.0.0\r\n\
+  //t=0 0\r\n\
+  //a=sdplang:en\r\n\
+  //a=range:npt=0- 596.48\r\n\
+  //a=control:*\r\n\
+  //m=audio 0 RTP/AVP 96\r\n\
+  //a=rtpmap:96 mpeg4-generic/12000/2\r\n\
+  //a=fmtp:96 profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3;config=1490\r\n\
+  //a=control:trackID=1\r\n\
+  //m=video 0 RTP/AVP 97\r\n\
+  //a=rtpmap:97 H264/90000\r\n\
+  //a=fmtp:97 packetization-mode=1;profile-level-id=42C01E;sprop-parameter-sets=Z0LAHtkDxWhAAAADAEAAAAwDxYuS,aMuMsg==\r\n\
+  //a=cliprect:0,0,160,240\r\n\
+  //a=framesize:97 240-160\r\n\
+  //a=framerate:24.0\r\n\
+  //a=control:trackID=2\r\n\
+  //");
 
   response.AddContent( "v=0\r\n\
 o=- 1487767593 1487767593 IN IP4 127.0.0.1\r\n\
@@ -463,6 +472,18 @@ bool HTTPServer::SETUP( HTTPRequest &request )
     return false;
   }
 
+
+  std::vector<std::string> tokens;
+  Tokenize( transport, ";=", tokens );
+  for( std::vector<std::string>::iterator it = tokens.begin( ); it != tokens.end( ); it++ )
+    if( *it == "client_port" )
+    {
+      it++;
+      rtp_port = atoi( (*it).c_str( ));
+    }
+
+  LogWarn( "RTP port %d", rtp_port );
+
   Response response;
   response.AddStatus( RTSP_OK );
   response.AddTimeStamp( );
@@ -487,6 +508,43 @@ bool HTTPServer::PLAY( HTTPRequest &request )
   response.AddStatus( RTSP_OK );
   request.KeepAlive( true );
   request.Reply( response );
+
+
+  InetHostAddress local_ip;
+  local_ip = "192.168.7.2";
+
+  InetHostAddress remote_ip;
+  remote_ip = "192.168.7.207";
+
+  // Is that correct?
+  if( ! local_ip )
+  {
+    LogError( "ip" );
+    return true;
+  }
+
+  RTPSession *socket;
+  socket = new RTPSession( local_ip, 7766 );
+
+  // Set up connection
+  socket->setSchedulingTimeout(10000);
+  if( !socket->addDestination( remote_ip, rtp_port ) )
+  {
+    LogError( "I could not connect." );
+    return true;
+  }
+
+  socket->setPayloadFormat( StaticPayloadFormat( sptH261 ));
+
+  socket->startRunning();
+  if( !socket->isActive() )
+  {
+    LogError( "I not active" );
+    return true;
+  }
+
+  socket->putData( 0, (const uint8_t *) "halloooo" , 6 );
+
   return true;
 }
 
@@ -557,7 +615,7 @@ void HTTPServer::Response::AddTimeStamp( )
   time_t now;
   time( &now );
   struct tm tm_now;
-  gmtime_r( &now, &tm_now );
+  ::gmtime_r( &now, &tm_now );
   char date_buffer[512];
   strftime( date_buffer, sizeof( date_buffer ), "%A, %e %B %Y %H:%M:%S GMT\r\n", &tm_now );
   _buffer.append( date_buffer );

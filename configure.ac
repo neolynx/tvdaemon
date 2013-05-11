@@ -32,6 +32,7 @@ AC_CHECK_HEADERS([fcntl.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/io
 # Checks for libraries.
 PKG_CHECK_MODULES([LIBCONFIGXX], [libconfig++ >= 1.3.2],, AC_MSG_ERROR([libconfig++8-dev 1.3.2 or newer not found.]))
 PKG_CHECK_MODULES([LIBJSONXX], [json >= 0.9],, AC_MSG_ERROR([libjson0-dev 0.9 or newer not found.]))
+PKG_CHECK_MODULES([LIBCCRTP], [libccrtp >= 2.0.3],, AC_MSG_ERROR([libccrtp-dev 2.0.3 or newer not found.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

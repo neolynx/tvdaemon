@@ -34,6 +34,6 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Log.cpp \
 			  Daemon.cpp
 
-libtvdaemon_la_LIBADD = -ludev -lconfig++ -lrt -lpthread -ljson ../v4l-utils/lib/libdvbv5/libdvbv5.la -lmatroska
+libtvdaemon_la_LIBADD = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} ../v4l-utils/lib/libdvbv5/libdvbv5.la -lmatroska ${LIBCCRTP_LIBS}
 
 INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/v4l-utils/lib/include
