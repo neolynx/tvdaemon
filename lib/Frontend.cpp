@@ -365,8 +365,9 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   {
     if( transponder == &t )
     {
-      Unlock( );
       usecount++;
+      Log( "increasing usecount to %d", usecount );
+      Unlock( );
       return true;
     }
     Log( "Frontend busy" );
@@ -383,6 +384,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
   state = State_Tuning;
   transponder = &t;
   usecount++;
+  Log( "increasing usecount to %d", usecount );
   Unlock( );
 
   t.SetState( Transponder::State_Tuning );
@@ -433,7 +435,10 @@ void Frontend::Release( )
     return;
   }
   if( --usecount == 0 )
+  {
+    Log( "Use count 0, closing frontend" );
     Close( );
+  }
   Unlock( );
 }
 
