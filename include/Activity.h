@@ -50,8 +50,9 @@ class Activity : public Thread
       State_Missed,
       State_Last
     };
-    bool HasState( State state ) { return this->state == state; }
-    State GetState( ) { return state; }
+    bool HasState( State state ) const { return this->state == state; }
+    bool SetState( State state );
+    State GetState( ) const { return state; }
 
     void SetChannel( Channel *channel ) { this->channel = channel; }
     Channel *GetChannel( ) const { return channel; }
@@ -68,6 +69,8 @@ class Activity : public Thread
     void SetPort( Port *port ) { this->port = port; }
     Port *GetPort( ) const { return port; }
 
+    time_t GetStateChanged( ) const { return state_changed; }
+
     bool Start( );
     void Stop( ) { up = false; }
     void Abort( );
@@ -80,8 +83,6 @@ class Activity : public Thread
     void Run( );
 
   protected:
-    State state;
-
     Channel *channel;
     Service *service;
     Transponder *transponder;
@@ -90,6 +91,9 @@ class Activity : public Thread
 
 
   private:
+    State state;
+    time_t state_changed;
+
     bool up;
 };
 

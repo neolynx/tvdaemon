@@ -48,7 +48,7 @@ Activity_Record::Activity_Record( Recorder &recorder, Event &event, int config_i
   recorder(recorder)
 {
   SetChannel( &event.GetChannel( ));
-  state = State_Scheduled;
+  SetState( State_Scheduled );
   start = event.GetStart( );
   end   = event.GetEnd( );
   name  = event.GetName( );
@@ -62,7 +62,7 @@ Activity_Record::Activity_Record( Recorder &recorder, Channel &channel, int conf
   recorder(recorder)
 {
   SetChannel( &channel ); // FIXME: use channel_id
-  state = State_Scheduled;
+  SetState( State_Scheduled );
   start = time( NULL );
   end   = start + 130 * 60;
   name  = "Recording";
@@ -92,7 +92,7 @@ bool Activity_Record::SaveConfig( )
   WriteConfig( "Channel",  channel->GetKey( ));
   WriteConfig( "Start",    start );
   WriteConfig( "End",      end );
-  WriteConfig( "State",    state );
+  WriteConfig( "State",    GetState( ));
   WriteConfig( "Duration", duration );
   WriteConfig( "EventID",  event_id );
 
@@ -108,14 +108,16 @@ bool Activity_Record::LoadConfig( )
   ReadConfig( "Channel",  channel_id );
   ReadConfig( "Start",    start );
   ReadConfig( "End",      end );
-  ReadConfig( "State",    (int &) state );
+  int state;
+  ReadConfig( "State",    state );
+  SetState( (Activity::State) state );
   ReadConfig( "Duration", duration );
   ReadConfig( "EventID",  event_id );
 
   if( end > time( NULL ))
-    state = State_Scheduled;
-  else if( state == State_Scheduled )
-    state = State_Missed;
+    SetState( State_Scheduled );
+  else if( HasState( State_Scheduled ))
+    SetState( State_Missed );
 
   if( channel_id != -1 )
   {
@@ -383,7 +385,7 @@ void Activity_Record::json( json_object *j ) const
   json_object_object_add( j, "channel", json_object_new_int( channel->GetKey( )));
   json_object_time_add  ( j, "start",   start );
   json_object_object_add( j, "end",     json_object_new_int( end ));
-  json_object_object_add( j, "state",   json_object_new_int( state ));
+  json_object_object_add( j, "state",   json_object_new_int( GetState( )));
   if( channel )
     json_object_object_add( j, "channel", json_object_new_string( channel->GetName( ).c_str( )));
 }

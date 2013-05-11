@@ -39,6 +39,7 @@ Activity::~Activity( )
 bool Activity::Start( )
 {
   state = State_Starting;
+  state_changed = time( NULL );
   StartThread( );
 }
 
@@ -47,6 +48,7 @@ void Activity::Run( )
   bool ret;
   std::string name = GetName( );
   state = State_Running;
+  state_changed = time( NULL );
   Log( "Activity starting: %s", name.c_str( ));
   if( channel )
   {
@@ -77,6 +79,7 @@ void Activity::Run( )
       state = State_Done;
     else
       state = State_Failed;
+    state_changed = time( NULL );
   }
 
   if( frontend )
@@ -87,6 +90,7 @@ void Activity::Run( )
 
 fail:
   state = State_Failed;
+  state_changed = time( NULL );
   Failed( );
   return;
 }
@@ -94,6 +98,16 @@ fail:
 void Activity::Abort( )
 {
   if( state == State_Running )
+  {
     state = State_Aborted;
+    state_changed = time( NULL );
+  }
   up = false;
+}
+
+bool Activity::SetState( State s )
+{
+  state = s;
+  state_changed = time( NULL );
+  return true;
 }
