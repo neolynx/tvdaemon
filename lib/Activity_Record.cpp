@@ -276,9 +276,11 @@ bool Activity_Record::Perform( )
     int ac, vc;
     ac = vc = 0;
     uint64_t startpts = 0;
+    time_t idle_since = 0;
     while( IsActive( ))
     {
       tmp_fdset = fdset;
+      bool idle = true;
 
       struct timeval timeout = { 1, 0 }; // 1 sec
       if( select( FD_SETSIZE, &tmp_fdset, NULL, NULL, &timeout ) == -1 )
@@ -315,6 +317,8 @@ bool Activity_Record::Perform( )
         int fd = *it;
         if( FD_ISSET( fd, &tmp_fdset ))
         {
+          idle = false;
+          idle_since = 0;
           len = read( fd, data, DMX_BUFSIZE );
           if( len < 0 )
           {
@@ -364,6 +368,18 @@ bool Activity_Record::Perform( )
           //p += chunk;
           //}
           //}
+        }
+      }
+
+      if( idle )
+      {
+        if( idle_since == 0 )
+          idle_since = time( NULL );
+        else if( difftime( time( NULL ), idle_since ) > 10.0 )
+        {
+          frontend->LogError( "No data received" );
+          ret = false;
+          break;
         }
       }
     }
