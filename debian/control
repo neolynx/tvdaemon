@@ -1,0 +1,16 @@
+Source: tvdaemon
+Section: devel
+Priority: extra
+Maintainer: André Roth <neolynx@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libjpeg62-dev, libudev-dev, libconfig++8-dev, libjson0-dev, libebml-dev, libmatroska-dev
+Standards-Version: 3.9.1
+Homepage: https://github.com/neolynx/tvdaemon/wiki
+Vcs-Git: http://github.com/neolynx/tvdaemon.git
+Vcs-Browser: https://github.com/neolynx/tvdaemon
+
+Package: tvdaemon
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Suggests: dvb-apps
+Description: digital tv server
+ TV server for DVB (terrestrial, cable, satellite) and ATSC

@@ -6,8 +6,8 @@ AC_INIT([tvdaemon], [0.1], [BUG-REPORT-ADDRESS])
 AC_CONFIG_SRCDIR([src/tvdaemon.cpp])
 AC_CONFIG_HEADERS([include/config.h])
 AM_INIT_AUTOMAKE
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_MACRO_DIR([m4])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -44,8 +44,19 @@ AC_TYPE_UINT8_T
 # Checks for library functions.
 AC_CHECK_FUNCS([clock_gettime memset mkdir select socket strcasecmp strdup strtoul])
 
+# for including libdvbv5 Makefile.am
+AC_SUBST([pkgconfigdir], [$libdir/pkgconfig])
+AM_CONDITIONAL([WITH_LIBDVBV5], [true])
+AC_SUBST([ENFORCE_LIBDVBV5_STATIC], ["-I../include -I../../../../v4l-utils/lib/include"])
+AM_GNU_GETTEXT_VERSION([0.17])
+AM_GNU_GETTEXT([external])
+AM_ICONV
+
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
-                 src/Makefile])
+                 src/Makefile
+                 v4l-utils/lib/libdvbv5/Makefile
+                 v4l-utils/lib/libdvbv5/libdvbv5.pc
+                 ])
 AC_OUTPUT
 

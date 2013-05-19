@@ -1,0 +1,141 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          balanccd
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Should-Start:      $network
+# Should-Stop:       $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: <Enter a short description of the sortware>
+# Description:       <Enter a long description of the software>
+#                    <...>
+#                    <...>
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+NAME=tvdaemon
+DAEMON=/usr/sbin/$NAME
+DESC="$NAME server"
+PIDFILE=/var/run/$NAME.pid
+
+DIETIME=5
+
+test -x $DAEMON || exit 0
+
+. /lib/lsb/init-functions
+
+if [ ! -f /etc/default/$NAME ] ; then
+  log_error_msg "/etc/default/$NAME not found"
+  exit 1
+fi
+
+. /etc/default/$NAME
+
+
+set -e
+
+running()
+{
+  # Check if a given process pid's cmdline matches a given name
+  pidfile=$1
+  name=$2
+  [ -z "$pidfile" ] && return 1
+  # No pidfile, probably no daemon present
+  [ ! -f "$pidfile" ] && return 1
+  pid=`cat $pidfile`
+  [ ! -d /proc/$pid ] &&  return 1
+  cmd=`cat /proc/$pid/cmdline | tr "\000" "\n"|head -n 1 |cut -d : -f 1`
+  # Is this the expected server
+  [ "$cmd" != "$name" ] &&  return 1
+  return 0
+}
+
+tvdaemon_running()
+{
+  running $PIDFILE $DAEMON
+  return $?
+}
+
+start_tvdaemon()
+{
+  start-stop-daemon --start --exec $DAEMON -- $OPTS
+  errcode=$?
+  return $errcode
+}
+
+stop_tvdaemon()
+{
+  start-stop-daemon --stop --pidfile $PIDFILE --exec $DAEMON
+  errcode=$?
+  rm -f $PIDFILE
+  return $errcode
+}
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting $DESC" "$NAME"
+    # Check if it's running first
+    if tvdaemon_running;  then
+      log_progress_msg "apparently already running"
+      log_end_msg 0
+      exit 0
+    fi
+    if start_tvdaemon && tvdaemon_running;  then
+      # It's ok, the server started and is running
+      log_end_msg 0
+    else
+      # Either we could not start it or it is not running
+      # after we did
+      # NOTE: Some servers might die some time after they start,
+      # this code does not try to detect this and might give
+      # a false positive (use 'status' for that)
+      log_end_msg 1
+    fi
+    ;;
+
+  stop)
+    log_daemon_msg "Stopping $DESC" "$NAME"
+    if tvdaemon_running; then
+      # Only stop the server if we see it running
+      stop_tvdaemon
+      log_end_msg $?
+      [ -n "$DIETIME" ] && sleep $DIETIME
+    else
+      # If it's not running don't do anything
+      log_progress_msg "apparently not running"
+      log_end_msg 0
+    fi
+    ;;
+
+  restart|force-reload)
+    log_daemon_msg "Restarting $DESC" "$NAME"
+    tvdaemon_running && stop_tvdaemon
+    [ -n "$DIETIME" ] && sleep $DIETIME
+    start_tvdaemon
+    tvdaemon_running
+    log_end_msg $?
+    ;;
+
+  status)
+    log_daemon_msg "Checking status of $DESC" "$NAME"
+    if tvdaemon_running ;  then
+      log_progress_msg "running"
+      log_end_msg 0
+    else
+      log_progress_msg "apparently not running"
+      log_end_msg 1
+      exit 1
+    fi
+    ;;
+
+  *)
+    N=/etc/init.d/$NAME
+    echo "Usage: $N {start|stop|restart|status}" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
+

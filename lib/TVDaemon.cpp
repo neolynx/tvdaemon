@@ -132,7 +132,7 @@ bool TVDaemon::Start( )
 
   MonitorAdapters( );
 
-  httpd = new HTTPServer( "www" );
+  httpd = new HTTPServer( TVDAEMON_HTML );
   httpd->AddDynamicHandler( "tvd", this );
   httpd->SetLogFunc( TVD_Log );
 

@@ -1,5 +1,5 @@
 
-bin_PROGRAMS = tvdaemon
+sbin_PROGRAMS = tvdaemon
 tvdaemon_SOURCES = tvdaemon.cpp
 tvdaemon_LDFLAGS = ../lib/libtvdaemon.la -lpthread
 tvdaemon_LDADD = ../v4l-utils/lib/libdvbv5/libdvbv5.la

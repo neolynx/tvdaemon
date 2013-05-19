@@ -1,0 +1,14 @@
+#!/bin/sh
+
+USER=tvdaemon
+default=/etc/default/tvdaemon
+
+if [ "$1" = "purge" ] ; then
+    rm -f $default
+    if id $USER > /dev/null 2>&1; then
+        deluser --quiet --system $USER
+        # maybe ask user to --remove-home
+    fi
+fi
+
+#DEBHELPER#

@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+adduser --quiet --system --ingroup video --home /var/run/tvdaemon tvdaemon
+
+#DEBHELPER#
