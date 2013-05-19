@@ -104,8 +104,8 @@ int HTTPServer::Message::AccumulateData( const char *buffer, int length )
 
 void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &msg )
 {
-  const char *buffer = msg.getLine( ).c_str( );
-  int length = msg.getLine( ).length( );
+  //const char *buffer = msg.getLine( ).c_str( );
+  //int length = msg.getLine( ).length( );
   //LogWarn( "Got: '%s' from client %d", msg.getLine( ).c_str( ), client );
   HTTPRequest *request = NULL;
   if( _requests.find( client ) == _requests.end( ))
@@ -121,9 +121,30 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
     if( request->content_length == -1 and request->HasHeader( "Content-Length" ))
     {
       request->GetHeader( "Content-Length", request->content_length );
+      //DisconnectClient( client );
+      //return;
+    }
+    if( request->http_method.empty( ))
+    {
+      LogError( "HTTPServer: no http method '%s'", msg.getLine( ).c_str( ));
       DisconnectClient( client );
       return;
     }
+
+    if( request->content_length <= 0 || request->content.length( ) == request->content_length ) // FIXME: handle on top
+    {
+      if( !HandleRequest( *request ) or !request->KeepAlive( ))
+        DisconnectClient( client );
+      else
+        request->Reset( );
+      return;
+    }
+    return;
+  }
+
+  if( request->content_length > 0 && request->content.length( ) < request->content_length )
+  {
+    request->content += msg.getLine( );
     if( request->http_method.empty( ))
     {
       LogError( "HTTPServer: no http method '%s'", msg.getLine( ).c_str( ));
@@ -138,49 +159,31 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
   }
   else
   {
-    if( request->content_length > 0 && request->content.length( ) < request->content_length )
+    if( request->http_method.empty( )) // handle HTTP request (GET, ...)
     {
-      request->content += msg.getLine( );
-      if( request->http_method.empty( ))
+      std::vector<std::string> tokens;
+      Tokenize( msg.getLine( ), " ", tokens, 3 );
+      if( tokens.size( ) < 3 )
       {
-        LogError( "HTTPServer: no http method '%s'", msg.getLine( ).c_str( ));
+        LogError( "HTTPServer: invalid http request '%s'", msg.getLine( ).c_str( ));
         DisconnectClient( client );
         return;
       }
-
-      if( !HandleRequest( *request ) or !request->KeepAlive( ))
-        DisconnectClient( client );
-      else
-        request->Reset( );
+      request->http_method = tokens[0];
+      request->url = tokens[1];
+      request->http_version = tokens[2];
+      //Log( "HTTPServer: request: '%s', '%s' (%s)", request->http_method.c_str( ), request->url.c_str( ), request->http_version.c_str( ));
+      return;
     }
-    else
+    std::vector<std::string> tokens; // handle HTTP headers
+    Tokenize( msg.getLine( ), ": ", tokens, 2 );
+    if( tokens.size( ) < 2 )
     {
-      if( request->http_method.empty( )) // handle HTTP request (GET, ...)
-      {
-        std::vector<std::string> tokens;
-        Tokenize( msg.getLine( ), " ", tokens, 3 );
-        if( tokens.size( ) < 3 )
-        {
-          LogError( "HTTPServer: invalid http request '%s'", msg.getLine( ).c_str( ));
-          DisconnectClient( client );
-          return;
-        }
-        request->http_method = tokens[0];
-        request->url = tokens[1];
-        request->http_version = tokens[2];
-        //Log( "HTTPServer: request: '%s', '%s' (%s)", request->http_method.c_str( ), request->url.c_str( ), request->http_version.c_str( ));
-        return;
-      }
-      std::vector<std::string> tokens; // handle HTTP headers
-      Tokenize( msg.getLine( ), ": ", tokens, 2 );
-      if( tokens.size( ) < 2 )
-      {
-        LogError( "HTTPServer: unknown http message '%s'", msg.getLine( ).c_str( ));
-        DisconnectClient( client );
-        return;
-      }
-      request->headers[tokens[0]] = tokens[1];
+      LogError( "HTTPServer: unknown http message '%s'", msg.getLine( ).c_str( ));
+      DisconnectClient( client );
+      return;
     }
+    request->headers[tokens[0]] = tokens[1];
   }
 }
 
