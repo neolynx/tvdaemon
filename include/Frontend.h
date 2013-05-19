@@ -119,6 +119,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     uint8_t filter[18];
     uint8_t mask[18];
 
+    int tune_timeout;
     bool up;
 
   private:
@@ -135,7 +136,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     virtual void Run( );
 
     bool Open( );
-    bool Tune( Transponder &transponder, int timeout = 1000 );
+    bool Tune( Transponder &transponder );
     void Close( );
 
     Activity *activity;

@@ -62,6 +62,7 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , current_port(0)
   , state(State_New)
   , usecount( 0 )
+  , tune_timeout(1500)
   , up(true)
 {
   ports.push_back( new Port( *this, 0 ));
@@ -353,7 +354,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
   return false;
 }
 
-bool Frontend::Tune( Transponder &t, int timeoutms )
+bool Frontend::Tune( Transponder &t )
 {
   if( !adapter.IsPresent( ))
   {
@@ -408,7 +409,7 @@ bool Frontend::Tune( Transponder &t, int timeoutms )
     goto fail;
   }
 
-  if( !GetLockStatus( signal, noise, 1500 ))
+  if( !GetLockStatus( signal, noise, tune_timeout ))
   {
     LogError( "Tuning failed" );
     goto fail;
