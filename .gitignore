@@ -1,8 +1,3 @@
-# http://www.gnu.org/software/automake
-
-Makefile.in
-
-# http://www.gnu.org/software/autoconf
 
 /autom4te.cache
 /aclocal.m4
@@ -11,6 +6,13 @@ Makefile.in
 /depcomp
 /install-sh
 /missing
+/libtool
+/ltmain.sh
+/configure
+/config.guess
+/config.log
+/config.status
+/config.sub
 
 *.o
 *.lo
@@ -22,19 +24,8 @@ Makefile.in
 .libs
 m4
 *.m4
-missing
-libtool
-ltmain.sh
-depcomp
-install-sh
-configure
-config.guess
-config.log
-config.status
-config.sub
 
 include/config.h
 include/config.h.in
 include/stamp-h1
 src/tvdaemon
-INSTALL
