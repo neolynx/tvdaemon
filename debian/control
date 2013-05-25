@@ -1,6 +1,6 @@
 Source: tvdaemon
-Section: devel
-Priority: extra
+Section: misc
+Priority: optional
 Maintainer: André Roth <neolynx@gmail.com>
 Build-Depends: debhelper (>= 8), dh-autoreconf, pkg-config, libjpeg62-dev, libudev-dev, libconfig++8-dev, libjson0-dev, libebml-dev, libmatroska-dev
 Standards-Version: 3.9.3
@@ -9,6 +9,7 @@ Vcs-Git: http://github.com/neolynx/tvdaemon.git
 Vcs-Browser: https://github.com/neolynx/tvdaemon
 
 Package: tvdaemon
+Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
 Suggests: dvb-apps
