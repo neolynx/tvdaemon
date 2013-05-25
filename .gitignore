@@ -13,6 +13,8 @@
 /config.log
 /config.status
 /config.sub
+/config.rpath
+/po
 
 *.o
 *.lo
@@ -29,3 +31,9 @@ include/config.h
 include/config.h.in
 include/stamp-h1
 src/tvdaemon
+
+debian/tvdaemon.debhelper.log
+debian/tvdaemon.postinst.debhelper
+debian/tvdaemon.postrm.debhelper
+debian/tvdaemon.prerm.debhelper
+debian/tvdaemon

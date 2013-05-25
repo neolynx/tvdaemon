@@ -2,8 +2,8 @@ Source: tvdaemon
 Section: devel
 Priority: extra
 Maintainer: André Roth <neolynx@gmail.com>
-Build-Depends: debhelper (>= 7.0.50~), autotools-dev, dh-autoreconf, libjpeg62-dev, libudev-dev, libconfig++8-dev, libjson0-dev, libebml-dev, libmatroska-dev
-Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 8), dh-autoreconf, pkg-config, libjpeg62-dev, libudev-dev, libconfig++8-dev, libjson0-dev, libebml-dev, libmatroska-dev
+Standards-Version: 3.9.3
 Homepage: https://github.com/neolynx/tvdaemon/wiki
 Vcs-Git: http://github.com/neolynx/tvdaemon.git
 Vcs-Browser: https://github.com/neolynx/tvdaemon
