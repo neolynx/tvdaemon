@@ -36,4 +36,8 @@ debian/tvdaemon.debhelper.log
 debian/tvdaemon.postinst.debhelper
 debian/tvdaemon.postrm.debhelper
 debian/tvdaemon.prerm.debhelper
+debian/autoreconf.after
+debian/autoreconf.before
+debian/files
+debian/tvdaemon.substvars
 debian/tvdaemon

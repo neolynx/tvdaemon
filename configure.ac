@@ -58,5 +58,6 @@ AC_CONFIG_FILES([Makefile
                  v4l-utils/lib/libdvbv5/Makefile
                  v4l-utils/lib/libdvbv5/libdvbv5.pc
                  ])
+                 #po/Makefile
 AC_OUTPUT
 
