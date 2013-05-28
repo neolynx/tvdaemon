@@ -23,6 +23,7 @@
 #include "Log.h"
 #include "Frontend.h"
 #include "Channel.h"
+#include "TVDaemon.h"
 
 #include <unistd.h> // NULL
 
@@ -50,6 +51,7 @@ void Activity::Run( )
   state = State_Running;
   state_changed = time( NULL );
   Log( "Activity starting: %s", name.c_str( ));
+  TVDaemon::Instance( )->LockFrontends( );
   if( channel )
   {
     if( !channel->Tune( *this ))
@@ -72,6 +74,7 @@ void Activity::Run( )
     goto fail;
   }
 
+  TVDaemon::Instance( )->UnlockFrontends( );
   ret = Perform( );
   if( state == State_Running )
   {
@@ -89,6 +92,7 @@ void Activity::Run( )
   return;
 
 fail:
+  TVDaemon::Instance( )->UnlockFrontends( );
   state = State_Failed;
   state_changed = time( NULL );
   Failed( );

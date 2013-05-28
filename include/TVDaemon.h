@@ -66,6 +66,9 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     Channel *GetChannel( int id );
     Channel *CreateChannel( Service *service );
 
+    void LockFrontends( );
+    void UnlockFrontends( );
+
     // RPC
     virtual bool HandleDynamicHTTP( const HTTPRequest &request );
     bool RPC        ( const HTTPRequest &request, const std::string &cat, const std::string &action );
@@ -112,6 +115,8 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     Recorder *recorder;
 
     std::vector<Transponder *> epg_transponders;
+
+    Mutex frontend_mutex;
 };
 
 #endif

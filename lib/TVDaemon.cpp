@@ -971,3 +971,16 @@ bool TVDaemon::Record( Channel &channel )
   return recorder->Record( channel );
 }
 
+void TVDaemon::LockFrontends( )
+{
+  Log( "Trying to get frontends lock ..." );
+  frontend_mutex.Lock( );
+  Log( "Locked frontends" );
+}
+
+void TVDaemon::UnlockFrontends( )
+{
+  Log( "Unlocking frontends ..." );
+  frontend_mutex.Unlock( );
+}
+
