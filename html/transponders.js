@@ -15,6 +15,7 @@ function ready( )
     "services"  : "Services",
   };
   t.load( );
+  $('#sst_paginator_transponders').append( $('#search') );
 }
 
 function print_freq( row )
