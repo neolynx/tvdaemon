@@ -32,6 +32,7 @@ function ready( )
     getJSON( 'tvd?c=service&a=add_channel&source_id=' + this["source_id"] +
         '&transponder_id=' + this["transponder_id"] + '&service_id=' + this["id"], addChannel );
   };
+  t.filters( [ "search" ] );
   t.load( );
   service_table = t;
 }

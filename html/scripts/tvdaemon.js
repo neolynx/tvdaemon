@@ -23,16 +23,46 @@ function ServerSideTable( name, url, page_size )
   context = { 'name': name, 'url': url }
   context['page_size'] = page_size || 10;
   context['start'] = 0;
+  context['filters'] = [];
   context['search'] = '';
   context['renderer'] = renderTable.bind( context );
-  loader = function ( ) {
+
+  search_func = function ( ) {
+    this['start'] = 0;
+    this['load']( );
+  };
+
+  //search = $('<input>');
+  //search.prop( 'id', "sst_search_" + context['name'] );
+  //search.bind( 'keyup', search_func.bind( context ));
+  //search.val( context['search'] );
+  //paginator.append( search );
+
+  load = function ( ) {
     url = this['url'];
     url += (url.split('?')[1] ? '&':'?') + 'page_size=' + this['page_size'];
     url += '&start=' + this['start'];
-    url += '&search=' + this['search'];
+
+    filters = this["filters"];
+    for( f in filters )
+    {
+      filter = $('#' + filters[f]);
+      url += '&' + filters[f] + "=" + filter.val( );
+    }
+
     getJSON( url, this['renderer'] );
   };
-  context['load'] = loader.bind( context );
+  context['load'] = load.bind( context );
+
+  filters = function ( filters ) {
+    this["filters"] = filters;
+    for( f in filters )
+    {
+      filter = $('#' + filters[f]);
+      filter.bind( 'keyup', search_func.bind( context ));
+    }
+  };
+  context['filters'] = filters.bind( context );
 
   paginator = $('<div>');
   paginator.prop( "id", "sst_paginator_" + context['name'] );
@@ -68,20 +98,7 @@ function ServerSideTable( name, url, page_size )
   next.bind( 'click', scroll_down.bind( context ));
   paginator.append( next );
 
-  search_func = function ( ) {
-    search = $('#sst_search_' + this['name']).val( );
-    if( search == this['search'] )
-      return;
-    this['search'] = search;
-    this['start'] = 0;
-    this['load']( );
-  };
-
-  search = $('<input>');
-  search.prop( 'id', "sst_search_" + context['name'] );
-  search.bind( 'keyup', search_func.bind( context ));
-  search.val( context['search'] );
-  paginator.append( search );
+  paginator.append( $('#search_' + context['name']) );
 
   sst = $('<div>');
   sst.prop( "class", "sst" );

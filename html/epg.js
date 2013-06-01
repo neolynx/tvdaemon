@@ -9,12 +9,13 @@ function ready( )
     "channel"  :   "Channel",
     "id"       :   "ID",
     "duration" : [ "Duration", duration ],
-    "name"     : [ "Name", function ( row ) { return "<b>" + row["name"] + "</b><br/>" + row["description"] } ]
+    "name"     : [ "Name", function ( row ) { return "<b>" + row["name"] + "</b><br/>" + row["description"] } ],
   };
   t["click"] = function( ) {
     if( confirm( "Record " + this["name"] + " ?" ))
       getJSON( 'tvd?c=channel&a=schedule&channel_id=' + this["channel_id"] + "&event_id=" + this["id"], schedule );
   };
+  t.filters( [ "search" ] );
   t.load( );
 }
 
