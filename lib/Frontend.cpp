@@ -62,7 +62,7 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , current_port(0)
   , state(State_New)
   , usecount( 0 )
-  , tune_timeout(1500)
+  , tune_timeout(2500)
   , up(true)
 {
   ports.push_back( new Port( *this, 0 ));
@@ -234,6 +234,7 @@ bool Frontend::GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *d
 bool Frontend::SaveConfig( )
 {
   WriteConfig( "Type", type );
+  WriteConfig( "TuneTimeout", tune_timeout );
 
   WriteConfigFile( );
 
@@ -250,6 +251,9 @@ bool Frontend::LoadConfig( )
     return false;
 
   ReadConfig( "Type", (int &) type );
+  ReadConfig( "TuneTimeout", tune_timeout );
+  if( tune_timeout == 0 )
+    tune_timeout = 2500;
 
   if( !CreateFromConfig<Port, Frontend>( *this, "port", ports ))
     return false;
