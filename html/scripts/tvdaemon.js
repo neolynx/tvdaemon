@@ -60,6 +60,9 @@ function ServerSideTable( name, url, page_size )
     {
       filter = $('#' + filters[f]);
       filter.bind( 'keyup', search_func.bind( context ));
+      if( f == 0 )
+        filter.focus( );
+      filter.attr( "tabindex", f );
     }
   };
   context['filters'] = filters.bind( context );
