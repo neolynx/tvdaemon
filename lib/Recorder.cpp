@@ -110,6 +110,7 @@ void Recorder::Run( )
 {
   double before = 5;
   double after = 5 * 60;
+  double retry_interval = 5.0;
   while( up )
   {
     time_t now = time( NULL );
@@ -129,6 +130,15 @@ void Recorder::Run( )
         case Activity::State_Running:
           if( difftime( now, end ) >= after )
             (*it)->Stop( );
+          break;
+
+        case Activity::State_Failed:
+          if( difftime( start, now ) <= before &&
+              difftime( now, end ) < -5.0 + after )
+          {
+            if( difftime( now, (*it)->GetStateChanged( )) >= retry_interval )
+              (*it)->Start( );
+          }
           break;
       }
     }
