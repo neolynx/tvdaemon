@@ -304,14 +304,11 @@ Port *Frontend::GetCurrentPort( )
 
 int Frontend::OpenDemux( )
 {
-  int fd = dvb_dmx_open( adapter_id, frontend_id );
-  Log( "Opening demux %d", fd );
-  return fd;
+  return dvb_dmx_open( adapter_id, frontend_id );
 }
 
 void Frontend::CloseDemux( int fd )
 {
-  Log( "Closing demux %d", fd );
   dvb_dmx_close( fd );
 }
 
