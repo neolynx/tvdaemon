@@ -114,7 +114,7 @@ int Stream::Open( Frontend &frontend )
     if( dvb_set_pesfilter( fd, id, DMX_PES_OTHER, DMX_OUT_TSDEMUX_TAP, DMX_BUFSIZE ) != 0 )
     {
       LogError( "failed to set the pes filter for %d", id );
-      dvb_dmx_close( fd );
+      frontend.CloseDemux( fd );
       return -1;
     }
   }

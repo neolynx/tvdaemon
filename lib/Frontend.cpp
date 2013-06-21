@@ -300,7 +300,15 @@ Port *Frontend::GetCurrentPort( )
 
 int Frontend::OpenDemux( )
 {
-  return dvb_dmx_open( adapter_id, frontend_id );
+  int fd = dvb_dmx_open( adapter_id, frontend_id );
+  Log( "Opening demux %d", fd );
+  return fd;
+}
+
+void Frontend::CloseDemux( int fd )
+{
+  Log( "Closing demux %d", fd );
+  dvb_dmx_close( fd );
 }
 
 bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )

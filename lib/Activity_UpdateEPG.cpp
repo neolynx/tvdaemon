@@ -98,7 +98,7 @@ bool Activity_UpdateEPG::Perform( )
         table = table->next;
       }
     }
-    dvb_dmx_close( fd_demux );
+    frontend->CloseDemux( fd_demux );
     return true;
   }
   else // no MGT
@@ -124,7 +124,7 @@ bool Activity_UpdateEPG::Perform( )
         transponder->SetEPGState( Transponder::EPGState_NotAvailable );
     }
 
-    dvb_dmx_close( fd_demux );
+    frontend->CloseDemux( fd_demux );
     return eit != NULL;
   }
 

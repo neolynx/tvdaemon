@@ -294,7 +294,7 @@ bool Activity_Scan::Perform( )
       dvb_table_nit_free( nit );
   }
 
-  dvb_dmx_close( fd_demux );
+  frontend->CloseDemux( fd_demux );
   transponder->SetState( Transponder::State_Scanned );
   transponder->SaveConfig( );
   return true;
@@ -303,7 +303,7 @@ scan_failed:
   transponder->SetState( Transponder::State_ScanningFailed );
   transponder->SaveConfig( );
 scan_aborted:
-  dvb_dmx_close( fd_demux );
+  frontend->CloseDemux( fd_demux );
 open_failed:
   return false;
 }

@@ -63,6 +63,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     static bool GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name = NULL );
     virtual bool GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout /* miliseconds */ );
     int OpenDemux( );
+    void CloseDemux( int fd );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );

@@ -138,6 +138,7 @@ bool Activity_Record::Perform( )
   std::vector<int> fds;
 
   int fd_pat = frontend->OpenDemux( );
+  frontend->Log( "Opening PAT demux %d", fd_pat );
   // FIXME check fd
   struct dmx_sct_filter_params f;
   memset(&f, 0, sizeof(f));
@@ -179,7 +180,7 @@ bool Activity_Record::Perform( )
   std::string dumpfile;
   std::string upcoming;
 
-  int fd = frontend->OpenDemux( );
+  //int fd = frontend->OpenDemux( );
   //Log( "Reading EIT" );
   //struct dvb_table_eit *eit;
   //dvb_read_section_with_id( frontend->GetFE( ), fd, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, service->GetKey( ), (uint8_t **) &eit, 5 );
@@ -388,9 +389,9 @@ bool Activity_Record::Perform( )
   }
 
 exit:
-  dvb_dmx_close( fd_pat );
+  frontend->CloseDemux( fd_pat );
   for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
-    dvb_dmx_close( *it );
+    frontend->CloseDemux( *it );
 
   return ret;
 }
