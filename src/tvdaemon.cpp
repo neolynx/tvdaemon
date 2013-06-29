@@ -19,6 +19,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include <signal.h>
 #include <stdlib.h> // exit
 #include <unistd.h> // getopt
@@ -40,9 +41,9 @@ void termination_handler( int signum )
 
 void usage( char *prog )
 {
-  printf( "Usage: %s [-d]\n", prog );
-  printf( "  -d     debug, do not fork, log to console\n" );
-  exit( -1 );
+  printf( "Usage: %s [-d] [-r http_root]\n", prog );
+  printf( "  -d                 debug, do not fork, log to console\n" );
+  printf( "  -r http_root_dir   use this as http root dir (default: " TVDAEMON_HTML ")\n" );
 }
 
 int main( int argc, char *argv[] )
@@ -56,17 +57,30 @@ int main( int argc, char *argv[] )
   sigaction( SIGTERM, &action, NULL );
 
   bool debug = false;
+  std::string httpRoot = TVDAEMON_HTML;
 
   int opt;
-  while(( opt = getopt( argc, argv, "d" )) != -1 )
+  while(( opt = getopt( argc, argv, "dr:" )) != -1 )
   {
     switch( opt )
     {
       case 'd':
         debug = true;
+        Log( "Starting with debug option." );
+        break;
+      case 'r':
+        {
+          char* tempPath = canonicalize_file_name( optarg );
+          if( tempPath )
+          {
+            httpRoot = tempPath;
+            free( tempPath );
+          }
+        }
         break;
       default:
         usage( argv[0] );
+        exit( -1 );
     }
   }
 
@@ -87,7 +101,8 @@ int main( int argc, char *argv[] )
     LogError( "Unable to create tvdaemon\n" );
     return -1;
   }
-  if( !tvd->Start( ))
+  Log( "HTTP root is set to %s", httpRoot.c_str() );
+  if( !tvd->Start( httpRoot.c_str()))
   {
     LogError( "Unable to start tvdaemon\n" );
     return -1;

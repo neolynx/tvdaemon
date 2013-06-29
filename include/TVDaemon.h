@@ -50,7 +50,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     bool Create( std::string configdir );
     virtual ~TVDaemon( );
 
-    bool Start( );
+    bool Start( const char* httpRoot );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );

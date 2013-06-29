@@ -112,7 +112,7 @@ TVDaemon::~TVDaemon( )
   instance = NULL;
 }
 
-bool TVDaemon::Start( )
+bool TVDaemon::Start( const char* httpRoot )
 {
   if( !LoadConfig( ))
   {
@@ -132,7 +132,7 @@ bool TVDaemon::Start( )
 
   MonitorAdapters( );
 
-  httpd = new HTTPServer( TVDAEMON_HTML );
+  httpd = new HTTPServer( httpRoot );
   httpd->AddDynamicHandler( "tvd", this );
   httpd->SetLogFunc( TVD_Log );
 
