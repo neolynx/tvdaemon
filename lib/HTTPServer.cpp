@@ -50,6 +50,7 @@ static const struct mime_type mime_types[] = {
   { "gif",  "image/gif",        true },
   { "png",  "image/png",        true },
   { "json", "application/json", false },
+  { "ico",  "image/x-icon",     true },
 };
 
 HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root)
