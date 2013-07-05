@@ -89,12 +89,16 @@ TVDaemon::~TVDaemon( )
     httpd->Stop( );
     delete httpd;
   }
+  Log( "Closing Tuners" );
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     (*it)->Shutdown( );
+  Log( "Stopping Recorder" );
   recorder->Stop( );
 
+  Log( "Saving Config" );
   SaveConfig( );
 
+  Log( "Cleanup" );
   delete recorder;
 
   if( up ) up = false;
@@ -603,6 +607,9 @@ bool TVDaemon::HandleDynamicHTTP( const HTTPRequest &request )
   if( cat == "channel" )
     return RPC_Channel( request, cat, action );
 
+  if( cat == "recorder" )
+    return recorder->RPC( request, cat, action );
+
   request.NotFound( "RPC unknown category: %s", cat.c_str( ));
   return false;
 }
@@ -966,9 +973,9 @@ bool TVDaemon::Schedule( Event &event )
   return recorder->Schedule( event );
 }
 
-bool TVDaemon::Record( Channel &channel )
+void TVDaemon::Record( Channel &channel )
 {
-  return recorder->Record( channel );
+  recorder->Record( channel );
 }
 
 void TVDaemon::LockFrontends( )

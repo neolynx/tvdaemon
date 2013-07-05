@@ -79,7 +79,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     void ServerSideTable( const HTTPRequest &request, std::vector<const JSONObject *> &data ) const;
 
     bool Schedule( Event &event );
-    bool Record( Channel &channel );
+    void Record( Channel &channel );
     void UpdateEPG( );
     int GetEPGUpdateInterval( ) const { return epg_update_interval; }
 

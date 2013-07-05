@@ -38,10 +38,14 @@ class JSONObject
 
 void json_object_time_add( json_object *j, std::string name, time_t tt );
 
-class RPCObject : public JSONObject
+class RPCHandler
 {
   public:
     virtual bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action ) = 0;
+};
+
+class RPCObject : public JSONObject, public RPCHandler
+{
 };
 
 class JSONObjectComparator : public std::binary_function<JSONObject, JSONObject, bool>

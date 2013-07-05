@@ -24,10 +24,11 @@
 
 //#include <stdint.h> // uint64_t
 
-#include <vector>
+#include <map>
 
 #include "Thread.h"
 #include "ConfigObject.h"
+#include "RPCObject.h"
 //class Matroska;
 //class RingBuffer;
 //class Frame;
@@ -40,7 +41,7 @@ class Event;
 class TVDaemon;
 class JSONObject;
 
-class Recorder : public Thread, public ConfigObject
+class Recorder : public Thread, public ConfigObject, public RPCHandler
 {
   public:
     Recorder( TVDaemon &tvd );
@@ -50,8 +51,9 @@ class Recorder : public Thread, public ConfigObject
     virtual bool LoadConfig( );
 
     bool Schedule( Event &event );
-    bool Record( Channel &channel );
+    void Record( Channel &channel );
     void Stop( );
+    bool Remove( int id );
 
     std::string GetDir( ) const { return dir; }
 
@@ -60,6 +62,7 @@ class Recorder : public Thread, public ConfigObject
 
     void GetRecordings( std::vector<const JSONObject *> &result ) const;
 
+    bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
   private:
     TVDaemon &tvd;
@@ -70,7 +73,7 @@ class Recorder : public Thread, public ConfigObject
     //Frame *frame;
     bool up;
     std::string dir;
-    std::vector<Activity_Record *> recordings;
+    std::map<int, Activity_Record *> recordings;
 
     virtual void Run( );
 };
