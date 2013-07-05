@@ -355,7 +355,7 @@ void SocketHandler::Run( )
               if( len <= 0 )
               {
                 if( len != 0 )
-                  SHLogError( "Error receiving data..." );
+                  SHLogError( "socket %d: error receiving data", i );
                 DisconnectClient( i, len != 0 );
               }
               else
@@ -401,7 +401,7 @@ void SocketHandler::Run( )
           if( len <= 0 )
           {
             if( len != 0 )
-              SHLogError( "Error receiving data..." );
+              SHLogError( "socket %d: error receiving data", sd );
             Disconnected( sd, len != 0 );
             connected = false;
             close( sd );

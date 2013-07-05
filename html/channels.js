@@ -1,7 +1,5 @@
 $(document).ready( ready );
 
-var channel_table;
-
 function ready( )
 {
   Menu( "Channels" );
@@ -13,10 +11,9 @@ function ready( )
     "last_epg" : [ "Last Update", print_time ],
     "" : [ "", print_update ],
   };
-  //t["click"] = function( ) {
-    //if( confirm( "Start recording " + this["name"] + " ?" ))
-      //getJSON( 'tvd?c=channel&a=record&channel_id=' + this["id"], record );
-  //};
+  t["click"] = function( ) {
+    location.href = 'rtsp://' + window.location.host + '/tvd?c=channel&a=stream&channel_id=' + this["id"];
+  };
   t.load( );
 }
 
