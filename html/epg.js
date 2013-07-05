@@ -5,9 +5,8 @@ function ready( )
   Menu( "EPG" );
   t = ServerSideTable( 'epg', 'tvd?c=tvdaemon&a=get_epg', 10 );
   t["columns"] = {
-    "start"    : [ "Start", print_time ],
-    "name"     : [ "Event", print_event ],
-    "channel"  :   "Channel",
+    "start"    : [ "", print_start ],
+    "name"     : [ "", print_event ],
   };
   t["click"] = function( ) {
     if( confirm( "Record " + this["name"] + " ?" ))
@@ -32,5 +31,14 @@ function duration( row )
 
 function print_event( row )
 {
-  return "<b>" + row["name"] + "</b>&nbsp;" + duration( row ) + "<br/>" + row["description"];
+  return "<div>" + row["name"] + "</div>" +
+         "<div>" + row["channel"] + "</div>" +
+         "<div>" + row["description"] + "</div>";
+}
+
+function print_start( row, field )
+{
+  r = print_time( row, field );
+  r += "<br/>" + duration( row );
+  return r;
 }

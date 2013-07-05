@@ -183,17 +183,22 @@ div.sst th
 
 div.sst td
 {
-  padding: 2px;
   vertical-align: top;
+  padding-left: 4px;
 }
 
-div.sst table tr:nth-child(odd) td
+div.sst table tr:not(:last-child) td
 {
-  background-color: #dfdfdf;
+  border-bottom: 1px solid #e0e0e0;
 }
+
+/*div.sst table tr:nth-child(odd) td*/
+/*{*/
+  /*background-color: #dfdfdf;*/
+/*}*/
 
 div.sst table tr:hover td
 {
-  background-color: #d0d0df;
+  background-color: #f5f5f5;
 }
 

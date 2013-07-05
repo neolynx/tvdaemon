@@ -9,3 +9,31 @@ div#sst_epg
   text-align: right;
 }
 
+.sst_start
+{
+  text-align: right;
+  font-size: small;
+  padding-top: 5px;
+}
+
+td.sst_name div:first-child
+{
+  font-weight: bold;
+  float: left;
+  max-width: 30em;
+}
+
+td.sst_name div:nth-child(2)
+{
+  text-align: right;
+  float: right;
+  font-size: small;
+  padding-left: 1em;
+}
+
+td.sst_name div:nth-child(3)
+{
+  clear: both;
+  font-size: small;
+  max-width: 30em;
+}
