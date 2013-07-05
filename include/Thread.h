@@ -42,6 +42,17 @@ class ScopeMutex : public Mutex
     ~ScopeMutex( ) { Unlock( ); }
 };
 
+class ScopeLock
+{
+  public:
+    ScopeLock( const Mutex *mutex ) : mutex(mutex) { mutex->Lock( ); }
+    ~ScopeLock( ) { mutex->Unlock( ); }
+  private:
+    const Mutex *mutex;
+};
+
+#define SCOPELOCK( ) ScopeLock _l( this )
+
 class Thread : public Mutex
 {
   protected:
