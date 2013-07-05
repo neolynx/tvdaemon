@@ -335,6 +335,15 @@ bool ConfigObject::ReadConfigFile( )
   return true;
 }
 
+bool ConfigObject::RemoveConfigFile( )
+{
+  if( unlink( configfile.c_str( )) != 0 )
+    return false;
+  if( rmdir( configdir.c_str( )) != 0 )
+    return false;
+  return true;
+}
+
 std::list<int> ConfigObject::GetParentPath( )
 {
   std::list<int> path;

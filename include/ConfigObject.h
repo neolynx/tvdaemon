@@ -22,14 +22,18 @@
 #ifndef _ConfigObject_
 #define _ConfigObject_
 
+#include <dirent.h>
 #include <libconfig.h++>
 using namespace libconfig;
 #include <string>
 #include <vector>
 #include <map>
 #include <list>
+#include <algorithm> // sort
+#include <unistd.h> // rmdir
 
 #include "Utils.h"
+#include "Log.h"
 
 class ConfigBase
 {
@@ -78,21 +82,44 @@ class ConfigObject : public ConfigBase
 
     template <class Class, class Parent> static bool CreateFromConfig( Parent &parent, std::string configname, std::vector<Class *> &list )
     {
-      char buf[128];
-      int count;
-      for( count = 0; count < 1024; count++ )
+      DIR *d;
+      struct dirent dp;
+      struct dirent *result = NULL;
+      std::string dir;
+      std::string file;
+      std::string path = parent.GetConfigDir( );
+      Utils::EnsureSlash( path );
+      d = opendir( path.c_str( ));
+      if( !d )
       {
-        std::string dir = parent.GetConfigDir( );
-        snprintf( buf, sizeof( buf ), "%s%d/", configname.c_str( ), count );
-        dir += buf;
-
-        std::string file = dir + "config";
+        LogError( "error opening config directory '%s'", path.c_str( ));
+        return false;
+      }
+      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      {
+        if( dp.d_name[0] == '.' )
+          continue;
+        if( ( dp.d_type & DT_DIR ) == 0 )
+          continue;
+        dir = path + dp.d_name;
+        int id;
+        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+          continue;
+        file = dir + "/config";
         if( !Utils::IsFile( file ))
-          break;
-
+        {
+          LogError( "config file not found '%s'", file.c_str( ));
+          rmdir( dir.c_str( ));
+          continue;
+        }
         Class *c = new Class( parent, file );
         if( !c->LoadConfig( ))
+        {
+          LogError( "error loading config '%s'", file.c_str( ));
+          delete c;
+          delete c;
           return false;
+        }
         list.push_back( c );
       }
       return true;
@@ -100,21 +127,43 @@ class ConfigObject : public ConfigBase
 
     template <class Class, class Key, class Parent> static bool CreateFromConfig( Parent &parent, std::string configname, std::map<Key, Class *> &map )
     {
-      char buf[128];
-      int count;
-      for( count = 0; count < 1024; count++ )
+      DIR *d;
+      struct dirent dp;
+      struct dirent *result = NULL;
+      std::string dir;
+      std::string file;
+      std::string path = parent.GetConfigDir( );
+      Utils::EnsureSlash( path );
+      d = opendir( path.c_str( ));
+      if( !d )
       {
-        std::string dir = parent.GetConfigDir( );
-        snprintf( buf, sizeof( buf ), "%s%d/", configname.c_str( ), count );
-        dir += buf;
-
-        std::string file = dir + "config";
+        LogError( "error opening config directory '%s'", path.c_str( ));
+        return false;
+      }
+      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      {
+        if( dp.d_name[0] == '.' )
+          continue;
+        if( ( dp.d_type & DT_DIR ) == 0 )
+          continue;
+        dir = path + dp.d_name;
+        int id;
+        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+          continue;
+        file = dir + "/config";
         if( !Utils::IsFile( file ))
-          break;
-
+        {
+          LogError( "config file not found '%s'", file.c_str( ));
+          rmdir( dir.c_str( ));
+          continue;
+        }
         Class *c = new Class( parent, file );
         if( !c->LoadConfig( ))
+        {
+          LogError( "error loading config '%s'", file.c_str( ));
+          delete c;
           return false;
+        }
         map[c->GetKey( )] = c;
       }
       return true;
@@ -122,29 +171,65 @@ class ConfigObject : public ConfigBase
 
     template <class Class, class Parent> static bool CreateFromConfigFactory( Parent &parent, std::string configname, std::vector<Class *> &list )
     {
-      char buf[128];
-      int count;
-      for( count = 0; count < 1024; count++ )
+      DIR *d;
+      struct dirent dp;
+      struct dirent *result = NULL;
+      std::string dir;
+      std::string file;
+      std::string path = parent.GetConfigDir( );
+      Utils::EnsureSlash( path );
+      d = opendir( path.c_str( ));
+      if( !d )
       {
-        std::string dir = parent.GetConfigDir( );
-        snprintf( buf, sizeof( buf ), "%s%d/", configname.c_str( ), count );
-        dir += buf;
-
-        std::string file = dir + "config";
+        LogError( "error opening config directory '%s'", path.c_str( ));
+        return false;
+      }
+      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      {
+        if( dp.d_name[0] == '.' )
+          continue;
+        if( ( dp.d_type & DT_DIR ) == 0 )
+          continue;
+        dir = path + dp.d_name;
+        int id;
+        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+          continue;
+        file = dir + "/config";
         if( !Utils::IsFile( file ))
-          break;
-
+        {
+          LogError( "config file not found '%s'", file.c_str( ));
+          rmdir( dir.c_str( ));
+          continue;
+        }
         Class *c = Class::Create( parent, file );
         if( !c )
         {
-          printf( "Could not create object from '%s'\n", file.c_str( ));
+          LogError( "Could not create object from '%s'", file.c_str( ));
           return false;
         }
         if( !c->LoadConfig( ))
+        {
+          LogError( "error loading config '%s'", file.c_str( ));
+          delete c;
           return false;
+        }
         list.push_back( c );
       }
       return true;
+    }
+
+    template <class Class, class Key> static Key GetAvailableKey( std::map<Key, Class *> &map )
+    {
+      Key id = -1;
+      typename std::map<Key, Class *>::iterator it;
+      std::vector<int> v;
+      for( it = map.begin( ); it != map.end( ); it++ )
+        v.push_back( it->first );
+      std::sort( v.begin( ), v.end( ));
+      for( int i = 0; i < v.size( ); i++ )
+        if( v[i] != i )
+          return i;
+      return v.size( );
     }
 
     template <class Class, class Parent> static void SaveReferences( Parent &parent, std::string configname, std::vector<Class *> &list )
@@ -169,6 +254,7 @@ class ConfigObject : public ConfigBase
     bool SetConfigFile( std::string configfile );
     bool WriteConfigFile( );
     bool ReadConfigFile( );
+    bool RemoveConfigFile( );
 
     std::list<int> GetParentPath( );
 
