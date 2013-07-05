@@ -130,7 +130,7 @@ class HTTPServer : public SocketHandler
 
     std::map<std::string, HTTPDynamicHandler *> dynamic_handlers;
 
-    std::map<const char *, Method> methods;
+    std::map<std::string, Method> methods;
 
     bool HandleRequest( HTTPRequest &request );
 
@@ -139,6 +139,7 @@ class HTTPServer : public SocketHandler
     bool POST( HTTPRequest &request );
     bool OPTIONS( HTTPRequest &request );
     bool DESCRIBE( HTTPRequest &request );
+    bool GET_PARAMETER( HTTPRequest &request );
     bool SETUP( HTTPRequest &request );
     bool PLAY( HTTPRequest &request );
     bool TEARDOWN( HTTPRequest &request );

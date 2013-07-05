@@ -59,6 +59,7 @@ HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root)
   methods["POST"] = &HTTPServer::POST;
   methods["OPTIONS"] = &HTTPServer::OPTIONS;
   methods["DESCRIBE"] = &HTTPServer::DESCRIBE;
+  methods["GET_PARAMETER"] = &HTTPServer::GET_PARAMETER;
   methods["SETUP"] = &HTTPServer::SETUP;
   methods["PLAY"] = &HTTPServer::PLAY;
   methods["TEARDOWN"] = &HTTPServer::TEARDOWN;
@@ -207,11 +208,9 @@ void HTTPServer::NotImplemented( HTTPRequest &request, const char *method )
 
 bool HTTPServer::HandleRequest( HTTPRequest &request )
 {
-  for( std::map<const char *, Method>::iterator it = methods.begin( ); it != methods.end( ); it++ )
-    if( strncmp( request.http_method.c_str( ), it->first, strlen( it->first )) == 0 ) // FIXME: remove strlen for speed
-    {
-      return (this->*it->second)( request );
-    }
+  std::map<std::string, Method>::iterator it = methods.find( request.http_method );
+  if( it != methods.end( ))
+    return (this->*it->second)( request );
 
   NotImplemented( request, request.http_method.c_str( )); // FIXME: pass method as std::string
   return false;
@@ -458,6 +457,11 @@ a=control:trackID=1\r\n\
   request.KeepAlive( true );
   request.Reply( response );
   return true;
+}
+
+bool HTTPServer::GET_PARAMETER( HTTPRequest &request )
+{
+  return HTTPServer::OPTIONS( request );
 }
 
 bool HTTPServer::SETUP( HTTPRequest &request )
