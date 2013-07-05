@@ -1,0 +1,1 @@
+-DHAVE_CONFIG_H -I. -Iinclude -Iv4l-utils/lib/include
