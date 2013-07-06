@@ -118,12 +118,14 @@ TVDaemon::~TVDaemon( )
 
 bool TVDaemon::Start( const char* httpRoot )
 {
+  Log( "Loading Config" );
   if( !LoadConfig( ))
   {
     LogError( "Error loading config directory '%s'", GetConfigDir( ).c_str( ));
     return false;
   }
 
+  Log( "Setup udev" );
   // Setup udev
   udev = udev_new( );
   udev_mon = udev_monitor_new_from_netlink( udev, "udev" );
@@ -131,6 +133,7 @@ bool TVDaemon::Start( const char* httpRoot )
 
   FindAdapters( );
 
+  Log( "Creating Recorder" );
   recorder = new Recorder( *this );
   recorder->LoadConfig( );
 
@@ -195,10 +198,13 @@ bool TVDaemon::LoadConfig( )
 
   Log( "Found config version: %s", version.c_str( ));
 
+  Log( "Loading Channels" );
   if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
     return false;
+  Log( "Loading Sources" );
   if( !CreateFromConfig<Source, TVDaemon>( *this, "source", sources ))
     return false;
+  Log( "Loading Adapters" );
   if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
     return false;
 
