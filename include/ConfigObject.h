@@ -99,7 +99,7 @@ class ConfigObject : public ConfigBase
       {
         if( dp.d_name[0] == '.' )
           continue;
-        if( ( dp.d_type & DT_DIR ) == 0 )
+        if( dp.d_type == DT_DIR )
           continue;
         dir = path + dp.d_name;
         int id;
@@ -117,11 +117,12 @@ class ConfigObject : public ConfigBase
         {
           LogError( "error loading config '%s'", file.c_str( ));
           delete c;
-          delete c;
+          closedir( d );
           return false;
         }
         list.push_back( c );
       }
+      closedir( d );
       return true;
     }
 
@@ -144,7 +145,7 @@ class ConfigObject : public ConfigBase
       {
         if( dp.d_name[0] == '.' )
           continue;
-        if( ( dp.d_type & DT_DIR ) == 0 )
+        if( dp.d_type == DT_DIR )
           continue;
         dir = path + dp.d_name;
         int id;
@@ -162,10 +163,12 @@ class ConfigObject : public ConfigBase
         {
           LogError( "error loading config '%s'", file.c_str( ));
           delete c;
+          closedir( d );
           return false;
         }
         map[c->GetKey( )] = c;
       }
+      closedir( d );
       return true;
     }
 
@@ -188,7 +191,7 @@ class ConfigObject : public ConfigBase
       {
         if( dp.d_name[0] == '.' )
           continue;
-        if( ( dp.d_type & DT_DIR ) == 0 )
+        if( dp.d_type == DT_DIR )
           continue;
         dir = path + dp.d_name;
         int id;
@@ -205,16 +208,19 @@ class ConfigObject : public ConfigBase
         if( !c )
         {
           LogError( "Could not create object from '%s'", file.c_str( ));
+          closedir( d );
           return false;
         }
         if( !c->LoadConfig( ))
         {
           LogError( "error loading config '%s'", file.c_str( ));
           delete c;
+          closedir( d );
           return false;
         }
         list.push_back( c );
       }
+      closedir( d );
       return true;
     }
 
