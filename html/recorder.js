@@ -25,12 +25,13 @@ function duration( row )
 
 function print_remove( row )
 {
-  return "<a href=\"javascript: remove( " + row["id"] + " );\">X</a>";
+  return "<a href=\"javascript: remove( " + row["id"] + ", '" + row["name"] + "' );\">X</a>";
 }
 
-function remove( id )
+function remove( id, name )
 {
-  getJSON( 'tvd?c=recorder&a=remove&id=' + id, rethandler );
+  if( confirm( "Are you sure to remove '" + name + "' ?\nRecorded files will not be deleted." ))
+    getJSON( 'tvd?c=recorder&a=remove&id=' + id, rethandler );
 }
 
 function rethandler( data, errmsg )
