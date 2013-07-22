@@ -28,10 +28,13 @@
 #include "Daemon.h"
 #include "Log.h"
 
-bool up = true;
+bool up    = true;
+bool debug = false;
 
 void termination_handler( int signum )
 {
+  if( debug )
+    putchar( '\n' );
   if( up )
   {
     Log( "Signal received, terminating ..." );
@@ -56,7 +59,6 @@ int main( int argc, char *argv[] )
   sigaction( SIGINT, &action, NULL );
   sigaction( SIGTERM, &action, NULL );
 
-  bool debug = false;
   std::string httpRoot = TVDAEMON_HTML;
 
   int opt;
