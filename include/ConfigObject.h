@@ -31,6 +31,7 @@ using namespace libconfig;
 #include <list>
 #include <algorithm> // sort
 #include <unistd.h> // rmdir
+#include <sys/stat.h>
 
 #include "Utils.h"
 #include "Log.h"
@@ -85,6 +86,7 @@ class ConfigObject : public ConfigBase
       DIR *d;
       struct dirent dp;
       struct dirent *result = NULL;
+      struct stat st;
       std::string dir;
       std::string file;
       std::string path = parent.GetConfigDir( );
@@ -99,9 +101,14 @@ class ConfigObject : public ConfigBase
       {
         if( dp.d_name[0] == '.' )
           continue;
-        if( dp.d_type == DT_DIR )
-          continue;
         dir = path + dp.d_name;
+        if( stat( dir.c_str( ), &st ) < 0)
+        {
+          LogError( "cannot stat '%s'", dir.c_str( ));
+          continue;
+        }
+        if( !S_ISDIR( st.st_mode ))
+          continue;
         int id;
         if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
           continue;
@@ -131,6 +138,7 @@ class ConfigObject : public ConfigBase
       DIR *d;
       struct dirent dp;
       struct dirent *result = NULL;
+      struct stat st;
       std::string dir;
       std::string file;
       std::string path = parent.GetConfigDir( );
@@ -145,9 +153,14 @@ class ConfigObject : public ConfigBase
       {
         if( dp.d_name[0] == '.' )
           continue;
-        if( dp.d_type == DT_DIR )
-          continue;
         dir = path + dp.d_name;
+        if( stat( dir.c_str( ), &st ) < 0)
+        {
+          LogError( "cannot stat '%s'", dir.c_str( ));
+          continue;
+        }
+        if( !S_ISDIR( st.st_mode ))
+          continue;
         int id;
         if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
           continue;
@@ -177,6 +190,7 @@ class ConfigObject : public ConfigBase
       DIR *d;
       struct dirent dp;
       struct dirent *result = NULL;
+      struct stat st;
       std::string dir;
       std::string file;
       std::string path = parent.GetConfigDir( );
@@ -191,9 +205,14 @@ class ConfigObject : public ConfigBase
       {
         if( dp.d_name[0] == '.' )
           continue;
-        if( dp.d_type == DT_DIR )
-          continue;
         dir = path + dp.d_name;
+        if( stat( dir.c_str( ), &st ) < 0)
+        {
+          LogError( "cannot stat '%s'", dir.c_str( ));
+          continue;
+        }
+        if( !S_ISDIR( st.st_mode ))
+          continue;
         int id;
         if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
           continue;
