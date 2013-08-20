@@ -39,4 +39,5 @@ nobase_dist_tvdaemon_DATA = \
   html/jqwidgets/jqxcore.js \
   html/jqwidgets/jqxwindow.js \
   html/jqwidgets/styles/images/close.png \
-  html/jqwidgets/styles/images/icon-up.png
+  html/jqwidgets/styles/images/icon-up.png \
+  html/favicon.ico
