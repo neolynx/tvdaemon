@@ -70,6 +70,8 @@ class Stream
 
     static const char *GetTypeName( Type type );
 
+    bool GetSDPDescriptor( std::string &desc );
+
     // RPC
     void json( json_object *entry ) const;
 
