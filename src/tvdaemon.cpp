@@ -68,16 +68,16 @@ int main( int argc, char *argv[] )
     {
       case 'd':
         debug = true;
-        Log( "Starting with debug option." );
         break;
       case 'r':
         {
-          char* tempPath = canonicalize_file_name( optarg );
-          if( tempPath )
-          {
-            httpRoot = tempPath;
-            free( tempPath );
-          }
+          //Log( "Setting http root dir" );
+          //char *tempPath = canonicalize_file_name( optarg );
+          //if( tempPath )
+          //{
+            httpRoot = optarg; //tempPath;
+            //free( tempPath );
+          //}
         }
         break;
       default:
