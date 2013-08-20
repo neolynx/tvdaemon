@@ -39,7 +39,7 @@ class SocketHandler
     char *socket;
 
     pthread_t handler;
-    pthread_mutex_t mutex;
+    volatile pthread_mutex_t mutex;
 
     enum SocketType
     {
@@ -76,6 +76,7 @@ class SocketHandler
 
     virtual bool Send( const char *buffer, int len );
     virtual bool SendToClient( int client, const char *buffer, int len );
+    bool GetClientAddress( int client, struct sockaddr_in &addr ) const;
 
     bool isUp( ) { return up; }
     bool isConnected( ) { return connected; }
@@ -102,8 +103,8 @@ class SocketHandler
 
     SocketHandler( );
     void Run( );
-    bool Lock( );
-    bool Unlock( );
+    bool Lock( ) const;
+    bool Unlock( ) const;
 
     static void Dump( const char *buffer, int length );
 
@@ -118,6 +119,7 @@ class SocketHandler
 
   private:
     std::map<int, Message *> messages;
+    std::map<int, struct sockaddr_in> clients;
 
     shlog logfunc;
 
