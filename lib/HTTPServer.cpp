@@ -164,7 +164,7 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
     if( request->http_method.empty( )) // handle HTTP request (GET, ...)
     {
       std::vector<std::string> tokens;
-      Tokenize( msg.getLine( ), " ", tokens, 3 );
+      Utils::Tokenize( msg.getLine( ), " ", tokens, 3 );
       if( tokens.size( ) < 3 )
       {
         LogError( "HTTPServer: invalid http request '%s'", msg.getLine( ).c_str( ));
@@ -178,7 +178,7 @@ void HTTPServer::HandleMessage( const int client, const SocketHandler::Message &
       return;
     }
     std::vector<std::string> tokens; // handle HTTP headers
-    Tokenize( msg.getLine( ), ": ", tokens, 2 );
+    Utils::Tokenize( msg.getLine( ), ": ", tokens, 2 );
     if( tokens.size( ) < 2 )
     {
       LogError( "HTTPServer: unknown http message '%s'", msg.getLine( ).c_str( ));
@@ -219,11 +219,11 @@ bool HTTPServer::HandleRequest( HTTPRequest &request )
 bool HTTPServer::GET( HTTPRequest &request )
 {
   std::vector<std::string> params;
-  Tokenize( request.url, "?&", params );
+  Utils::Tokenize( request.url, "?&", params );
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
-    Tokenize( params[i], "=", p );
+    Utils::Tokenize( params[i], "=", p );
     if( p.size( ) == 1 )
       request.parameters[p[0]] = "1";
     else if( p.size( ) == 2 )
@@ -325,11 +325,11 @@ bool HTTPServer::GET( HTTPRequest &request )
 bool HTTPServer::POST( HTTPRequest &request )
 {
   std::vector<std::string> params;
-  Tokenize( request.url, "?&", params );
+  Utils::Tokenize( request.url, "?&", params );
   for( int i = 1; i < params.size( ); i++ )
   {
     std::vector<std::string> p;
-    Tokenize( params[i], "=", p );
+    Utils::Tokenize( params[i], "=", p );
     if( p.size( ) == 1 )
       request.parameters[p[0]] = "1";
     else if( p.size( ) == 2 )
@@ -345,11 +345,11 @@ bool HTTPServer::POST( HTTPRequest &request )
   if( request.content.length( ) > 0 )
   {
     std::vector<std::string> vars;
-    Tokenize( request.content, "&", vars );
+    Utils::Tokenize( request.content, "&", vars );
     for( int i = 0; i < vars.size( ); i++ )
     {
       std::vector<std::string> p;
-      Tokenize( vars[i], "=", p );
+      Utils::Tokenize( vars[i], "=", p );
       if( p.size( ) == 1 )
         request.parameters[p[0]] = "1";
       else if( p.size( ) == 2 )
@@ -482,7 +482,7 @@ bool HTTPServer::SETUP( HTTPRequest &request )
 
 
   std::vector<std::string> tokens;
-  Tokenize( transport, ";=", tokens );
+  Utils::Tokenize( transport, ";=", tokens );
   for( std::vector<std::string>::iterator it = tokens.begin( ); it != tokens.end( ); it++ )
     if( *it == "client_port" )
     {
@@ -678,58 +678,6 @@ void HTTPServer::Response::AddMime( const char *mime )
   _buffer.append( "Content-Type: " );
   _buffer += mime_types[i].type;
   _buffer.append( "\r\n" );
-}
-
-int HTTPServer::Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count )
-{
-  int len = string.length( );
-  int dlen = strlen( delims );
-  int last = -1;
-  for( int i = 0; i < len; )
-  {
-    // eat delimiters
-    while( i < len )
-    {
-      bool found = false;
-      for( int j = 0; j < dlen; j++ )
-        if( string[i] == delims[j] )
-        {
-          found = true;
-          break;
-        }
-      if( !found )
-        break;
-      i++;
-    }
-    if( i > len )
-      break;
-
-    int j = i;
-
-    // eat non-delimiters
-    while( i < len )
-    {
-      bool found = false;
-      for( int j = 0; j < dlen; j++ )
-        if( string[i] == delims[j] )
-        {
-          found = true;
-          break;
-        }
-      if( found )
-        break;
-      i++;
-    }
-
-    tokens.push_back( std::string( string.c_str( ) + j,  i - j ));
-
-    if( i == len )
-      break;
-
-    if( count )
-      if( --count == 0 )
-        break;
-  }
 }
 
 void HTTPRequest::Reset( )

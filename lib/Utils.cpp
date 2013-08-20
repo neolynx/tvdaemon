@@ -220,3 +220,56 @@ Name &Name::operator=( const char *str )
   return *this;
 }
 
+int Utils::Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count )
+{
+  int len = string.length( );
+  int dlen = strlen( delims );
+  int last = -1;
+  tokens.clear( );
+  for( int i = 0; i < len; )
+  {
+    // eat delimiters
+    while( i < len )
+    {
+      bool found = false;
+      for( int j = 0; j < dlen; j++ )
+        if( string[i] == delims[j] )
+        {
+          found = true;
+          break;
+        }
+      if( !found )
+        break;
+      i++;
+    }
+    if( i > len )
+      break;
+
+    int j = i;
+
+    // eat non-delimiters
+    while( i < len )
+    {
+      bool found = false;
+      for( int j = 0; j < dlen; j++ )
+        if( string[i] == delims[j] )
+        {
+          found = true;
+          break;
+        }
+      if( found )
+        break;
+      i++;
+    }
+
+    tokens.push_back( std::string( string.c_str( ) + j,  i - j ));
+
+    if( i == len )
+      break;
+
+    if( count )
+      if( --count == 0 )
+        break;
+  }
+}
+

@@ -40,6 +40,8 @@ namespace Utils
 
   void dump( const unsigned char *data, int length );
   void ToLower( const std::string &string, std::string &lower );
+
+  int Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count = 0 );
 };
 
 class Name : public std::string
