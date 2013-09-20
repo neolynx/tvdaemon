@@ -29,6 +29,7 @@
 #include <stdio.h>   // snprintf
 #include <algorithm> // transform
 #include <locale>
+#include <sys/statvfs.h>
 
 #include "Log.h"
 
@@ -98,6 +99,17 @@ void Utils::EnsureSlash( std::string &dir )
 {
   if( dir[dir.length( ) - 1] != '/' )
     dir += "/";
+}
+
+bool Utils::DiskFree( std::string &dir, size_t &df )
+{
+  struct statvfs st;
+  if( statvfs( dir.c_str( ), &st ) < 0 )
+  {
+    return false;
+  }
+  df = st.f_bsize * st.f_bfree;
+  return true;
 }
 
 std::string Utils::GetExtension( std::string &filename )

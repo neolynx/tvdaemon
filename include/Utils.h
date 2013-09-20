@@ -26,6 +26,10 @@
 #include <stdint.h>
 #include <vector>
 
+#define KB(x) (size_t)x*1024
+#define MB(x) (size_t)x*1024*1024
+#define GB(x) (size_t)x*1024*1024*1024
+
 namespace Utils
 {
   std::string Expand( std::string path );
@@ -35,6 +39,7 @@ namespace Utils
   std::string DirName( std::string path );
   std::string BaseName( std::string path );
   void EnsureSlash( std::string &dir );
+  bool DiskFree( std::string &dir, size_t &df );
 
   std::string GetExtension( std::string &filename );
 
