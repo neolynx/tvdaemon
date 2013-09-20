@@ -251,10 +251,13 @@ bool HTTPServer::GET( HTTPRequest &request )
   // Handle http files
 
   std::string url = _root;
-  if( request.url[0] != '/' )
-    url += "/";
-  url += request.url;
+  Utils::EnsureSlash( url );
   url = Utils::Expand( url.c_str( ));
+  std::string t = request.url;
+  size_t pos;
+  while(( pos = t.find( ".." )) != std::string::npos )
+    t.replace( pos, 2, "." );
+  url += t;
 
   if( url.empty( ))
   {
