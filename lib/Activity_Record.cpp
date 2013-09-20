@@ -134,6 +134,20 @@ bool Activity_Record::Perform( )
 {
   // FIXME: verify all pointers...
 
+  std::string dir = recorder.GetDir( );
+  dir = Utils::Expand( dir.c_str( ));
+  size_t df;
+  if( !Utils::DiskFree( dir, df ))
+  {
+    LogError( "error getting free disk space on %s, recording aborted", dir.c_str( ));
+    return false;
+  }
+  if( df < GB( 20 ))
+  {
+    LogError( "Disk space less than 20G on %s, recording aborted", dir.c_str( ));
+    return false;
+  }
+
   bool ret = true;
   std::vector<int> fds;
 
@@ -334,6 +348,12 @@ bool Activity_Record::Perform( )
           }
 
           int ret = write( file_fd, data, len );
+          if( ret != len )
+          {
+            LogError( "Error writing to %s", filename.c_str( ));
+            Stop( );
+            break;
+          }
 
           //if( fd == videofd )
           //{
