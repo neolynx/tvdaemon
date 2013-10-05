@@ -1,20 +1,20 @@
-From 5854caff640adc056e62be2948eac6e76ec0d3f0 Mon Sep 17 00:00:00 2001
+From a5fbf2dd6ef3f79478e2f67cccd256cebac2bfc1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 26 Feb 2013 16:04:00 -0800
 Subject: [PATCH 09/11] libdvbv5: ATSC EIT
 
 ---
- lib/include/descriptors/atsc_eit.h     |  91 +++++++++++++++++++++
- lib/include/descriptors/atsc_header.h  |  64 +++++++++++++++
- lib/include/descriptors/mgt.h          |  25 +++---
- lib/include/descriptors/vct.h          |  45 +++++------
- lib/libdvbv5/Makefile.am               |   2 +
- lib/libdvbv5/descriptors.c             |  22 ++---
- lib/libdvbv5/descriptors/atsc_eit.c    | 143 +++++++++++++++++++++++++++++++++
- lib/libdvbv5/descriptors/atsc_header.c |  48 +++++++++++
- lib/libdvbv5/descriptors/eit.c         |   2 +-
- lib/libdvbv5/descriptors/mgt.c         |  41 +++++-----
- lib/libdvbv5/descriptors/vct.c         |  37 +++++----
+ lib/include/descriptors/atsc_eit.h     |   91 ++++++++++++++++++++
+ lib/include/descriptors/atsc_header.h  |   64 ++++++++++++++
+ lib/include/descriptors/mgt.h          |   25 +++---
+ lib/include/descriptors/vct.h          |   45 +++++-----
+ lib/libdvbv5/Makefile.am               |    2 +
+ lib/libdvbv5/descriptors.c             |   22 ++---
+ lib/libdvbv5/descriptors/atsc_eit.c    |  143 ++++++++++++++++++++++++++++++++
+ lib/libdvbv5/descriptors/atsc_header.c |   48 +++++++++++
+ lib/libdvbv5/descriptors/eit.c         |    2 +-
+ lib/libdvbv5/descriptors/mgt.c         |   41 +++++----
+ lib/libdvbv5/descriptors/vct.c         |   37 ++++-----
  11 files changed, 436 insertions(+), 84 deletions(-)
  create mode 100644 lib/include/descriptors/atsc_eit.h
  create mode 100644 lib/include/descriptors/atsc_header.h
@@ -835,5 +835,5 @@ index e3858c2..0267f2f 100644
  	while (channel) {
  		dvb_log("|   short name     '%s'", channel->short_name);
 -- 
-1.8.3.2
+1.7.10.4
 

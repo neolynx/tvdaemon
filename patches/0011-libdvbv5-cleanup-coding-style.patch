@@ -1,12 +1,12 @@
-From 60fe7ae3d663de8b0077c422b8ec49e86c42db74 Mon Sep 17 00:00:00 2001
+From 97c0a3d63cff469fb29b9bb46c59c0210dfed3bd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 13 Jun 2013 17:33:20 +0200
 Subject: [PATCH 11/11] libdvbv5: cleanup coding style
 
 ---
- lib/libdvbv5/descriptors.c          | 2 +-
- lib/libdvbv5/descriptors/mpeg_pes.c | 2 +-
- lib/libdvbv5/dvb-demux.c            | 4 ++--
+ lib/libdvbv5/descriptors.c          |    2 +-
+ lib/libdvbv5/descriptors/mpeg_pes.c |    2 +-
+ lib/libdvbv5/dvb-demux.c            |    4 ++--
  3 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
@@ -56,5 +56,5 @@ index 2029204..3914a0a 100644
  
  int dvb_set_pesfilter(int dmxfd, int pid, dmx_pes_type_t type, dmx_output_t output, int buffersize)
 -- 
-1.8.3.2
+1.7.10.4
 

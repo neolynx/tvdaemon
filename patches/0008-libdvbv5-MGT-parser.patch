@@ -1,13 +1,13 @@
-From 753ce42b1cb9152360e53c8941efa2ea807bc091 Mon Sep 17 00:00:00 2001
+From 42f23a862de8e0bac8b535716cbe98a68e76e57e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 25 Feb 2013 12:39:57 -0800
 Subject: [PATCH 08/11] libdvbv5: MGT parser
 
 ---
- lib/include/descriptors/mgt.h  |  82 ++++++++++++++++++++++++++++++
- lib/libdvbv5/Makefile.am       |   1 +
- lib/libdvbv5/descriptors.c     |   2 +
- lib/libdvbv5/descriptors/mgt.c | 113 +++++++++++++++++++++++++++++++++++++++++
+ lib/include/descriptors/mgt.h  |   82 +++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am       |    1 +
+ lib/libdvbv5/descriptors.c     |    2 +
+ lib/libdvbv5/descriptors/mgt.c |  113 ++++++++++++++++++++++++++++++++++++++++
  4 files changed, 198 insertions(+)
  create mode 100644 lib/include/descriptors/mgt.h
  create mode 100644 lib/libdvbv5/descriptors/mgt.c
@@ -252,5 +252,5 @@ index 0000000..272d9d7
 +}
 +
 -- 
-1.8.3.2
+1.7.10.4
 

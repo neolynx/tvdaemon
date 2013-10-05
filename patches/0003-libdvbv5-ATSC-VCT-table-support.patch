@@ -1,4 +1,4 @@
-From 17a093de9ac820a8097847542404292b26dab9b5 Mon Sep 17 00:00:00 2001
+From de345cbc2d7763cbdf0996f88add2dd39006c9a9 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 29 Aug 2012 22:14:10 +0200
 Subject: [PATCH 03/11] libdvbv5: ATSC VCT table support
@@ -8,16 +8,16 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors.h                        |   4 +-
- lib/include/descriptors/desc_service_location.h  |  70 ++++++++++
- lib/include/descriptors/vct.h                    | 110 ++++++++++++++++
- lib/libdvbv5/Makefile.am                         |   4 +-
- lib/libdvbv5/descriptors.c                       |  10 +-
- lib/libdvbv5/descriptors/desc_service_location.c |  71 ++++++++++
- lib/libdvbv5/descriptors/vct.c                   | 157 +++++++++++++++++++++++
- lib/libdvbv5/dvb-scan.c                          |  32 +++--
- lib/libdvbv5/parse_string.c                      |   2 +-
- 9 files changed, 441 insertions(+), 19 deletions(-)
+ lib/include/descriptors.h                        |    4 +-
+ lib/include/descriptors/desc_service_location.h  |   70 ++++++++++
+ lib/include/descriptors/vct.h                    |  110 +++++++++++++++
+ lib/libdvbv5/Makefile.am                         |    4 +-
+ lib/libdvbv5/descriptors.c                       |   10 +-
+ lib/libdvbv5/descriptors/desc_service_location.c |   71 ++++++++++
+ lib/libdvbv5/descriptors/vct.c                   |  157 ++++++++++++++++++++++
+ lib/libdvbv5/dvb-scan.c                          |   56 +++++---
+ lib/libdvbv5/parse_string.c                      |    2 +-
+ 9 files changed, 458 insertions(+), 26 deletions(-)
  create mode 100644 lib/include/descriptors/desc_service_location.h
  create mode 100644 lib/include/descriptors/vct.h
  mode change 100644 => 100755 lib/libdvbv5/descriptors.c
@@ -552,7 +552,7 @@ index 0000000..e3858c2
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
 old mode 100644
 new mode 100755
-index b1acf9b..172d208
+index b1acf9b..f41e37c
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -312,6 +312,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
@@ -563,21 +563,25 @@ index b1acf9b..172d208
  	*table = NULL;
  	ssize_t table_length = 0;
  
-@@ -337,6 +338,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -337,37 +338,40 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  		return -1;
  	}
  
 +	int ret = 0;
++	uint8_t *buf = NULL;
  	while (1) {
  		int available;
  
-@@ -347,27 +349,25 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+-		uint8_t *buf = NULL;
+ 		ssize_t buf_length = 0;
+ 
+ 		do {
  			available = poll(parms, dmx_fd, timeout);
  		} while (available < 0 && errno == EOVERFLOW);
  		if (parms->abort) {
 -			free(tbl);
 -			return 0;
-+			ret = 0; // FIXME: free tbl
++			ret = 0;
 +			goto exit;
  		}
  		if (available <= 0) {
@@ -586,6 +590,10 @@ index b1acf9b..172d208
 -			return -1;
 +			ret = -1;
 +			goto exit;
++		}
++		if (buf) {
++			free(buf);
++			buf = NULL;
  		}
  		buf = malloc(DVB_MAX_PAYLOAD_PACKET_SIZE);
  		buf_length = read(dmx_fd, buf, DVB_MAX_PAYLOAD_PACKET_SIZE);
@@ -607,10 +615,11 @@ index b1acf9b..172d208
  		}
  
  		buf = realloc(buf, buf_length);
-@@ -376,8 +376,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -375,15 +379,23 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+ 		uint32_t crc = crc32(buf, buf_length, 0xFFFFFFFF);
  		if (crc != 0) {
  			dvb_logerr("dvb_read_section: crc error");
- 			free(buf);
+-			free(buf);
 -			free(tbl);
 -			return -3;
 +			ret = -3;
@@ -618,15 +627,47 @@ index b1acf9b..172d208
  		}
  
  		struct dvb_table_header *h = (struct dvb_table_header *) buf;
-@@ -425,10 +425,14 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+ 		dvb_table_header_init(h);
++
++		/* dvb_logdbg( "dvb_read_section: id %d, section %d/%d, current: %d", h->id, h->section_id, h->last_section, h->current_next ); */
++		if (start_id == h->id && start_section == h->section_id) {
++			dvb_logwarn( "dvb_read_section: section repeated, reading done" );
++			ret = -5;
++			goto exit;
++		}
++		if (start_id == -1) start_id = h->id;
++		if (start_section == -1) start_section = h->section_id;
++
+ 		if (id != -1 && h->id != id) { /* search for a specific table id */
+-			free(buf);
+ 			continue;
+ 		}
+ 
+@@ -403,7 +415,6 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+ 			first_section = h->section_id;
+ 		else if (h->section_id == first_section)
+ 		{
+-			free(buf);
+ 			break;
+ 		}
+ 		if (last_section == -1)
+@@ -419,16 +430,19 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+ 		} else
+ 			dvb_logerr("dvb_read_section: no initializer for table %d", tid);
+ 
+-		free(buf);
+-
+-		if (++sections == last_section + 1)
++		if (id != -1 && ++sections == last_section + 1) {
++			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
  			break;
  	}
  
 +	*table = tbl;
 +
 +exit:
-+	if (tbl)
-+		free(tbl);
++	if (buf)
++		free(buf);
  	dvb_dmx_stop(dmx_fd);
  
 -	*table = tbl;
@@ -649,5 +690,5 @@ index 92fdbfc..cee101a 100644
  		} else {
  			iconv(cd, (ICONV_CONST char **)&s, &len, &p, &destlen);
 -- 
-1.8.3.2
+1.7.10.4
 

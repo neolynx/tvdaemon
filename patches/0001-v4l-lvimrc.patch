@@ -4,7 +4,7 @@ Date: Sat, 5 Oct 2013 14:09:47 +0200
 Subject: [PATCH 01/11] v4l: lvimrc
 
 ---
- .lvimrc | 4 ++++
+ .lvimrc |    4 ++++
  1 file changed, 4 insertions(+)
  create mode 100644 .lvimrc
 
@@ -19,5 +19,5 @@ index 0000000..b8658a7
 +set softtabstop=8
 +
 -- 
-1.8.3.2
+1.7.10.4
 

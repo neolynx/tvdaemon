@@ -1,17 +1,17 @@
-From 621892124f2c12569f29aad597a9178e0825fdbf Mon Sep 17 00:00:00 2001
+From 303f43f74b012109dc3df0768ab94faacd395322 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 21 Jan 2013 23:23:55 +0100
 Subject: [PATCH 06/11] libdvbv5: eit parsing updated
 
 ---
- lib/include/descriptors.h      |  6 ++++++
- lib/include/descriptors/eit.h  |  1 +
- lib/include/dvb-fe.h           |  2 ++
- lib/libdvbv5/descriptors.c     |  1 +
- lib/libdvbv5/descriptors/eit.c | 28 +++++++++++++++++++++++-----
- lib/libdvbv5/dvb-fe.c          |  7 +++++++
- lib/libdvbv5/dvb-scan.c        | 26 ++++++++++++--------------
- 7 files changed, 52 insertions(+), 19 deletions(-)
+ lib/include/descriptors.h      |    6 ++++++
+ lib/include/descriptors/eit.h  |    1 +
+ lib/include/dvb-fe.h           |    2 ++
+ lib/libdvbv5/descriptors.c     |    1 +
+ lib/libdvbv5/descriptors/eit.c |   28 +++++++++++++++++++++++-----
+ lib/libdvbv5/dvb-fe.c          |    7 +++++++
+ lib/libdvbv5/dvb-scan.c        |   19 ++++++++-----------
+ 7 files changed, 48 insertions(+), 16 deletions(-)
 
 diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
 index e72b370..50cc948 100644
@@ -147,7 +147,7 @@ index d62355d..850a631 100644
  				    unsigned use_legacy_call)
  {
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 427ca05..f838045 100755
+index 856f14f..6ec5052 100755
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -321,14 +321,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
@@ -166,25 +166,7 @@ index 427ca05..f838045 100755
  	struct dmx_sct_filter_params f;
  	memset(&f, 0, sizeof(f));
  	f.pid = pid;
-@@ -352,7 +349,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 			available = poll(parms, dmx_fd, timeout);
- 		} while (available < 0 && errno == EOVERFLOW);
- 		if (parms->abort) {
--			ret = 0; // FIXME: free tbl
-+			ret = 0; // FIXME: free table
- 			goto exit;
- 		}
- 		if (available <= 0) {
-@@ -386,7 +383,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 		struct dvb_table_header *h = (struct dvb_table_header *) buf;
- 		dvb_table_header_init(h);
- 
--		dvb_logdbg( "dvb_read_section: id %d, section %d/%d", h->id, h->section_id, h->last_section );
-+		dvb_logdbg( "dvb_read_section: id %d, section %d/%d, current: %d", h->id, h->section_id, h->last_section, h->current_next );
- 		if (start_id == h->id && start_section == h->section_id) {
- 			dvb_logwarn( "dvb_read_section: section repeated, reading done" );
- 			free(buf);
-@@ -411,11 +408,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -412,11 +409,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  			/*}*/
  		/*}*/
  
@@ -196,9 +178,9 @@ index 427ca05..f838045 100755
 -		else if (h->section_id == first_section)
 +		else if (start_id == h->id && h->section_id == first_section)
  		{
- 			free(buf);
  			break;
-@@ -424,22 +421,23 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+ 		}
+@@ -424,21 +421,21 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  			last_section = h->last_section;
  
  		//ARRAY_SIZE(vb_table_initializers) >= table
@@ -215,11 +197,8 @@ index 427ca05..f838045 100755
  		} else
  			dvb_logerr("dvb_read_section: no initializer for table %d", tid);
  
- 		free(buf);
- 
--		if (++sections == last_section + 1)
-+		if (++sections == last_section + 1) {
-+			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
+ 		if (id != -1 && ++sections == last_section + 1) {
+ 			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
  			break;
 +		}
  	}
@@ -227,7 +206,7 @@ index 427ca05..f838045 100755
 -	*table = tbl;
  
  exit:
- 	if (tbl)
+ 	if (buf)
 -- 
-1.8.3.2
+1.7.10.4
 

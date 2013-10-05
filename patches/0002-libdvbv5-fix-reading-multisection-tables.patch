@@ -4,7 +4,7 @@ Date: Sun, 13 Jan 2013 23:23:33 +0100
 Subject: [PATCH 02/11] libdvbv5: fix reading multisection tables
 
 ---
- lib/libdvbv5/dvb-scan.c | 19 +++++++++++--------
+ lib/libdvbv5/dvb-scan.c |   19 +++++++++++--------
  1 file changed, 11 insertions(+), 8 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
@@ -40,5 +40,5 @@ index 6de629f..b1acf9b 100644
  		if (first_section == -1)
  			first_section = h->section_id;
 -- 
-1.8.3.2
+1.7.10.4
 
