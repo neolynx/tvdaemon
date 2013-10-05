@@ -20,7 +20,7 @@ DAEMON=/usr/sbin/$NAME
 DESC="$NAME server"
 PIDFILE=/var/run/$NAME.pid
 
-DIETIME=5
+DIETIME=10
 
 test -x $DAEMON || exit 0
 
