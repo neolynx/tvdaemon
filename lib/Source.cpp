@@ -161,7 +161,7 @@ bool Source::ReadScanfile( std::string scanfile )
 
 bool Source::AddTransponder( Transponder *t )
 {
-  ScopeMutex _l;
+  SCOPELOCK( );
   for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
     if( (*it)->IsSame( *t ))
@@ -426,7 +426,7 @@ bool Source::Tune( Activity &act )
 
 void Source::Scan( )
 {
-  ScopeMutex t;
+  SCOPELOCK( );
   std::vector<Transponder *>::const_iterator it;
   for( it = transponders.begin( ); it != transponders.end( ); it++ )
     if( (*it)->GetState( ) != Transponder::State_Duplicate )
@@ -435,7 +435,7 @@ void Source::Scan( )
 
 bool Source::GetTransponderForScanning( Activity &act )
 {
-  ScopeMutex t;
+  SCOPELOCK( );
   std::vector<Transponder *>::const_iterator it;
   for( it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
     if( (*it)->GetState( ) == Transponder::State_New )
@@ -449,7 +449,7 @@ bool Source::GetTransponderForScanning( Activity &act )
 
 bool Source::GetTransponderForEPGScan( Activity &act )
 {
-  ScopeMutex t;
+  SCOPELOCK( );
   time_t now = time( NULL );
   for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
   {

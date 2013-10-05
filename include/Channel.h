@@ -26,6 +26,7 @@
 #include "RPCObject.h"
 #include "Event.h"
 #include "Utils.h" // Name
+#include "Thread.h" // Name
 
 #include <string>
 #include <vector>
@@ -85,6 +86,7 @@ class Channel : public ConfigObject, public RPCObject
     std::vector<Service *> services;
 
     std::vector<Event *> events;
+    Mutex mutex;
 };
 
 #endif

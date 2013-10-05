@@ -197,7 +197,7 @@ void Channel::ClearEPG( )
 
 bool Channel::AddEPGEvent( const struct dvb_table_eit_event *event )
 {
-  ScopeMutex _l;
+  ScopeLock _l( mutex );
   for( int i = 0; i < events.size( ); i++ )
   {
     if( events[i]->GetID( ) == event->event_id ) // FIXME: check start time

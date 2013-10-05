@@ -21,6 +21,9 @@
 
 #include "Thread.h"
 
+#include <sys/time.h>
+#include <errno.h> // ETIMEDOUT
+
 #include "Log.h"
 
 Mutex::Mutex( )
@@ -28,15 +31,63 @@ Mutex::Mutex( )
   pthread_mutex_init( (pthread_mutex_t *) &mutex, NULL );
 }
 
+Mutex::~Mutex( )
+{
+  pthread_mutex_destroy((pthread_mutex_t *) &mutex );
+}
+
 void Mutex::Lock( ) const
 {
-  pthread_mutex_lock( (pthread_mutex_t *) &mutex );
+  pthread_mutex_lock((pthread_mutex_t *) &mutex );
 }
 
 void Mutex::Unlock( ) const
 {
-  pthread_mutex_unlock( (pthread_mutex_t *) &mutex );
+  pthread_mutex_unlock((pthread_mutex_t *) &mutex );
 }
+
+Condition::Condition( )
+{
+  pthread_cond_init((pthread_cond_t *) &cond, NULL );
+}
+
+Condition::~Condition( )
+{
+  pthread_cond_destroy((pthread_cond_t *) &cond );
+}
+
+void Condition::Signal( ) const
+{
+  pthread_cond_signal((pthread_cond_t *) &cond );
+}
+
+bool Condition::Wait( int seconds ) const
+{
+  struct timespec ts;
+  struct timeval  tp;
+
+  while( seconds-- )
+  {
+    gettimeofday( &tp, NULL );
+    ts.tv_sec  = tp.tv_sec;
+    ts.tv_nsec = tp.tv_usec * 1000;
+    ts.tv_sec += 1;
+
+    int r = pthread_cond_timedwait((pthread_cond_t *) &cond, (pthread_mutex_t *) &mutex, &ts );
+    switch( r )
+    {
+      case ETIMEDOUT:
+        continue;
+      case 0:
+        Unlock( );
+        return true;
+      default:
+        return false;
+    }
+  }
+  return false;
+}
+
 
 Thread::Thread( ) : Mutex( ), started(false)
 {

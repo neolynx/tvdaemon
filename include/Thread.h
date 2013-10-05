@@ -28,30 +28,36 @@ class Mutex
 {
   public:
     Mutex( );
+    virtual ~Mutex( );
     void Lock( ) const;
     void Unlock( ) const;
 
-  private:
+  protected:
     volatile pthread_mutex_t mutex;
-};
-
-class ScopeMutex : public Mutex
-{
-  public:
-    ScopeMutex( ) : Mutex( ) { Lock( ); }
-    ~ScopeMutex( ) { Unlock( ); }
 };
 
 class ScopeLock
 {
   public:
-    ScopeLock( const Mutex *mutex ) : mutex(mutex) { mutex->Lock( ); }
-    ~ScopeLock( ) { mutex->Unlock( ); }
+    ScopeLock( const Mutex &mutex ) : mutex(mutex) { mutex.Lock( ); }
+    ~ScopeLock( ) { mutex.Unlock( ); }
   private:
-    const Mutex *mutex;
+    const Mutex &mutex;
 };
 
-#define SCOPELOCK( ) ScopeLock _l( this )
+#define SCOPELOCK( ) ScopeLock _l( *this )
+
+class Condition : public Mutex
+{
+  public:
+    Condition( );
+    virtual ~Condition( );
+    bool Wait( int seconds = 3 ) const;
+    void Signal( ) const;
+
+  private:
+    volatile pthread_cond_t cond;
+};
 
 class Thread : public Mutex
 {
