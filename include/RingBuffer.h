@@ -25,6 +25,8 @@
 #include <unistd.h> // size_t
 #include <stdint.h> // uint8_t
 
+#include "Thread.h"
+
 class RingBuffer
 {
   public:
@@ -37,11 +39,12 @@ class RingBuffer
     bool GetFrame( uint8_t * &data, size_t &length );
 
     uint8_t *Data( ) { return buffer; }
-    size_t Count( ) { return count; }
+    size_t Count( ) const;
     size_t Remaining( ) { return size - readpos; }
     size_t ReadPos( ) { return readpos; }
 
   private:
+    Mutex mutex;
     uint8_t *buffer;
     size_t size, overlap, readpos, writepos, count;
 };

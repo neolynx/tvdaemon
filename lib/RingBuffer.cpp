@@ -33,11 +33,24 @@ RingBuffer::RingBuffer( size_t size, size_t overlap ): size(size), overlap(overl
 
 RingBuffer::~RingBuffer( )
 {
+  ScopeLock _l( mutex );
   delete[] buffer;
+}
+
+size_t RingBuffer::Count( ) const
+{
+  ScopeLock _l( mutex );
+  return count;
 }
 
 bool RingBuffer::append( uint8_t *data, size_t length )
 {
+  ScopeLock _l( mutex );
+  if( length > size )
+  {
+    LogWarn( "RingBuffer: buffer too small: %d > %d", (int) length, (int) size );
+    return false;
+  }
   if( writepos + length > size )
   {
     int chunk = size - writepos;
@@ -66,6 +79,7 @@ bool RingBuffer::append( uint8_t *data, size_t length )
 
 bool RingBuffer::read( uint8_t *data, size_t length )
 {
+  ScopeLock _l( mutex );
   if( length > count )
     return false;
   if( length > size - readpos )
