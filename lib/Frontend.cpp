@@ -343,10 +343,16 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
 
       //if( i > 0 )
       //printf( "\n" );
-      Log( "Tuned: signal %3u%% snr %3u%% ber %d unc %d", (sig * 100) / 0xffff, (snr * 100) / 0xffff, ber, unc );
+      Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
+      sig *= 100;
+      sig /= 0xffff;
+      snr *= 100;
+      snr /= 0xffff;
 
-      signal = (sig * 100) / 0xffff;
-      noise  = (snr * 100) / 0xffff;
+      Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
+
+      signal = sig;
+      noise  = snr;
       return true;
     }
 

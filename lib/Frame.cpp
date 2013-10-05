@@ -22,12 +22,16 @@
 #include "Frame.h"
 
 #include "Log.h"
-#include "Matroska.h"
+//#include "Matroska.h"
 
 #include <stdlib.h> // malloc
 #include <string.h> // memcpy
 
-Frame::Frame( struct dvb_v5_fe_parms &fe, Matroska &mkv ) : fe(fe), mkv(mkv)
+#ifdef	CCXX_NAMESPACES
+using namespace ost;
+#endif
+
+Frame::Frame( struct dvb_v5_fe_parms &fe ) : fe(fe)//, mkv(mkv)
 {
   buffer_size = 1024;
   buffer = (uint8_t *) malloc( buffer_size );
@@ -38,6 +42,8 @@ Frame::Frame( struct dvb_v5_fe_parms &fe, Matroska &mkv ) : fe(fe), mkv(mkv)
   pts_start = 0;
   pts = 0;
   frame_type = DVB_MPEG_ES_FRAME_UNKNOWN;
+
+  timestamp = 0;
 }
 
 Frame::~Frame( )
@@ -45,12 +51,12 @@ Frame::~Frame( )
   free( buffer );
 }
 
-bool Frame::ReadFrame( uint8_t *data, size_t length )
+bool Frame::ReadFrame( uint8_t *data, size_t length, RTPSession *session )
 {
   bool got_slice = false;
   bool payload = false;
-  uint64_t last_pts = pts;
-  dvb_mpeg_es_frame_t last_frame_type = frame_type;
+  last_pts = pts;
+  last_frame_type = frame_type;
   uint8_t type = data[3];
   switch( type )
   {
@@ -109,7 +115,14 @@ bool Frame::ReadFrame( uint8_t *data, size_t length )
     slices = false;
     if( started )
     {
-      mkv.AddFrame( last_pts, last_frame_type, buffer, buffer_length );
+      // mkv.AddFrame( last_pts, last_frame_type, buffer, buffer_length );
+      Log( "RTP: Sending %d bytes @", buffer_length );
+      if( timestamp == 0 )
+        timestamp = session->getCurrentTimestamp( );
+      else
+        timestamp += session->getCurrentRTPClockRate();
+      session->putData( timestamp, buffer, buffer_length );
+
       buffer_length = 0;
     }
   }

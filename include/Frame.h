@@ -27,24 +27,26 @@
 #include "descriptors/mpeg_pes.h"
 #include "descriptors/mpeg_es.h"
 
-class Matroska;
+//class Matroska;
+#include <ccrtp/rtp.h>
 
 class Frame
 {
   public:
-    Frame( struct dvb_v5_fe_parms &fe, Matroska &mkv );
+    Frame( struct dvb_v5_fe_parms &fe );
     ~Frame( );
 
-    bool ReadFrame( uint8_t *data, size_t size );
+    bool ReadFrame( uint8_t *data, size_t size, ost::RTPSession *session );
 
   private:
     struct dvb_v5_fe_parms &fe;
-    Matroska &mkv;
+    //Matroska &mkv;
 
     uint8_t *buffer;
     size_t   buffer_size;
     size_t   buffer_length;
 
+    bool started;
     bool slices;
     struct dvb_mpeg_pes pes;
     struct dvb_mpeg_es_seq_start seq_start;
@@ -52,10 +54,12 @@ class Frame
 
     uint64_t pts_start;
     uint64_t pts;
-
-    bool started;
+    uint64_t last_pts;
 
     dvb_mpeg_es_frame_t frame_type;
+    dvb_mpeg_es_frame_t last_frame_type;
+
+    uint32_t timestamp;
 };
 
 #endif

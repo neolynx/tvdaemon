@@ -32,6 +32,8 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Event.cpp \
 			  RPCObject.cpp \
 			  Log.cpp \
+			  StreamingHandler.cpp \
+			  Activity_Stream.cpp \
 			  Daemon.cpp
 
 libtvdaemon_la_LIBADD = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} ../v4l-utils/lib/libdvbv5/libdvbv5.la -lmatroska ${LIBCCRTP_LIBS} ${LIBAVFORMAT_LIBS} ${LIBAVCODEC_LIBS}

@@ -15,6 +15,7 @@
 #include <list>
 #include <vector>
 #include <stdint.h>
+#include <netinet/in.h> // sockaddr_in
 
 #define HTTP_VERSION  "HTTP/1.0"
 #define RTSP_VERSION  "RTSP/1.0"
@@ -66,6 +67,7 @@ struct mime_type
 };
 
 class HTTPDynamicHandler;
+class RTSPHandler;
 class HTTPRequest;
 
 class HTTPServer : public SocketHandler
@@ -75,6 +77,7 @@ class HTTPServer : public SocketHandler
     virtual ~HTTPServer( );
 
     void AddDynamicHandler( std::string url, HTTPDynamicHandler *handler );
+    void SetRTSPHandler( RTSPHandler *handler );
 
     std::string GetRoot( ) { return _root; }
 
@@ -129,6 +132,7 @@ class HTTPServer : public SocketHandler
     std::map<int, HTTPRequest *> _requests;
 
     std::map<std::string, HTTPDynamicHandler *> dynamic_handlers;
+    RTSPHandler *rtsp_handler;
 
     std::map<std::string, Method> methods;
 
@@ -144,8 +148,6 @@ class HTTPServer : public SocketHandler
     bool PLAY( HTTPRequest &request );
     bool TEARDOWN( HTTPRequest &request );
 
-    static int Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count = 0 );
-
 };
 
 class HTTPDynamicHandler
@@ -154,10 +156,17 @@ class HTTPDynamicHandler
     virtual bool HandleDynamicHTTP( const HTTPRequest &request ) = 0;
 };
 
+class StreamingHandler;
+class RTSPHandler // StreamingProvider ?
+{
+  public:
+    virtual StreamingHandler *GetStreamingHandler( std::string url ) = 0;
+};
+
 class HTTPRequest
 {
   public:
-    HTTPRequest( HTTPServer &server, int client ) : server(server), client(client), content_length(-1), keep_alive(false) { }
+    HTTPRequest( HTTPServer &server, int client );
 
     bool HasHeader( const char *key ) const;
     bool GetHeader( const char *key, std::string &value ) const;
@@ -178,6 +187,8 @@ class HTTPRequest
 
     std::string GetDocRoot( ) const { return server.GetRoot( ); }
 
+    in_addr GetClientIP( ) const;
+
     void Reset( );
 
   private:
@@ -191,6 +202,7 @@ class HTTPRequest
     std::string content;
     std::map<std::string, std::string> parameters;
     bool keep_alive;
+    struct sockaddr_in client_addr;
   friend class HTTPServer;
 };
 

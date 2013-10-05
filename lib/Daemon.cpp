@@ -88,6 +88,7 @@ bool Daemon::daemonize( const char *user, const char *pidfile, bool change_cwd )
   // child
   if( pidfile )
     this->pidfile = pidfile;
+
   if( user )
   {
     {

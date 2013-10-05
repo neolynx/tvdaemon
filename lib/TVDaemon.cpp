@@ -41,6 +41,7 @@
 
 #include "SocketHandler.h"
 #include "Log.h"
+#include "StreamingHandler.h"
 
 TVDaemon *TVDaemon::instance = NULL;
 
@@ -92,8 +93,13 @@ TVDaemon::~TVDaemon( )
   Log( "Closing Tuners" );
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     (*it)->Shutdown( );
+
   Log( "Stopping Recorder" );
   recorder->Stop( );
+
+  Log( "Stopping StreamingHandlers" );
+  for( std::map<Channel *, StreamingHandler *>::iterator it = streaming_handlers.begin( ); it != streaming_handlers.end( ); it++ )
+    delete it->second;
 
   Log( "Saving Config" );
   SaveConfig( );
@@ -141,6 +147,7 @@ bool TVDaemon::Start( const char* httpRoot )
 
   httpd = new HTTPServer( httpRoot );
   httpd->AddDynamicHandler( "tvd", this );
+  httpd->SetRTSPHandler( this );
   httpd->SetLogFunc( TVD_Log );
 
   if( !httpd->CreateServerTCP( HTTPDPORT ))
@@ -157,7 +164,7 @@ bool TVDaemon::Start( const char* httpRoot )
 
 bool TVDaemon::SaveConfig( )
 {
-  ScopeMutex _l;
+  SCOPELOCK( );
   std::string version = PACKAGE_VERSION;
   WriteConfig( "Version", version );
   WriteConfig( "EPGUpdateInterval", epg_update_interval );
@@ -539,7 +546,7 @@ Source *TVDaemon::GetSource( int id ) const
 
 Channel *TVDaemon::CreateChannel( Service *service )
 {
-  ScopeMutex _l;
+  SCOPELOCK( );
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
     if( (*it)->HasService( service ))
@@ -555,7 +562,7 @@ Channel *TVDaemon::CreateChannel( Service *service )
 
 std::vector<std::string> TVDaemon::GetChannelList( )
 {
-  ScopeMutex _l;
+  SCOPELOCK( );
   std::vector<std::string> result;
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
@@ -566,7 +573,7 @@ std::vector<std::string> TVDaemon::GetChannelList( )
 
 Channel *TVDaemon::GetChannel( int id )
 {
-  ScopeMutex _l;
+  SCOPELOCK( );
   if( id < 0 or id >= channels.size( ))
   {
     LogError( "Channel not found: %d", id );
@@ -577,7 +584,7 @@ Channel *TVDaemon::GetChannel( int id )
 
 void TVDaemon::UpdateEPG( )
 {
-  ScopeMutex _l;
+  SCOPELOCK( );
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
     (*it)->UpdateEPG( );
@@ -926,7 +933,7 @@ void TVDaemon::ServerSideTable( const HTTPRequest &request, std::vector<const JS
 
 bool TVDaemon::RPC_Channel( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  ScopeMutex _l;
+  SCOPELOCK( );
   std::string t;
   if( !request.GetParam( "channel_id", t ))
     return false;
@@ -986,14 +993,62 @@ void TVDaemon::Record( Channel &channel )
 
 void TVDaemon::LockFrontends( )
 {
-  Log( "Trying to get frontends lock ..." );
-  frontend_mutex.Lock( );
-  Log( "Locked frontends" );
+  frontends_mutex.Lock( );
 }
 
 void TVDaemon::UnlockFrontends( )
 {
-  Log( "Unlocking frontends ..." );
-  frontend_mutex.Unlock( );
+  frontends_mutex.Unlock( );
 }
 
+void TVDaemon::LockChannels( )
+{
+  channels_mutex.Lock( );
+}
+
+void TVDaemon::UnlockChannels( )
+{
+  channels_mutex.Unlock( );
+}
+
+StreamingHandler *TVDaemon::GetStreamingHandler( std::string url )
+{
+  std::vector<std::string> tokens;
+  Utils::Tokenize( url,"/", tokens, 3 );
+  if( tokens.size( ) != 3 ) // rtsp://server:port/channel
+  {
+    LogError( "RTSP: invalid setup url: %s", url.c_str( ));
+    return NULL;
+  }
+  std::string channel_name = tokens[2];
+
+  LockChannels( );
+  Channel *channel = NULL;
+  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+  {
+    if( (*it)->GetName( ) == channel_name )
+    {
+      channel = *it;
+      break;
+    }
+  }
+  if( !channel )
+  {
+    LogError( "RTSP: unknown channel '%s'", channel_name.c_str( ));
+    UnlockChannels( );
+    return NULL;
+  }
+
+  StreamingHandler *streaming_handler = NULL;
+  std::map<Channel *, StreamingHandler *>::iterator it = streaming_handlers.find( channel ); // FIXME: key should be channel and remote_ip, maybe session
+  if( it == streaming_handlers.end( ))
+  {
+    streaming_handler = new StreamingHandler( channel );
+    streaming_handlers[channel] = streaming_handler;
+  }
+  else
+    streaming_handler = streaming_handlers[channel];
+
+  UnlockChannels( );
+  return streaming_handler;
+}

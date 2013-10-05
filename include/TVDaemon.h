@@ -31,7 +31,6 @@
 #include <vector>
 #include <queue>
 #include <libudev.h>
-#include <pthread.h>
 
 #define SCANFILE_DIR "/usr/share/dvb/"
 
@@ -42,8 +41,9 @@ class Source;
 class Channel;
 class Recorder;
 class Event;
+class StreamingHandler;
 
-class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
+class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHandler, public Thread
 {
   public:
     static TVDaemon *Instance( );
@@ -68,6 +68,8 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
 
     void LockFrontends( );
     void UnlockFrontends( );
+    void LockChannels( );
+    void UnlockChannels( );
 
     // RPC
     virtual bool HandleDynamicHTTP( const HTTPRequest &request );
@@ -82,6 +84,9 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
     void Record( Channel &channel );
     void UpdateEPG( );
     int GetEPGUpdateInterval( ) const { return epg_update_interval; }
+
+    // RTSP
+    virtual StreamingHandler *GetStreamingHandler( std::string url );
 
   private:
     TVDaemon( );
@@ -116,7 +121,10 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public Thread
 
     std::vector<Transponder *> epg_transponders;
 
-    Mutex frontend_mutex;
+    std::map<Channel *, StreamingHandler *> streaming_handlers;
+
+    Mutex frontends_mutex;
+    Mutex channels_mutex;
 };
 
 #endif

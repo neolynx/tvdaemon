@@ -175,11 +175,14 @@ bool Activity_Record::Perform( )
       int fd = it->second->Open( *frontend );
       if( fd )
         fds.push_back( fd );
-      //if( it->second->IsVideo( ))
-      //{
+      if( it->second->IsVideo( ))
+      {
+        std::string desc;
+        it->second->GetSDPDescriptor( desc );
+        frontend->LogWarn( "SDP: %s", desc.c_str( ));
       ////rec.AddTrack( );
       //videofd = fd;
-      //}
+      }
     }
     else
       frontend->LogWarn( "Ignoring Stream %d: %s (%d)", it->first, it->second->GetTypeName( ), it->second->GetType( ));
@@ -237,8 +240,7 @@ bool Activity_Record::Perform( )
   {
     char file[256];
 
-    std::string dir = recorder.GetDir( );
-    dir = Utils::Expand( dir.c_str( ));
+
     Utils::EnsureSlash( dir );
     std::string filename = dir + dumpfile + ".pes";
 
@@ -260,7 +262,7 @@ bool Activity_Record::Perform( )
 #ifdef O_LARGEFILE
         O_LARGEFILE |
 #endif
-        O_WRONLY | O_CREAT | O_TRUNC, 0644 );
+        O_WRONLY | O_CREAT | O_TRUNC, 0664 );
 
     if( file_fd < 0 )
     {

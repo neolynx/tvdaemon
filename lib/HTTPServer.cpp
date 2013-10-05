@@ -20,15 +20,9 @@
 #include <streambuf>
 #include <sstream>
 #include <stdlib.h> // atoi
+#include <arpa/inet.h> // inet_ntop
 
-#include <ccrtp/rtp.h>
-
-#ifdef	CCXX_NAMESPACES
-using namespace ost;
-using namespace std;
-#endif
-
-int rtp_port;
+#include "StreamingHandler.h" // FIXME: mm.. needed?
 
 static const struct http_status response_status[] = {
   { HTTP_OK, "OK" },
@@ -53,7 +47,7 @@ static const struct mime_type mime_types[] = {
   { "ico",  "image/x-icon",     true },
 };
 
-HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root)
+HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root), rtsp_handler(NULL)
 {
   methods["GET"] = &HTTPServer::GET;
   methods["POST"] = &HTTPServer::POST;
@@ -193,6 +187,12 @@ void HTTPServer::AddDynamicHandler( std::string url, HTTPDynamicHandler *handler
 {
   url = "/" + url;
   dynamic_handlers[url] = handler;
+}
+
+void HTTPServer::SetRTSPHandler( RTSPHandler *handler )
+{
+  if( !rtsp_handler )
+    rtsp_handler = handler;
 }
 
 void HTTPServer::NotImplemented( HTTPRequest &request, const char *method )
@@ -416,7 +416,7 @@ bool HTTPServer::DESCRIBE( HTTPRequest &request )
   Response response;
   response.AddStatus( RTSP_OK );
   response.AddTimeStamp( );
-  response.AddHeader( "Content-Base", "rtsp://exciton:7777/3+" ); // FIXME: from header
+  response.AddHeader( "Content-Base", "%s", request.url.c_str( ));
   response.AddHeader( "Cseq", "%d", seq );
   response.AddHeader( "Server", "TVDaemon" );
   response.AddHeader( "Cache-Control", "no-cache" );
@@ -450,7 +450,7 @@ a=sdplang:en\r\n\
 a=range:npt=0- 596.48\r\n\
 a=control:*\r\n\
 m=video 0 RTP/AVP 97\r\n\
-a=rtpmap:97 H264/90000\r\n\
+a=rtpmap:97 MPV/90000\r\n\
 a=fmtp:97 packetization-mode=1;profile-level-id=42C01E;sprop-parameter-sets=Z0LAHtkDxWhAAAADAEAAAAwDxYuS,aMuMsg==\r\n\
 a=cliprect:0,0,160,240\r\n\
 a=framesize:97 240-160\r\n\
@@ -469,6 +469,13 @@ bool HTTPServer::GET_PARAMETER( HTTPRequest &request )
 
 bool HTTPServer::SETUP( HTTPRequest &request )
 {
+  Log( "HTTPServer::SETUP" );
+  if( !rtsp_handler )
+  {
+    LogError( "RTSP: no handler defined" );
+    return false;
+  }
+
   int seq;
   if( !request.GetHeader( "CSeq", seq ))
   {
@@ -483,7 +490,7 @@ bool HTTPServer::SETUP( HTTPRequest &request )
     return false;
   }
 
-
+  int rtp_port = -1;
   std::vector<std::string> tokens;
   Utils::Tokenize( transport, ";=", tokens );
   for( std::vector<std::string>::iterator it = tokens.begin( ); it != tokens.end( ); it++ )
@@ -493,18 +500,52 @@ bool HTTPServer::SETUP( HTTPRequest &request )
       rtp_port = atoi( (*it).c_str( ));
     }
 
-  LogWarn( "RTP port %d", rtp_port );
+  if( rtp_port == -1 )
+  {
+    LogError( "RTSP: client port not found in SETUP" );
+    return false;
+  }
+
+  Utils::Tokenize( request.url, "/", tokens, 2 );
+  if( tokens.size( ) != 2 ) // rtsp://server:port/channel
+  {
+    LogError( "RTSP: invalid setup url: %s", request.url.c_str( ));
+    return NULL;
+  }
+  std::string server = tokens[1];
+
+  Utils::Tokenize( server, ":", tokens, 2 );
+  if( tokens.size( ) < 1 ) // server:port
+  {
+    LogError( "RTSP: invalid setup url: %s", request.url.c_str( ));
+    return NULL;
+  }
+  std::string hostname = tokens[0];
+
+  StreamingHandler *streaming_handler = rtsp_handler->GetStreamingHandler( request.url );
+  if( !streaming_handler )
+  {
+    LogError( "RTSP: no streaming handler found for %s", request.url.c_str( ));
+    return false;
+  }
+
+  char str[INET_ADDRSTRLEN];
+  in_addr addr = request.GetClientIP( );
+  inet_ntop( AF_INET, &addr, str, sizeof( str ));
+
+  Log( "Client Addr: %s", str );
+  streaming_handler->Setup( hostname, str, rtp_port );
 
   Response response;
   response.AddStatus( RTSP_OK );
   response.AddTimeStamp( );
-  response.AddHeader( "Cseq", "%d", seq ); // FIXME: AddCSeq
+  response.AddHeader( "Cseq", "%d", seq );
   response.AddHeader( "Server", "TVDaemon" );
   transport += ";source=exciton;server_port=7066-7067;ssrc=02E34D2C";
-  response.AddHeader( "Transport", transport.c_str( ));
+  response.AddHeader( "Transport", "%s", transport.c_str( ));
   char session[256];
   snprintf( session, sizeof( session ), "%d;timeout=60", request.client );
-  response.AddHeader( "Session", session );
+  response.AddHeader( "Session", "%s", session );
   // FIXME: Expires
   response.AddHeader( "Cache-Control", "no-cache" );
 
@@ -515,46 +556,27 @@ bool HTTPServer::SETUP( HTTPRequest &request )
 
 bool HTTPServer::PLAY( HTTPRequest &request )
 {
+  Log( "HTTPServer::PLAY" );
+  if( !rtsp_handler )
+  {
+    LogError( "RTSP: no handler defined" );
+    return false;
+  }
+
+  StreamingHandler *streaming_handler = rtsp_handler->GetStreamingHandler( request.url );
+  if( !streaming_handler )
+  {
+    LogError( "RTSP: no streaming handler found for %s", request.url.c_str( ));
+    return false;
+  }
+
+  Log( "Calling streaming_handler->Play %p", streaming_handler );
+  streaming_handler->Play( request.url );
+
   Response response;
   response.AddStatus( RTSP_OK );
   request.KeepAlive( true );
   request.Reply( response );
-
-
-  InetHostAddress local_ip;
-  local_ip = "192.168.7.2";
-
-  InetHostAddress remote_ip;
-  remote_ip = "192.168.7.207";
-
-  // Is that correct?
-  if( ! local_ip )
-  {
-    LogError( "ip" );
-    return true;
-  }
-
-  RTPSession *socket;
-  socket = new RTPSession( local_ip, 7766 );
-
-  // Set up connection
-  socket->setSchedulingTimeout(10000);
-  if( !socket->addDestination( remote_ip, rtp_port ) )
-  {
-    LogError( "I could not connect." );
-    return true;
-  }
-
-  socket->setPayloadFormat( StaticPayloadFormat( sptH261 ));
-
-  socket->startRunning();
-  if( !socket->isActive() )
-  {
-    LogError( "I not active" );
-    return true;
-  }
-
-  socket->putData( 0, (const uint8_t *) "halloooo" , 6 );
 
   return true;
 }
@@ -655,7 +677,7 @@ void HTTPServer::Response::AddContent( std::string buffer )
   char length_str[10];
   snprintf( length_str, sizeof( length_str ), "%d", (int) length );
 
-  AddHeader( "Content-Length", length_str );
+  AddHeader( "Content-Length", "%s", length_str );
 
   Finalize( );
   _buffer += buffer;
@@ -846,5 +868,16 @@ void HTTPServer::URLDecode( const std::string &string, std::string &decoded )
     else
       decoded += string[j];
   }
+}
+
+HTTPRequest::HTTPRequest( HTTPServer &server, int client ) : server(server), client(client), content_length(-1), keep_alive(false)
+{
+  memset( &client_addr, 0, sizeof( client_addr ));
+  server.GetClientAddress( client, client_addr );
+}
+
+in_addr HTTPRequest::GetClientIP( ) const
+{
+  return client_addr.sin_addr;
 }
 

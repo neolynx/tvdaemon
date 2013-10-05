@@ -24,15 +24,25 @@
 
 #include <stdint.h>
 
+// libav
+extern "C" {
+#include "libavformat/avformat.h"
+#include "libavcodec/avcodec.h"
+}
+
+#include <ccrtp/rtp.h> // FIXME: make interfase/impl
+
 #include "RPCObject.h"
+#include "Thread.h"
 
 #include "descriptors.h"
 
 class ConfigBase;
 class Service;
 class Frontend;
+class RingBuffer;
 
-class Stream
+class Stream : public Thread
 {
   public:
     enum Type
@@ -72,6 +82,9 @@ class Stream
 
     bool GetSDPDescriptor( std::string &desc );
 
+    bool Init( ost::RTPSession *session );
+    void HandleData( uint8_t *data, ssize_t len );
+
     // RPC
     void json( json_object *entry ) const;
 
@@ -79,6 +92,28 @@ class Stream
     Service &service;
     uint16_t id;
     Type type;
+
+    AVFormatContext *ifc;
+    AVIOContext *ictx;
+    AVInputFormat *iformat;
+
+    AVFormatContext *ofc;
+    AVIOContext *octx;
+    AVOutputFormat *oformat;
+
+    AVStream *st;
+    uint8_t *buffer;
+    uint8_t *buffer2;
+    RingBuffer *ringbuffer;
+    bool up;
+    Condition cond;
+
+    static int read_packet( void *opaque, uint8_t *buf, int buf_size );
+    static int write_packet( void *opaque, uint8_t *buf, int buf_size );
+    virtual void Run( );
+
+    ost::RTPSession *session;
+    uint32 timestamp;
 };
 
 #endif
