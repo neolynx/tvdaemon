@@ -1,0 +1,34 @@
+From e1f0e2976ebcda5100ee7ca25e048b36ca641f3d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Thu, 13 Jun 2013 17:36:56 +0200
+Subject: [PATCH 10/11] libdvbv5: fix section counting
+
+---
+ lib/libdvbv5/dvb-scan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
+index f838045..c4f6f74 100755
+--- a/lib/libdvbv5/dvb-scan.c
++++ b/lib/libdvbv5/dvb-scan.c
+@@ -417,7 +417,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+ 			free(buf);
+ 			break;
+ 		}
+-		if (last_section == -1)
++		if (last_section == -1 || h->last_section > last_section)
+ 			last_section = h->last_section;
+ 
+ 		//ARRAY_SIZE(vb_table_initializers) >= table
+@@ -432,7 +432,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+ 
+ 		free(buf);
+ 
+-		if (++sections == last_section + 1) {
++		if (id != -1 && ++sections == last_section + 1) {
+ 			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
+ 			break;
+ 		}
+-- 
+1.8.3.2
+

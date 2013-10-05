@@ -1,23 +1,23 @@
-From 688be2c86cc227c8d4379ca4fc709f7fc52a5d03 Mon Sep 17 00:00:00 2001
+From 17a093de9ac820a8097847542404292b26dab9b5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 29 Aug 2012 22:14:10 +0200
-Subject: [PATCH 2/7] libdvbv5: ATSC VCT table support
+Subject: [PATCH 03/11] libdvbv5: ATSC VCT table support
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors.h                        |    4 +-
- lib/include/descriptors/desc_service_location.h  |   70 ++++++++++
- lib/include/descriptors/vct.h                    |  110 +++++++++++++++
- lib/libdvbv5/Makefile.am                         |    4 +-
- lib/libdvbv5/descriptors.c                       |   10 +-
- lib/libdvbv5/descriptors/desc_service_location.c |   71 ++++++++++
- lib/libdvbv5/descriptors/vct.c                   |  157 ++++++++++++++++++++++
- lib/libdvbv5/dvb-scan.c                          |   26 +++-
- lib/libdvbv5/parse_string.c                      |    2 +-
- 9 files changed, 441 insertions(+), 13 deletions(-)
+ lib/include/descriptors.h                        |   4 +-
+ lib/include/descriptors/desc_service_location.h  |  70 ++++++++++
+ lib/include/descriptors/vct.h                    | 110 ++++++++++++++++
+ lib/libdvbv5/Makefile.am                         |   4 +-
+ lib/libdvbv5/descriptors.c                       |  10 +-
+ lib/libdvbv5/descriptors/desc_service_location.c |  71 ++++++++++
+ lib/libdvbv5/descriptors/vct.c                   | 157 +++++++++++++++++++++++
+ lib/libdvbv5/dvb-scan.c                          |  32 +++--
+ lib/libdvbv5/parse_string.c                      |   2 +-
+ 9 files changed, 441 insertions(+), 19 deletions(-)
  create mode 100644 lib/include/descriptors/desc_service_location.h
  create mode 100644 lib/include/descriptors/vct.h
  mode change 100644 => 100755 lib/libdvbv5/descriptors.c
@@ -254,7 +254,7 @@ index 2f75321..a325077 100644
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
 old mode 100644
 new mode 100755
-index 73338d8..5fe0989
+index 9b6b050..24a16c3
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -35,6 +35,7 @@
@@ -552,7 +552,7 @@ index 0000000..e3858c2
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
 old mode 100644
 new mode 100755
-index 05eb34c..2db024f
+index b1acf9b..172d208
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -312,6 +312,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
@@ -571,18 +571,18 @@ index 05eb34c..2db024f
  	while (1) {
  		int available;
  
-@@ -346,23 +348,28 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 		do {
+@@ -347,27 +349,25 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  			available = poll(parms, dmx_fd, timeout);
  		} while (available < 0 && errno == EOVERFLOW);
--		if (parms->abort)
--			return 0; // FIXME: free tbl
-+		if (parms->abort) {
+ 		if (parms->abort) {
+-			free(tbl);
+-			return 0;
 +			ret = 0; // FIXME: free tbl
 +			goto exit;
-+		}
+ 		}
  		if (available <= 0) {
  			dvb_logerr("dvb_read_section: no data read" );
+-			free(tbl);
 -			return -1;
 +			ret = -1;
 +			goto exit;
@@ -591,37 +591,42 @@ index 05eb34c..2db024f
  		buf_length = read(dmx_fd, buf, DVB_MAX_PAYLOAD_PACKET_SIZE);
  		if (!buf_length) {
  			dvb_logerr("dvb_read_section: no data read" );
- 			free(buf);
+-			free(buf);
+-			free(tbl);
 -			return -1;
 +			ret = -1;
 +			goto exit;
  		}
  		if (buf_length < 0) {
  			dvb_perror("dvb_read_section: read error");
- 			free(buf);
+-			free(buf);
+-			free(tbl);
 -			return -2;
 +			ret = -2;
 +			goto exit;
  		}
  
  		buf = realloc(buf, buf_length);
-@@ -371,7 +378,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -376,8 +376,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  		if (crc != 0) {
  			dvb_logerr("dvb_read_section: crc error");
  			free(buf);
+-			free(tbl);
 -			return -3;
 +			ret = -3;
 +			goto exit;
  		}
  
  		struct dvb_table_header *h = (struct dvb_table_header *) buf;
-@@ -419,10 +427,12 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -425,10 +425,14 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  			break;
  	}
  
 +	*table = tbl;
 +
 +exit:
++	if (tbl)
++		free(tbl);
  	dvb_dmx_stop(dmx_fd);
  
 -	*table = tbl;
@@ -631,7 +636,7 @@ index 05eb34c..2db024f
  
  static int read_section(struct dvb_v5_fe_parms *parms, int dmx_fd, struct dvb_v5_descriptors *dvb_desc,
 diff --git a/lib/libdvbv5/parse_string.c b/lib/libdvbv5/parse_string.c
-index 21368b6..14e326e 100644
+index 92fdbfc..cee101a 100644
 --- a/lib/libdvbv5/parse_string.c
 +++ b/lib/libdvbv5/parse_string.c
 @@ -344,7 +344,7 @@ static void charset_conversion(struct dvb_v5_fe_parms *parms, char **dest, const
@@ -644,5 +649,5 @@ index 21368b6..14e326e 100644
  		} else {
  			iconv(cd, (ICONV_CONST char **)&s, &len, &p, &destlen);
 -- 
-1.7.2.5
+1.8.3.2
 

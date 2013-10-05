@@ -1,11 +1,11 @@
-From 5fa7bda28e699344be484ac7bf986e0e5952fc2f Mon Sep 17 00:00:00 2001
+From bdeeb61c83904276f4208a4bee7efb862bf871bc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 6 Apr 2013 18:30:36 +0200
-Subject: [PATCH 6/7] libdvbv5: fix eit times
+Subject: [PATCH 07/11] libdvbv5: fix eit times
 
 ---
- lib/libdvbv5/descriptors/eit.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ lib/libdvbv5/descriptors/eit.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors/eit.c b/lib/libdvbv5/descriptors/eit.c
 index d13b14c..e70cf3b 100644
@@ -24,5 +24,5 @@ index d13b14c..e70cf3b 100644
  
  
 -- 
-1.7.2.5
+1.8.3.2
 

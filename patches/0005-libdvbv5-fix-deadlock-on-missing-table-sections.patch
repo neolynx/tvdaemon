@@ -1,14 +1,14 @@
-From 42e76badde92cd64a27524f388c7a9fe3613e291 Mon Sep 17 00:00:00 2001
+From 6c36e12ffa2c7c1f6071fb9ea1e52ed70de51288 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 3 Jan 2013 00:37:07 +0100
-Subject: [PATCH 4/7] libdvbv5: fix deadlock on missing table sections
+Subject: [PATCH 05/11] libdvbv5: fix deadlock on missing table sections
 
 ---
- lib/libdvbv5/dvb-scan.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ lib/libdvbv5/dvb-scan.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 2db024f..58de864 100755
+index 172d208..427ca05 100755
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -315,7 +315,10 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
@@ -22,7 +22,7 @@ index 2db024f..58de864 100755
  	int first_section = -1;
  	int last_section = -1;
  	int table_id = -1;
-@@ -384,6 +387,17 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -382,6 +385,17 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  
  		struct dvb_table_header *h = (struct dvb_table_header *) buf;
  		dvb_table_header_init(h);
@@ -41,5 +41,5 @@ index 2db024f..58de864 100755
  			free(buf);
  			continue;
 -- 
-1.7.2.5
+1.8.3.2
 

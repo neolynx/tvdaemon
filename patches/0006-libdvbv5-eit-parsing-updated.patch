@@ -1,16 +1,16 @@
-From cdf6e691ffccb4c211e383852930116645efb730 Mon Sep 17 00:00:00 2001
+From 621892124f2c12569f29aad597a9178e0825fdbf Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 21 Jan 2013 23:23:55 +0100
-Subject: [PATCH 5/7] libdvbv5: eit parsing updated
+Subject: [PATCH 06/11] libdvbv5: eit parsing updated
 
 ---
- lib/include/descriptors.h      |    6 ++++++
- lib/include/descriptors/eit.h  |    1 +
- lib/include/dvb-fe.h           |    2 ++
- lib/libdvbv5/descriptors.c     |    1 +
- lib/libdvbv5/descriptors/eit.c |   28 +++++++++++++++++++++++-----
- lib/libdvbv5/dvb-fe.c          |    7 +++++++
- lib/libdvbv5/dvb-scan.c        |   26 ++++++++++++--------------
+ lib/include/descriptors.h      |  6 ++++++
+ lib/include/descriptors/eit.h  |  1 +
+ lib/include/dvb-fe.h           |  2 ++
+ lib/libdvbv5/descriptors.c     |  1 +
+ lib/libdvbv5/descriptors/eit.c | 28 +++++++++++++++++++++++-----
+ lib/libdvbv5/dvb-fe.c          |  7 +++++++
+ lib/libdvbv5/dvb-scan.c        | 26 ++++++++++++--------------
  7 files changed, 52 insertions(+), 19 deletions(-)
 
 diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
@@ -44,10 +44,10 @@ index 2af9696..d2ebdb4 100644
  
  struct dvb_table_eit {
 diff --git a/lib/include/dvb-fe.h b/lib/include/dvb-fe.h
-index d725a42..05c0134 100644
+index b0e2bf9..8cf2697 100644
 --- a/lib/include/dvb-fe.h
 +++ b/lib/include/dvb-fe.h
-@@ -120,6 +120,8 @@ struct dvb_v5_fe_parms {
+@@ -119,6 +119,8 @@ struct dvb_v5_fe_parms {
  extern "C" {
  #endif
  
@@ -57,7 +57,7 @@ index d725a42..05c0134 100644
  				    unsigned verbose, unsigned use_legacy_call);
  struct dvb_v5_fe_parms *dvb_fe_open2(int adapter, int frontend,
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 5fe0989..b912c38 100755
+index 24a16c3..415f222 100755
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -64,6 +64,7 @@ void dvb_desc_default_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, st
@@ -129,7 +129,7 @@ index ccfe1a6..d13b14c 100644
  		dvb_log("|   Duration              %dh %dm %ds", event->duration / 3600, (event->duration % 3600) / 60, event->duration % 60);
  		dvb_log("|   free CA mode          %d", event->free_CA_mode);
 diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
-index 550b6e2..af9c7b9 100644
+index d62355d..850a631 100644
 --- a/lib/libdvbv5/dvb-fe.c
 +++ b/lib/libdvbv5/dvb-fe.c
 @@ -35,6 +35,13 @@ static void dvb_v5_free(struct dvb_v5_fe_parms *parms)
@@ -147,7 +147,7 @@ index 550b6e2..af9c7b9 100644
  				    unsigned use_legacy_call)
  {
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 58de864..2c8cc2b 100755
+index 427ca05..f838045 100755
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -321,14 +321,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
@@ -175,7 +175,7 @@ index 58de864..2c8cc2b 100755
  			goto exit;
  		}
  		if (available <= 0) {
-@@ -388,7 +385,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -386,7 +383,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  		struct dvb_table_header *h = (struct dvb_table_header *) buf;
  		dvb_table_header_init(h);
  
@@ -184,7 +184,7 @@ index 58de864..2c8cc2b 100755
  		if (start_id == h->id && start_section == h->section_id) {
  			dvb_logwarn( "dvb_read_section: section repeated, reading done" );
  			free(buf);
-@@ -413,11 +410,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -411,11 +408,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  			/*}*/
  		/*}*/
  
@@ -198,7 +198,7 @@ index 58de864..2c8cc2b 100755
  		{
  			free(buf);
  			break;
-@@ -426,22 +423,23 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -424,22 +421,23 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
  			last_section = h->last_section;
  
  		//ARRAY_SIZE(vb_table_initializers) >= table
@@ -227,7 +227,7 @@ index 58de864..2c8cc2b 100755
 -	*table = tbl;
  
  exit:
- 	dvb_dmx_stop(dmx_fd);
+ 	if (tbl)
 -- 
-1.7.2.5
+1.8.3.2
 

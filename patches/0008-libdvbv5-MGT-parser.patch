@@ -1,13 +1,13 @@
-From dac081ec1b188bb37ac7bb53caf9f2998e4965a1 Mon Sep 17 00:00:00 2001
+From 753ce42b1cb9152360e53c8941efa2ea807bc091 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 25 Feb 2013 12:39:57 -0800
-Subject: [PATCH] libdvbv5: MGT parser
+Subject: [PATCH 08/11] libdvbv5: MGT parser
 
 ---
- lib/include/descriptors/mgt.h  |   82 +++++++++++++++++++++++++++++
- lib/libdvbv5/Makefile.am       |    1 +
- lib/libdvbv5/descriptors.c     |    2 +
- lib/libdvbv5/descriptors/mgt.c |  113 ++++++++++++++++++++++++++++++++++++++++
+ lib/include/descriptors/mgt.h  |  82 ++++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am       |   1 +
+ lib/libdvbv5/descriptors.c     |   2 +
+ lib/libdvbv5/descriptors/mgt.c | 113 +++++++++++++++++++++++++++++++++++++++++
  4 files changed, 198 insertions(+)
  create mode 100644 lib/include/descriptors/mgt.h
  create mode 100644 lib/libdvbv5/descriptors/mgt.c
@@ -101,7 +101,7 @@ index 0000000..4a68f2c
 +
 +#endif
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 480859f..fed844f 100644
+index 3a639f5..6c028a2 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
 @@ -41,6 +41,7 @@ libdvbv5_la_SOURCES = \
@@ -113,7 +113,7 @@ index 480859f..fed844f 100644
    descriptors/mpeg_ts.c  ../include/descriptors/mpeg_ts.h \
    descriptors/mpeg_pes.c  ../include/descriptors/mpeg_pes.h \
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index b912c38..6b3713b 100755
+index 415f222..efd4970 100755
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -36,6 +36,7 @@
@@ -252,5 +252,5 @@ index 0000000..272d9d7
 +}
 +
 -- 
-1.7.10.4
+1.8.3.2
 
