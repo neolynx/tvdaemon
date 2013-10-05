@@ -25,7 +25,10 @@ function duration( row )
 
 function print_remove( row )
 {
-  return "<a href=\"javascript: remove( " + row["id"] + ", '" + row["name"] + "' );\">X</a>";
+  name = row["name"];
+  name = name.replace( /\"/g, "&quote;" );
+  name = name.replace( /'/g, "&quote;" );
+  return "<a href=\"javascript: remove( " + row["id"] + ", '" + name + "' );\">X</a>";
 }
 
 function remove( id, name )
