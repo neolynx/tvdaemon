@@ -20,7 +20,7 @@ function ready( )
   t.load( );
 }
 
-function record( data, errmsg )
+function handle_message( data, errmsg )
 {
   if( !data )
     return false;
@@ -44,7 +44,10 @@ function print_channel( row )
 
 function update_epg( channel_id )
 {
-  getJSON( 'tvd?c=channel&a=update_epg&channel_id=' + channel_id, record );
+  if( typeof( channel_id ) === 'undefined' )
+    getJSON( 'tvd?c=tvdaemon&a=update_epg', handle_message );
+  else
+    getJSON( 'tvd?c=channel&a=update_epg&channel_id=' + channel_id, handle_message );
 }
 
 function remove( id, name )
