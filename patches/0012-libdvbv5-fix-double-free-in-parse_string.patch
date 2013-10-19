@@ -1,0 +1,40 @@
+From 609e1c6a217db8a6a9822bc9c2b19a88bdf395a6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sat, 19 Oct 2013 12:14:55 +0200
+Subject: [PATCH 12/12] libdvbv5: fix double free in parse_string
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/libdvbv5/parse_string.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/lib/libdvbv5/parse_string.c b/lib/libdvbv5/parse_string.c
+index cee101a..2192b02 100644
+--- a/lib/libdvbv5/parse_string.c
++++ b/lib/libdvbv5/parse_string.c
+@@ -474,7 +474,6 @@ void parse_string(struct dvb_v5_fe_parms *parms, char **dest, char **emph,
+ 		*dest = realloc(*dest, strlen(*dest) + 1);
+ 
+ 	if (!len2) {
+-		free (tmp2);
+ 		free (*emph);
+ 		*emph = NULL;
+ 	} else {
+@@ -482,7 +481,9 @@ void parse_string(struct dvb_v5_fe_parms *parms, char **dest, char **emph,
+ 		*emph = realloc(*emph, strlen(*emph) + 1);
+ 	}
+ 
+-	free(tmp1);
+-	free(tmp2);
++        if (tmp1)
++		free(tmp1);
++	if (tmp2)
++		free(tmp2);
+ }
+ 
+-- 
+1.8.3.2
+
