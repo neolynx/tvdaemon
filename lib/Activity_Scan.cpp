@@ -91,16 +91,16 @@ bool Activity_Scan::Perform( )
   {
     frontend->Log( "Reading VCT" );
     struct atsc_table_vct *vct;
-    dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_VCT_TERRESTRIAL, ATSC_BASE_PID, (uint8_t **) &vct, time );
+    dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_TVCT, ATSC_BASE_PID, (uint8_t **) &vct, time );
     if( vct && IsActive( ))
     {
       atsc_table_vct_print( frontend->GetFE( ), vct );
-      atsc_vct_channel_foreach( vct, channel )
+      atsc_vct_channel_foreach( ch, vct )
       {
-        std::string name = channel->short_name;
+        std::string name = ch->short_name;
         std::string provider = "unknown";
         Service::Type type = Service::Type_Unknown;
-        switch( channel->service_type )
+        switch( ch->service_type )
         {
           default:
             type = Service::Type_TV;
@@ -109,12 +109,12 @@ bool Activity_Scan::Perform( )
 
         if( type == Service::Type_Unknown )
         {
-          frontend->LogWarn( "  Service %5d: %s '%s': unknown type: %d", channel->program_number, channel->access_control ? "§" : " ", name.c_str( ), channel->service_type );
+          frontend->LogWarn( "  Service %5d: %s '%s': unknown type: %d", ch->program_number, ch->access_controlled ? "§" : " ", name.c_str( ), ch->service_type );
           continue;
         }
 
-        transponder->UpdateService( channel->program_number, type, name, provider, channel->access_control );
-        services.push_back( channel->program_number );
+        transponder->UpdateService( ch->program_number, type, name, provider, ch->access_controlled );
+        services.push_back( ch->program_number );
       }
     }
     if( vct )
