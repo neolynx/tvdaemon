@@ -201,6 +201,7 @@ int Stream::read_packet( void *opaque, uint8_t *buf, int buf_size )
   }
   if( !s->up || s->ringbuffer->Count( ) < buf_size )
     return -1;
+  Log( "Stream::read_packet %d", buf_size );
   return s->ringbuffer->read( buf, buf_size ) ? buf_size : -1;
 }
 
@@ -229,8 +230,6 @@ bool Stream::Init( ost::RTPSession *session )
   timestamp = 0;
   this->session = session;
   ringbuffer = new RingBuffer( 2 * 1024 * 1024 );
-  ifc = avformat_alloc_context( );
-  ofc = avformat_alloc_context( );
 
   buffer  = (uint8_t *) av_malloc( bsize );
   buffer2 = (uint8_t *) av_malloc( bsize );
@@ -238,22 +237,35 @@ bool Stream::Init( ost::RTPSession *session )
   av_register_all( );
   av_log_set_level( AV_LOG_DEBUG );
 
+
+
+
+  ifc = avformat_alloc_context( );
   ictx = avio_alloc_context( buffer, bsize, 0, this, read_packet, NULL, NULL );
   ictx->seekable = 0;
   ictx->write_flag = 0;
+  iformat = av_find_input_format( "mpegts" );
+  if( !iformat )
+  {
+    LogError( "mpegts format not found" );
+    return false;
+  }
+  ifc->iformat = iformat;
+  ifc->pb = ictx;
 
+
+  ofc = avformat_alloc_context( );
   octx = avio_alloc_context( buffer2, bsize, 1, this, NULL, write_packet, NULL );
   octx->max_packet_size = 1450; // ?? ehter frame ?
-
-  Log( "Stream::Init av_find_input_format" );
-  iformat = av_find_input_format( "mpegts" );
-
   oformat = av_guess_format( "rtp", NULL, NULL );
   if( !oformat )
   {
-    printf( "Error: rtp format not found\n" );
+    LogError( "rtp format not found" );
     return false;
   }
+  ofc->oformat = oformat;
+  ofc->pb = octx;
+
   up = true;
   StartThread( );
   return true;
@@ -261,33 +273,30 @@ bool Stream::Init( ost::RTPSession *session )
 
 void Stream::Run( )
 {
-  //Log( "Stream::Run av_open_input_stream" );
-  //if( av_open_input_stream( &ifc, ictx, "", iformat, NULL ))
-  //{
-    //Log( "error opening input stream" );
-    //goto exit;
-  //}
+  Log( "Stream::Run av_open_input_stream" );
 
-  //Log( "Stream::Run avformat_find_stream_info" );
-  //avformat_find_stream_info( ifc, NULL ); // FIXME: if(
-  //av_dump_format( ifc, 0, "", 0 );
-  //if( ifc->nb_streams != 1 )
-  //{
-    //LogError( "stream count not 1" );
-    //goto exit;
-  //}
+  if( avformat_open_input( &ifc, NULL, iformat, NULL ) < 0 )
+  {
+    LogError( "Stream::Run error opening input" );
+    return;
+  }
+  Log( "Stream::Run input opened" );
 
-  Log( "Stream::Run" );
 
-  ifc->iformat = iformat;
-  ifc->pb = ictx;
-  ifc->streams = (AVStream **) av_malloc( sizeof( AVStream * ));
   AVCodec *codec;
   AVCodecContext *c;
 
   codec = avcodec_find_decoder( CODEC_ID_MPEG2VIDEO );
+  // int avcodec_get_context_defaults3(AVCodecContext *s, AVCodec *codec);
   c = avcodec_alloc_context3( codec );
-  /// from avserverc.c
+
+
+  if( avcodec_open2( c, codec, NULL ) < 0 )
+  {
+    LogError( "Stream::Run avcodec_open2 failed" );
+    return;
+  }
+  ///// from avserverc.c
         if (c->bit_rate == 0)
             c->bit_rate = 64000;
         if (c->time_base.num == 0){
@@ -298,7 +307,7 @@ void Stream::Run( )
             c->width = 160;
             c->height = 128;
         }
-        /* Bitrate tolerance is less for streaming */
+         //Bitrate tolerance is less for streaming
         if (c->bit_rate_tolerance == 0)
             c->bit_rate_tolerance = FFMAX(c->bit_rate / 4,
                       (int64_t)c->bit_rate*c->time_base.num/c->time_base.den);
@@ -333,27 +342,53 @@ void Stream::Run( )
         if (c->rc_max_rate && !c->rc_buffer_size) {
             c->rc_buffer_size = c->rc_max_rate;
         }
-  ///
-  Log( "time base: %d/%d", c->time_base.num, c->time_base.den );
-  Log( "bit rate : %d", c->bit_rate );
-  Log( "bit rate tol: %d", c->bit_rate_tolerance );
-  ifc->priv_data = malloc( iformat->priv_data_size ); // FIXME: free
-  Log( "input privdata: %p", ifc->priv_data );
-  //c->bit_rate
-  //c->sample_fmt
-  //c->sample_rate = select_sample_rate(codec);
-  //c->channel_layout = select_channel_layout(codec);
-  //c->channels = av_get_channel_layout_nb_channels(c->channel_layout);
-  if( avcodec_open2( c, codec, NULL ) < 0 )
+  /////
+
+  //st = avformat_new_stream( ifc, codec );
+
+  //ifc->streams = (AVStream **) av_malloc( sizeof( AVStream * ));
+  //ifc->streams[0] = st;
+
+  //ifc->priv_data = c->priv_data;
+
+  //ifc->priv_data = calloc( 1, iformat->priv_data_size ); // FIXME: free
+  //ifc->priv_data = av_mallocz( iformat->priv_data_size );
+
+  Log( "Stream::Run ifc             %p", ifc );
+  Log( "Stream::Run ifc->iformat    %p", ifc->iformat );
+  Log( "Stream::Run ifc->priv_data  %p", ifc->priv_data );
+  Log( "Stream::Run ifc->pb         %p", ifc->pb );
+  Log( "Stream::Run ifc->streams    %p", ifc->streams );
+  if( ifc->streams )
+    Log( "Stream::Run ifc->streams[0] %p", ifc->streams[0] );
+
+  if( avformat_find_stream_info( ifc, NULL ) < 0 )
   {
-    LogError( "Stream::Run avcodec_open2 failed" );
-    return;
+    LogError( "getting stream info failed" );
   }
 
-  st = avformat_new_stream( ifc, codec );
+  av_dump_format( ifc, 0, "", 0 );
+  if( ifc->nb_streams != 1 )
+  {
+    LogError( "stream count %d instead of 1", ifc->nb_streams );
+    //goto exit;
+  }
+
+  //Log( "Stream::Run avformat_find_stream_info" );
+  //Log( "Stream::Run done" );
+
+  //codec = avcodec_find_decoder( CODEC_ID_MPEG2VIDEO );
+  //c = avcodec_alloc_context3( codec );
+  //c->bits_per_raw_sample = 32;
+  //Log( "time base: %d/%d", c->time_base.num, c->time_base.den );
+  //Log( "bit rate : %d", c->bit_rate );
+  //Log( "bit rate tol: %d", c->bit_rate_tolerance );
+
 
     //Duration: N/A, start: 59033.638156, bitrate: 15000 kb/s
      //Stream #0.0[0xd2], 131, 1/90000: Video: mpeg2video (Main), yuv420p, 720x576 [PAR 64:45 DAR 16:9], 1/50, 15000 kb/s, 25.80 fps, 25 tbr, 90k tbn, 50 tbc
+     //
+
 
   ofc->oformat = oformat;
   ofc->pb = octx;
@@ -388,7 +423,7 @@ void Stream::Run( )
   st->codec->height = 576;
   ofc->priv_data = malloc( oformat->priv_data_size ); // FIXME: free
 
-  Log( "output privdata: %p", ofc->priv_data );
+  Log( "output privdata: %p %d bytes", ofc->priv_data, oformat->priv_data_size );
 
   Log( "Stream::Run avformat_write_header" );
   if( avformat_write_header( ofc, NULL ) != 0 )
