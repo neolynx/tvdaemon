@@ -79,16 +79,21 @@ void Activity::Run( )
   if( state == State_Running )
   {
     if( ret )
+    {
       state = State_Done;
+      Log( "Activity done: %s", name.c_str( ));
+    }
     else
+    {
       state = State_Failed;
+      LogWarn( "Activity failed: %s", name.c_str( ));
+    }
     state_changed = time( NULL );
   }
 
   if( frontend )
     frontend->Release( );
 
-  Log( "Activity %s %s", state == State_Done ? "done:    " : "failed:  ", name.c_str( ));
   return;
 
 fail:
