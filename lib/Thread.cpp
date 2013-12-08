@@ -28,22 +28,22 @@
 
 Mutex::Mutex( )
 {
-  pthread_mutex_init( (pthread_mutex_t *) &mutex, NULL );
+  pthread_mutex_init( &mutex, NULL );
 }
 
 Mutex::~Mutex( )
 {
-  pthread_mutex_destroy((pthread_mutex_t *) &mutex );
+  pthread_mutex_destroy( &mutex );
 }
 
 void Mutex::Lock( ) const
 {
-  pthread_mutex_lock((pthread_mutex_t *) &mutex );
+  pthread_mutex_lock( &mutex );
 }
 
 void Mutex::Unlock( ) const
 {
-  pthread_mutex_unlock((pthread_mutex_t *) &mutex );
+  pthread_mutex_unlock( &mutex );
 }
 
 Condition::Condition( )
@@ -73,7 +73,7 @@ bool Condition::Wait( int seconds ) const
     ts.tv_nsec = tp.tv_usec * 1000;
     ts.tv_sec += 1;
 
-    int r = pthread_cond_timedwait((pthread_cond_t *) &cond, (pthread_mutex_t *) &mutex, &ts );
+    int r = pthread_cond_timedwait( &cond, &mutex, &ts );
     switch( r )
     {
       case ETIMEDOUT:

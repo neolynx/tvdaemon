@@ -39,7 +39,7 @@ class SocketHandler
     char *socket;
 
     pthread_t handler;
-    volatile pthread_mutex_t mutex;
+    mutable pthread_mutex_t mutex;
 
     enum SocketType
     {

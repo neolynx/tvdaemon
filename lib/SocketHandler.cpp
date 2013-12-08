@@ -25,7 +25,7 @@ bool SocketHandler::log2syslog = false;
 
 SocketHandler::SocketHandler() : up(false), connected(false), autoreconnect(false), sd(0), host(NULL), port(0), socket(0)
 {
-  pthread_mutex_init((pthread_mutex_t *)  &mutex, 0 );
+  pthread_mutex_init( &mutex, 0 );
   logfunc = StdLog;
 }
 
@@ -506,12 +506,12 @@ bool SocketHandler::SendToClient( int client, const char *buffer, int len )
 
 bool SocketHandler::Lock( ) const
 {
-  pthread_mutex_lock((pthread_mutex_t *) &mutex );
+  pthread_mutex_lock( &mutex );
 }
 
 bool SocketHandler::Unlock( ) const
 {
-  pthread_mutex_unlock((pthread_mutex_t *) &mutex );
+  pthread_mutex_unlock( &mutex );
 }
 
 void SocketHandler::Dump( const char *buffer, int length )

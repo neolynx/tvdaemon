@@ -33,7 +33,7 @@ class Mutex
     void Unlock( ) const;
 
   protected:
-    volatile pthread_mutex_t mutex;
+    mutable pthread_mutex_t mutex;
 };
 
 class ScopeLock
@@ -56,7 +56,7 @@ class Condition : public Mutex
     void Signal( ) const;
 
   private:
-    volatile pthread_cond_t cond;
+    mutable pthread_cond_t cond;
 };
 
 class Thread : public Mutex
