@@ -210,7 +210,10 @@ bool HTTPServer::HandleRequest( HTTPRequest &request )
 {
   std::map<std::string, Method>::iterator it = methods.find( request.http_method );
   if( it != methods.end( ))
+  {
+    Log( "HTPServer: %s %s %s", inet_ntoa( request.GetClientIP( )), request.http_method.c_str( ), request.url.c_str( ));
     return (this->*it->second)( request );
+  }
 
   NotImplemented( request, request.http_method.c_str( )); // FIXME: pass method as std::string
   return false;
