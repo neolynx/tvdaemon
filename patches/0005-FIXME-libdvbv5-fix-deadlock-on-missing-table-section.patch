@@ -1,23 +1,22 @@
-From d7314ca9cb57327b31e2fffb5c3368c49d8bf015 Mon Sep 17 00:00:00 2001
+From 8204591e44fdffac2ccee3b3b26da94a5fcf01b5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Thu, 3 Jan 2013 00:37:07 +0100
-Subject: [PATCH 05/11] libdvbv5: fix deadlock on missing table sections
+Date: Sun, 8 Dec 2013 16:24:48 +0100
+Subject: [PATCH 05/13] FIXME libdvbv5: fix deadlock on missing table sections
 
 ---
  lib/libdvbv5/dvb-scan.c |    3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index f41e37c..856f14f 100755
+index f9bc018..b94d6a9 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -315,7 +315,10 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 
- 	*table = NULL;
+@@ -96,6 +96,9 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+ 	uint8_t *buf = NULL;
+ 	uint8_t *tbl = NULL;
  	ssize_t table_length = 0;
 +	int start_id = -1;
 +	int start_section = -1;
- 
 +	// handle sections
  	int first_section = -1;
  	int last_section = -1;

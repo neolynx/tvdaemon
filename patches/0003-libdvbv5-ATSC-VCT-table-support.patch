@@ -1,7 +1,7 @@
-From de345cbc2d7763cbdf0996f88add2dd39006c9a9 Mon Sep 17 00:00:00 2001
+From ea8c0da734964fff49b94cc822fefcfaec701a61 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Wed, 29 Aug 2012 22:14:10 +0200
-Subject: [PATCH 03/11] libdvbv5: ATSC VCT table support
+Date: Sun, 8 Dec 2013 20:19:56 +0100
+Subject: [PATCH 03/13] libdvbv5: ATSC VCT table support
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -9,24 +9,19 @@ Content-Transfer-Encoding: 8bit
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
  lib/include/descriptors.h                        |    4 +-
- lib/include/descriptors/desc_service_location.h  |   70 ++++++++++
- lib/include/descriptors/vct.h                    |  110 +++++++++++++++
- lib/libdvbv5/Makefile.am                         |    4 +-
- lib/libdvbv5/descriptors.c                       |   10 +-
- lib/libdvbv5/descriptors/desc_service_location.c |   71 ++++++++++
- lib/libdvbv5/descriptors/vct.c                   |  157 ++++++++++++++++++++++
- lib/libdvbv5/dvb-scan.c                          |   56 +++++---
- lib/libdvbv5/parse_string.c                      |    2 +-
- 9 files changed, 458 insertions(+), 26 deletions(-)
+ lib/include/descriptors/desc_service_location.h  |   70 +++++++++++++++++++++
+ lib/include/descriptors/vct.h                    |    5 +-
+ lib/libdvbv5/Makefile.am                         |    3 +-
+ lib/libdvbv5/descriptors.c                       |    2 +-
+ lib/libdvbv5/descriptors/desc_service_location.c |   71 ++++++++++++++++++++++
+ lib/libdvbv5/descriptors/vct.c                   |    1 +
+ lib/libdvbv5/dvb-scan.c                          |   12 +++-
+ 8 files changed, 162 insertions(+), 6 deletions(-)
  create mode 100644 lib/include/descriptors/desc_service_location.h
- create mode 100644 lib/include/descriptors/vct.h
- mode change 100644 => 100755 lib/libdvbv5/descriptors.c
  create mode 100644 lib/libdvbv5/descriptors/desc_service_location.c
- create mode 100644 lib/libdvbv5/descriptors/vct.c
- mode change 100644 => 100755 lib/libdvbv5/dvb-scan.c
 
 diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
-index a64370c..e72b370 100644
+index 2e614f0..5ab29a0 100644
 --- a/lib/include/descriptors.h
 +++ b/lib/include/descriptors.h
 @@ -1,4 +1,4 @@
@@ -35,7 +30,7 @@ index a64370c..e72b370 100644
   * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
   *
   * This program is free software; you can redistribute it and/or
-@@ -213,6 +213,8 @@ enum descriptors {
+@@ -216,6 +216,8 @@ enum descriptors {
  	/* SCTE 35 2004 */
  	CUE_identifier_descriptor			= 0x8a,
  
@@ -121,194 +116,53 @@ index 0000000..2e11cff
 +
 +#endif
 diff --git a/lib/include/descriptors/vct.h b/lib/include/descriptors/vct.h
-new file mode 100644
-index 0000000..95aa80b
---- /dev/null
+index 6272b43..505a407 100644
+--- a/lib/include/descriptors/vct.h
 +++ b/lib/include/descriptors/vct.h
-@@ -0,0 +1,110 @@
-+/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright (c) 2013 - Mauro Carvalho Chehab <m.chehab@samsung.com>
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation version 2
-+ * of the License.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-+ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-+ *
-+ */
-+
-+#ifndef _VCT_H
-+#define _VCT_H
-+
-+#include <stdint.h>
-+#include <unistd.h> /* ssize_t */
-+
-+#include "descriptors/header.h"
-+#include "descriptors.h"
-+
-+#define DVB_TABLE_VCT      0xC8
-+#define DVB_TABLE_VCT_PID  0x1FFB
-+
-+struct dvb_table_vct_channel {
-+	//uint8_t short_name[14];
-+	union {
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -35,7 +36,7 @@ struct dvb_table_vct_channel {
+ 	uint16_t	__short_name[7];
+ 
+ 	union {
+-		uint16_t bitfield1;
 +		uint32_t bitfield;
-+		struct {
-+			uint32_t modulation_mode:8;
-+			uint32_t minor_channel_number:10;
-+			uint32_t major_channel_number:10;
-+			uint32_t reserved:4;
-+		};
-+	};
-+	uint32_t carrier_frequency;
-+	uint16_t tsid;
-+	uint16_t program_number;
-+	union {
-+		uint16_t bitfield2;
-+		struct {
-+			uint16_t service_type:6;
-+			uint16_t reserved2:3;
-+			uint16_t hide_guide:1;
-+			uint16_t reserved3:2;
-+			uint16_t hidden:1;
-+			uint16_t access_control:1;
-+			uint16_t ETM_location:2;
-+		};
-+	};
-+	uint16_t source_id;
-+
-+	union {
-+		uint16_t bitfield3;
-+		struct {
-+			uint16_t desc_length:10;
-+			uint16_t reserved4:6;
-+		};
-+	};
-+
-+	char *short_name;
-+	struct dvb_desc *descriptor;
-+	struct dvb_table_vct_channel *next;
-+} __attribute__((packed));
-+
-+union dvb_table_vct_desc_length {
-+	uint16_t bitfield;
-+	struct {
-+		uint16_t desc_length:10;
-+		uint16_t reserved:6;
-+	};
-+};
-+
-+struct dvb_table_vct {
-+	struct dvb_table_header header;
-+        uint8_t protocol_version;
-+        uint8_t channels;
-+	struct dvb_table_vct_channel *channel;
-+
-+	struct dvb_desc *descriptor;
-+} __attribute__((packed));
-+
-+
-+#define dvb_vct_channel_foreach( _vct, _chan ) \
-+	for( struct dvb_table_vct_channel *_chan = _vct->channel; _chan; _chan = _chan->next ) \
-+
-+struct dvb_v5_fe_parms;
-+
-+#ifdef __cplusplus
-+extern "C" {
-+#endif
-+
-+void dvb_table_vct_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length);
-+void dvb_table_vct_free(struct dvb_table_vct *vct);
-+void dvb_table_vct_print(struct dvb_v5_fe_parms *parms, struct dvb_table_vct *vct);
-+
-+#ifdef __cplusplus
-+}
-+#endif
-+
-+#endif
+ 		struct {
+ 			uint32_t	modulation_mode:8;
+ 			uint32_t	minor_channel_number:10;
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 2f75321..a325077 100644
+index 2ad5902..400af39 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
-@@ -39,7 +39,9 @@ libdvbv5_la_SOURCES = \
-   descriptors/desc_hierarchy.c  ../include/descriptors/desc_hierarchy.h \
+@@ -48,7 +48,8 @@ libdvbv5_la_SOURCES = \
    descriptors/nit.c  ../include/descriptors/nit.h \
    descriptors/sdt.c  ../include/descriptors/sdt.h \
+   descriptors/vct.c  ../include/descriptors/vct.h \
 -  descriptors/eit.c  ../include/descriptors/eit.h
-+  descriptors/eit.c  ../include/descriptors/eit.h \
 +  descriptors/vct.c  ../include/descriptors/vct.h \
 +  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h
  
  libdvbv5_la_CPPFLAGS = $(ENFORCE_LIBDVBV5_STATIC)
- libdvbv5_la_LDFLAGS = -version-info 0 $(ENFORCE_LIBDVBV5_STATIC) -lm
+ libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) -lm
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-old mode 100644
-new mode 100755
-index 9b6b050..24a16c3
+index 5ce9241..437b2f4 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -35,6 +35,7 @@
- #include "descriptors/nit.h"
- #include "descriptors/sdt.h"
- #include "descriptors/eit.h"
-+#include "descriptors/vct.h"
- #include "descriptors/desc_language.h"
- #include "descriptors/desc_network_name.h"
- #include "descriptors/desc_cable_delivery.h"
-@@ -46,6 +47,7 @@
- #include "descriptors/desc_event_short.h"
- #include "descriptors/desc_event_extended.h"
- #include "descriptors/desc_hierarchy.h"
-+#include "descriptors/desc_service_location.h"
- 
- ssize_t dvb_desc_init(const uint8_t *buf, struct dvb_desc *desc)
- {
-@@ -62,7 +64,7 @@ void dvb_desc_default_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, st
+@@ -69,7 +69,7 @@ void dvb_desc_default_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, st
  
  void dvb_desc_default_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
  {
--	dvb_log("|                   %s (%d)", dvb_descriptors[desc->type].name, desc->type);
+-	dvb_log("|                   %s (0x%02x)", dvb_descriptors[desc->type].name, desc->type);
 +	dvb_log("|                   %s (%#02x)", dvb_descriptors[desc->type].name, desc->type);
  	hexdump(parms, "|                       ", desc->data, desc->length);
  }
  
-@@ -73,6 +75,7 @@ const struct dvb_table_init dvb_table_initializers[] = {
- 	[DVB_TABLE_SDT] = { dvb_table_sdt_init },
- 	[DVB_TABLE_EIT] = { dvb_table_eit_init },
- 	[DVB_TABLE_EIT_SCHEDULE] = { dvb_table_eit_init },
-+	[DVB_TABLE_VCT] = { dvb_table_vct_init },
- };
- 
- char *default_charset = "iso-8859-1";
-@@ -246,6 +249,8 @@ const struct dvb_descriptor dvb_descriptors[] = {
- 
- 	[CUE_identifier_descriptor] = { "CUE_identifier_descriptor", NULL, NULL, NULL, 0 },
- 
-+	[extended_channel_name] = { "extended channel name", NULL, NULL, NULL, 0 },
-+	[service_location     ] = { "sercvice location", dvb_desc_service_location_init, dvb_desc_service_location_print, dvb_desc_service_location_free, sizeof(struct dvb_desc_service_location) },
- 	[component_name_descriptor] = { "component_name_descriptor", NULL, NULL, NULL, 0 },
- 	[logical_channel_number_descriptor] = { "logical_channel_number_descriptor", NULL, NULL, NULL, 0 },
- 
-@@ -460,7 +465,8 @@ static void parse_NIT_DVBS(struct nit_table *nit_table,
- 
- 	orbit = bcd_to_int(&buf[6], 16);
- 	west = buf[8] >> 7;
--	asprintf(&nit_table->orbit, "%d%c", orbit, west ? 'W' : 'E');
-+	if(asprintf(&nit_table->orbit, "%d%c", orbit, west ? 'W' : 'E') == -1)
-+		nit_table->orbit = NULL;
- 
- 	nit_table->pol = polarization[(buf[8] >> 5) & 0x3];
- 	nit_table->modulation = modulation[(buf[8] >> 3) & 0x3];
 diff --git a/lib/libdvbv5/descriptors/desc_service_location.c b/lib/libdvbv5/descriptors/desc_service_location.c
 new file mode 100644
 index 0000000..94c34fa
@@ -387,308 +241,46 @@ index 0000000..94c34fa
 +}
 +
 diff --git a/lib/libdvbv5/descriptors/vct.c b/lib/libdvbv5/descriptors/vct.c
-new file mode 100644
-index 0000000..e3858c2
---- /dev/null
+index e703c52..e567f7a 100644
+--- a/lib/libdvbv5/descriptors/vct.c
 +++ b/lib/libdvbv5/descriptors/vct.c
-@@ -0,0 +1,157 @@
-+/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation version 2
-+ * of the License.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-+ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-+ *
-+ */
-+
-+#include "descriptors/vct.h"
-+#include "dvb-fe.h"
-+
-+#include <iconv.h>
-+#include "config.h" /* ICONV_CONST */
-+
-+void dvb_table_vct_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length)
-+{
-+	const uint8_t *p = buf;
-+	struct dvb_table_vct *vct = (struct dvb_table_vct *) table;
-+	struct dvb_table_vct_channel **head;
-+
-+	hexdump(parms, "vct: ", buf, buflen);
-+
-+	if (*table_length > 0) {
-+		/* find end of curent list */
-+		head = &vct->channel;
-+		while (*head != NULL)
-+			head = &(*head)->next;
-+//FIXME: find descriptor end
-+	} else {
-+		memcpy(vct, p, sizeof(struct dvb_table_vct) - sizeof(vct->channel) - sizeof(vct->descriptor));
-+		*table_length = sizeof(struct dvb_table_vct);
-+
-+		vct->channel = NULL;
-+		vct->descriptor = NULL;
-+		head = &vct->channel;
-+	}
-+	p += sizeof(struct dvb_table_vct) - sizeof(vct->channel) - sizeof(vct->descriptor);
-+
-+	struct dvb_table_vct_channel *last = NULL;
-+	int i;
-+	for(i = 0; i < vct->channels; i++ )
-+	{
-+		struct dvb_table_vct_channel *channel = (struct dvb_table_vct_channel *) malloc(sizeof(struct dvb_table_vct_channel));
-+
-+		uint16_t short_name[8];
-+		int j;
-+		for(j = 0; j < 7; j++)
-+			short_name[j] = be16toh(((uint16_t *) p)[j]);
-+		p += 14;
-+		short_name[7] = 0x0000;
-+
-+
-+		iconv_t cd = iconv_open("utf8", "utf16");
-+		if (cd == (iconv_t)(-1)) {
-+			dvb_logerr("Conversion from utf16 to utf8 not supported");
-+			if(asprintf(&channel->short_name, "unknown") == -1)
-+				channel->short_name = NULL;
-+
-+		} else {
-+			size_t len = 14;
-+			size_t destlen = 32;
-+			char *t = malloc(destlen);
-+			char *s = (char *) short_name;
-+			channel->short_name = t;
-+			iconv(cd, (ICONV_CONST char **)&s, &len, &t, &destlen);
-+			iconv_close(cd);
-+			*t = '\0';
-+		}
-+
-+		memcpy(channel, p, sizeof(struct dvb_table_vct_channel)
-+				- sizeof(channel->short_name)
-+				- sizeof(channel->descriptor)
-+				- sizeof(channel->next));
-+		p += sizeof(struct dvb_table_vct_channel)
-+				- sizeof(channel->short_name)
-+				- sizeof(channel->descriptor)
-+				- sizeof(channel->next);
-+
-+		bswap32(channel->carrier_frequency);
-+		bswap32(channel->bitfield);
-+		bswap16(channel->bitfield2);
-+		bswap16(channel->bitfield3);
-+		bswap16(channel->program_number);
-+		bswap16(channel->tsid);
-+		channel->descriptor = NULL;
-+		channel->next = NULL;
-+
-+		if(!*head)
-+			*head = channel;
-+		if(last)
-+			last->next = channel;
-+
-+		struct dvb_desc **head_desc = &channel->descriptor;
-+		dvb_parse_descriptors(parms, p, channel->desc_length, head_desc);
-+
-+		p += channel->desc_length;
-+		last = channel;
-+	}
-+	union dvb_table_vct_desc_length *desc = (union dvb_table_vct_desc_length *) p;
-+	bswap16(desc->desc_length);
-+	p += sizeof(union dvb_table_vct_desc_length);
-+	dvb_parse_descriptors(parms, p, desc->desc_length, &vct->descriptor);
-+}
-+
-+void dvb_table_vct_free(struct dvb_table_vct *vct)
-+{
-+	struct dvb_table_vct_channel *channel = vct->channel;
-+	while (channel) {
-+		dvb_free_descriptors((struct dvb_desc **) &channel->descriptor);
-+		struct dvb_table_vct_channel *tmp = channel;
-+		channel = channel->next;
-+		free(tmp->short_name);
-+		free(tmp);
-+	}
-+	dvb_free_descriptors((struct dvb_desc **) &vct->descriptor);
-+	free(vct);
-+}
-+
-+void dvb_table_vct_print(struct dvb_v5_fe_parms *parms, struct dvb_table_vct *vct)
-+{
-+	dvb_log("VCT");
-+	dvb_table_header_print(parms, &vct->header);
-+	dvb_log("|- protocol version %d", vct->protocol_version);
-+	dvb_log("|- channels         %d", vct->channels);
-+	/*dvb_log("|\\  event_id");*/
-+	const struct dvb_table_vct_channel *channel = vct->channel;
-+	uint16_t channels = 0;
-+	while (channel) {
-+		dvb_log("|   short name     '%s'", channel->short_name);
-+		dvb_log("|   reserved        %d", channel->reserved);
-+		dvb_log("|   major channel # %d", channel->major_channel_number);
-+		dvb_log("|   minor channel # %d", channel->minor_channel_number);
-+		dvb_log("|   modulation      %d", channel->modulation_mode);
-+		dvb_log("|   carrier freq    %d", channel->carrier_frequency);
-+		dvb_log("|   program #       %d", channel->program_number);
-+		dvb_log("|   tsid            %d", channel->tsid);
-+		dvb_print_descriptors(parms, channel->descriptor);
-+		channel = channel->next;
-+		channels++;
-+	}
-+	dvb_log("|_  %d channels", channels);
-+	dvb_print_descriptors(parms, vct->descriptor);
-+}
-+
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2013 - Mauro Carvalho Chehab <m.chehab@samsung.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-old mode 100644
-new mode 100755
-index b1acf9b..f41e37c
+index e16f843..f9bc018 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -312,6 +312,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- {
- 	if (!table)
- 		return -4;
-+
- 	*table = NULL;
- 	ssize_t table_length = 0;
+@@ -185,6 +185,15 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  
-@@ -337,37 +338,40 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 		return -1;
- 	}
- 
-+	int ret = 0;
-+	uint8_t *buf = NULL;
- 	while (1) {
- 		int available;
- 
--		uint8_t *buf = NULL;
- 		ssize_t buf_length = 0;
- 
- 		do {
- 			available = poll(parms, dmx_fd, timeout);
- 		} while (available < 0 && errno == EOVERFLOW);
- 		if (parms->abort) {
--			free(tbl);
--			return 0;
-+			ret = 0;
-+			goto exit;
- 		}
- 		if (available <= 0) {
- 			dvb_logerr("dvb_read_section: no data read" );
--			free(tbl);
--			return -1;
-+			ret = -1;
-+			goto exit;
-+		}
-+		if (buf) {
-+			free(buf);
-+			buf = NULL;
- 		}
- 		buf = malloc(DVB_MAX_PAYLOAD_PACKET_SIZE);
- 		buf_length = read(dmx_fd, buf, DVB_MAX_PAYLOAD_PACKET_SIZE);
- 		if (!buf_length) {
- 			dvb_logerr("dvb_read_section: no data read" );
--			free(buf);
--			free(tbl);
--			return -1;
-+			ret = -1;
-+			goto exit;
- 		}
- 		if (buf_length < 0) {
- 			dvb_perror("dvb_read_section: read error");
--			free(buf);
--			free(tbl);
--			return -2;
-+			ret = -2;
-+			goto exit;
- 		}
- 
- 		buf = realloc(buf, buf_length);
-@@ -375,15 +379,23 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 		uint32_t crc = crc32(buf, buf_length, 0xFFFFFFFF);
- 		if (crc != 0) {
- 			dvb_logerr("dvb_read_section: crc error");
--			free(buf);
--			free(tbl);
--			return -3;
-+			ret = -3;
-+			goto exit;
- 		}
- 
- 		struct dvb_table_header *h = (struct dvb_table_header *) buf;
+ 		h = (struct dvb_table_header *)buf;
  		dvb_table_header_init(h);
 +
 +		/* dvb_logdbg( "dvb_read_section: id %d, section %d/%d, current: %d", h->id, h->section_id, h->last_section, h->current_next ); */
 +		if (start_id == h->id && start_section == h->section_id) {
-+			dvb_logwarn( "dvb_read_section: section repeated, reading done" );
-+			ret = -5;
-+			goto exit;
++			dvb_logdbg( "dvb_read_section: section repeated, reading done" );
++			break;
 +		}
 +		if (start_id == -1) start_id = h->id;
 +		if (start_section == -1) start_section = h->section_id;
 +
  		if (id != -1 && h->id != id) { /* search for a specific table id */
--			free(buf);
  			continue;
  		}
- 
-@@ -403,7 +415,6 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 			first_section = h->section_id;
- 		else if (h->section_id == first_section)
- 		{
--			free(buf);
- 			break;
- 		}
- 		if (last_section == -1)
-@@ -419,16 +430,19 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 		} else
+@@ -232,7 +241,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+ 		else
  			dvb_logerr("dvb_read_section: no initializer for table %d", tid);
  
--		free(buf);
--
 -		if (++sections == last_section + 1)
 +		if (id != -1 && ++sections == last_section + 1) {
 +			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
  			break;
  	}
- 
-+	*table = tbl;
-+
-+exit:
-+	if (buf)
-+		free(buf);
- 	dvb_dmx_stop(dmx_fd);
- 
--	*table = tbl;
--	return 0;
-+	return ret;
- }
- 
- static int read_section(struct dvb_v5_fe_parms *parms, int dmx_fd, struct dvb_v5_descriptors *dvb_desc,
-diff --git a/lib/libdvbv5/parse_string.c b/lib/libdvbv5/parse_string.c
-index 92fdbfc..cee101a 100644
---- a/lib/libdvbv5/parse_string.c
-+++ b/lib/libdvbv5/parse_string.c
-@@ -344,7 +344,7 @@ static void charset_conversion(struct dvb_v5_fe_parms *parms, char **dest, const
- 		if (cd == (iconv_t)(-1)) {
- 			memcpy(p, s, len);
- 			p[len] = '\0';
--			dvb_logerr("Conversion from %s to %s not supported\n",
-+			dvb_logerr("Conversion from %s to %s not supported",
- 				 type, output_charset);
- 		} else {
- 			iconv(cd, (ICONV_CONST char **)&s, &len, &p, &destlen);
+ 	free(buf);
 -- 
 1.7.10.4
 

@@ -1,7 +1,7 @@
-From 600b3139324d3e5fce3d1d459cef99157541691e Mon Sep 17 00:00:00 2001
+From fa0a5e2d5404317b7d63fa352818cabf6f73cc13 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 6 Apr 2013 18:30:36 +0200
-Subject: [PATCH 07/11] libdvbv5: fix eit times
+Subject: [PATCH 07/13] libdvbv5: fix eit times
 
 ---
  lib/libdvbv5/descriptors/eit.c |    5 ++---

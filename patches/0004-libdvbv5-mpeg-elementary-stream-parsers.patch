@@ -1,18 +1,18 @@
-From fdc5ebde21b1d5e4966eaabcab0b70348c408fdf Mon Sep 17 00:00:00 2001
+From bd07719d3459e3c2eb9d5b6d2864a99d31646f82 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 3 Jan 2013 00:26:55 +0100
-Subject: [PATCH 04/11] libdvbv5: mpeg elementary stream parsers
+Subject: [PATCH 04/13] libdvbv5: mpeg elementary stream parsers
 
 ---
  lib/include/descriptors/mpeg_es.h   |  109 +++++++++++++++++++++++++++++
  lib/include/descriptors/mpeg_pes.h  |  112 ++++++++++++++++++++++++++++++
  lib/include/descriptors/mpeg_ts.h   |   79 +++++++++++++++++++++
- lib/include/descriptors/nit.h       |    6 +-
+ lib/include/descriptors/nit.h       |    4 +-
  lib/libdvbv5/Makefile.am            |    5 +-
  lib/libdvbv5/descriptors/mpeg_es.c  |   76 ++++++++++++++++++++
  lib/libdvbv5/descriptors/mpeg_pes.c |  131 +++++++++++++++++++++++++++++++++++
  lib/libdvbv5/descriptors/mpeg_ts.c  |   77 ++++++++++++++++++++
- 8 files changed, 591 insertions(+), 4 deletions(-)
+ 8 files changed, 590 insertions(+), 3 deletions(-)
  create mode 100644 lib/include/descriptors/mpeg_es.h
  create mode 100644 lib/include/descriptors/mpeg_pes.h
  create mode 100644 lib/include/descriptors/mpeg_ts.h
@@ -339,19 +339,10 @@ index 0000000..2bb570b
 +
 +#endif
 diff --git a/lib/include/descriptors/nit.h b/lib/include/descriptors/nit.h
-index 8a0b488..99a62d4 100644
+index f2f6163..d71a762 100644
 --- a/lib/include/descriptors/nit.h
 +++ b/lib/include/descriptors/nit.h
-@@ -36,7 +36,7 @@ union dvb_table_nit_transport_header {
- 	struct {
- 		uint16_t transport_length:12;
- 		uint16_t reserved:4;
--	};
-+	} __attribute__((packed));
- };
- 
- struct dvb_table_nit_transport {
-@@ -47,7 +47,7 @@ struct dvb_table_nit_transport {
+@@ -48,7 +48,7 @@ struct dvb_table_nit_transport {
  		struct {
  			uint16_t section_length:12;
  			uint16_t reserved:4;
@@ -360,7 +351,7 @@ index 8a0b488..99a62d4 100644
  	};
  	struct dvb_desc *descriptor;
  	struct dvb_table_nit_transport *next;
-@@ -60,7 +60,7 @@ struct dvb_table_nit {
+@@ -61,7 +61,7 @@ struct dvb_table_nit {
  		struct {
  			uint16_t desc_length:12;
  			uint16_t reserved:4;
@@ -370,12 +361,12 @@ index 8a0b488..99a62d4 100644
  	struct dvb_desc *descriptor;
  	struct dvb_table_nit_transport *transport;
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index a325077..3a639f5 100644
+index 400af39..795f30c 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
-@@ -41,7 +41,10 @@ libdvbv5_la_SOURCES = \
+@@ -49,7 +49,10 @@ libdvbv5_la_SOURCES = \
    descriptors/sdt.c  ../include/descriptors/sdt.h \
-   descriptors/eit.c  ../include/descriptors/eit.h \
+   descriptors/vct.c  ../include/descriptors/vct.h \
    descriptors/vct.c  ../include/descriptors/vct.h \
 -  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h
 +  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h \
@@ -384,7 +375,7 @@ index a325077..3a639f5 100644
 +  descriptors/mpeg_es.c  ../include/descriptors/mpeg_es.h
  
  libdvbv5_la_CPPFLAGS = $(ENFORCE_LIBDVBV5_STATIC)
- libdvbv5_la_LDFLAGS = -version-info 0 $(ENFORCE_LIBDVBV5_STATIC) -lm
+ libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) -lm
 diff --git a/lib/libdvbv5/descriptors/mpeg_es.c b/lib/libdvbv5/descriptors/mpeg_es.c
 new file mode 100644
 index 0000000..b081af4

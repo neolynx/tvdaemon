@@ -1,14 +1,14 @@
-From 42f23a862de8e0bac8b535716cbe98a68e76e57e Mon Sep 17 00:00:00 2001
+From 56d094fbb303cd776341e6fc5b34a89db090bb76 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 25 Feb 2013 12:39:57 -0800
-Subject: [PATCH 08/11] libdvbv5: MGT parser
+Subject: [PATCH 08/13] libdvbv5: MGT parser
 
 ---
  lib/include/descriptors/mgt.h  |   82 +++++++++++++++++++++++++++++
  lib/libdvbv5/Makefile.am       |    1 +
- lib/libdvbv5/descriptors.c     |    2 +
+ lib/libdvbv5/descriptors.c     |    1 +
  lib/libdvbv5/descriptors/mgt.c |  113 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 198 insertions(+)
+ 4 files changed, 197 insertions(+)
  create mode 100644 lib/include/descriptors/mgt.h
  create mode 100644 lib/libdvbv5/descriptors/mgt.c
 
@@ -101,19 +101,19 @@ index 0000000..4a68f2c
 +
 +#endif
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 3a639f5..6c028a2 100644
+index 795f30c..9d4b6b9 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
-@@ -41,6 +41,7 @@ libdvbv5_la_SOURCES = \
+@@ -49,6 +49,7 @@ libdvbv5_la_SOURCES = \
    descriptors/sdt.c  ../include/descriptors/sdt.h \
-   descriptors/eit.c  ../include/descriptors/eit.h \
+   descriptors/vct.c  ../include/descriptors/vct.h \
    descriptors/vct.c  ../include/descriptors/vct.h \
 +  descriptors/mgt.c  ../include/descriptors/mgt.h \
    descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h \
    descriptors/mpeg_ts.c  ../include/descriptors/mpeg_ts.h \
    descriptors/mpeg_pes.c  ../include/descriptors/mpeg_pes.h \
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 415f222..efd4970 100755
+index 18884b0..bd1bc03 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -36,6 +36,7 @@
@@ -124,14 +124,6 @@ index 415f222..efd4970 100755
  #include "descriptors/desc_language.h"
  #include "descriptors/desc_network_name.h"
  #include "descriptors/desc_cable_delivery.h"
-@@ -77,6 +78,7 @@ const struct dvb_table_init dvb_table_initializers[] = {
- 	[DVB_TABLE_EIT] = { dvb_table_eit_init },
- 	[DVB_TABLE_EIT_SCHEDULE] = { dvb_table_eit_init },
- 	[DVB_TABLE_VCT] = { dvb_table_vct_init },
-+	[DVB_TABLE_MGT] = { dvb_table_mgt_init },
- };
- 
- char *default_charset = "iso-8859-1";
 diff --git a/lib/libdvbv5/descriptors/mgt.c b/lib/libdvbv5/descriptors/mgt.c
 new file mode 100644
 index 0000000..272d9d7

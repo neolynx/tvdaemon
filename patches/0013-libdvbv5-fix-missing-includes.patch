@@ -1,0 +1,63 @@
+From 7e46781797022709f4addfac6f31f3fa5b143fc5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 8 Dec 2013 18:39:11 +0100
+Subject: [PATCH 13/13] libdvbv5: fix missing includes
+
+---
+ lib/libdvbv5/dvb-file.c     |    1 +
+ lib/libdvbv5/dvb-sat.c      |    1 +
+ lib/libdvbv5/dvb-scan.c     |    1 +
+ lib/libdvbv5/parse_string.c |    1 +
+ 4 files changed, 4 insertions(+)
+
+diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
+index 5621a23..3efa770 100644
+--- a/lib/libdvbv5/dvb-file.c
++++ b/lib/libdvbv5/dvb-file.c
+@@ -21,6 +21,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <strings.h> // strcasecmp
+ #include <unistd.h>
+ 
+ #include "dvb-file.h"
+diff --git a/lib/libdvbv5/dvb-sat.c b/lib/libdvbv5/dvb-sat.c
+index 3cbcf03..c35e3d7 100644
+--- a/lib/libdvbv5/dvb-sat.c
++++ b/lib/libdvbv5/dvb-sat.c
+@@ -21,6 +21,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <unistd.h>
++#include <strings.h> // strcasecmp
+ 
+ #include "dvb-fe.h"
+ #include "dvb-v5-std.h"
+diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
+index 2aa63f9..4dd0a27 100644
+--- a/lib/libdvbv5/dvb-scan.c
++++ b/lib/libdvbv5/dvb-scan.c
+@@ -35,6 +35,7 @@
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ #include <stdlib.h>
++#include <sys/time.h>
+ 
+ #include "dvb-scan.h"
+ #include "dvb-frontend.h"
+diff --git a/lib/libdvbv5/parse_string.c b/lib/libdvbv5/parse_string.c
+index f7b745e..8bd56f3 100644
+--- a/lib/libdvbv5/parse_string.c
++++ b/lib/libdvbv5/parse_string.c
+@@ -27,6 +27,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <strings.h> // strcasecmp
+ 
+ #include "parse_string.h"
+ #include "dvb-log.h"
+-- 
+1.7.10.4
+

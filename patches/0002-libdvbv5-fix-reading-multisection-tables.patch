@@ -1,26 +1,25 @@
-From 4e3ef0176e4efa58c918ac954157629e571110e8 Mon Sep 17 00:00:00 2001
+From dfa05eb65a17cea61b42e9fe23ba0be01df6d1ba Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 13 Jan 2013 23:23:33 +0100
-Subject: [PATCH 02/11] libdvbv5: fix reading multisection tables
+Subject: [PATCH 02/13] libdvbv5: fix reading multisection tables
 
 ---
- lib/libdvbv5/dvb-scan.c |   19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ lib/libdvbv5/dvb-scan.c |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 6de629f..b1acf9b 100644
+index e97ddfa..e16f843 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -385,16 +385,19 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -187,15 +187,19 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+ 		dvb_table_header_init(h);
  		if (id != -1 && h->id != id) { /* search for a specific table id */
- 			free(buf);
  			continue;
 -		} else {
 -			if (table_id == -1)
 -				table_id = h->id;
 -			else if (h->id != table_id) {
 -				dvb_logwarn("dvb_read_section: table ID mismatch reading multi section table: %d != %d", h->id, table_id);
--				free(buf);
 -				continue;
 -			}
  		}

@@ -1,7 +1,7 @@
-From 303f43f74b012109dc3df0768ab94faacd395322 Mon Sep 17 00:00:00 2001
+From 97bed716b44cd4a493009baa8cc63e8cb4ac2f4d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Mon, 21 Jan 2013 23:23:55 +0100
-Subject: [PATCH 06/11] libdvbv5: eit parsing updated
+Date: Sun, 8 Dec 2013 19:35:17 +0100
+Subject: [PATCH 06/13] libdvbv5: eit parsing updated
 
 ---
  lib/include/descriptors.h      |    6 ++++++
@@ -10,14 +10,14 @@ Subject: [PATCH 06/11] libdvbv5: eit parsing updated
  lib/libdvbv5/descriptors.c     |    1 +
  lib/libdvbv5/descriptors/eit.c |   28 +++++++++++++++++++++++-----
  lib/libdvbv5/dvb-fe.c          |    7 +++++++
- lib/libdvbv5/dvb-scan.c        |   19 ++++++++-----------
- 7 files changed, 48 insertions(+), 16 deletions(-)
+ lib/libdvbv5/dvb-scan.c        |   22 +++++++---------------
+ 7 files changed, 47 insertions(+), 20 deletions(-)
 
 diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
-index e72b370..50cc948 100644
+index 5ab29a0..6f89aeb 100644
 --- a/lib/include/descriptors.h
 +++ b/lib/include/descriptors.h
-@@ -62,7 +62,13 @@ struct dvb_desc {
+@@ -63,7 +63,13 @@ struct dvb_desc {
  } __attribute__((packed));
  
  void dvb_desc_default_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc);
@@ -57,10 +57,10 @@ index b0e2bf9..8cf2697 100644
  				    unsigned verbose, unsigned use_legacy_call);
  struct dvb_v5_fe_parms *dvb_fe_open2(int adapter, int frontend,
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 24a16c3..415f222 100755
+index 437b2f4..18884b0 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -64,6 +64,7 @@ void dvb_desc_default_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, st
+@@ -69,6 +69,7 @@ void dvb_desc_default_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, st
  
  void dvb_desc_default_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
  {
@@ -129,7 +129,7 @@ index ccfe1a6..d13b14c 100644
  		dvb_log("|   Duration              %dh %dm %ds", event->duration / 3600, (event->duration % 3600) / 60, event->duration % 60);
  		dvb_log("|   free CA mode          %d", event->free_CA_mode);
 diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
-index d62355d..850a631 100644
+index 57382ba..7e2d24a 100644
 --- a/lib/libdvbv5/dvb-fe.c
 +++ b/lib/libdvbv5/dvb-fe.c
 @@ -35,6 +35,13 @@ static void dvb_v5_free(struct dvb_v5_fe_parms *parms)
@@ -147,29 +147,40 @@ index d62355d..850a631 100644
  				    unsigned use_legacy_call)
  {
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 856f14f..6ec5052 100755
+index b94d6a9..bcd536d 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -321,14 +321,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
+@@ -101,7 +101,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  	// handle sections
  	int first_section = -1;
  	int last_section = -1;
 -	int table_id = -1;
 +	/*int table_id = -1;*/
  	int sections = 0;
+ 	struct dmx_sct_filter_params f;
+ 	struct dvb_table_header *h;
+@@ -111,7 +111,6 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+ 	*table = NULL;
  
  	// FIXME: verify known table
- 
--	/* table cannot be reallocated due to linked lists */
--	uint8_t *tbl = NULL;
 -
- 	struct dmx_sct_filter_params f;
  	memset(&f, 0, sizeof(f));
  	f.pid = pid;
-@@ -412,11 +409,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 			/*}*/
- 		/*}*/
+ 	f.filter.filter[0] = tid;
+@@ -201,21 +200,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+ 			continue;
+ 		}
  
+-		/*if (id != -1) {*/
+-			/*if (table_id == -1)*/
+-				/*table_id = h->id;*/
+-			/*else if (h->id != table_id) {*/
+-				/*dvb_logwarn("dvb_read_section: table ID mismatch reading multi section table: %d != %d", h->id, table_id);*/
+-				/*free(buf);*/
+-				/*continue;*/
+-			/*}*/
+-		/*}*/
+-
 -		dvb_logerr("dvb_read_section: got section %d, last %di, filter %d", h->section_id, h->last_section, id );
 +		/*dvb_logerr("dvb_read_section: got section %d, last %d, filter %d", h->section_id, h->last_section, id );*/
  		/* handle the sections */
@@ -177,36 +188,22 @@ index 856f14f..6ec5052 100755
  			first_section = h->section_id;
 -		else if (h->section_id == first_section)
 +		else if (start_id == h->id && h->section_id == first_section)
- 		{
  			break;
- 		}
-@@ -424,21 +421,21 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd, unsigned
- 			last_section = h->last_section;
  
- 		//ARRAY_SIZE(vb_table_initializers) >= table
--		if (!tbl)
--			tbl = malloc(MAX_TABLE_SIZE);
-+		if (!*table)
-+			*table = malloc(MAX_TABLE_SIZE);
- 
- 		if (dvb_table_initializers[tid].init) {
--			dvb_table_initializers[tid].init(parms, buf, buf_length, tbl, &table_length);
--			tbl = realloc(tbl, table_length);
-+			dvb_table_initializers[tid].init(parms, buf, buf_length, *table, &table_length);
-+			*table = realloc(*table, table_length);
- 		} else
- 			dvb_logerr("dvb_read_section: no initializer for table %d", tid);
- 
+ 		if (last_section == -1)
+@@ -247,8 +236,11 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  		if (id != -1 && ++sections == last_section + 1) {
  			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
  			break;
 +		}
  	}
+-	free(buf);
++
++	if (buf)
++		free(buf);
  
--	*table = tbl;
+ 	dvb_dmx_stop(dmx_fd);
  
- exit:
- 	if (buf)
 -- 
 1.7.10.4
 
