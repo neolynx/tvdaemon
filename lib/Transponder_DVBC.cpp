@@ -43,6 +43,22 @@ Transponder_DVBC::Transponder_DVBC( Source &source, std::string configfile ) : T
   has_nit = true;
 }
 
+Transponder_DVBC::Transponder_DVBC( Source &source,
+		    uint32_t frequency,
+		    uint32_t symbol_rate,
+		    fe_code_rate fec,
+		    fe_modulation modulation,
+		    int config_id ) :
+  Transponder( source, SYS_DVBC_ANNEX_A, config_id ),
+  symbol_rate(symbol_rate),
+  inner_fec(fec),
+  modulation(modulation)
+{
+  this->frequency = frequency;
+  has_sdt = true;
+  has_nit = true;
+}
+
 Transponder_DVBC::~Transponder_DVBC( )
 {
 }
@@ -110,6 +126,15 @@ std::string Transponder_DVBC::toString( ) const
 
 bool Transponder_DVBC::IsSame( const Transponder &t )
 {
+  const Transponder_DVBC &other = (const Transponder_DVBC &) t;
+  if( other.delsys != delsys )
+    return false;
+  if( other.frequency != frequency )
+    return false;
+  if( other.symbol_rate != symbol_rate )
+    return false;
+  if( other.inner_fec != inner_fec )
+    return false;
   return true;
 }
 

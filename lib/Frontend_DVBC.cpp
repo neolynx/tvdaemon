@@ -21,7 +21,11 @@
 
 #include "Frontend_DVBC.h"
 
+#include "descriptors/nit.h"
+#include "descriptors/desc_cable_delivery.h"
+
 #include "Log.h"
+#include "Transponder_DVBC.h"
 
 Frontend_DVBC::Frontend_DVBC( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   Frontend( adapter, adapter_id, frontend_id, config_id )
@@ -53,49 +57,78 @@ bool Frontend_DVBC::LoadConfig( )
 
 bool Frontend_DVBC::HandleNIT( struct dvb_table_nit *nit )
 {
-  //struct section_ext *section_ext = NULL;
-  //if(( section_ext = section_ext_decode( section, 1 )) == NULL )
-  //{
-    //printf( "unable to extract section_ext of nit\n" );
-    //return false;
-  //}
-  //struct dvb_nit_section *nit = dvb_nit_section_codec(section_ext);
-  //if( nit == NULL )
-  //{
-    //printf( "NIT section decode error\n" );
-    //return false;
-  //}
-  //struct descriptor *curd = NULL;
-  //struct dvb_nit_section_part2 *part2 = dvb_nit_section_part2(nit);
-  //struct dvb_nit_transport *cur_transport = NULL;
-  //dvb_nit_section_transports_for_each(nit, part2, cur_transport)
-  //{
-    //dvb_nit_transport_descriptors_for_each(cur_transport, curd)
-    //{
-      //switch( curd->tag )
-      //{
-        //case dtag_dvb_cable_delivery_system:
-          //{
-            //struct dvb_cable_delivery_descriptor *dx = dvb_cable_delivery_descriptor_codec(curd);
-            //if( dx == NULL )
-              //return false;
-            //printf("TS frequency:%x fec_outer:%i modulation:%i symbol_rate:%x fec_inner:%i\n",
-                //dx->frequency, dx->fec_outer, dx->modulation,
-                //dx->symbol_rate, dx->fec_inner);
-          //}
-          //break;
-      //}
-    //}
-  //}
+  dvb_nit_transport_foreach( tr, nit )
+  {
+    dvb_desc_find( struct dvb_desc_cable_delivery, desc, tr, cable_delivery_system_descriptor )
+    {
+//      LogWarn("TS frequency:%x fec_outer:%i modulation:%i symbol_rate:%x fec_inner:%i",
+//              desc->frequency, desc->fec_outer, desc->modulation,
+//              desc->symbol_rate, desc->fec_inner);
 
-  //// switch to the SDT table
-  //filter[0] = stag_dvb_service_description_actual;
-  //if( dvbdemux_set_section_filter( fd_demux, TRANSPORT_SDT_PID, filter, mask, 1, 1 ))
-  //{
-    //printf( "failed to set demux filter for sdt\n" );
-    //up = false;
-    //return false;
-  //}
+      fe_modulation modulation = QAM_16;
+      switch( desc->modulation )
+      {
+        case 0:
+          modulation = QPSK; // FIXME: should be INVALID
+          break;
+        case 1:
+          modulation = QAM_16;
+          break;
+        case 2:
+          modulation = QAM_32;
+          break;
+        case 3:
+          modulation = QAM_64;
+          break;
+        case 4:
+          modulation = QAM_128;
+          break;
+        case 5:
+          modulation = QAM_256;
+          break;
+      }
+
+      fe_code_rate fec = FEC_NONE;
+      switch( desc->fec_inner )
+      {
+        case 0:
+          break;
+        case 1:
+          fec = FEC_1_2;
+          break;
+        case 2:
+          fec = FEC_2_3;
+          break;
+        case 3:
+          fec = FEC_3_4;
+          break;
+        case 4:
+          fec = FEC_5_6;
+          break;
+        case 5:
+          fec = FEC_7_8;
+          break;
+        case 15:
+          fec = FEC_NONE;
+          break;
+        default:
+          LogWarn( "got unknown fec: %d", desc->fec_inner );
+          break;
+      }
+      Source &source = transponder->GetSource( );
+      Transponder_DVBC *t = new Transponder_DVBC( source,
+						  desc->frequency,
+						  desc->symbol_rate,
+						  fec,
+                                                  modulation,
+						  source.GetTransponderCount( ));
+      if( !source.AddTransponder( t ))
+        delete t;
+      else
+        Log( "  Added transponder %s", t->toString( ).c_str( ));
+    }
+  }
+
   return true;
 }
 

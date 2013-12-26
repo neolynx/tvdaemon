@@ -29,6 +29,7 @@ class Transponder_DVBC : public Transponder
   public:
     Transponder_DVBC( Source &src, const fe_delivery_system_t delsys, int config_id );
     Transponder_DVBC( Source &src, std::string configfile );
+    Transponder_DVBC( Source &source, uint32_t frequency, uint32_t symbol_rate, fe_code_rate fec, fe_modulation modulation, int config_id );
     virtual ~Transponder_DVBC( );
 
     virtual bool SaveConfig( );
