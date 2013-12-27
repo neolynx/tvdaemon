@@ -52,7 +52,8 @@ Transponder_DVBC::Transponder_DVBC( Source &source,
   Transponder( source, SYS_DVBC_ANNEX_A, config_id ),
   symbol_rate(symbol_rate),
   inner_fec(fec),
-  modulation(modulation)
+  modulation(modulation),
+  inversion(INVERSION_AUTO)
 {
   this->frequency = frequency;
   has_sdt = true;
