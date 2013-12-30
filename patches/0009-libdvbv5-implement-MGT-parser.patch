@@ -1,25 +1,28 @@
-From 56d094fbb303cd776341e6fc5b34a89db090bb76 Mon Sep 17 00:00:00 2001
+From 3d66ebc85cc310c2ce287e6b28cbdd7dd5f144c8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Mon, 25 Feb 2013 12:39:57 -0800
-Subject: [PATCH 08/13] libdvbv5: MGT parser
+Date: Sun, 29 Dec 2013 16:45:59 +0100
+Subject: [PATCH 09/19] libdvbv5: implement MGT parser
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors/mgt.h  |   82 +++++++++++++++++++++++++++++
- lib/libdvbv5/Makefile.am       |    1 +
- lib/libdvbv5/descriptors.c     |    1 +
- lib/libdvbv5/descriptors/mgt.c |  113 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 197 insertions(+)
+ lib/include/descriptors/mgt.h  |  80 ++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am       |   1 +
+ lib/libdvbv5/descriptors.c     |   2 +
+ lib/libdvbv5/descriptors/mgt.c | 117 +++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 200 insertions(+)
  create mode 100644 lib/include/descriptors/mgt.h
  create mode 100644 lib/libdvbv5/descriptors/mgt.c
 
 diff --git a/lib/include/descriptors/mgt.h b/lib/include/descriptors/mgt.h
 new file mode 100644
-index 0000000..4a68f2c
+index 0000000..9eaac02
 --- /dev/null
 +++ b/lib/include/descriptors/mgt.h
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,80 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
 + * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -45,12 +48,12 @@ index 0000000..4a68f2c
 +#include <stdint.h>
 +#include <unistd.h> /* ssize_t */
 +
-+#include "descriptors/header.h"
++#include "descriptors/atsc_header.h"
 +#include "descriptors.h"
 +
-+#define DVB_TABLE_MGT      0xC7
++#define ATSC_TABLE_MGT 0xC7
 +
-+struct dvb_table_mgt_table {
++struct atsc_table_mgt_table {
 +	uint16_t type;
 +	union {
 +		uint16_t bitfield;
@@ -70,20 +73,19 @@ index 0000000..4a68f2c
 +		} __attribute__((packed));
 +	} __attribute__((packed));
 +	struct dvb_desc *descriptor;
-+	struct dvb_table_mgt_table *next;
++	struct atsc_table_mgt_table *next;
 +} __attribute__((packed));
 +
-+struct dvb_table_mgt {
-+	struct dvb_table_header header;
-+        uint8_t  protocol_version;
++struct atsc_table_mgt {
++	struct atsc_table_header header;
 +        uint16_t tables;
-+        struct dvb_table_mgt_table *table;
++        struct atsc_table_mgt_table *table;
 +	struct dvb_desc *descriptor;
 +} __attribute__((packed));
 +
 +
-+#define dvb_mgt_transport_foreach( tran, mgt ) \
-+  for( struct dvb_table_mgt_transport *tran = mgt->transport; tran; tran = tran->next ) \
++#define atsc_mgt_table_foreach( _tran, _mgt ) \
++  for( struct atsc_table_mgt_table *_tran = _mgt->table; _tran; _tran = _tran->next ) \
 +
 +struct dvb_v5_fe_parms;
 +
@@ -91,9 +93,9 @@ index 0000000..4a68f2c
 +extern "C" {
 +#endif
 +
-+void dvb_table_mgt_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length);
-+void dvb_table_mgt_free(struct dvb_table_mgt *mgt);
-+void dvb_table_mgt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_mgt *mgt);
++void atsc_table_mgt_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length);
++void atsc_table_mgt_free(struct atsc_table_mgt *mgt);
++void atsc_table_mgt_print(struct dvb_v5_fe_parms *parms, struct atsc_table_mgt *mgt);
 +
 +#ifdef __cplusplus
 +}
@@ -101,19 +103,19 @@ index 0000000..4a68f2c
 +
 +#endif
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 795f30c..9d4b6b9 100644
+index 33693cc..7755e05 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
 @@ -49,6 +49,7 @@ libdvbv5_la_SOURCES = \
    descriptors/sdt.c  ../include/descriptors/sdt.h \
    descriptors/vct.c  ../include/descriptors/vct.h \
-   descriptors/vct.c  ../include/descriptors/vct.h \
+   descriptors/eit.c  ../include/descriptors/eit.h \
 +  descriptors/mgt.c  ../include/descriptors/mgt.h \
    descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h \
    descriptors/mpeg_ts.c  ../include/descriptors/mpeg_ts.h \
    descriptors/mpeg_pes.c  ../include/descriptors/mpeg_pes.h \
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 18884b0..bd1bc03 100644
+index bc3d51a..7b9e9d0 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -36,6 +36,7 @@
@@ -124,15 +126,22 @@ index 18884b0..bd1bc03 100644
  #include "descriptors/desc_language.h"
  #include "descriptors/desc_network_name.h"
  #include "descriptors/desc_cable_delivery.h"
+@@ -84,6 +85,7 @@ const struct dvb_table_init dvb_table_initializers[] = {
+ 	[DVB_TABLE_TVCT] = { dvb_table_vct_init, sizeof(struct dvb_table_vct) },
+ 	[DVB_TABLE_CVCT] = { dvb_table_vct_init, sizeof(struct dvb_table_vct) },
+ 	[DVB_TABLE_EIT_SCHEDULE] = { dvb_table_eit_init, sizeof(struct dvb_table_eit) },
++	[ATSC_TABLE_MGT]         = { atsc_table_mgt_init, sizeof(struct atsc_table_mgt) },
+ };
+ 
+ char *default_charset = "iso-8859-1";
 diff --git a/lib/libdvbv5/descriptors/mgt.c b/lib/libdvbv5/descriptors/mgt.c
 new file mode 100644
-index 0000000..272d9d7
+index 0000000..09d1cf2
 --- /dev/null
 +++ b/lib/libdvbv5/descriptors/mgt.c
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,117 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -154,12 +163,12 @@ index 0000000..272d9d7
 +#include "descriptors/mgt.h"
 +#include "dvb-fe.h"
 +
-+void dvb_table_mgt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length)
++void atsc_table_mgt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length)
 +{
 +	const uint8_t *p = buf;
-+	struct dvb_table_mgt *mgt = (struct dvb_table_mgt *) table;
++	struct atsc_table_mgt *mgt = (struct atsc_table_mgt *) table;
 +	struct dvb_desc **head_desc;
-+	struct dvb_table_mgt_table **head;
++	struct atsc_table_mgt_table **head;
 +	/*int desc_length;*/
 +
 +	if (*table_length > 0) {
@@ -171,8 +180,8 @@ index 0000000..272d9d7
 +		while (*head != NULL)
 +			head = &(*head)->next;
 +	} else {
-+		memcpy(table, p, sizeof(struct dvb_table_mgt) - sizeof(mgt->descriptor) - sizeof(mgt->table));
-+		*table_length = sizeof(struct dvb_table_mgt);
++		memcpy(table, p, sizeof(struct atsc_table_mgt) - sizeof(mgt->descriptor) - sizeof(mgt->table));
++		*table_length = sizeof(struct atsc_table_mgt);
 +
 +		mgt->descriptor = NULL;
 +		mgt->table = NULL;
@@ -180,16 +189,16 @@ index 0000000..272d9d7
 +		head = &mgt->table;
 +		bswap16(mgt->tables);
 +	}
-+	p += sizeof(struct dvb_table_mgt) - sizeof(mgt->descriptor) - sizeof(mgt->table);
++	p += sizeof(struct atsc_table_mgt) - sizeof(mgt->descriptor) - sizeof(mgt->table);
 +
 +	/*dvb_parse_descriptors(parms, p, desc_length, head_desc);*/
 +	/*p += desc_length;*/
 +        int i = 0;
-+	struct dvb_table_mgt_table *last = NULL;
++	struct atsc_table_mgt_table *last = NULL;
 +	while (i++ < mgt->tables && (uint8_t *) p < buf + buflen - 4) {
-+		struct dvb_table_mgt_table *table = (struct dvb_table_mgt_table *) malloc(sizeof(struct dvb_table_mgt_table));
-+		memcpy(table, p, sizeof(struct dvb_table_mgt_table) - sizeof(table->descriptor) - sizeof(table->next));
-+		p += sizeof(struct dvb_table_mgt_table) - sizeof(table->descriptor) - sizeof(table->next);
++		struct atsc_table_mgt_table *table = (struct atsc_table_mgt_table *) malloc(sizeof(struct atsc_table_mgt_table));
++		memcpy(table, p, sizeof(struct atsc_table_mgt_table) - sizeof(table->descriptor) - sizeof(table->next));
++		p += sizeof(struct atsc_table_mgt_table) - sizeof(table->descriptor) - sizeof(table->next);
 +
 +		bswap16(table->type);
 +		bswap16(table->bitfield);
@@ -212,30 +221,35 @@ index 0000000..272d9d7
 +	}
 +}
 +
-+void dvb_table_mgt_free(struct dvb_table_mgt *mgt)
++void atsc_table_mgt_free(struct atsc_table_mgt *mgt)
 +{
-+	struct dvb_table_mgt_table *table = mgt->table;
++	struct atsc_table_mgt_table *table = mgt->table;
 +	dvb_free_descriptors((struct dvb_desc **) &mgt->descriptor);
 +	while(table) {
 +		dvb_free_descriptors((struct dvb_desc **) &table->descriptor);
-+		struct dvb_table_mgt_table *tmp = table;
++		struct atsc_table_mgt_table *tmp = table;
 +		table = table->next;
 +		free(tmp);
 +	}
 +	free(mgt);
 +}
 +
-+void dvb_table_mgt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_mgt *mgt)
++void atsc_table_mgt_print(struct dvb_v5_fe_parms *parms, struct atsc_table_mgt *mgt)
 +{
 +	dvb_log("MGT");
-+	dvb_table_header_print(parms, &mgt->header);
-+	dvb_log("| protocol_version %d", mgt->protocol_version);
++	atsc_table_header_print(parms, &mgt->header);
 +	dvb_log("| tables           %d", mgt->tables);
 +	/*dvb_print_descriptors(parms, mgt->descriptor);*/
-+	const struct dvb_table_mgt_table *table = mgt->table;
++	const struct atsc_table_mgt_table *table = mgt->table;
 +	uint16_t tables = 0;
 +	while(table) {
-+                dvb_log("|- type %04x  %d", table->type, table->pid);
++                dvb_log("|- type %04x    %d", table->type, table->pid);
++                dvb_log("|  one          %d", table->one);
++                dvb_log("|  one2         %d", table->one2);
++                dvb_log("|  type version %d", table->type_version);
++                dvb_log("|  size         %d", table->size);
++                dvb_log("|  one3         %d", table->one3);
++                dvb_log("|  desc_length  %d", table->desc_length);
 +		dvb_print_descriptors(parms, table->descriptor);
 +		table = table->next;
 +		tables++;
@@ -244,5 +258,5 @@ index 0000000..272d9d7
 +}
 +
 -- 
-1.7.10.4
+1.8.3.2
 

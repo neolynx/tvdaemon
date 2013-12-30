@@ -1,0 +1,38 @@
+From 81b6b04fbaab313208272350156672f90270b46b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 29 Dec 2013 15:19:48 +0100
+Subject: [PATCH 06/19] libdvbv5: fix NIT structures
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/include/descriptors/nit.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/include/descriptors/nit.h b/lib/include/descriptors/nit.h
+index f2f6163..d71a762 100644
+--- a/lib/include/descriptors/nit.h
++++ b/lib/include/descriptors/nit.h
+@@ -48,7 +48,7 @@ struct dvb_table_nit_transport {
+ 		struct {
+ 			uint16_t section_length:12;
+ 			uint16_t reserved:4;
+-		};
++		} __attribute__((packed));
+ 	};
+ 	struct dvb_desc *descriptor;
+ 	struct dvb_table_nit_transport *next;
+@@ -61,7 +61,7 @@ struct dvb_table_nit {
+ 		struct {
+ 			uint16_t desc_length:12;
+ 			uint16_t reserved:4;
+-		};
++		} __attribute__((packed));
+ 	};
+ 	struct dvb_desc *descriptor;
+ 	struct dvb_table_nit_transport *transport;
+-- 
+1.8.3.2
+

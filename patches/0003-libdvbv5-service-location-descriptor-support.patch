@@ -1,22 +1,21 @@
-From ea8c0da734964fff49b94cc822fefcfaec701a61 Mon Sep 17 00:00:00 2001
+From 5b4b1aab3146bf56d4014c406b5db2b4d8807506 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Sun, 8 Dec 2013 20:19:56 +0100
-Subject: [PATCH 03/13] libdvbv5: ATSC VCT table support
+Date: Sun, 29 Dec 2013 15:22:43 +0100
+Subject: [PATCH 03/19] libdvbv5: service location descriptor support
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+Implement the service location descriptor (0xa1), and small cleanups.
+
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors.h                        |    4 +-
- lib/include/descriptors/desc_service_location.h  |   70 +++++++++++++++++++++
- lib/include/descriptors/vct.h                    |    5 +-
- lib/libdvbv5/Makefile.am                         |    3 +-
- lib/libdvbv5/descriptors.c                       |    2 +-
- lib/libdvbv5/descriptors/desc_service_location.c |   71 ++++++++++++++++++++++
- lib/libdvbv5/descriptors/vct.c                   |    1 +
- lib/libdvbv5/dvb-scan.c                          |   12 +++-
- 8 files changed, 162 insertions(+), 6 deletions(-)
+ lib/include/descriptors.h                        |  4 +-
+ lib/include/descriptors/desc_service_location.h  | 69 +++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am                         |  3 +-
+ lib/libdvbv5/descriptors.c                       |  2 +-
+ lib/libdvbv5/descriptors/desc_service_location.c | 70 ++++++++++++++++++++++++
+ 5 files changed, 145 insertions(+), 3 deletions(-)
  create mode 100644 lib/include/descriptors/desc_service_location.h
  create mode 100644 lib/libdvbv5/descriptors/desc_service_location.c
 
@@ -41,13 +40,12 @@ index 2e614f0..5ab29a0 100644
  
 diff --git a/lib/include/descriptors/desc_service_location.h b/lib/include/descriptors/desc_service_location.h
 new file mode 100644
-index 0000000..2e11cff
+index 0000000..89ed055
 --- /dev/null
 +++ b/lib/include/descriptors/desc_service_location.h
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,69 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -115,29 +113,8 @@ index 0000000..2e11cff
 +#endif
 +
 +#endif
-diff --git a/lib/include/descriptors/vct.h b/lib/include/descriptors/vct.h
-index 6272b43..505a407 100644
---- a/lib/include/descriptors/vct.h
-+++ b/lib/include/descriptors/vct.h
-@@ -1,5 +1,6 @@
- /*
-- * Copyright (c) 2013 - Mauro Carvalho Chehab <m.chehab@samsung.com>
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
-+ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
-@@ -35,7 +36,7 @@ struct dvb_table_vct_channel {
- 	uint16_t	__short_name[7];
- 
- 	union {
--		uint16_t bitfield1;
-+		uint32_t bitfield;
- 		struct {
- 			uint32_t	modulation_mode:8;
- 			uint32_t	minor_channel_number:10;
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 2ad5902..400af39 100644
+index 2ad5902..80e8adb 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
 @@ -48,7 +48,8 @@ libdvbv5_la_SOURCES = \
@@ -145,7 +122,7 @@ index 2ad5902..400af39 100644
    descriptors/sdt.c  ../include/descriptors/sdt.h \
    descriptors/vct.c  ../include/descriptors/vct.h \
 -  descriptors/eit.c  ../include/descriptors/eit.h
-+  descriptors/vct.c  ../include/descriptors/vct.h \
++  descriptors/eit.c  ../include/descriptors/eit.h \
 +  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h
  
  libdvbv5_la_CPPFLAGS = $(ENFORCE_LIBDVBV5_STATIC)
@@ -165,13 +142,12 @@ index 5ce9241..437b2f4 100644
  
 diff --git a/lib/libdvbv5/descriptors/desc_service_location.c b/lib/libdvbv5/descriptors/desc_service_location.c
 new file mode 100644
-index 0000000..94c34fa
+index 0000000..3759665
 --- /dev/null
 +++ b/lib/libdvbv5/descriptors/desc_service_location.c
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,70 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -240,47 +216,6 @@ index 0000000..94c34fa
 +	free(service_location->element);
 +}
 +
-diff --git a/lib/libdvbv5/descriptors/vct.c b/lib/libdvbv5/descriptors/vct.c
-index e703c52..e567f7a 100644
---- a/lib/libdvbv5/descriptors/vct.c
-+++ b/lib/libdvbv5/descriptors/vct.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2013 - Mauro Carvalho Chehab <m.chehab@samsung.com>
-+ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
-diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index e16f843..f9bc018 100644
---- a/lib/libdvbv5/dvb-scan.c
-+++ b/lib/libdvbv5/dvb-scan.c
-@@ -185,6 +185,15 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
- 
- 		h = (struct dvb_table_header *)buf;
- 		dvb_table_header_init(h);
-+
-+		/* dvb_logdbg( "dvb_read_section: id %d, section %d/%d, current: %d", h->id, h->section_id, h->last_section, h->current_next ); */
-+		if (start_id == h->id && start_section == h->section_id) {
-+			dvb_logdbg( "dvb_read_section: section repeated, reading done" );
-+			break;
-+		}
-+		if (start_id == -1) start_id = h->id;
-+		if (start_section == -1) start_section = h->section_id;
-+
- 		if (id != -1 && h->id != id) { /* search for a specific table id */
- 			continue;
- 		}
-@@ -232,7 +241,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
- 		else
- 			dvb_logerr("dvb_read_section: no initializer for table %d", tid);
- 
--		if (++sections == last_section + 1)
-+		if (id != -1 && ++sections == last_section + 1) {
-+			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
- 			break;
- 	}
- 	free(buf);
 -- 
-1.7.10.4
+1.8.3.2
 

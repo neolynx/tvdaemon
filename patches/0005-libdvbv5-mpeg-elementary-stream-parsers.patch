@@ -1,18 +1,23 @@
-From bd07719d3459e3c2eb9d5b6d2864a99d31646f82 Mon Sep 17 00:00:00 2001
+From 1425c32b2699f879e9b9ca05e0299dae9ad1e3b9 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Thu, 3 Jan 2013 00:26:55 +0100
-Subject: [PATCH 04/13] libdvbv5: mpeg elementary stream parsers
+Date: Sun, 29 Dec 2013 15:19:26 +0100
+Subject: [PATCH 05/19] libdvbv5: mpeg elementary stream parsers
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+Implement parsers for mpeg TS, PES and ES
+
+Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors/mpeg_es.h   |  109 +++++++++++++++++++++++++++++
- lib/include/descriptors/mpeg_pes.h  |  112 ++++++++++++++++++++++++++++++
- lib/include/descriptors/mpeg_ts.h   |   79 +++++++++++++++++++++
- lib/include/descriptors/nit.h       |    4 +-
- lib/libdvbv5/Makefile.am            |    5 +-
- lib/libdvbv5/descriptors/mpeg_es.c  |   76 ++++++++++++++++++++
- lib/libdvbv5/descriptors/mpeg_pes.c |  131 +++++++++++++++++++++++++++++++++++
- lib/libdvbv5/descriptors/mpeg_ts.c  |   77 ++++++++++++++++++++
- 8 files changed, 590 insertions(+), 3 deletions(-)
+ lib/include/descriptors/mpeg_es.h   | 109 ++++++++++++++++++++++++++++++
+ lib/include/descriptors/mpeg_pes.h  | 111 ++++++++++++++++++++++++++++++
+ lib/include/descriptors/mpeg_ts.h   |  78 +++++++++++++++++++++
+ lib/libdvbv5/Makefile.am            |   5 +-
+ lib/libdvbv5/descriptors/mpeg_es.c  |  76 +++++++++++++++++++++
+ lib/libdvbv5/descriptors/mpeg_pes.c | 131 ++++++++++++++++++++++++++++++++++++
+ lib/libdvbv5/descriptors/mpeg_ts.c  |  77 +++++++++++++++++++++
+ 7 files changed, 586 insertions(+), 1 deletion(-)
  create mode 100644 lib/include/descriptors/mpeg_es.h
  create mode 100644 lib/include/descriptors/mpeg_pes.h
  create mode 100644 lib/include/descriptors/mpeg_ts.h
@@ -22,12 +27,12 @@ Subject: [PATCH 04/13] libdvbv5: mpeg elementary stream parsers
 
 diff --git a/lib/include/descriptors/mpeg_es.h b/lib/include/descriptors/mpeg_es.h
 new file mode 100644
-index 0000000..1a74c90
+index 0000000..4c6a862
 --- /dev/null
 +++ b/lib/include/descriptors/mpeg_es.h
 @@ -0,0 +1,109 @@
 +/*
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -137,13 +142,12 @@ index 0000000..1a74c90
 +#endif
 diff --git a/lib/include/descriptors/mpeg_pes.h b/lib/include/descriptors/mpeg_pes.h
 new file mode 100644
-index 0000000..e495f44
+index 0000000..3a3f8e4
 --- /dev/null
 +++ b/lib/include/descriptors/mpeg_pes.h
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,111 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -255,13 +259,12 @@ index 0000000..e495f44
 +#endif
 diff --git a/lib/include/descriptors/mpeg_ts.h b/lib/include/descriptors/mpeg_ts.h
 new file mode 100644
-index 0000000..2bb570b
+index 0000000..54fee69
 --- /dev/null
 +++ b/lib/include/descriptors/mpeg_ts.h
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,78 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -338,36 +341,14 @@ index 0000000..2bb570b
 +#endif
 +
 +#endif
-diff --git a/lib/include/descriptors/nit.h b/lib/include/descriptors/nit.h
-index f2f6163..d71a762 100644
---- a/lib/include/descriptors/nit.h
-+++ b/lib/include/descriptors/nit.h
-@@ -48,7 +48,7 @@ struct dvb_table_nit_transport {
- 		struct {
- 			uint16_t section_length:12;
- 			uint16_t reserved:4;
--		};
-+		} __attribute__((packed));
- 	};
- 	struct dvb_desc *descriptor;
- 	struct dvb_table_nit_transport *next;
-@@ -61,7 +61,7 @@ struct dvb_table_nit {
- 		struct {
- 			uint16_t desc_length:12;
- 			uint16_t reserved:4;
--		};
-+		} __attribute__((packed));
- 	};
- 	struct dvb_desc *descriptor;
- 	struct dvb_table_nit_transport *transport;
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 400af39..795f30c 100644
+index 80e8adb..33693cc 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
 @@ -49,7 +49,10 @@ libdvbv5_la_SOURCES = \
    descriptors/sdt.c  ../include/descriptors/sdt.h \
    descriptors/vct.c  ../include/descriptors/vct.h \
-   descriptors/vct.c  ../include/descriptors/vct.h \
+   descriptors/eit.c  ../include/descriptors/eit.h \
 -  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h
 +  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h \
 +  descriptors/mpeg_ts.c  ../include/descriptors/mpeg_ts.h \
@@ -378,12 +359,12 @@ index 400af39..795f30c 100644
  libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) -lm
 diff --git a/lib/libdvbv5/descriptors/mpeg_es.c b/lib/libdvbv5/descriptors/mpeg_es.c
 new file mode 100644
-index 0000000..b081af4
+index 0000000..9fcb5ca
 --- /dev/null
 +++ b/lib/libdvbv5/descriptors/mpeg_es.c
 @@ -0,0 +1,76 @@
 +/*
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -460,12 +441,12 @@ index 0000000..b081af4
 +
 diff --git a/lib/libdvbv5/descriptors/mpeg_pes.c b/lib/libdvbv5/descriptors/mpeg_pes.c
 new file mode 100644
-index 0000000..c717297
+index 0000000..1b518a3
 --- /dev/null
 +++ b/lib/libdvbv5/descriptors/mpeg_pes.c
 @@ -0,0 +1,131 @@
 +/*
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -597,12 +578,12 @@ index 0000000..c717297
 +
 diff --git a/lib/libdvbv5/descriptors/mpeg_ts.c b/lib/libdvbv5/descriptors/mpeg_ts.c
 new file mode 100644
-index 0000000..c1d1293
+index 0000000..d7ec2c4
 --- /dev/null
 +++ b/lib/libdvbv5/descriptors/mpeg_ts.c
 @@ -0,0 +1,77 @@
 +/*
-+ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -679,5 +660,5 @@ index 0000000..c1d1293
 +}
 +
 -- 
-1.7.10.4
+1.8.3.2
 

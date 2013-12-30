@@ -1,18 +1,22 @@
-From 609abf96b11f77a518a0f8b814bacb97de37d637 Mon Sep 17 00:00:00 2001
+From 6023c7c178aeecd3f291d2c78b4aa92cb68f63ea Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Thu, 13 Jun 2013 17:33:20 +0200
-Subject: [PATCH 11/13] libdvbv5: cleanup coding style
+Date: Sat, 28 Dec 2013 16:08:53 +0100
+Subject: [PATCH 12/19] libdvbv5: cleanup coding style
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/descriptors.c          |    2 +-
- lib/libdvbv5/descriptors/mpeg_pes.c |    2 +-
+ lib/libdvbv5/descriptors.c          | 2 +-
+ lib/libdvbv5/descriptors/mpeg_pes.c | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 6df8b8b..b5bc9b2 100644
+index 226349e..f46aa4a 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -1358,6 +1358,6 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
+@@ -1359,6 +1359,6 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
  		for (i = strlen(hex); i < 49; i++)
  			strncat(spaces, " ", sizeof(spaces));
  		ascii[j] = '\0';
@@ -21,7 +25,7 @@ index 6df8b8b..b5bc9b2 100644
  	}
  }
 diff --git a/lib/libdvbv5/descriptors/mpeg_pes.c b/lib/libdvbv5/descriptors/mpeg_pes.c
-index c717297..0f0cde0 100644
+index 1b518a3..98364a3 100644
 --- a/lib/libdvbv5/descriptors/mpeg_pes.c
 +++ b/lib/libdvbv5/descriptors/mpeg_pes.c
 @@ -33,7 +33,7 @@ void dvb_mpeg_pes_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_
@@ -34,5 +38,5 @@ index c717297..0f0cde0 100644
  		return;
  	}
 -- 
-1.7.10.4
+1.8.3.2
 
