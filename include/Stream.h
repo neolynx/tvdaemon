@@ -35,7 +35,7 @@ extern "C" {
 #include "RPCObject.h"
 #include "Thread.h"
 
-#include "descriptors.h"
+#include <libdvbv5/descriptors.h>
 
 class ConfigBase;
 class Service;

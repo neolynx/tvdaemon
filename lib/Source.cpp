@@ -32,8 +32,8 @@
 #include "Log.h"
 #include "Activity.h"
 
-#include "dvb-file.h"
-#include "descriptors.h"
+#include <libdvbv5/dvb-file.h>
+#include <libdvbv5/descriptors.h>
 #include <dirent.h>
 
 Source::Source( TVDaemon &tvd, std::string name, Type type, int config_id ) :

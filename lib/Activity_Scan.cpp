@@ -25,19 +25,19 @@
 #include "Frontend.h"
 
 #include <time.h>
-#include "dvb-demux.h"
-#include "dvb-scan.h"
-#include "descriptors/pat.h"
-#include "descriptors/pmt.h"
-#include "descriptors/nit.h"
-#include "descriptors/sdt.h"
-#include "descriptors/vct.h"
-#include "descriptors/mpeg_ts.h"
-#include "descriptors/mpeg_pes.h"
-#include "descriptors/desc_service.h"
-#include "descriptors/desc_network_name.h"
-#include "descriptors/desc_event_short.h"
-#include "descriptors/desc_hierarchy.h"
+#include <libdvbv5/dvb-demux.h>
+#include <libdvbv5/dvb-scan.h>
+#include <libdvbv5/pat.h>
+#include <libdvbv5/pmt.h>
+#include <libdvbv5/nit.h>
+#include <libdvbv5/sdt.h>
+#include <libdvbv5/vct.h>
+#include <libdvbv5/mpeg_ts.h>
+#include <libdvbv5/mpeg_pes.h>
+#include <libdvbv5/desc_service.h>
+#include <libdvbv5/desc_network_name.h>
+#include <libdvbv5/desc_event_short.h>
+#include <libdvbv5/desc_hierarchy.h>
 #include <vector>
 
 

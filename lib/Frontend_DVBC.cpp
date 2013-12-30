@@ -21,8 +21,8 @@
 
 #include "Frontend_DVBC.h"
 
-#include "descriptors/nit.h"
-#include "descriptors/desc_cable_delivery.h"
+#include <libdvbv5/nit.h>
+#include <libdvbv5/desc_cable_delivery.h>
 
 #include "Log.h"
 #include "Transponder_DVBC.h"

@@ -22,7 +22,7 @@
 #include "Transponder_ATSC.h"
 #include "Log.h"
 
-#include "dvb-fe.h"
+#include <libdvbv5/dvb-fe.h>
 
 Transponder_ATSC::Transponder_ATSC( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id )
 {

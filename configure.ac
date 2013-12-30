@@ -57,9 +57,9 @@ AM_ICONV
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  src/Makefile
-                 v4l-utils/lib/libdvbv5/Makefile
-                 v4l-utils/lib/libdvbv5/libdvbv5.pc
                  ])
                  #po/Makefile
+#                 v4l-utils/lib/libdvbv5/Makefile
+#                 v4l-utils/lib/libdvbv5/libdvbv5.pc
 AC_OUTPUT
 

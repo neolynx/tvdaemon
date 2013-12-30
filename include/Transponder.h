@@ -28,7 +28,7 @@
 
 #include <map>
 
-#include "dvb-frontend.h"
+#include <libdvbv5/dvb-frontend.h>
 
 class Source;
 class Activity;

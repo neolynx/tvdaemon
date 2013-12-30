@@ -25,7 +25,7 @@
 #include <strings.h> // strcasecmp
 #include <string.h>  // strlen
 #include <fcntl.h>   // open
-#include "descriptors/eit.h"
+#include <libdvbv5/eit.h>
 
 #include "TVDaemon.h"
 #include "Transponder.h"

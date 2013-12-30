@@ -25,11 +25,11 @@
 #include "Frontend.h"
 #include "Channel.h"
 
-#include "descriptors/eit.h"
-#include "descriptors/mgt.h"
-#include "descriptors/atsc_eit.h"
-#include "dvb-scan.h"
-#include "dvb-demux.h"
+#include <libdvbv5/eit.h>
+#include <libdvbv5/mgt.h>
+#include <libdvbv5/atsc_eit.h>
+#include <libdvbv5/dvb-scan.h>
+#include <libdvbv5/dvb-demux.h>
 
 Activity_UpdateEPG::Activity_UpdateEPG( ) : Activity( )
 {

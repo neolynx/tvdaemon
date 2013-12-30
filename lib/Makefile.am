@@ -36,9 +36,9 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Activity_Stream.cpp \
 			  Daemon.cpp
 
-libtvdaemon_la_LDFLAGS = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} ../v4l-utils/lib/libdvbv5/libdvbv5.la \
+libtvdaemon_la_LDFLAGS = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} -ldvbv5 \
 			-lmatroska ${LIBCCRTP_LIBS} ${LIBAVFORMAT_LIBS} ${LIBAVCODEC_LIBS}
-libtvdaemon_la_CXXFLAGS = -D__STDC_CONSTANT_MACROS -I$(top_srcdir)/v4l-utils/lib/include
+libtvdaemon_la_CXXFLAGS = -D__STDC_CONSTANT_MACROS
 
 
 

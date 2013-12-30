@@ -44,8 +44,8 @@
 #include <algorithm> // replace
 #include <RPCObject.h>
 
-#include "dvb-demux.h"
-#include "dvb-fe.h"
+#include <libdvbv5/dvb-demux.h>
+#include <libdvbv5/dvb-fe.h>
 #include <errno.h> // ETIMEDOUT
 #include <sys/time.h>
 

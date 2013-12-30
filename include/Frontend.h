@@ -31,7 +31,7 @@
 #include <vector>
 #include <deque>
 
-#include "dvb-frontend.h"
+#include <libdvbv5/dvb-frontend.h>
 
 class Adapter;
 class Transponder;

@@ -30,12 +30,12 @@
 #include "Recorder.h"
 #include "RPCObject.h"
 
-#include "descriptors/pat.h"
-#include "descriptors/eit.h"
-#include "descriptors/desc_event_short.h"
-#include "dvb-scan.h"
-#include "descriptors/mpeg_ts.h"
-#include "dvb-demux.h"
+#include <libdvbv5/pat.h>
+#include <libdvbv5/eit.h>
+#include <libdvbv5/desc_event_short.h>
+#include <libdvbv5/dvb-scan.h>
+#include <libdvbv5/mpeg_ts.h>
+#include <libdvbv5/dvb-demux.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <algorithm> // replace

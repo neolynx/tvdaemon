@@ -30,7 +30,7 @@
 #include "matroska/KaxCues.h"
 #include "matroska/KaxCluster.h"
 
-#include "descriptors/mpeg_es.h"
+#include <libdvbv5/mpeg_es.h>
 
 using namespace LIBEBML_NAMESPACE;
 using namespace LIBMATROSKA_NAMESPACE;

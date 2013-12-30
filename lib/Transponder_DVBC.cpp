@@ -21,7 +21,7 @@
 
 #include "Transponder_DVBC.h"
 
-#include "dvb-file.h"
+#include <libdvbv5/dvb-file.h>
 
 Transponder_DVBC::Transponder_DVBC( Source &source, const fe_delivery_system_t delsys, int config_id ) : Transponder( source, delsys, config_id ),
   inner_fec(FEC_AUTO),

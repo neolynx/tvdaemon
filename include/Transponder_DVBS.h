@@ -24,7 +24,7 @@
 
 #include "Transponder.h"
 
-#include "dvb-sat.h"
+#include <libdvbv5/dvb-sat.h>
 
 class Transponder_DVBS : public Transponder
 {

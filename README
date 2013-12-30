@@ -29,18 +29,26 @@ git checkout master
 git am ../patches/*
 cd ..
 
-cd cli/cli-core
-git checkout master
-git submodule init
-git submodule update
-cd src/colorful
-git checkout master
-cd ../..
-cd ../..
+# obsolete
+#cd cli/cli-core
+#git checkout master
+#git submodule init
+#git submodule update
+#cd src/colorful
+#git checkout master
+#cd ../..
+#cd ../..
 
 
 Build tvdaemon
 ===============
+
+cd v4l-utils
+autoreconf -vfis
+./configure --enable-libdvbv5
+make
+sudo make install
+cd ..
 
 autoreconf -vfis
 ./configure

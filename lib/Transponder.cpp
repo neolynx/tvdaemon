@@ -21,7 +21,7 @@
 
 #include "Transponder.h"
 
-#include "dvb-file.h"
+#include <libdvbv5/dvb-file.h>
 #include <RPCObject.h>
 
 #include "Source.h"

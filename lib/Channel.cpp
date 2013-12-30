@@ -31,7 +31,7 @@
 #include "Source.h"
 #include "Activity_UpdateEPG.h"
 #include "Log.h"
-#include "descriptors/eit.h"
+#include <libdvbv5/eit.h>
 
 Channel::Channel( TVDaemon &tvd, Service *service, int config_id ) :
   ConfigObject( tvd, "channel", config_id ),

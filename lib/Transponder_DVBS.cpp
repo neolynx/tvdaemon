@@ -22,8 +22,8 @@
 #include "Transponder_DVBS.h"
 #include "Log.h"
 
-#include "dvb-fe.h"
-#include "descriptors/desc_sat.h"
+#include <libdvbv5/dvb-fe.h>
+#include <libdvbv5/desc_sat.h>
 
 Transponder_DVBS::Transponder_DVBS( Source &source, const fe_delivery_system_t delsys, int config_id ) :
   Transponder( source, delsys, config_id ),

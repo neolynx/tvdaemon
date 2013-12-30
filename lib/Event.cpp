@@ -26,8 +26,8 @@
 #include "RPCObject.h"
 
 #include <sys/time.h>
-#include "descriptors/eit.h"
-#include "descriptors/desc_event_short.h"
+#include <libdvbv5/eit.h>
+#include <libdvbv5/desc_event_short.h>
 
 Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : channel(channel)
 {

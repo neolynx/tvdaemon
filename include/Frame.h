@@ -24,8 +24,8 @@
 
 #include <stdint.h> // uint8_t
 #include <unistd.h> // size_t
-#include "descriptors/mpeg_pes.h"
-#include "descriptors/mpeg_es.h"
+#include <libdvbv5/mpeg_pes.h>
+#include <libdvbv5/mpeg_es.h>
 
 //class Matroska;
 #include <ccrtp/rtp.h>

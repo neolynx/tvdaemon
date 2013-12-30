@@ -26,7 +26,7 @@
 #include "Log.h"
 #include "Frontend.h"
 #include "RingBuffer.h"
-#include "dvb-demux.h"
+#include <libdvbv5/dvb-demux.h>
 
 #include <RPCObject.h>
 

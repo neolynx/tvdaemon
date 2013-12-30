@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = v4l-utils/lib/libdvbv5 lib src #po
-noinst_HEADERS = include v4l-utils/lib/include
+SUBDIRS = lib src #po
+noinst_HEADERS = include
 
 tvdaemondir = $(datadir)/tvdaemon
 nobase_dist_tvdaemon_DATA = \

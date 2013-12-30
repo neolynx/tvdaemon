@@ -26,10 +26,10 @@
 #include "Log.h"
 #include "Source.h"
 
-#include "dvb-fe.h"
-#include "dvb-frontend.h"
-#include "descriptors/nit.h"
-#include "descriptors/desc_sat.h"
+#include <libdvbv5/dvb-fe.h>
+#include <libdvbv5/dvb-frontend.h>
+#include <libdvbv5/nit.h>
+#include <libdvbv5/desc_sat.h>
 
 Frontend_DVBS::Frontend_DVBS( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
   Frontend( adapter, adapter_id, frontend_id, config_id )
