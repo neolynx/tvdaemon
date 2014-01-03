@@ -1,10 +1,12 @@
 $(document).ready( ready );
 
+var table;
+
 function ready( )
 {
   Menu( "Transponders" );
-  t = ServerSideTable( 'transponders', 'tvd?c=tvdaemon&a=get_transponders', 20 );
-  t["columns"] = {
+  table = ServerSideTable( 'transponders', 'tvd?c=tvdaemon&a=get_transponders', 20 );
+  table["columns"] = {
     "delsys"    : [ "", print_delsys ],
     "frequency" : [ "Frequency", print_freq ],
     "state"     : [ "State", print_state ],
@@ -13,8 +15,9 @@ function ready( )
     "tsid"      : "TS ID",
     "signal"    : [ "S/N", print_sn ],
     "services"  : "Services",
+    ""  : [ "", print_scan ],
   };
-  t.load( );
+  table.load( );
   $('#sst_paginator_transponders').append( $('#search') );
 }
 
@@ -53,5 +56,21 @@ function print_delsys( row )
   {
     case 3: return "DVB-T";
   }
+}
+
+function print_scan( row )
+{
+  return "<a href=\"javascript: scan( " + row['source_id'] + ", " + row['id'] + " );\">scan</a>";
+}
+
+function scan( source_id, id )
+{
+  getJSON( 'tvd?c=transponder&a=scan&source_id=' + source_id +
+      '&transponder_id=' + id, scanTransponder );
+}
+
+function scanTransponder( data, errmsg )
+{
+  table.load( );
 }
 
