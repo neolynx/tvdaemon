@@ -49,7 +49,7 @@ std::string Activity_UpdateEPG::GetName( ) const
 
 bool Activity_UpdateEPG::Perform( )
 {
-  int time = 15;
+  int timeout = 2; // seconds
   int fd_demux;
 
   if(( fd_demux = frontend->OpenDemux( )) < 0 )
@@ -61,7 +61,7 @@ bool Activity_UpdateEPG::Perform( )
   {
     frontend->Log( "Reading MGT" );
     struct atsc_table_mgt *mgt = NULL;
-    dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_MGT, ATSC_BASE_PID, (uint8_t **) &mgt, time );
+    dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_MGT, ATSC_BASE_PID, (uint8_t **) &mgt, timeout );
     if( mgt )
     {
       atsc_table_mgt_print( frontend->GetFE( ), mgt );
@@ -74,7 +74,7 @@ bool Activity_UpdateEPG::Perform( )
             {
               frontend->Log( "Reading EIT %d\t(pid: %d)", table->type - 0x100, table->pid );
               struct atsc_table_eit *eit = NULL;
-              dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_EIT, table->pid, (uint8_t **) &eit, time );
+              dvb_read_section( frontend->GetFE( ), fd_demux, ATSC_TABLE_EIT, table->pid, (uint8_t **) &eit, timeout );
               if( eit )
               {
                 //transponder->ReadEPG( eit->event );
@@ -88,7 +88,7 @@ bool Activity_UpdateEPG::Perform( )
             {
               frontend->LogWarn( "Reading ETT %d\t(pid: %d)", table->type - 0x200, table->pid );
               //struct dvb_table_eit *eit = NULL;
-              //dvb_read_section( frontend->GetFE( ), fd_demux, 0xCB, table->pid, (uint8_t **) &eit, time );
+              //dvb_read_section( frontend->GetFE( ), fd_demux, 0xCB, table->pid, (uint8_t **) &eit, timeout );
               //if( eit )
               //{
               //}
@@ -105,7 +105,7 @@ bool Activity_UpdateEPG::Perform( )
   {
     frontend->Log( "Reading EIT" );
     struct dvb_table_eit *eit = NULL;
-    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, (uint8_t **) &eit, time );
+    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, (uint8_t **) &eit, timeout );
     if( eit )
     {
       transponder->ReadEPG( eit->event );
@@ -114,7 +114,7 @@ bool Activity_UpdateEPG::Perform( )
     else
     {
       frontend->Log( "Reading EIT now/next" );
-      dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, (uint8_t **) &eit, time );
+      dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, (uint8_t **) &eit, timeout );
       if( eit )
       {
         transponder->ReadEPG( eit->event );
