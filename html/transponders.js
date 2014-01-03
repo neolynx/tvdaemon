@@ -18,7 +18,7 @@ function ready( )
     ""  : [ "", print_scan ],
   };
   table.load( );
-  $('#sst_paginator_transponders').append( $('#search') );
+  table.filters( [ "search" ] );
 }
 
 function print_freq( row )

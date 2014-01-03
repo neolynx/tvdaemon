@@ -784,7 +784,9 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       const std::vector<Transponder *> &transponders = (*it)->GetTransponders( );
       for( std::vector<Transponder *>::const_iterator it2 = transponders.begin( ); it2 != transponders.end( ); it2++ )
       {
-        if( !search.empty( ) && (*it2)->toString( ).find( search.c_str( ), 0, search.length( )) != 0 )
+        std::string t;
+        Utils::ToLower( (*it2)->toString( ), t );
+        if( !search.empty( ) && t.find( search.c_str( ), 0, search.length( )) == std::string::npos )
           continue;
         result.push_back( *it2 );
       }
