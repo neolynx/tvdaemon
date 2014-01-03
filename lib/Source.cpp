@@ -350,7 +350,7 @@ bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std:
       return transponders[obj_id]->RPC( request, cat, action );
     }
 
-    request.NotFound( "RPC transponder: unknown transponder" );
+    request.NotFound( "RPC: unknown transponder" );
     return false;
   }
 

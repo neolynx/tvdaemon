@@ -115,7 +115,7 @@ void ConfigBase::ReadConfig( const char *key, time_t &t )
     return;
   }
 
-  struct tm tm;
+  struct tm tm = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   strptime( tstr.c_str( ), "%Y-%m-%d %H:%M:%S", &tm );
   t = mktime( &tm );
 }
