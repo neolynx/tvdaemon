@@ -163,6 +163,7 @@ void Service::json( json_object *entry ) const
   json_object_object_add( entry, "channel",        json_object_new_int( channel ? 1 : 0 ));
   json_object_object_add( entry, "transponder_id", json_object_new_int( transponder.GetKey( )));
   json_object_object_add( entry, "source_id",      json_object_new_int( transponder.GetSource( ).GetKey( )));
+  json_object_object_add( entry, "transponder",    json_object_new_string( transponder.toString( ).c_str( )));
 }
 
 bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )

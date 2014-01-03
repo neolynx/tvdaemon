@@ -26,7 +26,8 @@ function ready( )
     "name"      : "Service",
     "provider"  : "Provider",
     "type"      : [ "Type", function( service ) { return service_types[service['type']]; } ],
-    "id"        : [ "PID", SST_NUMERIC ]
+    "id"        : [ "PID", SST_NUMERIC ],
+    "transponder" : "Transponder",
   };
   t["click"] = function( row ) {
     getJSON( 'tvd?c=service&a=add_channel&source_id=' + this["source_id"] +
