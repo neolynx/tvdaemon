@@ -192,6 +192,16 @@ bool Transponder::SaveConfig( )
     it->second->SaveConfig( c2 );
   }
 
+  DeleteConfig( "CA" );
+  Setting &n2 = ConfigList( "CA" );
+  ConfigBase c2( n2 );
+  for( std::map<uint16_t, uint16_t>::iterator it = caids.begin( ); it != caids.end( ); it++ )
+  {
+    Setting &n3 = c2.ConfigGroup( );
+    ConfigBase c3( n3 );
+    c3.WriteConfig( "CA_id", it->first );
+    c3.WriteConfig( "CA_pid", it->second );
+  }
   return WriteConfigFile( );
 }
 
@@ -217,6 +227,17 @@ bool Transponder::LoadConfig( )
     s->LoadConfig( c2 );
     services[s->GetKey( )] = s;
   }
+
+  Setting &n2 = ConfigList( "CA" );
+  for( int i = 0; i < n2.getLength( ); i++ )
+  {
+    ConfigBase c3( n2[i] );
+    uint16_t ca_id, ca_pid;
+    c3.ReadConfig( "CA_id", ca_id );
+    c3.ReadConfig( "CA_pid", ca_pid );
+    caids[ca_id] = ca_pid;
+  }
+
   return true;
 }
 
@@ -467,3 +488,15 @@ bool Transponder::compare( const JSONObject &other, const int &p ) const
 }
 
 
+void Transponder::SetCA( uint16_t ca_id, uint16_t ca_pid )
+{
+  caids[ca_id] = ca_pid;
+}
+
+void Transponder::SetStreamCA( uint16_t service_id, uint16_t ca_id, uint16_t ca_pid )
+{
+  std::map<uint16_t, Service *>::iterator it = services.find( service_id );
+  if( it == services.end( ))
+    return;
+  it->second->SetCA( ca_id, ca_pid );
+}

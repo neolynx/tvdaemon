@@ -63,6 +63,8 @@ class Service : public RPCObject
     void        SetScrambled( bool scrambled ) { this->scrambled = scrambled; }
     Channel    *GetChannel( ) { return channel; }
 
+    void SetCA( uint16_t ca_id, uint16_t ca_pid );
+
     Transponder &GetTransponder( ) const { return transponder; }
 
 
@@ -92,6 +94,8 @@ class Service : public RPCObject
     Channel *channel;
 
     std::map<uint16_t, Stream *> streams;
+
+    std::map<uint16_t, uint16_t> caids;
 };
 
 #endif

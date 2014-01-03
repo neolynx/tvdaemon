@@ -25,6 +25,7 @@
 #include "Frontend.h"
 
 #include <time.h>
+#include <libdvbv5/dvb-fe.h> // FIXME: remove
 #include <libdvbv5/dvb-demux.h>
 #include <libdvbv5/dvb-scan.h>
 #include <libdvbv5/pat.h>
@@ -32,12 +33,14 @@
 #include <libdvbv5/nit.h>
 #include <libdvbv5/sdt.h>
 #include <libdvbv5/vct.h>
+#include <libdvbv5/cat.h>
 #include <libdvbv5/mpeg_ts.h>
 #include <libdvbv5/mpeg_pes.h>
 #include <libdvbv5/desc_service.h>
 #include <libdvbv5/desc_network_name.h>
 #include <libdvbv5/desc_event_short.h>
 #include <libdvbv5/desc_hierarchy.h>
+#include <libdvbv5/desc_ca.h>
 #include <vector>
 
 
@@ -82,6 +85,7 @@ bool Activity_Scan::Perform( )
     frontend->LogError( "Error reading PAT table" );
     goto scan_failed;
   }
+  dvb_table_pat_print( frontend->GetFE( ), pat );
 
   transponder->SetTSID( pat->header.id );
   if( transponder->GetState( ) == Transponder::State_Duplicate )
@@ -128,7 +132,7 @@ bool Activity_Scan::Perform( )
     dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, time );
     if( sdt )
     {
-      //dvb_table_sdt_print( fe, sdt );
+      dvb_table_sdt_print( frontend->GetFE( ), sdt );
       dvb_sdt_service_foreach( service, sdt )
       {
         const char *name = "", *provider = "";
@@ -182,7 +186,6 @@ bool Activity_Scan::Perform( )
     }
   }
 
-  //dvb_table_pat_print( fe, pat );
   frontend->Log( "Reading PMT's" );
   dvb_pat_program_foreach( program, pat )
   {
@@ -200,6 +203,7 @@ bool Activity_Scan::Perform( )
 
         transponder->UpdateProgram( program->service_id, program->pid );
 
+        frontend->Log( "Reading PMT %04x", program->pid );
         struct dvb_table_pmt *pmt;
         dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_PMT, program->pid, (uint8_t **) &pmt, time );
         if( !pmt )
@@ -208,7 +212,13 @@ bool Activity_Scan::Perform( )
           break;
         }
 
-        //dvb_table_pmt_print( fe, pmt );
+        dvb_desc_find( struct dvb_desc_ca, desc, pmt, conditional_access_descriptor )
+        {
+          transponder->SetCA( desc->ca_id, desc->ca_pid );
+          transponder->SetStreamCA( program->service_id, desc->ca_id, desc->ca_pid );
+        }
+
+        dvb_table_pmt_print( frontend->GetFE( ), pmt );
 
         dvb_pmt_stream_foreach( stream, pmt )
         {
@@ -287,11 +297,28 @@ bool Activity_Scan::Perform( )
         //transponder->SetNetwork( desc->network_name );
         break;
       }
-      //dvb_table_nit_print( fe, nit );
+      dvb_table_nit_print( frontend->GetFE( ), nit );
       frontend->HandleNIT( nit );
     }
     if( nit )
       dvb_table_nit_free( nit );
+  }
+
+
+  if( IsActive( ) ) // FIXME: && transponder->HasNIT( ))
+  {
+    frontend->Log( "Reading CAT" );
+    struct dvb_table_cat *cat;
+    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_CAT, DVB_TABLE_CAT_PID, (uint8_t **) &cat, time );
+    if( cat )
+    {
+      dvb_desc_find( struct dvb_desc_ca, desc, cat, conditional_access_descriptor )
+      {
+        transponder->SetCA( desc->ca_id, desc->ca_pid );
+      }
+      dvb_table_cat_print( frontend->GetFE( ), cat );
+      dvb_table_cat_free( cat );
+    }
   }
 
   frontend->CloseDemux( fd_demux );

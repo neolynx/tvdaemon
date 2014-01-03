@@ -80,6 +80,10 @@ class Transponder : public ConfigObject, public RPCObject
 
     void SetSignal( uint8_t signal, uint8_t noise ) { this->signal = signal; this->noise = noise; }
     void SetTSID( uint16_t TSID );
+
+    void SetCA( uint16_t ca_id, uint16_t ca_pid );
+    void SetStreamCA( uint16_t service_id, uint16_t ca_id, uint16_t ca_pid );
+
     uint16_t GetTSID( ) { return TSID; }
 
     void Disable( ) { enabled = false; }
@@ -141,6 +145,8 @@ class Transponder : public ConfigObject, public RPCObject
     uint32_t frequency;
 
     std::map<uint16_t, Service *> services;
+
+    std::map<uint16_t, uint16_t> caids;
 
     uint16_t TSID;
 
