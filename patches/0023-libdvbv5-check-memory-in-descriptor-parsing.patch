@@ -1,0 +1,39 @@
+From 98518a23c543e1870537f356fdbecdee9b2ecd17 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sat, 4 Jan 2014 18:04:58 +0100
+Subject: [PATCH 23/27] libdvbv5: check memory in descriptor parsing
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/libdvbv5/descriptors/desc_sat.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/lib/libdvbv5/descriptors/desc_sat.c b/lib/libdvbv5/descriptors/desc_sat.c
+index c763e4e..2e453b7 100644
+--- a/lib/libdvbv5/descriptors/desc_sat.c
++++ b/lib/libdvbv5/descriptors/desc_sat.c
+@@ -25,10 +25,14 @@
+ int dvb_desc_sat_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
+ {
+ 	struct dvb_desc_sat *sat = (struct dvb_desc_sat *) desc;
+-	/* copy from .length */
+-	memcpy(((uint8_t *) sat ) + sizeof(sat->type) + sizeof(sat->next) + sizeof(sat->length),
+-		buf,
+-		sat->length);
++	ssize_t size = sizeof(struct dvb_desc_sat) - sizeof(struct dvb_desc);
++
++	if (size > desc->length) {
++		dvb_logerr("dvb_desc_sat_init short read %d/%zd bytes", desc->length, size);
++		return -1;
++	}
++
++	memcpy(desc->data, buf, size);
+ 	bswap16(sat->orbit);
+ 	bswap32(sat->bitfield);
+ 	bswap32(sat->frequency);
+-- 
+1.8.3.2
+

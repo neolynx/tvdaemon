@@ -1,7 +1,7 @@
-From 1425c32b2699f879e9b9ca05e0299dae9ad1e3b9 Mon Sep 17 00:00:00 2001
+From eebf8236a4ad206a9ad45fbe8382296ab5997977 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 29 Dec 2013 15:19:26 +0100
-Subject: [PATCH 05/19] libdvbv5: mpeg elementary stream parsers
+Subject: [PATCH 04/27] libdvbv5: mpeg elementary stream parsers
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -13,11 +13,10 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  lib/include/descriptors/mpeg_es.h   | 109 ++++++++++++++++++++++++++++++
  lib/include/descriptors/mpeg_pes.h  | 111 ++++++++++++++++++++++++++++++
  lib/include/descriptors/mpeg_ts.h   |  78 +++++++++++++++++++++
- lib/libdvbv5/Makefile.am            |   5 +-
  lib/libdvbv5/descriptors/mpeg_es.c  |  76 +++++++++++++++++++++
  lib/libdvbv5/descriptors/mpeg_pes.c | 131 ++++++++++++++++++++++++++++++++++++
  lib/libdvbv5/descriptors/mpeg_ts.c  |  77 +++++++++++++++++++++
- 7 files changed, 586 insertions(+), 1 deletion(-)
+ 6 files changed, 582 insertions(+)
  create mode 100644 lib/include/descriptors/mpeg_es.h
  create mode 100644 lib/include/descriptors/mpeg_pes.h
  create mode 100644 lib/include/descriptors/mpeg_ts.h
@@ -341,22 +340,6 @@ index 0000000..54fee69
 +#endif
 +
 +#endif
-diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 80e8adb..33693cc 100644
---- a/lib/libdvbv5/Makefile.am
-+++ b/lib/libdvbv5/Makefile.am
-@@ -49,7 +49,10 @@ libdvbv5_la_SOURCES = \
-   descriptors/sdt.c  ../include/descriptors/sdt.h \
-   descriptors/vct.c  ../include/descriptors/vct.h \
-   descriptors/eit.c  ../include/descriptors/eit.h \
--  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h
-+  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h \
-+  descriptors/mpeg_ts.c  ../include/descriptors/mpeg_ts.h \
-+  descriptors/mpeg_pes.c  ../include/descriptors/mpeg_pes.h \
-+  descriptors/mpeg_es.c  ../include/descriptors/mpeg_es.h
- 
- libdvbv5_la_CPPFLAGS = $(ENFORCE_LIBDVBV5_STATIC)
- libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) -lm
 diff --git a/lib/libdvbv5/descriptors/mpeg_es.c b/lib/libdvbv5/descriptors/mpeg_es.c
 new file mode 100644
 index 0000000..9fcb5ca

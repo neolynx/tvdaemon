@@ -1,49 +1,55 @@
-From 89233b8dc767b6da7f04ecefc58cc5e2b3c49412 Mon Sep 17 00:00:00 2001
+From 0a5e0c31b28e5ddcf2a6de05ee6d649c1238840f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Sat, 28 Dec 2013 16:07:01 +0100
-Subject: [PATCH 02/19] libdvbv5: fix reading multisection tables
+Date: Wed, 8 Jan 2014 20:40:38 +0100
+Subject: [PATCH 02/27] libdvbv5: fix reading multisection tables
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+Unfortunately the section ids are not granted to be incremented by one.
+This means the last section id is not necessarily equal to the total
+number of sections. The only way to know if everything has been parsed, is
+to stop when a repeating section id has been found.
+
+The sections do not need to contain the same table id. In EIT for example,
+the id designates the corresponding service.
+Thus, allow the table id to differ.
+
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/dvb-scan.c | 36 +++++++++++++++++++++++-------------
- 1 file changed, 23 insertions(+), 13 deletions(-)
+ lib/libdvbv5/dvb-scan.c | 29 ++++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 11 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index e9ccc72..520bf9c 100644
+index e69d852..95219fa 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -96,9 +96,13 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -97,9 +98,12 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  	uint8_t *buf = NULL;
  	uint8_t *tbl = NULL;
  	ssize_t table_length = 0;
 +
-+	// handle sections
++	/* variables for section handling */
 +	int start_id = -1;
 +	int start_section = -1;
  	int first_section = -1;
  	int last_section = -1;
 -	int table_id = -1;
-+	/*int table_id = -1;*/
  	int sections = 0;
  	struct dmx_sct_filter_params f;
  	struct dvb_table_header *h;
-@@ -108,7 +112,6 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
- 	*table = NULL;
- 
- 	// FIXME: verify known table
--
- 	memset(&f, 0, sizeof(f));
- 	f.pid = pid;
- 	f.filter.filter[0] = tid;
-@@ -185,24 +188,27 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+@@ -186,24 +190,25 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  
  		h = (struct dvb_table_header *)buf;
  		dvb_table_header_init(h);
 +
-+		/* dvb_logdbg( "dvb_read_section: id %d, section %d/%d, current: %d", h->id, h->section_id, h->last_section, h->current_next ); */
 +		if (start_id == h->id && start_section == h->section_id) {
 +			dvb_logdbg( "dvb_read_section: section repeated, reading done" );
 +			break;
@@ -62,7 +68,6 @@ index e9ccc72..520bf9c 100644
 -			}
  		}
  
-+		/*dvb_logerr("dvb_read_section: got section %d, last %d, filter %d", h->section_id, h->last_section, id );*/
  		/* handle the sections */
  		if (first_section == -1)
  			first_section = h->section_id;
@@ -75,22 +80,17 @@ index e9ccc72..520bf9c 100644
  			last_section = h->last_section;
  
  		if (!tbl) {
-@@ -228,10 +234,14 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+@@ -229,8 +234,10 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  		else
  			dvb_logerr("dvb_read_section: no initializer for table %d", tid);
  
 -		if (++sections == last_section + 1)
 +		if (id != -1 && ++sections == last_section + 1) {
-+			dvb_logerr("dvb_read_section: ++sections == last_section + 1");
++			dvb_logerr("dvb_read_section: read more sections than last section id: %d / %d", sections, last_section);
  			break;
 +		}
  	}
--	free(buf);
-+
-+	if (buf)
-+		free(buf);
- 
- 	dvb_dmx_stop(dmx_fd);
+ 	free(buf);
  
 -- 
 1.8.3.2

@@ -1,7 +1,7 @@
-From d5f81bfb72c036cea17a530c1643687b936e4d05 Mon Sep 17 00:00:00 2001
+From 4adbce595201d9a686df091fca4f45267688e4c7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 01:45:07 +0100
-Subject: [PATCH 17/19] libdvbv5: shared lib and installing headers
+Subject: [PATCH 09/27] libdvbv5: shared lib and installing headers
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -26,13 +26,13 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  lib/include/descriptors/desc_sat.h                 |  67 ---
  lib/include/descriptors/desc_service.h             |  54 --
  lib/include/descriptors/desc_service_list.h        |  54 --
- lib/include/descriptors/desc_service_location.h    |  69 ---
+ lib/include/descriptors/desc_service_location.h    |  68 ---
  lib/include/descriptors/desc_t2_delivery.h         |  78 ---
  .../descriptors/desc_terrestrial_delivery.h        |  70 ---
  lib/include/descriptors/desc_ts_info.h             |  66 ---
  lib/include/descriptors/eit.h                      |  91 ----
  lib/include/descriptors/header.h                   |  81 ---
- lib/include/descriptors/mgt.h                      |  80 ---
+ lib/include/descriptors/mgt.h                      |  79 ---
  lib/include/descriptors/mpeg_es.h                  | 109 ----
  lib/include/descriptors/mpeg_pes.h                 | 111 ----
  lib/include/descriptors/mpeg_ts.h                  |  78 ---
@@ -66,7 +66,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  lib/include/libdvbv5/desc_sat.h                    |  67 +++
  lib/include/libdvbv5/desc_service.h                |  54 ++
  lib/include/libdvbv5/desc_service_list.h           |  54 ++
- lib/include/libdvbv5/desc_service_location.h       |  69 +++
+ lib/include/libdvbv5/desc_service_location.h       |  68 +++
  lib/include/libdvbv5/desc_t2_delivery.h            |  78 +++
  lib/include/libdvbv5/desc_terrestrial_delivery.h   |  70 +++
  lib/include/libdvbv5/desc_ts_info.h                |  66 +++
@@ -81,7 +81,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  lib/include/libdvbv5/dvb-v5-std.h                  |  96 ++++
  lib/include/libdvbv5/eit.h                         |  91 ++++
  lib/include/libdvbv5/header.h                      |  81 +++
- lib/include/libdvbv5/mgt.h                         |  80 +++
+ lib/include/libdvbv5/mgt.h                         |  79 +++
  lib/include/libdvbv5/mpeg_es.h                     | 109 ++++
  lib/include/libdvbv5/mpeg_pes.h                    | 111 ++++
  lib/include/libdvbv5/mpeg_ts.h                     |  78 +++
@@ -90,7 +90,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  lib/include/libdvbv5/pmt.h                         | 119 +++++
  lib/include/libdvbv5/sdt.h                         |  76 +++
  lib/include/libdvbv5/vct.h                         | 127 +++++
- lib/libdvbv5/Makefile.am                           | 142 +++--
+ lib/libdvbv5/Makefile.am                           | 138 +++--
  lib/libdvbv5/descriptors.c                         |  62 +--
  lib/libdvbv5/descriptors/atsc_eit.c                |   4 +-
  lib/libdvbv5/descriptors/atsc_header.c             |   6 +-
@@ -109,7 +109,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  lib/libdvbv5/descriptors/desc_sat.c                |   6 +-
  lib/libdvbv5/descriptors/desc_service.c            |   8 +-
  lib/libdvbv5/descriptors/desc_service_list.c       |   6 +-
- lib/libdvbv5/descriptors/desc_service_location.c   |   6 +-
+ lib/libdvbv5/descriptors/desc_service_location.c   |   4 +-
  lib/libdvbv5/descriptors/desc_t2_delivery.c        |   8 +-
  .../descriptors/desc_terrestrial_delivery.c        |   6 +-
  lib/libdvbv5/descriptors/desc_ts_info.c            |   8 +-
@@ -140,7 +140,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  utils/dvb/dvb-format-convert.c                     |   6 +-
  utils/dvb/dvbv5-scan.c                             |   8 +-
  utils/dvb/dvbv5-zap.c                              |   8 +-
- 132 files changed, 4340 insertions(+), 4298 deletions(-)
+ 132 files changed, 4337 insertions(+), 4291 deletions(-)
  delete mode 100644 lib/include/descriptors.h
  delete mode 100644 lib/include/descriptors/atsc_eit.h
  delete mode 100644 lib/include/descriptors/atsc_header.h
@@ -1700,10 +1700,10 @@ index 8e7d73f..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_service_location.h b/lib/include/descriptors/desc_service_location.h
 deleted file mode 100644
-index 89ed055..0000000
+index 78490bd..0000000
 --- a/lib/include/descriptors/desc_service_location.h
 +++ /dev/null
-@@ -1,69 +0,0 @@
+@@ -1,68 +0,0 @@
 -/*
 - * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 - *
@@ -1728,7 +1728,6 @@ index 89ed055..0000000
 -#define _SERVICE_LOCATION_H
 -
 -#include <stdint.h>
--#include <unistd.h> /* ssize_t */
 -
 -struct dvb_desc_service_location_element {
 -	uint8_t stream_type;
@@ -1737,8 +1736,8 @@ index 89ed055..0000000
 -		struct {
 -			uint16_t elementary_pid:13;
 -			uint16_t reserved:3;
--		};
--	};
+-		} __attribute__((packed));
+-	} __attribute__((packed));
 -	uint8_t language[4];
 -} __attribute__((packed));
 -
@@ -1752,8 +1751,8 @@ index 89ed055..0000000
 -		struct {
 -			uint16_t pcr_pid:13;
 -			uint16_t reserved:3;
--		};
--	};
+-		} __attribute__((packed));
+-	} __attribute__((packed));
 -	uint8_t elements;
 -	struct dvb_desc_service_location_element *element;
 -} __attribute__((packed));
@@ -2191,10 +2190,10 @@ index c8cd466..0000000
 -#endif
 diff --git a/lib/include/descriptors/mgt.h b/lib/include/descriptors/mgt.h
 deleted file mode 100644
-index 9eaac02..0000000
+index 9c583b4..0000000
 --- a/lib/include/descriptors/mgt.h
 +++ /dev/null
-@@ -1,80 +0,0 @@
+@@ -1,79 +0,0 @@
 -/*
 - * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 - *
@@ -2255,7 +2254,6 @@ index 9eaac02..0000000
 -        struct atsc_table_mgt_table *table;
 -	struct dvb_desc *descriptor;
 -} __attribute__((packed));
--
 -
 -#define atsc_mgt_table_foreach( _tran, _mgt ) \
 -  for( struct atsc_table_mgt_table *_tran = _mgt->table; _tran; _tran = _tran->next ) \
@@ -5685,10 +5683,10 @@ index 0000000..8e7d73f
 +#endif
 diff --git a/lib/include/libdvbv5/desc_service_location.h b/lib/include/libdvbv5/desc_service_location.h
 new file mode 100644
-index 0000000..89ed055
+index 0000000..78490bd
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_service_location.h
-@@ -0,0 +1,69 @@
+@@ -0,0 +1,68 @@
 +/*
 + * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
@@ -5713,7 +5711,6 @@ index 0000000..89ed055
 +#define _SERVICE_LOCATION_H
 +
 +#include <stdint.h>
-+#include <unistd.h> /* ssize_t */
 +
 +struct dvb_desc_service_location_element {
 +	uint8_t stream_type;
@@ -5722,8 +5719,8 @@ index 0000000..89ed055
 +		struct {
 +			uint16_t elementary_pid:13;
 +			uint16_t reserved:3;
-+		};
-+	};
++		} __attribute__((packed));
++	} __attribute__((packed));
 +	uint8_t language[4];
 +} __attribute__((packed));
 +
@@ -5737,8 +5734,8 @@ index 0000000..89ed055
 +		struct {
 +			uint16_t pcr_pid:13;
 +			uint16_t reserved:3;
-+		};
-+	};
++		} __attribute__((packed));
++	} __attribute__((packed));
 +	uint8_t elements;
 +	struct dvb_desc_service_location_element *element;
 +} __attribute__((packed));
@@ -7877,10 +7874,10 @@ index 0000000..c8cd466
 +#endif
 diff --git a/lib/include/libdvbv5/mgt.h b/lib/include/libdvbv5/mgt.h
 new file mode 100644
-index 0000000..442150a
+index 0000000..346cbb5
 --- /dev/null
 +++ b/lib/include/libdvbv5/mgt.h
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,79 @@
 +/*
 + * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
 + *
@@ -7941,7 +7938,6 @@ index 0000000..442150a
 +        struct atsc_table_mgt_table *table;
 +	struct dvb_desc *descriptor;
 +} __attribute__((packed));
-+
 +
 +#define atsc_mgt_table_foreach( _tran, _mgt ) \
 +  for( struct atsc_table_mgt_table *_tran = _mgt->table; _tran; _tran = _tran->next ) \
@@ -8801,7 +8797,7 @@ index 0000000..6935f30
 +
 +#endif
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 6771d24..ddf9ea1 100644
+index c6d2a42..ddf9ea1 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
 @@ -1,8 +1,50 @@
@@ -8858,7 +8854,7 @@ index 6771d24..ddf9ea1 100644
  pkgconfig_DATA = libdvbv5.pc
  LIBDVBV5_VERSION = -version-info 0
  else
-@@ -10,54 +52,54 @@ noinst_LTLIBRARIES = libdvbv5.la
+@@ -10,50 +52,54 @@ noinst_LTLIBRARIES = libdvbv5.la
  endif
  
  libdvbv5_la_SOURCES = \
@@ -8903,11 +8899,7 @@ index 6771d24..ddf9ea1 100644
 -  descriptors/atsc_header.c ../include/descriptors/atsc_header.h \
 -  descriptors/mgt.c  ../include/descriptors/mgt.h \
 -  descriptors/eit.c  ../include/descriptors/eit.h \
--  descriptors/atsc_eit.c  ../include/descriptors/atsc_eit.h \
--  descriptors/desc_service_location.c  ../include/descriptors/desc_service_location.h \
--  descriptors/mpeg_ts.c  ../include/descriptors/mpeg_ts.h \
--  descriptors/mpeg_pes.c  ../include/descriptors/mpeg_pes.h \
--  descriptors/mpeg_es.c  ../include/descriptors/mpeg_es.h
+-  descriptors/atsc_eit.c  ../include/descriptors/atsc_eit.h
 +	crc32.c crc32.h \
 +	../include/dvb-frontend.h \
 +	dvb-legacy-channel-format.c \
@@ -8961,7 +8953,7 @@ index 6771d24..ddf9ea1 100644
  libdvbv5_la_LIBADD = $(LTLIBICONV)
  
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index f46aa4a..a2176b4 100644
+index 25fd620..17711c5 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -22,39 +22,39 @@
@@ -9036,7 +9028,7 @@ index f46aa4a..a2176b4 100644
  ssize_t dvb_desc_init(const uint8_t *buf, struct dvb_desc *desc)
  {
 diff --git a/lib/libdvbv5/descriptors/atsc_eit.c b/lib/libdvbv5/descriptors/atsc_eit.c
-index 8d3791d..d0225f4 100644
+index f8afc76..86a7b11 100644
 --- a/lib/libdvbv5/descriptors/atsc_eit.c
 +++ b/lib/libdvbv5/descriptors/atsc_eit.c
 @@ -18,8 +18,8 @@
@@ -9349,18 +9341,16 @@ index 18aa313..b81f961 100644
  /* FIXME: implement */
  
 diff --git a/lib/libdvbv5/descriptors/desc_service_location.c b/lib/libdvbv5/descriptors/desc_service_location.c
-index b205428..c636862 100644
+index 187a8ac..e9eb1f7 100644
 --- a/lib/libdvbv5/descriptors/desc_service_location.c
 +++ b/lib/libdvbv5/descriptors/desc_service_location.c
-@@ -18,9 +18,9 @@
+@@ -18,8 +18,8 @@
   *
   */
  
 -#include "descriptors/desc_service_location.h"
--#include "descriptors.h"
 -#include "dvb-fe.h"
 +#include <libdvbv5/desc_service_location.h>
-+#include <libdvbv5/descriptors.h>
 +#include <libdvbv5/dvb-fe.h>
  
  void dvb_desc_service_location_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
@@ -9453,7 +9443,7 @@ index d371eec..66f8424 100644
  int dvb_table_header_init(struct dvb_table_header *t)
  {
 diff --git a/lib/libdvbv5/descriptors/mgt.c b/lib/libdvbv5/descriptors/mgt.c
-index 09d1cf2..672e7f5 100644
+index 7279982..ba57c84 100644
 --- a/lib/libdvbv5/descriptors/mgt.c
 +++ b/lib/libdvbv5/descriptors/mgt.c
 @@ -18,8 +18,8 @@
@@ -9730,10 +9720,10 @@ index ea3e2c1..9b3f73c 100644
  static const struct dvb_sat_lnb lnb[] = {
  	{
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 5f8596e..640f190 100644
+index bb7732a..ee122cd 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -37,30 +37,30 @@
+@@ -38,30 +38,30 @@
  #include <stdlib.h>
  #include <sys/time.h>
  
