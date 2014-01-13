@@ -29,12 +29,14 @@
 #include "TVDaemon.h" // GetDir .. use ref to recorder !
 #include "Recorder.h"
 #include "RPCObject.h"
+#include "CAMClient.h"
 
 #include <libdvbv5/pat.h>
 #include <libdvbv5/eit.h>
 #include <libdvbv5/desc_event_short.h>
 #include <libdvbv5/dvb-scan.h>
 #include <libdvbv5/mpeg_ts.h>
+#include <libdvbv5/mpeg_pes.h>
 #include <libdvbv5/dvb-demux.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -151,6 +153,29 @@ bool Activity_Record::Perform( )
   bool ret = true;
   std::vector<int> fds;
 
+  // encrypted
+  uint16_t ecm_pid = 0;
+  int ecm_fd = -1;
+  CAMClient *client = NULL;
+  if( service->GetScrambled( ))
+  {
+    frontend->Log( "Scrambled" );
+    if( !service->GetECMPID( ecm_pid, &client ))
+    {
+      LogError( "CA id not found" );
+      return false;
+    }
+
+    frontend->Log( "Opening ECM pid 0x%04x, cam client %p", ecm_pid, client );
+    ecm_fd = service->Open( *frontend, ecm_pid );
+    if( ecm_fd < 0 )
+    {
+      LogError( "Error opening demux" );
+      return false;
+    }
+    fds.push_back( ecm_fd );
+  }
+
   int fd_pat = frontend->OpenDemux( );
   frontend->Log( "Opening PAT demux %d", fd_pat );
   // FIXME check fd
@@ -172,9 +197,12 @@ bool Activity_Record::Perform( )
     if( it->second->IsVideo( ) || it->second->IsAudio( ))
     {
       frontend->Log( "Adding Stream %d: %s", it->first, it->second->GetTypeName( ));
-      int fd = it->second->Open( *frontend );
-      if( fd )
+      int fd = service->Open( *frontend, it->second->GetKey( ));
+      if( fd > 0 )
         fds.push_back( fd );
+      else
+        LogError( "Error opening demux" );
+
       if( it->second->IsVideo( ))
       {
         std::string desc;
@@ -182,7 +210,9 @@ bool Activity_Record::Perform( )
         frontend->LogWarn( "SDP: %s", desc.c_str( ));
       ////rec.AddTrack( );
       //videofd = fd;
+      //
       }
+
     }
     else
       frontend->LogWarn( "Ignoring Stream %d: %s (%d)", it->first, it->second->GetTypeName( ), it->second->GetType( ));
@@ -191,6 +221,7 @@ bool Activity_Record::Perform( )
   if( fds.empty( ))
   {
     frontend->LogError( "no audio or video stream for service %d found", service->GetKey( ));
+    // FIXME: close fd_pat, ...
     return false;
   }
 
@@ -242,7 +273,7 @@ bool Activity_Record::Perform( )
 
 
     Utils::EnsureSlash( dir );
-    std::string filename = dir + dumpfile + ".pes";
+    std::string filename = dir + dumpfile + ".ts";
 
     int i = 0;
     while( Utils::IsFile( filename ))
@@ -255,7 +286,7 @@ bool Activity_Record::Perform( )
         goto exit;
       }
       snprintf( num, sizeof( num ), "_%d", i );
-      filename = dir + dumpfile + num + ".pes";
+      filename = dir + dumpfile + num + ".ts";
     }
 
     int file_fd = open( filename.c_str( ),
@@ -307,6 +338,9 @@ bool Activity_Record::Perform( )
         break;
       }
 
+      if( !IsActive( ))
+        break;
+
       if( FD_ISSET( fd_pat, &tmp_fdset ))
       {
         len = read( fd_pat, data, DMX_BUFSIZE );
@@ -334,6 +368,39 @@ bool Activity_Record::Perform( )
         int fd = *it;
         if( FD_ISSET( fd, &tmp_fdset ))
         {
+          if( ecm_fd != -1 && fd == ecm_fd )
+          {
+            len = read( fd, data, DMX_BUFSIZE );
+            if( len < 0 )
+            {
+              frontend->LogError( "Error receiving data... %d", errno );
+              continue;
+            }
+
+            if( len == 0 )
+            {
+              frontend->Log( "no data received" );
+              continue;
+            }
+
+            int remaining = len;
+            uint8_t *p = data;
+            while( IsActive( ) && remaining > 0 )
+            {
+              int chunk = 188;
+
+              if( remaining < chunk ) chunk = remaining;
+              remaining -= chunk;
+
+              if( client )
+                client->HandleECM( p, chunk );
+
+              p += chunk;
+            }
+
+            continue;
+          }
+
           idle = false;
           idle_since = 0;
           len = read( fd, data, DMX_BUFSIZE );
@@ -349,13 +416,28 @@ bool Activity_Record::Perform( )
             continue;
           }
 
-          int ret = write( file_fd, data, len );
-          if( ret != len )
+          int remaining = len;
+          uint8_t *p = data;
+          while( IsActive( ) && remaining > 0 )
           {
-            LogError( "Error writing to %s", filename.c_str( ));
-            Stop( );
-            break;
+            int chunk = 188;
+            if( remaining < chunk ) chunk = remaining;
+            remaining -= chunk;
+
+            if( client )
+              client->Decrypt( p, chunk );
+
+            int ret = write( file_fd, p, chunk );
+            if( ret != chunk )
+            {
+              LogError( "Error writing to %s", filename.c_str( ));
+              Stop( );
+              break;
+            }
+
+            p += chunk;
           }
+
 
           //if( fd == videofd )
           //{

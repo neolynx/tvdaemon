@@ -71,7 +71,6 @@ class Stream : public Thread
 
     virtual int GetKey( ) const { return id; }
 
-    int Open( Frontend &frontend );
     bool Update( Type type );
     Type GetType( ) { return type; }
     const char *GetTypeName( ) { return GetTypeName( type ); };

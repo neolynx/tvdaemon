@@ -88,6 +88,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     // RTSP
     virtual StreamingHandler *GetStreamingHandler( std::string url );
 
+
   private:
     TVDaemon( );
     int FindAdapters( );

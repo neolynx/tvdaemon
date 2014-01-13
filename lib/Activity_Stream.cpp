@@ -103,7 +103,7 @@ bool Activity_Stream::Perform( )
     if( it->second->IsVideo( ) || it->second->IsAudio( ))
     {
       frontend->Log( "Adding Stream %d: %s", it->first, it->second->GetTypeName( ));
-      int fd = it->second->Open( *frontend );
+      int fd = service->Open( *frontend, it->second->GetKey( ));
       if( fd )
         fds[fd] = it->second;
       if( it->second->IsVideo( ))

@@ -4,3 +4,7 @@
 [submodule "cli/cli-core"]
 	path = cli/cli-core
 	url = https://github.com/timofurrer/cli-core.git
+
+[submodule "tsdecrypt"]
+	path = tsdecrypt
+	url = https://github.com/neolynx/tsdecrypt.git

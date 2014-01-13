@@ -38,6 +38,7 @@
 #include "Adapter.h"
 #include "Frontend.h"
 #include "Recorder.h"
+#include "CAMClientHandler.h"
 
 #include "SocketHandler.h"
 #include "Log.h"
@@ -62,6 +63,7 @@ bool TVDaemon::Create( std::string confdir )
   if( !Utils::IsFile( GetConfigFile( )))
     SaveConfig( );
   Log( "Config directory: %s", d.c_str( ));
+
   return true;
 }
 
@@ -97,6 +99,9 @@ TVDaemon::~TVDaemon( )
   Log( "Stopping Recorder" );
   recorder->Stop( );
 
+  Log( "Stopping CAMClientHandler" );
+  delete CAMClientHandler::Instance( );
+
   Log( "Stopping StreamingHandlers" );
   for( std::map<Channel *, StreamingHandler *>::iterator it = streaming_handlers.begin( ); it != streaming_handlers.end( ); it++ )
     delete it->second;
@@ -131,7 +136,11 @@ bool TVDaemon::Start( const char* httpRoot )
     return false;
   }
 
-  Log( "Setup udev" );
+  Log( "Creating CAM clients" );
+  CAMClientHandler *camclienthandler = CAMClientHandler::Instance( );
+  camclienthandler->LoadConfig( );
+
+  Log( "Setting up udev" );
   // Setup udev
   udev = udev_new( );
   udev_mon = udev_monitor_new_from_netlink( udev, "udev" );
@@ -153,12 +162,12 @@ bool TVDaemon::Start( const char* httpRoot )
   if( !httpd->CreateServerTCP( HTTPDPORT ))
   {
     LogError( "unable to create web server" );
+    return false;
   }
-  else
-  {
-    httpd->Start( );
-    Log( "HTTP Server listening on port %d", HTTPDPORT );
-  }
+
+  httpd->Start( );
+  Log( "HTTP Server listening on port %d", HTTPDPORT );
+
   return true;
 }
 

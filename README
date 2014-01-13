@@ -8,7 +8,9 @@ the following tools are needed:
 
 the following headers are needed:
 
-    apt-get install libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev libebml-dev libmatroska-dev libavformat-dev libccrtp-dev
+    apt-get install libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev \
+                    libebml-dev libmatroska-dev libavformat-dev libccrtp-dev \
+                    libdvbcsa-dev
 
 for initial scan files:
 

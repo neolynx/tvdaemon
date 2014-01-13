@@ -18,6 +18,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
+AM_PROG_CC_C_O
 
 AC_CHECK_LIB([rt], [main])
 AC_CHECK_LIB([pthread], [pthread_create])
@@ -57,6 +58,7 @@ AM_ICONV
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  src/Makefile
+                 tsdecrypt/Makefile
                  ])
                  #po/Makefile
 #                 v4l-utils/lib/libdvbv5/Makefile

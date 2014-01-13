@@ -34,6 +34,7 @@
 class Transponder;
 class Channel;
 class Activity;
+class CAMClient;
 
 class Service : public RPCObject
 {
@@ -61,9 +62,11 @@ class Service : public RPCObject
     std::string GetProvider( ) { return provider; }
     void        SetProvider( std::string provider ) { this->provider = provider; }
     void        SetScrambled( bool scrambled ) { this->scrambled = scrambled; }
+    bool        GetScrambled( ) { return scrambled; }
     Channel    *GetChannel( ) { return channel; }
 
     void SetCA( uint16_t ca_id, uint16_t ca_pid );
+    bool GetECMPID( uint16_t &ca_pid, CAMClient **client );
 
     Transponder &GetTransponder( ) const { return transponder; }
 
@@ -73,6 +76,8 @@ class Service : public RPCObject
 
     bool SaveConfig( ConfigBase &config );
     bool LoadConfig( ConfigBase &config );
+
+    int Open( Frontend &frontend, int pid );
 
     // RPC
     void json( json_object *entry ) const;

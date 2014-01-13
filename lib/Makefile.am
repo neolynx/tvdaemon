@@ -34,10 +34,13 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Log.cpp \
 			  StreamingHandler.cpp \
 			  Activity_Stream.cpp \
+			  CAMClient.cpp \
+			  CAMClientHandler.cpp \
 			  Daemon.cpp
 
 libtvdaemon_la_LDFLAGS = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} -ldvbv5 \
-			-lmatroska ${LIBCCRTP_LIBS} ${LIBAVFORMAT_LIBS} ${LIBAVCODEC_LIBS}
+			-lmatroska ${LIBCCRTP_LIBS} ${LIBAVFORMAT_LIBS} ${LIBAVCODEC_LIBS} \
+			../tsdecrypt/libtsdecrypt.la
 libtvdaemon_la_CXXFLAGS = -D__STDC_CONSTANT_MACROS
 
 

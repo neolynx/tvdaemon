@@ -26,14 +26,17 @@
 #include <string.h>  // strlen
 #include <fcntl.h>   // open
 #include <libdvbv5/eit.h>
+#include <libdvbv5/dvb-demux.h>
 
 #include "TVDaemon.h"
+#include "Frontend.h"
 #include "Transponder.h"
 #include "HTTPServer.h"
 #include "Stream.h"
 #include "Channel.h"
 #include "Log.h"
 #include "Activity.h"
+#include "CAMClientHandler.h"
 
 Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id ) :
   transponder(transponder),
@@ -299,5 +302,35 @@ bool Service::compare( const JSONObject &other, const int &p ) const
 void Service::SetCA( uint16_t ca_id, uint16_t ca_pid )
 {
   caids[ca_id] = ca_pid;
+}
+
+bool Service::GetECMPID( uint16_t &ca_pid, CAMClient **client )
+{
+  for( std::map<uint16_t, uint16_t>::iterator it = caids.begin( ); it != caids.end( ); it++ )
+  {
+    CAMClient *c = CAMClientHandler::Instance( )->GetCAMClient( it->first );
+    if( c )
+    {
+      ca_pid = it->second;
+      *client = c;
+      return true;
+    }
+  }
+  return false;
+}
+
+int Service::Open( Frontend &frontend, int pid )
+{
+  int fd = frontend.OpenDemux( );
+  if( fd > 0 )
+  {
+    if( dvb_set_pesfilter( fd, pid, DMX_PES_OTHER, DMX_OUT_TSDEMUX_TAP, DMX_BUFSIZE ) != 0 )
+    {
+      frontend.LogError( "failed to set the pes filter for pid 0x%04x", pid );
+      frontend.CloseDemux( fd );
+      return -1;
+    }
+  }
+  return fd;
 }
 

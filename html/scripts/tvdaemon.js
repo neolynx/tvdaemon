@@ -191,7 +191,8 @@ function Menu( selected )
            Services: "services.html",
            Channels: "channels.html",
            EPG     : "epg.html",
-           Recorder: "recorder.html"
+           Recorder: "recorder.html",
+           CAMClients: "camclients.html",
          };
 
   ul = $('<ul>');
