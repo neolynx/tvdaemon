@@ -166,34 +166,62 @@ void ConfigBase::ReadConfig( const char *key, Name &n )
 
 void ConfigBase::WriteConfig( const char *key, int i )
 {
-  if( settings->exists( key ))
-    (*settings)[key] = i;
-  else
-    settings->add( key, Setting::TypeInt ) = i;
+  try
+  {
+    if( settings->exists( key ))
+      (*settings)[key] = i;
+    else
+      settings->add( key, Setting::TypeInt ) = i;
+  }
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, uint8_t u8 )
 {
-  if( settings->exists( key ))
-    (*settings)[key] = u8;
-  else
-    settings->add( key, Setting::TypeInt ) = u8;
+  try
+  {
+    if( settings->exists( key ))
+      (*settings)[key] = u8;
+    else
+      settings->add( key, Setting::TypeInt ) = u8;
+  }
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, uint16_t u16 )
 {
-  if( settings->exists( key ))
-    (*settings)[key] = u16;
-  else
-    settings->add( key, Setting::TypeInt ) = u16;
+  try
+  {
+    if( settings->exists( key ))
+      (*settings)[key] = u16;
+    else
+      settings->add( key, Setting::TypeInt ) = u16;
+  }
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, uint32_t u32 )
 {
-  if( settings->exists( key ))
-    (*settings)[key] = (int) u32;
-  else
-    settings->add( key, Setting::TypeInt ) = (int) u32;
+  try
+  {
+    if( settings->exists( key ))
+      (*settings)[key] = (int) u32;
+    else
+      settings->add( key, Setting::TypeInt ) = (int) u32;
+  }
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, time_t t )
@@ -202,41 +230,69 @@ void ConfigBase::WriteConfig( const char *key, time_t t )
   char tstr[255];
   localtime_r( &t, &tm );
   strftime( tstr, sizeof( tstr ), "%Y-%m-%d %H:%M:%S", &tm );
-  if( settings->exists( key ))
+  try
   {
-    if( (*settings)[key].getType( ) != Setting::TypeString )
+    if( settings->exists( key ))
     {
-      DeleteConfig( key );
-      settings->add( key, Setting::TypeString ) = tstr;
+      if( (*settings)[key].getType( ) != Setting::TypeString )
+      {
+        DeleteConfig( key );
+        settings->add( key, Setting::TypeString ) = tstr;
+      }
+      (*settings)[key] = tstr;
     }
-    (*settings)[key] = tstr;
+    else
+      settings->add( key, Setting::TypeString ) = tstr;
   }
-  else
-    settings->add( key, Setting::TypeString ) = tstr;
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, bool b )
 {
-  if( settings->exists( key ))
-    (*settings)[key] = b ? 1 : 0;
-  else
-    settings->add( key, Setting::TypeInt ) = b ? 1 : 0;
+  try
+  {
+    if( settings->exists( key ))
+      (*settings)[key] = b ? 1 : 0;
+    else
+      settings->add( key, Setting::TypeInt ) = b ? 1 : 0;
+  }
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, float f )
 {
-  if( settings->exists( key ))
-    (*settings)[key] = f;
-  else
-    settings->add( key, Setting::TypeFloat ) = f;
+  try
+  {
+    if( settings->exists( key ))
+      (*settings)[key] = f;
+    else
+      settings->add( key, Setting::TypeFloat ) = f;
+  }
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 void ConfigBase::WriteConfig( const char *key, std::string &s )
 {
-  if( settings->exists( key ))
-    (*settings)[key] = s;
-  else
-    settings->add( key, Setting::TypeString ) = s;
+  try
+  {
+    if( settings->exists( key ))
+      (*settings)[key] = s;
+    else
+      settings->add( key, Setting::TypeString ) = s;
+  }
+  catch( std::exception &e )
+  {
+    LogError( "Error writing config value '%s'", key );
+  }
 }
 
 bool ConfigBase::DeleteConfig( const char *key )
@@ -319,7 +375,8 @@ bool ConfigObject::ReadConfigFile( )
 {
   if( !Utils::IsFile( configfile ))
   {
-    LogError( "not a config file '%s'", configfile.c_str( ));
+    LogWarn( "creating empty config file '%s'", configfile.c_str( ));
+    config.writeFile( configfile.c_str( ));
     return false;
   }
   try
