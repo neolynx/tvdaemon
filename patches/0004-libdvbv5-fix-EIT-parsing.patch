@@ -1,7 +1,7 @@
-From 7cf0483fd7be269b2697e8e49eb549b6aa3c8c7d Mon Sep 17 00:00:00 2001
+From e400103c95661fbdaddbabca2eb5c0ac69bf25da Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 29 Dec 2013 15:37:30 +0100
-Subject: [PATCH 05/27] libdvbv5: fix EIT parsing
+Subject: [PATCH 04/26] libdvbv5: fix EIT parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

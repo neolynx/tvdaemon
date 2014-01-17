@@ -1,7 +1,7 @@
-From 98518a23c543e1870537f356fdbecdee9b2ecd17 Mon Sep 17 00:00:00 2001
+From ce93585bb317029a1fb489312c2ace6ae9f53a35 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 18:04:58 +0100
-Subject: [PATCH 23/27] libdvbv5: check memory in descriptor parsing
+Subject: [PATCH 22/26] libdvbv5: check memory in descriptor parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

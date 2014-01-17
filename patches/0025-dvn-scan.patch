@@ -1,14 +1,14 @@
-From dcfeb785fb56782058328e49432de11bbc45c8e1 Mon Sep 17 00:00:00 2001
+From fa0b2f4c7c7208e642263f278e034dd38a45c896 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:40:47 +0100
-Subject: [PATCH 26/27] dvn scan
+Subject: [PATCH 25/26] dvn scan
 
 ---
  lib/libdvbv5/dvb-scan.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index ee122cd..ef0ea77 100644
+index d37071a..a105330 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -191,6 +191,7 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
@@ -19,7 +19,7 @@ index ee122cd..ef0ea77 100644
  		dvb_table_header_init(h);
  
  		if (start_id == h->id && start_section == h->section_id) {
-@@ -204,6 +205,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+@@ -205,6 +206,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  			continue;
  		}
  
@@ -28,7 +28,7 @@ index ee122cd..ef0ea77 100644
  		/* handle the sections */
  		if (first_section == -1)
  			first_section = h->section_id;
-@@ -241,7 +244,9 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+@@ -242,7 +245,9 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  			break;
  		}
  	}

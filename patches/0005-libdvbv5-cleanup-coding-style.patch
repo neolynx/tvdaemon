@@ -1,7 +1,7 @@
-From e23262e803196fe2126023625e4aab15a25557cf Mon Sep 17 00:00:00 2001
+From b990cd2fd8d3fcf6b7b499c7606e0567772ef395 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 28 Dec 2013 16:08:53 +0100
-Subject: [PATCH 06/27] libdvbv5: cleanup coding style
+Subject: [PATCH 05/26] libdvbv5: cleanup coding style
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

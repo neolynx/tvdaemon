@@ -1,7 +1,7 @@
-From 4531a4d1e1554cc8d4000c1b0f476d566970a8f9 Mon Sep 17 00:00:00 2001
+From deec2deeb9c7d5d711762ec03173287f42f57185 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:15:02 +0100
-Subject: [PATCH 15/27] libdvbv5: add parser for ca and ca_identifier
+Subject: [PATCH 14/26] libdvbv5: add parser for ca and ca_identifier
  descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

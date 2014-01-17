@@ -1,7 +1,7 @@
-From 4e6b7cdcd5c1e2388ba4ecb62f564f27a7b8399e Mon Sep 17 00:00:00 2001
+From 6cb4db4d88b5389e34652c0c00bef00688ed826b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:51:27 +0100
-Subject: [PATCH 13/27] libdvbv5: add attribute packed to structs and unions
+Subject: [PATCH 12/26] libdvbv5: add attribute packed to structs and unions
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

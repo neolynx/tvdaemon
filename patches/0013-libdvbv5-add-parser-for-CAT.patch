@@ -1,7 +1,7 @@
-From 5052c0893cd7eb055cfe1d9dd8d586337dc63c27 Mon Sep 17 00:00:00 2001
+From 5e5e3798595b0e12958f906e308f43d21f3c192e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:13:30 +0100
-Subject: [PATCH 14/27] libdvbv5: add parser for CAT
+Subject: [PATCH 13/26] libdvbv5: add parser for CAT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,7 +1,7 @@
-From 57b5df3e2c6bb5c25083b8bfc7fbfe68cb9f9461 Mon Sep 17 00:00:00 2001
+From 891b7dee682a16e6534a5e6bb833c8d95d985166 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:39:20 +0100
-Subject: [PATCH 18/27] libdvbv5: use DVB_DESC_HEADER macro in all descriptors
+Subject: [PATCH 17/26] libdvbv5: use DVB_DESC_HEADER macro in all descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

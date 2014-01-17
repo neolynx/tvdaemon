@@ -1,7 +1,7 @@
-From 9d2c3be8460d2eec2c6245af654d4f9a3e6deaae Mon Sep 17 00:00:00 2001
+From 8307ce5b127341243bda9a901f9f4ea9f567cef4 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:18:30 +0100
-Subject: [PATCH 16/27] libdvbv5: fix PMT parser
+Subject: [PATCH 15/26] libdvbv5: fix PMT parser
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

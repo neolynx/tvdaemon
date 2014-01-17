@@ -1,7 +1,7 @@
-From 586a4aede9f4560d72dfd21fe5dfc2409e640b12 Mon Sep 17 00:00:00 2001
+From 600b7a3247460647a92ff4437ed35d7be11a8b59 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 22:45:56 +0100
-Subject: [PATCH 21/27] libdvbv5: descriptor parser return int
+Subject: [PATCH 20/26] libdvbv5: descriptor parser return int
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -838,7 +838,7 @@ index b81f961..a9a99e9 100644
  
  void dvb_desc_service_list_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_service_location.c b/lib/libdvbv5/descriptors/desc_service_location.c
-index e9eb1f7..40a9ce3 100644
+index 5fe71e0..fe5ed24 100644
 --- a/lib/libdvbv5/descriptors/desc_service_location.c
 +++ b/lib/libdvbv5/descriptors/desc_service_location.c
 @@ -21,7 +21,7 @@

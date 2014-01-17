@@ -1,7 +1,7 @@
-From 4adbce595201d9a686df091fca4f45267688e4c7 Mon Sep 17 00:00:00 2001
+From 37f9880fe0c75508af42cdfcd4f14e17ea234a43 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 01:45:07 +0100
-Subject: [PATCH 09/27] libdvbv5: shared lib and installing headers
+Subject: [PATCH 08/26] libdvbv5: shared lib and installing headers
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -9341,7 +9341,7 @@ index 18aa313..b81f961 100644
  /* FIXME: implement */
  
 diff --git a/lib/libdvbv5/descriptors/desc_service_location.c b/lib/libdvbv5/descriptors/desc_service_location.c
-index 187a8ac..e9eb1f7 100644
+index 52cb06d..5fe71e0 100644
 --- a/lib/libdvbv5/descriptors/desc_service_location.c
 +++ b/lib/libdvbv5/descriptors/desc_service_location.c
 @@ -18,8 +18,8 @@
@@ -9720,7 +9720,7 @@ index ea3e2c1..9b3f73c 100644
  static const struct dvb_sat_lnb lnb[] = {
  	{
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index bb7732a..ee122cd 100644
+index c0a763f..d37071a 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -38,30 +38,30 @@
