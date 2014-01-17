@@ -2,19 +2,12 @@
 Prerequisites
 ==============
 
-the following tools are needed:
+On Ubuntu >= quantal or Debian >= wheezy, install the following:
 
-    apt-get install autoconf libtool automake autopoint pkg-config g++
-
-the following headers are needed:
-
-    apt-get install libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev \
+sudo apt-get install autoconf libtool automake autopoint pkg-config g++ \
+                    libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev \
                     libebml-dev libmatroska-dev libavformat-dev libccrtp-dev \
-                    libdvbcsa-dev
-
-for initial scan files:
-
-    apt-get install dvb-apps
+                    libdvbcsa-dev dvb-apps
 
 
 Checkout TVDaemon
@@ -31,23 +24,18 @@ git checkout master
 git am ../patches/*
 cd ..
 
-# obsolete
-#cd cli/cli-core
-#git checkout master
-#git submodule init
-#git submodule update
-#cd src/colorful
-#git checkout master
-#cd ../..
-#cd ../..
-
+cd tsdecrypt
+git checkout master
+git submodule init
+git submodule update
+cd ..
 
 Build tvdaemon
 ===============
 
 cd v4l-utils
 autoreconf -vfis
-./configure --enable-libdvbv5
+./configure
 make
 sudo make install
 cd ..
@@ -69,5 +57,8 @@ GDB
 In order to launch the application with gdb without a make install,
 use libtool from the root folder: libtool --mode=execute gdb src/tvdaemon
 
+Valgrind
+=========
 libtool --mode=execute valgrind --leak-check=full --log-file=vg.out src/tvdaemon -d -r html
+
 
