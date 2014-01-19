@@ -37,7 +37,6 @@ cd v4l-utils
 autoreconf -vfis
 ./configure
 make
-sudo make install
 cd ..
 
 autoreconf -vfis
