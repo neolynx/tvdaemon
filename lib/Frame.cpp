@@ -116,7 +116,7 @@ bool Frame::ReadFrame( uint8_t *data, size_t length, RTPSession *session )
     if( started )
     {
       // mkv.AddFrame( last_pts, last_frame_type, buffer, buffer_length );
-      Log( "RTP: Sending %d bytes @", buffer_length );
+      Log( "RTP: Sending %zd bytes @", buffer_length );
       if( timestamp == 0 )
         timestamp = session->getCurrentTimestamp( );
       else

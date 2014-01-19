@@ -243,6 +243,64 @@ class ConfigObject : public ConfigBase
       return true;
     }
 
+    template <class Class, class Key, class Parent> static bool CreateFromConfigFactory( Parent &parent, std::string configname, std::map<Key, Class *> &map )
+    {
+      DIR *d;
+      struct dirent dp;
+      struct dirent *result = NULL;
+      struct stat st;
+      std::string dir;
+      std::string file;
+      std::string path = parent.GetConfigDir( );
+      Utils::EnsureSlash( path );
+      d = opendir( path.c_str( ));
+      if( !d )
+      {
+        LogError( "error opening config directory '%s'", path.c_str( ));
+        return false;
+      }
+      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      {
+        if( dp.d_name[0] == '.' )
+          continue;
+        dir = path + dp.d_name;
+        if( stat( dir.c_str( ), &st ) < 0)
+        {
+          LogError( "cannot stat '%s'", dir.c_str( ));
+          continue;
+        }
+        if( !S_ISDIR( st.st_mode ))
+          continue;
+        int id;
+        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+          continue;
+        file = dir + "/config";
+        if( !Utils::IsFile( file ))
+        {
+          LogError( "config file not found '%s'", file.c_str( ));
+          rmdir( dir.c_str( ));
+          continue;
+        }
+        Class *c = Class::Create( parent, file );
+        if( !c )
+        {
+          LogError( "Could not create object from '%s'", file.c_str( ));
+          closedir( d );
+          return false;
+        }
+        if( !c->LoadConfig( ))
+        {
+          LogError( "error loading config '%s'", file.c_str( ));
+          delete c;
+          closedir( d );
+          return false;
+        }
+        map[id] = c;
+      }
+      closedir( d );
+      return true;
+    }
+
     template <class Class, class Key> static Key GetAvailableKey( std::map<Key, Class *> &map )
     {
       Key id = -1;

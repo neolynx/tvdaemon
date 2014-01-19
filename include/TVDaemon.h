@@ -98,7 +98,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     int epg_update_interval;
 
     std::vector<Adapter *> adapters;
-    std::vector<Source *>  sources;
+    std::map<int, Source *>  sources;
     std::vector<Channel *> channels;
 
     bool up;

@@ -308,6 +308,7 @@ bool Service::GetECMPID( uint16_t &ca_pid, CAMClient **client )
 {
   for( std::map<uint16_t, uint16_t>::iterator it = caids.begin( ); it != caids.end( ); it++ )
   {
+    Log( "Trying CAID 0x%04x", it->first );
     CAMClient *c = CAMClientHandler::Instance( )->GetCAMClient( it->first );
     if( c )
     {

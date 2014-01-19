@@ -73,7 +73,7 @@ class Source : public ConfigObject, public RPCObject, public Mutex
 
     int CountServices( ) const;
 
-    const std::vector<Transponder *> &GetTransponders( ) { return transponders; }
+    const std::map<int, Transponder *> &GetTransponders( ) { return transponders; }
 
     bool AddPort( Port *port );
     bool RemovePort( Port *port );
@@ -94,7 +94,7 @@ class Source : public ConfigObject, public RPCObject, public Mutex
 
     Type type;
 
-    std::vector<Transponder *> transponders;
+    std::map<int, Transponder *> transponders;
     std::vector<Port *> ports;
 };
 

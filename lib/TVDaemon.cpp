@@ -118,8 +118,8 @@ TVDaemon::~TVDaemon( )
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     delete *it;
 
-  for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
-    delete *it;
+  for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    delete it->second;
 
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     delete *it;
@@ -179,9 +179,9 @@ bool TVDaemon::SaveConfig( )
   WriteConfig( "EPGUpdateInterval", epg_update_interval );
   WriteConfigFile( );
 
-  for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+  for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
-    (*it)->SaveConfig( );
+    it->second->SaveConfig( );
   }
 
   for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
@@ -218,7 +218,7 @@ bool TVDaemon::LoadConfig( )
   if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
     return false;
   Log( "Loading Sources" );
-  if( !CreateFromConfig<Source, TVDaemon>( *this, "source", sources ))
+  if( !CreateFromConfig<Source, int, TVDaemon>( *this, "source", sources ))
     return false;
   Log( "Loading Adapters" );
   if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
@@ -498,9 +498,9 @@ void TVDaemon::Run( )
 
 Source *TVDaemon::CreateSource( std::string name, Source::Type type, std::string scanfile )
 {
-  for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+  for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
-    if( (*it)->GetName( ) == name )
+    if( it->second->GetName( ) == name )
     {
       LogError( "Source with name '%s' already exists", name.c_str( ));
       return NULL;
@@ -515,7 +515,8 @@ Source *TVDaemon::CreateSource( std::string name, Source::Type type, std::string
     s->ReadScanfile( scanfile );
   }
 
-  sources.push_back( s );
+  int next_id = GetAvailableKey<Source, int>( sources );
+  sources[next_id] = s;
   return s;
 }
 
@@ -539,18 +540,19 @@ Adapter *TVDaemon::GetAdapter( int id )
 std::vector<std::string> TVDaemon::GetSourceList( )
 {
   std::vector<std::string> result;
-  for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+  for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
-    result.push_back( (*it)->GetName( ));
+    result.push_back( it->second->GetName( ));
   }
   return result;
 }
 
 Source *TVDaemon::GetSource( int id ) const
 {
-  if( id >= sources.size( ))
+  std::map<int, Source *>::const_iterator it = sources.find( id );
+  if( it == sources.end( ))
     return NULL;
-  return sources[id];
+  return it->second;
 }
 
 Channel *TVDaemon::CreateChannel( Service *service )
@@ -644,10 +646,10 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     json_object_object_add( h, "iTotalRecords", json_object_new_int( sources.size( )));
     json_object *a = json_object_new_array();
 
-    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
     {
       json_object *entry = json_object_new_object( );
-      (*it)->json( entry );
+      it->second->json( entry );
       json_object_array_add( a, entry );
     }
 
@@ -788,16 +790,16 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     }
 
     std::vector<const JSONObject *> result;
-    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
     {
-      const std::vector<Transponder *> &transponders = (*it)->GetTransponders( );
-      for( std::vector<Transponder *>::const_iterator it2 = transponders.begin( ); it2 != transponders.end( ); it2++ )
+      const std::map<int, Transponder *> &transponders = it->second->GetTransponders( );
+      for( std::map<int, Transponder *>::const_iterator it2 = transponders.begin( ); it2 != transponders.end( ); it2++ )
       {
         std::string t;
-        Utils::ToLower( (*it2)->toString( ), t );
+        Utils::ToLower( it2->second->toString( ), t );
         if( !search.empty( ) && t.find( search.c_str( ), 0, search.length( )) == std::string::npos )
           continue;
-        result.push_back( *it2 );
+        result.push_back( it2->second );
       }
     }
     ServerSideTable( request, result );
@@ -815,12 +817,12 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     }
 
     std::vector<const JSONObject *> result;
-    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
     {
-      const std::vector<Transponder *> &transponders = (*it)->GetTransponders( );
-      for( std::vector<Transponder *>::const_iterator it2 = transponders.begin( ); it2 != transponders.end( ); it2++ )
+      const std::map<int, Transponder *> &transponders = it->second->GetTransponders( );
+      for( std::map<int, Transponder *>::const_iterator it2 = transponders.begin( ); it2 != transponders.end( ); it2++ )
       {
-        const std::map<uint16_t, Service *> &services = (*it2)->GetServices( );
+        const std::map<uint16_t, Service *> &services = it2->second->GetServices( );
         for( std::map<uint16_t, Service *>::const_iterator it3 = services.begin( ); it3 != services.end( ); it3++ )
         {
           if( !search.empty( ) && it3->second->GetName( ).find( search.c_str( ), 0, search.length( )) != 0 )
@@ -884,8 +886,8 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "scan" )
   {
-    for( std::vector<Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
-      (*it)->Scan( );
+    for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+      it->second->Scan( );
     request.Reply( HTTP_OK );
     return true;
   }
@@ -969,6 +971,7 @@ bool TVDaemon::RPC_Source( const HTTPRequest &request, const std::string &cat, c
   int i = atoi( t.c_str( ));
   if( i >= 0 && i < sources.size( ))
   {
+    Log( "RPC on source %d", i );
     return sources[i]->RPC( request, cat, action );
   }
 

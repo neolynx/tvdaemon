@@ -444,12 +444,12 @@ bool Transponder::RPC( const HTTPRequest &request, const std::string &cat, const
 void Transponder::SetTSID( uint16_t TSID )
 {
   this->TSID = TSID;
-  const std::vector<Transponder *> &transponders = source.GetTransponders( );
-  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  const std::map<int, Transponder *> &transponders = source.GetTransponders( );
+  for( std::map<int, Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
-    if( *it != this && (*it)->Enabled( ) && (*it)->GetTSID( ) == TSID )
+    if( it->second != this && it->second->Enabled( ) && it->second->GetTSID( ) == TSID )
     {
-      LogWarn( "Disabling duplicate transponder %s: same as %s", toString( ).c_str( ), (*it)->toString( ).c_str( ));
+      LogWarn( "Disabling duplicate transponder %s: same as %s", toString( ).c_str( ), it->second->toString( ).c_str( ));
       Disable( );
       SetState( State_Duplicate );
       SaveConfig( );

@@ -53,8 +53,8 @@ Source::Source( TVDaemon &tvd, std::string configfile ) :
 Source::~Source( )
 {
   Lock( );
-  for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-    delete *it;
+  for( std::map<int, Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+    delete it->second;
   Unlock( );
 }
 
@@ -67,10 +67,10 @@ bool Source::SaveConfig( )
 
   WriteConfigFile( );
 
-  for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  for( std::map<int, Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
-    if((*it)->IsModified( ))
-      (*it)->SaveConfig( );
+    if( it->second->IsModified( ))
+      it->second->SaveConfig( );
   }
   return true;
 }
@@ -85,7 +85,7 @@ bool Source::LoadConfig( )
 
   Log( "Loading Source '%s'", name.c_str( ));
 
-  if( !CreateFromConfigFactory<Transponder, Source>( *this, "transponder", transponders ))
+  if( !CreateFromConfigFactory<Transponder, int, Source>( *this, "transponder", transponders ))
     return false;
 
   //Setting &n = ConfigList( "Ports" );
@@ -162,15 +162,16 @@ bool Source::ReadScanfile( std::string scanfile )
 bool Source::AddTransponder( Transponder *t )
 {
   SCOPELOCK( );
-  for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  for( std::map<int, Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
-    if( (*it)->IsSame( *t ))
+    if( it->second->IsSame( *t ))
     {
       //LogWarn( "Ignoring already known transponder: %s", t->toString( ).c_str( ));
       return false;
     }
   }
-  transponders.push_back( t );
+  int next_id = GetAvailableKey<Transponder, int>( transponders );
+  transponders[next_id] = t;
   return true;
 }
 
@@ -211,9 +212,9 @@ Transponder *Source::CreateTransponder( const struct dvb_entry &info )
       break;
   }
 
-  for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+  for( std::map<int, Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
   {
-    if( Transponder::IsSame( **it, info ))
+    if( Transponder::IsSame( *it->second, info ))
     {
       //LogWarn( "Already known transponder: %s %d", delivery_system_name[delsys], frequency );
       Unlock( );
@@ -224,7 +225,8 @@ Transponder *Source::CreateTransponder( const struct dvb_entry &info )
   Transponder *t = Transponder::Create( *this, delsys, transponders.size( ));
   if( t )
   {
-    transponders.push_back( t );
+    int next_id = GetAvailableKey<Transponder, int>( transponders );
+    transponders[next_id] = t;
     for( int i = 0; i < info.n_props; i++ )
       t->AddProperty( info.props[i] );
   }
@@ -271,8 +273,8 @@ int Source::CountServices( ) const
 {
   int count = 0;
   Lock( );
-  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
-    count += (*it)->CountServices( );
+  for( std::map<int, Transponder *>::const_iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+    count += it->second->CountServices( );
   Unlock( );
   return count;
 }
@@ -325,10 +327,10 @@ bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std:
       json_object_object_add( h, "iTotalRecords", json_object_new_int( transponders.size( )));
       json_object *a = json_object_new_array();
 
-      for( std::vector<Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+      for( std::map<int, Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
       {
         json_object *entry = json_object_new_object( );
-        (*it)->json( entry );
+        it->second->json( entry );
         json_object_array_add( a, entry );
       }
 
@@ -344,6 +346,7 @@ bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std:
     if( !request.GetParam( "transponder_id", t ))
       return false;
 
+    Log( "Source: %s", name.c_str( ));
     int obj_id = atoi( t.c_str( ));
     if( obj_id >= 0 && obj_id < transponders.size( ))
     {
@@ -427,21 +430,21 @@ bool Source::Tune( Activity &act )
 void Source::Scan( )
 {
   SCOPELOCK( );
-  std::vector<Transponder *>::const_iterator it;
+  std::map<int, Transponder *>::const_iterator it;
   for( it = transponders.begin( ); it != transponders.end( ); it++ )
-    if( (*it)->GetState( ) != Transponder::State_Duplicate )
-      (*it)->SetState( Transponder::State_New );
+    if( it->second->GetState( ) != Transponder::State_Duplicate )
+      it->second->SetState( Transponder::State_New );
 }
 
 bool Source::GetTransponderForScanning( Activity &act )
 {
   SCOPELOCK( );
-  std::vector<Transponder *>::const_iterator it;
+  std::map<int, Transponder *>::const_iterator it;
   for( it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
-    if( (*it)->GetState( ) == Transponder::State_New )
+    if( it->second->GetState( ) == Transponder::State_New )
     {
-      (*it)->SetState( Transponder::State_Selected );
-      act.SetTransponder( *it );
+      it->second->SetState( Transponder::State_Selected );
+      act.SetTransponder( it->second );
       return true;
     }
   return false;
@@ -451,15 +454,15 @@ bool Source::GetTransponderForEPGScan( Activity &act )
 {
   SCOPELOCK( );
   time_t now = time( NULL );
-  for( std::vector<Transponder *>::const_iterator it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
+  for( std::map<int, Transponder *>::const_iterator it = transponders.begin( ); act.IsActive( ) && it != transponders.end( ); it++ )
   {
-    if((*it)->HasChannels( ) &&
-       (*it)->GetEPGState( ) != Transponder::EPGState_Updating &&
-       ((*it)->LastEPGUpdate( ) == 0 or difftime( now, (*it)->LastEPGUpdate( )) >= TVDaemon::Instance( )->GetEPGUpdateInterval( )) and
-        ((*it)->LastEPGFailed( ) == 0 or difftime( now, (*it)->LastEPGFailed( )) >= 3600.0 ))
+    if(it->second->HasChannels( ) &&
+       it->second->GetEPGState( ) != Transponder::EPGState_Updating &&
+       (it->second->LastEPGUpdate( ) == 0 or difftime( now, it->second->LastEPGUpdate( )) >= TVDaemon::Instance( )->GetEPGUpdateInterval( )) and
+        (it->second->LastEPGFailed( ) == 0 or difftime( now, it->second->LastEPGFailed( )) >= 3600.0 ))
     {
-      (*it)->SetEPGState( Transponder::EPGState_Updating );
-      act.SetTransponder( *it );
+      it->second->SetEPGState( Transponder::EPGState_Updating );
+      act.SetTransponder( it->second );
       return true;
     }
     //else
