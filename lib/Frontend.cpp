@@ -507,16 +507,22 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
     int source_id;
     if( !request.GetParam( "source_id", source_id ))
       return false;
+    if( source_id < 0 )
+    {
+      LogError( "Invalid source: %d", source_id );
+      return false;
+    }
 
     Port *port = AddPort( name, port_num );
-    if( source_id >= 0 )
-    {
-      Source *source = TVDaemon::Instance( )->GetSource( source_id );
-      if( !source )
-        return false;
-      source->AddPort( port );
-      port->SetSource( source );
-    }
+    if( port == NULL )
+      return false;
+
+    Source *source = TVDaemon::Instance( )->GetSource( source_id );
+    if( !source )
+      return false;
+
+    source->AddPort( port );
+    port->SetSource( source );
     request.Reply( HTTP_OK, port->GetKey( ));
     return true;
   }
