@@ -44,10 +44,21 @@ autoreconf -vfis
 make
 
 
-Start tvdaemon
-===============
+Start tvdaemon locally
+=======================
 
 src/tvdaemon -d -r html
+
+
+Install tvdaemon
+=================
+
+cd v4l-utils
+sudo make install
+cd ..
+sudo make install
+
+
 
 
 GDB
