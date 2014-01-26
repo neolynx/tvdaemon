@@ -22,13 +22,13 @@ git submodule update
 cd v4l-utils
 git checkout master
 git am ../patches/*
-cd ..
+cd -
 
 cd tsdecrypt
 git checkout master
 git submodule init
 git submodule update
-cd ..
+cd -
 
 Build tvdaemon
 ===============
@@ -36,8 +36,9 @@ Build tvdaemon
 cd v4l-utils
 autoreconf -vfis
 ./configure
+cd lib/libdvbv5
 make
-cd ..
+cd ../../..
 
 autoreconf -vfis
 ./configure
@@ -53,9 +54,9 @@ src/tvdaemon -d -r html
 Install tvdaemon
 =================
 
-cd v4l-utils
+cd v4l-utils/lib/libdvbv5
 sudo make install
-cd ..
+cd -
 sudo make install
 
 
