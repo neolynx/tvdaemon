@@ -1,7 +1,7 @@
-From deec2deeb9c7d5d711762ec03173287f42f57185 Mon Sep 17 00:00:00 2001
+From 1df064c4af2b1e20e4fa19cb21b4f795ea09da78 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:15:02 +0100
-Subject: [PATCH 14/26] libdvbv5: add parser for ca and ca_identifier
+Subject: [PATCH 14/27] libdvbv5: add parser for ca and ca_identifier
  descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -187,7 +187,7 @@ index 0abe42d..667a1af 100644
  
  libdvbv5_la_CPPFLAGS = -I../.. $(ENFORCE_LIBDVBV5_STATIC)
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 87c0fe8..0ad63ae 100644
+index 1dd1201..5403e4b 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -55,6 +55,8 @@

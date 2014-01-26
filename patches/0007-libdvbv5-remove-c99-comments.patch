@@ -1,7 +1,7 @@
-From 97ab14a98208aaf179f702842c773cb6b29c7ae3 Mon Sep 17 00:00:00 2001
+From c519bac9d165f195968181c94e76beb1becac648 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:45:59 +0100
-Subject: [PATCH 07/26] libdvbv5: remove c99 comments
+Subject: [PATCH 07/27] libdvbv5: remove c99 comments
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -16,7 +16,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  5 files changed, 17 insertions(+), 14 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors/desc_service_list.c b/lib/libdvbv5/descriptors/desc_service_list.c
-index ab91622..18aa313 100644
+index 36ecc95..153918e 100644
 --- a/lib/libdvbv5/descriptors/desc_service_list.c
 +++ b/lib/libdvbv5/descriptors/desc_service_list.c
 @@ -23,6 +23,8 @@
@@ -38,10 +38,10 @@ index ab91622..18aa313 100644
  
  void dvb_desc_service_list_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
-index 1e41fbb..de19dc5 100644
+index e0cef34..34e3651 100644
 --- a/lib/libdvbv5/dvb-file.c
 +++ b/lib/libdvbv5/dvb-file.c
-@@ -784,20 +784,21 @@ static char *dvb_vchannel(struct dvb_table_nit *nit, uint16_t service_id)
+@@ -815,20 +815,21 @@ static char *dvb_vchannel(struct dvb_table_nit *nit, uint16_t service_id)
  	if (!nit)
  		return NULL;
  
@@ -74,7 +74,7 @@ index 1e41fbb..de19dc5 100644
  		}
  	}
 diff --git a/lib/libdvbv5/dvb-log.c b/lib/libdvbv5/dvb-log.c
-index 7fa811f..2be056a 100644
+index 87d92f2..137b188 100644
 --- a/lib/libdvbv5/dvb-log.c
 +++ b/lib/libdvbv5/dvb-log.c
 @@ -44,7 +44,7 @@ static const struct loglevel {
@@ -87,7 +87,7 @@ index 7fa811f..2be056a 100644
  	va_list ap;
  	va_start(ap, fmt);
 diff --git a/lib/libdvbv5/dvb-sat.c b/lib/libdvbv5/dvb-sat.c
-index 09eb4d1..ea3e2c1 100644
+index e307a3d..52dcffb 100644
 --- a/lib/libdvbv5/dvb-sat.c
 +++ b/lib/libdvbv5/dvb-sat.c
 @@ -214,8 +214,6 @@ static void dvbsat_diseqc_prep_frame_addr(struct diseqc_cmd *cmd,
@@ -100,7 +100,7 @@ index 09eb4d1..ea3e2c1 100644
  static int dvbsat_diseqc_write_to_port_group(struct dvb_v5_fe_parms *parms, struct diseqc_cmd *cmd,
  					     int high_band,
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index a9c8ec5..c0a763f 100644
+index 890892b..9222305 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -113,6 +113,8 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,

@@ -1,7 +1,7 @@
-From b990cd2fd8d3fcf6b7b499c7606e0567772ef395 Mon Sep 17 00:00:00 2001
+From 656f207ace3c3c322f6cc0c596ca63cb415f1ff9 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 28 Dec 2013 16:08:53 +0100
-Subject: [PATCH 05/26] libdvbv5: cleanup coding style
+Subject: [PATCH 05/27] libdvbv5: cleanup coding style
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -13,7 +13,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index aeace36..25fd620 100644
+index 2b7bf56..f141028 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -1359,6 +1359,6 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c

@@ -1,7 +1,7 @@
-From 6260677d48bb394d6e4a95fc7de8a86c540187e9 Mon Sep 17 00:00:00 2001
+From 7fa0956c1335cfe5715ebb2c4b73271f7ad5898e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:41:06 +0100
-Subject: [PATCH 18/26] libdvbv5: make dvb_desc_default_init and
+Subject: [PATCH 18/27] libdvbv5: make dvb_desc_default_init and
  dvb_desc_default_print private
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -14,7 +14,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  2 files changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index ae33fda..d5feb4f 100644
+index b869a14..1ea0957 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -65,14 +65,6 @@ struct dvb_desc {
@@ -55,7 +55,7 @@ index ae33fda..d5feb4f 100644
  
  typedef void (*dvb_desc_init_func) (struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc);
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 1f8bc11..825994b 100644
+index 9a798a6..2d7a24b 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -66,12 +66,12 @@ static void dvb_desc_init(uint8_t type, uint8_t length, struct dvb_desc *desc)

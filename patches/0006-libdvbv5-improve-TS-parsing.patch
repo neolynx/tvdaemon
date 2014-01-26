@@ -1,7 +1,7 @@
-From 27638da0e1114d1b65358fd7b59d6f9113e1044d Mon Sep 17 00:00:00 2001
+From e061116d6d20cfc6b8659e7115725a7d9613c53c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 28 Dec 2013 16:09:35 +0100
-Subject: [PATCH 06/26] libdvbv5: improve TS parsing
+Subject: [PATCH 06/27] libdvbv5: improve TS parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

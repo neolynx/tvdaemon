@@ -1,7 +1,7 @@
-From 5e5e3798595b0e12958f906e308f43d21f3c192e Mon Sep 17 00:00:00 2001
+From 9b2b3504fff76a295d66ac221b5df8719e0ba497 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:13:30 +0100
-Subject: [PATCH 13/26] libdvbv5: add parser for CAT
+Subject: [PATCH 13/27] libdvbv5: add parser for CAT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -94,7 +94,7 @@ index 8f89531..0abe42d 100644
  	descriptors/desc_language.c		\
  	descriptors/desc_network_name.c		\
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 6918959..87c0fe8 100644
+index 199f6cd..1dd1201 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -31,6 +31,7 @@

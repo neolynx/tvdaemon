@@ -1,7 +1,7 @@
-From 891b7dee682a16e6534a5e6bb833c8d95d985166 Mon Sep 17 00:00:00 2001
+From aee7cb1062f71eab56366fef5f223ffd97fded6e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:39:20 +0100
-Subject: [PATCH 17/26] libdvbv5: use DVB_DESC_HEADER macro in all descriptors
+Subject: [PATCH 17/27] libdvbv5: use DVB_DESC_HEADER macro in all descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -98,7 +98,7 @@ index 18df191..1136a84 100644
  	uint8_t caid_count;
  	uint16_t *caids;
 diff --git a/lib/include/libdvbv5/desc_cable_delivery.h b/lib/include/libdvbv5/desc_cable_delivery.h
-index c2bab5a..25d6ab2 100644
+index 7abe920..8f5355a 100644
 --- a/lib/include/libdvbv5/desc_cable_delivery.h
 +++ b/lib/include/libdvbv5/desc_cable_delivery.h
 @@ -23,13 +23,10 @@
@@ -118,7 +118,7 @@ index c2bab5a..25d6ab2 100644
  	uint32_t frequency;
  	union {
 diff --git a/lib/include/libdvbv5/desc_event_extended.h b/lib/include/libdvbv5/desc_event_extended.h
-index 03fb1f1..f816a2a 100644
+index 286f91d..b15e551 100644
 --- a/lib/include/libdvbv5/desc_event_extended.h
 +++ b/lib/include/libdvbv5/desc_event_extended.h
 @@ -22,13 +22,10 @@
@@ -138,7 +138,7 @@ index 03fb1f1..f816a2a 100644
  	union {
  		struct {
 diff --git a/lib/include/libdvbv5/desc_event_short.h b/lib/include/libdvbv5/desc_event_short.h
-index 521fbca..68c7f64 100644
+index b2c979a..836e1b6 100644
 --- a/lib/include/libdvbv5/desc_event_short.h
 +++ b/lib/include/libdvbv5/desc_event_short.h
 @@ -22,13 +22,10 @@
@@ -183,7 +183,7 @@ index 5921cba..c19ec70 100644
  	uint8_t extension_code;
  
 diff --git a/lib/include/libdvbv5/desc_frequency_list.h b/lib/include/libdvbv5/desc_frequency_list.h
-index 55723c7..ca155fa 100644
+index a138e56..7278971 100644
 --- a/lib/include/libdvbv5/desc_frequency_list.h
 +++ b/lib/include/libdvbv5/desc_frequency_list.h
 @@ -22,13 +22,10 @@
@@ -203,7 +203,7 @@ index 55723c7..ca155fa 100644
  	uint8_t frequencies;
  	uint32_t *frequency;
 diff --git a/lib/include/libdvbv5/desc_hierarchy.h b/lib/include/libdvbv5/desc_hierarchy.h
-index 9dd44c2..3b08d66 100644
+index 30bf082..fe8e772 100644
 --- a/lib/include/libdvbv5/desc_hierarchy.h
 +++ b/lib/include/libdvbv5/desc_hierarchy.h
 @@ -22,12 +22,10 @@
@@ -243,7 +243,7 @@ index 5bac178..ae23475 100644
  	unsigned num_freqs;
  
 diff --git a/lib/include/libdvbv5/desc_language.h b/lib/include/libdvbv5/desc_language.h
-index 44fe1a4..f8b9634 100644
+index 28738a3..0872bdd 100644
 --- a/lib/include/libdvbv5/desc_language.h
 +++ b/lib/include/libdvbv5/desc_language.h
 @@ -22,13 +22,10 @@
@@ -288,7 +288,7 @@ index bbccb81..28a6ac4 100644
  	struct dvb_desc_logical_channel_number *lcn;
  } __attribute__((packed));
 diff --git a/lib/include/libdvbv5/desc_network_name.h b/lib/include/libdvbv5/desc_network_name.h
-index 060b2e8..20e23a7 100644
+index 1ddc86b..6b6dcbc 100644
 --- a/lib/include/libdvbv5/desc_network_name.h
 +++ b/lib/include/libdvbv5/desc_network_name.h
 @@ -22,13 +22,10 @@
@@ -332,7 +332,7 @@ index c6c45f7..3f40e5f 100644
  	struct isdb_partial_reception_service_id *partial_reception;
  } __attribute__((packed));
 diff --git a/lib/include/libdvbv5/desc_sat.h b/lib/include/libdvbv5/desc_sat.h
-index 9e192c6..8f2b1a6 100644
+index cf6393f..391ab44 100644
 --- a/lib/include/libdvbv5/desc_sat.h
 +++ b/lib/include/libdvbv5/desc_sat.h
 @@ -22,13 +22,10 @@
@@ -352,7 +352,7 @@ index 9e192c6..8f2b1a6 100644
  	uint32_t frequency;
  	uint16_t orbit;
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
-index 8f269aa..dc26eac 100644
+index eea27ae..57964d3 100644
 --- a/lib/include/libdvbv5/desc_service.h
 +++ b/lib/include/libdvbv5/desc_service.h
 @@ -22,13 +22,10 @@
@@ -372,7 +372,7 @@ index 8f269aa..dc26eac 100644
  	uint8_t service_type;
  	char *name;
 diff --git a/lib/include/libdvbv5/desc_service_list.h b/lib/include/libdvbv5/desc_service_list.h
-index 8e7d73f..0dc34c0 100644
+index bffce0e..33b9b67 100644
 --- a/lib/include/libdvbv5/desc_service_list.h
 +++ b/lib/include/libdvbv5/desc_service_list.h
 @@ -22,8 +22,7 @@
@@ -444,7 +444,7 @@ index a51f897..ed0d7a3 100644
  	uint16_t system_id;
  	union {
 diff --git a/lib/include/libdvbv5/desc_terrestrial_delivery.h b/lib/include/libdvbv5/desc_terrestrial_delivery.h
-index 9404169..72e449e 100644
+index b6f039d..592305a 100644
 --- a/lib/include/libdvbv5/desc_terrestrial_delivery.h
 +++ b/lib/include/libdvbv5/desc_terrestrial_delivery.h
 @@ -24,13 +24,10 @@
@@ -489,7 +489,7 @@ index 523aa04..60eed5d 100644
  	char *ts_name, *ts_name_emph;
  	struct dvb_desc_ts_info_transmission_type transmission_type;
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 36bcc61..ae33fda 100644
+index f4d9288..b869a14 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -54,10 +54,13 @@ extern char *output_charset;

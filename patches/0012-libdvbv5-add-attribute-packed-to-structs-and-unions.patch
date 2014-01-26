@@ -1,7 +1,7 @@
-From 6cb4db4d88b5389e34652c0c00bef00688ed826b Mon Sep 17 00:00:00 2001
+From a3c1648823db69b25f92eb7cec56d6624d87e44e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:51:27 +0100
-Subject: [PATCH 12/26] libdvbv5: add attribute packed to structs and unions
+Subject: [PATCH 12/27] libdvbv5: add attribute packed to structs and unions
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -63,7 +63,7 @@ index 47113f2..1ff2341 100644
  	uint8_t number_elements;
  } __attribute__((packed));
 diff --git a/lib/include/libdvbv5/desc_cable_delivery.h b/lib/include/libdvbv5/desc_cable_delivery.h
-index 70f5a5b..c2bab5a 100644
+index b4aa037..7abe920 100644
 --- a/lib/include/libdvbv5/desc_cable_delivery.h
 +++ b/lib/include/libdvbv5/desc_cable_delivery.h
 @@ -37,16 +37,16 @@ struct dvb_desc_cable_delivery {
@@ -88,7 +88,7 @@ index 70f5a5b..c2bab5a 100644
  
  struct dvb_v5_fe_parms;
 diff --git a/lib/include/libdvbv5/desc_event_extended.h b/lib/include/libdvbv5/desc_event_extended.h
-index a543590..03fb1f1 100644
+index 306c2ab..286f91d 100644
 --- a/lib/include/libdvbv5/desc_event_extended.h
 +++ b/lib/include/libdvbv5/desc_event_extended.h
 @@ -34,9 +34,9 @@ struct dvb_desc_event_extended {
@@ -104,7 +104,7 @@ index a543590..03fb1f1 100644
  	unsigned char language[4];
  	char *text;
 diff --git a/lib/include/libdvbv5/desc_frequency_list.h b/lib/include/libdvbv5/desc_frequency_list.h
-index e6e7945..55723c7 100644
+index 26d078a..a138e56 100644
 --- a/lib/include/libdvbv5/desc_frequency_list.h
 +++ b/lib/include/libdvbv5/desc_frequency_list.h
 @@ -38,8 +38,8 @@ struct dvb_desc_frequency_list {
@@ -149,7 +149,7 @@ index ce1206c..bbccb81 100644
  
  struct dvb_desc_logical_channel {
 diff --git a/lib/include/libdvbv5/desc_sat.h b/lib/include/libdvbv5/desc_sat.h
-index bb55319..9e192c6 100644
+index d28841b..cf6393f 100644
 --- a/lib/include/libdvbv5/desc_sat.h
 +++ b/lib/include/libdvbv5/desc_sat.h
 @@ -42,8 +42,8 @@ struct dvb_desc_sat {
@@ -179,7 +179,7 @@ index a36f6c1..a51f897 100644
  	uint32_t *centre_frequency;
  	uint8_t frequency_loop_length;
 diff --git a/lib/include/libdvbv5/header.h b/lib/include/libdvbv5/header.h
-index c8cd466..39871c9 100644
+index 08f2ac8..54c4d61 100644
 --- a/lib/include/libdvbv5/header.h
 +++ b/lib/include/libdvbv5/header.h
 @@ -35,7 +35,7 @@ struct dvb_ts_packet_header {
@@ -245,7 +245,7 @@ index de4fc3f..a877f42 100644
  		uint8_t continuity_counter:4;
  		uint8_t adaptation_field:2;
 diff --git a/lib/include/libdvbv5/nit.h b/lib/include/libdvbv5/nit.h
-index 09fe596..48feecc 100644
+index a2c4950..af57931 100644
 --- a/lib/include/libdvbv5/nit.h
 +++ b/lib/include/libdvbv5/nit.h
 @@ -49,7 +49,7 @@ struct dvb_table_nit_transport {
@@ -267,7 +267,7 @@ index 09fe596..48feecc 100644
  	struct dvb_table_nit_transport *transport;
  } __attribute__((packed));
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
-index 899815c..2004836 100644
+index a3f9b30..4c1fd4d 100644
 --- a/lib/include/libdvbv5/pat.h
 +++ b/lib/include/libdvbv5/pat.h
 @@ -38,7 +38,7 @@ struct dvb_table_pat_program {
@@ -280,7 +280,7 @@ index 899815c..2004836 100644
  } __attribute__((packed));
  
 diff --git a/lib/include/libdvbv5/pmt.h b/lib/include/libdvbv5/pmt.h
-index e1d44cb..f1b7cef 100644
+index 59debf0..07b77ce 100644
 --- a/lib/include/libdvbv5/pmt.h
 +++ b/lib/include/libdvbv5/pmt.h
 @@ -64,16 +64,16 @@ struct dvb_table_pmt_stream {
@@ -327,7 +327,7 @@ index e1d44cb..f1b7cef 100644
  } __attribute__((packed));
  
 diff --git a/lib/include/libdvbv5/sdt.h b/lib/include/libdvbv5/sdt.h
-index 77ec5b1..17c51f2 100644
+index 3d5b1d7..2b3e8e0 100644
 --- a/lib/include/libdvbv5/sdt.h
 +++ b/lib/include/libdvbv5/sdt.h
 @@ -44,7 +44,7 @@ struct dvb_table_sdt_service {

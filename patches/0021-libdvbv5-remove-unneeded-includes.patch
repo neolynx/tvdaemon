@@ -1,7 +1,7 @@
-From d7699b0ddaeabcf6de379a8766f16e227d6b690f Mon Sep 17 00:00:00 2001
+From 22a05ef09e327f6085ee1e5b686ced409c20322b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 18:06:21 +0100
-Subject: [PATCH 21/26] libdvbv5: remove unneeded includes
+Subject: [PATCH 21/27] libdvbv5: remove unneeded includes
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -67,7 +67,7 @@ index c986ac7..3102d01 100644
  
  int dvb_desc_ca_identifier_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_cable_delivery.c b/lib/libdvbv5/descriptors/desc_cable_delivery.c
-index 5263a56..0b599e6 100644
+index 63583eb..2ba0ce6 100644
 --- a/lib/libdvbv5/descriptors/desc_cable_delivery.c
 +++ b/lib/libdvbv5/descriptors/desc_cable_delivery.c
 @@ -21,7 +21,6 @@
@@ -79,7 +79,7 @@ index 5263a56..0b599e6 100644
  
  int dvb_desc_cable_delivery_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_event_extended.c b/lib/libdvbv5/descriptors/desc_event_extended.c
-index 6689aa2..de20d06 100644
+index 9d7c6e3..346a71c 100644
 --- a/lib/libdvbv5/descriptors/desc_event_extended.c
 +++ b/lib/libdvbv5/descriptors/desc_event_extended.c
 @@ -20,7 +20,6 @@
@@ -91,7 +91,7 @@ index 6689aa2..de20d06 100644
  #include <parse_string.h>
  
 diff --git a/lib/libdvbv5/descriptors/desc_event_short.c b/lib/libdvbv5/descriptors/desc_event_short.c
-index a4fb2d0..c4f5efe 100644
+index d28e5f0..e9d7bd7 100644
 --- a/lib/libdvbv5/descriptors/desc_event_short.c
 +++ b/lib/libdvbv5/descriptors/desc_event_short.c
 @@ -20,7 +20,6 @@
@@ -115,7 +115,7 @@ index 91748bb..0aaeba8 100644
  #include <libdvbv5/desc_t2_delivery.h>
  #include <libdvbv5/dvb-fe.h>
 diff --git a/lib/libdvbv5/descriptors/desc_frequency_list.c b/lib/libdvbv5/descriptors/desc_frequency_list.c
-index e1183b9..1ee563c 100644
+index 2ed0272..2f2d5fc 100644
 --- a/lib/libdvbv5/descriptors/desc_frequency_list.c
 +++ b/lib/libdvbv5/descriptors/desc_frequency_list.c
 @@ -20,7 +20,6 @@
@@ -127,7 +127,7 @@ index e1183b9..1ee563c 100644
  
  int dvb_desc_frequency_list_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_hierarchy.c b/lib/libdvbv5/descriptors/desc_hierarchy.c
-index 0f7675c..a85c8da 100644
+index 0d8ac66..17b3699 100644
 --- a/lib/libdvbv5/descriptors/desc_hierarchy.c
 +++ b/lib/libdvbv5/descriptors/desc_hierarchy.c
 @@ -20,7 +20,6 @@
@@ -151,7 +151,7 @@ index 9ef5df4..336ca85 100644
  #include <libdvbv5/dvb-fe.h>
  
 diff --git a/lib/libdvbv5/descriptors/desc_language.c b/lib/libdvbv5/descriptors/desc_language.c
-index cfc91b7..5477ae7 100644
+index 91646c7..7504dd5 100644
 --- a/lib/libdvbv5/descriptors/desc_language.c
 +++ b/lib/libdvbv5/descriptors/desc_language.c
 @@ -20,7 +20,6 @@
@@ -175,7 +175,7 @@ index 6ebea03..7137c57 100644
  #include <libdvbv5/dvb-fe.h>
  #include <parse_string.h>
 diff --git a/lib/libdvbv5/descriptors/desc_network_name.c b/lib/libdvbv5/descriptors/desc_network_name.c
-index 03f98fa..95d8501 100644
+index 6a6cb09..0fa456f 100644
 --- a/lib/libdvbv5/descriptors/desc_network_name.c
 +++ b/lib/libdvbv5/descriptors/desc_network_name.c
 @@ -20,7 +20,6 @@
@@ -199,7 +199,7 @@ index 4d19f14..0e4d25c 100644
  #include <libdvbv5/dvb-fe.h>
  #include <parse_string.h>
 diff --git a/lib/libdvbv5/descriptors/desc_sat.c b/lib/libdvbv5/descriptors/desc_sat.c
-index b57ee22..c763e4e 100644
+index 3084435..5494799 100644
 --- a/lib/libdvbv5/descriptors/desc_sat.c
 +++ b/lib/libdvbv5/descriptors/desc_sat.c
 @@ -20,7 +20,6 @@
@@ -211,7 +211,7 @@ index b57ee22..c763e4e 100644
  
  int dvb_desc_sat_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_service.c b/lib/libdvbv5/descriptors/desc_service.c
-index fdcea02..f13a9e6 100644
+index c356b7f..7289219 100644
 --- a/lib/libdvbv5/descriptors/desc_service.c
 +++ b/lib/libdvbv5/descriptors/desc_service.c
 @@ -20,7 +20,6 @@
@@ -223,7 +223,7 @@ index fdcea02..f13a9e6 100644
  #include <parse_string.h>
  
 diff --git a/lib/libdvbv5/descriptors/desc_service_list.c b/lib/libdvbv5/descriptors/desc_service_list.c
-index a9a99e9..7334f01 100644
+index 58d4f2d..3e7e603 100644
 --- a/lib/libdvbv5/descriptors/desc_service_list.c
 +++ b/lib/libdvbv5/descriptors/desc_service_list.c
 @@ -20,7 +20,6 @@
@@ -247,7 +247,7 @@ index b7f2d0b..0d5cab6 100644
  #include <libdvbv5/desc_t2_delivery.h>
  #include <libdvbv5/dvb-fe.h>
 diff --git a/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
-index 0c568b0..7eb4b2b 100644
+index 3bf478c..8b6a92d 100644
 --- a/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
 +++ b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
 @@ -22,7 +22,6 @@

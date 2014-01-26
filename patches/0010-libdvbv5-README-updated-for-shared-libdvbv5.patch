@@ -1,7 +1,7 @@
-From 9eb671a11fda241130d5f0484ec92a95fe5337d0 Mon Sep 17 00:00:00 2001
+From 1053e6e0b715361391c1fc7c25d87d22a857aae6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 13:48:34 +0100
-Subject: [PATCH 10/26] libdvbv5: README updated for shared libdvbv5
+Subject: [PATCH 10/27] libdvbv5: README updated for shared libdvbv5
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

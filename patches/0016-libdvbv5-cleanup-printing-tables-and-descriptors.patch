@@ -1,7 +1,7 @@
-From f929a907c08012ab1604b5b36692196eb0f98ef7 Mon Sep 17 00:00:00 2001
+From ca2f9bec7f6f348fb168f8f120e9a7b7e54ede03 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 17:53:06 +0100
-Subject: [PATCH 16/26] libdvbv5: cleanup printing tables and descriptors
+Subject: [PATCH 16/27] libdvbv5: cleanup printing tables and descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -37,7 +37,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  23 files changed, 35 insertions(+), 41 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 0ad63ae..1f8bc11 100644
+index 5403e4b..9a798a6 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -76,7 +76,7 @@ void dvb_desc_default_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc
@@ -111,7 +111,7 @@ index 4740a01..95e0569 100644
  
  void dvb_desc_ca_identifier_free(struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_cable_delivery.c b/lib/libdvbv5/descriptors/desc_cable_delivery.c
-index 0aa7719..6a1c7bb 100644
+index 2cfc679..2214133 100644
 --- a/lib/libdvbv5/descriptors/desc_cable_delivery.c
 +++ b/lib/libdvbv5/descriptors/desc_cable_delivery.c
 @@ -41,7 +41,6 @@ void dvb_desc_cable_delivery_init(struct dvb_v5_fe_parms *parms, const uint8_t *
@@ -123,7 +123,7 @@ index 0aa7719..6a1c7bb 100644
  	dvb_log("|           frequency         %d", cable->frequency);
  	dvb_log("|           fec outer         %d", cable->fec_outer);
 diff --git a/lib/libdvbv5/descriptors/desc_event_extended.c b/lib/libdvbv5/descriptors/desc_event_extended.c
-index bb05951..0970484 100644
+index 51c7d2b..c3bfc33 100644
 --- a/lib/libdvbv5/descriptors/desc_event_extended.c
 +++ b/lib/libdvbv5/descriptors/desc_event_extended.c
 @@ -74,6 +74,6 @@ void dvb_desc_event_extended_free(struct dvb_desc *desc)
@@ -135,7 +135,7 @@ index bb05951..0970484 100644
  }
  
 diff --git a/lib/libdvbv5/descriptors/desc_event_short.c b/lib/libdvbv5/descriptors/desc_event_short.c
-index 1978beb..98809a5 100644
+index 8525579..81f7b36 100644
 --- a/lib/libdvbv5/descriptors/desc_event_short.c
 +++ b/lib/libdvbv5/descriptors/desc_event_short.c
 @@ -67,8 +67,8 @@ void dvb_desc_event_short_free(struct dvb_desc *desc)
@@ -164,7 +164,7 @@ index 400372f..0adf9c0 100644
  
  	if (dvb_ext_descriptors[type].print)
 diff --git a/lib/libdvbv5/descriptors/desc_frequency_list.c b/lib/libdvbv5/descriptors/desc_frequency_list.c
-index 447e412..28ba068 100644
+index 6cdc27d..df6ad79 100644
 --- a/lib/libdvbv5/descriptors/desc_frequency_list.c
 +++ b/lib/libdvbv5/descriptors/desc_frequency_list.c
 @@ -59,11 +59,11 @@ void dvb_desc_frequency_list_init(struct dvb_v5_fe_parms *parms, const uint8_t *
@@ -182,7 +182,7 @@ index 447e412..28ba068 100644
  }
  
 diff --git a/lib/libdvbv5/descriptors/desc_hierarchy.c b/lib/libdvbv5/descriptors/desc_hierarchy.c
-index a591ed8..346a9c0 100644
+index b6e0adc..cf14824 100644
 --- a/lib/libdvbv5/descriptors/desc_hierarchy.c
 +++ b/lib/libdvbv5/descriptors/desc_hierarchy.c
 @@ -35,7 +35,6 @@ void dvb_desc_hierarchy_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
@@ -206,7 +206,7 @@ index df04580..bd22456 100644
  		tm_name[d->transmission_mode], d->transmission_mode);
  	dvb_log("|           guard interval    %s (%d)",
 diff --git a/lib/libdvbv5/descriptors/desc_language.c b/lib/libdvbv5/descriptors/desc_language.c
-index 0b47371..264be55 100644
+index 3d234e1..dfdf40f 100644
 --- a/lib/libdvbv5/descriptors/desc_language.c
 +++ b/lib/libdvbv5/descriptors/desc_language.c
 @@ -37,6 +37,6 @@ void dvb_desc_language_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, s
@@ -218,7 +218,7 @@ index 0b47371..264be55 100644
  }
  
 diff --git a/lib/libdvbv5/descriptors/desc_service.c b/lib/libdvbv5/descriptors/desc_service.c
-index 2f1b6ef..1e38451 100644
+index e73bf78..c86de91 100644
 --- a/lib/libdvbv5/descriptors/desc_service.c
 +++ b/lib/libdvbv5/descriptors/desc_service.c
 @@ -30,7 +30,6 @@ void dvb_desc_service_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, st
@@ -254,7 +254,7 @@ index a563164..31c6974 100644
  	dvb_log("|           system_id                 %d", d->system_id);
  
 diff --git a/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
-index 745813f..889ded3 100644
+index d7ebe1d..2cb3a01 100644
 --- a/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
 +++ b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
 @@ -39,7 +39,6 @@ void dvb_desc_terrestrial_delivery_init(struct dvb_v5_fe_parms *parms, const uin
@@ -347,7 +347,7 @@ index 83e983a..c2154af 100644
  	dvb_log(" - adaptation_field   %d", ts->adaptation_field);
  	dvb_log(" - continuity_counter %d", ts->continuity_counter);
 diff --git a/lib/libdvbv5/descriptors/nit.c b/lib/libdvbv5/descriptors/nit.c
-index ca565dd..b351a6b 100644
+index 054a924..1c08f0e 100644
 --- a/lib/libdvbv5/descriptors/nit.c
 +++ b/lib/libdvbv5/descriptors/nit.c
 @@ -143,7 +143,7 @@ void dvb_table_nit_print(struct dvb_v5_fe_parms *parms, struct dvb_table_nit *ni
@@ -360,7 +360,7 @@ index ca565dd..b351a6b 100644
  		transport = transport->next;
  		transports++;
 diff --git a/lib/libdvbv5/descriptors/pat.c b/lib/libdvbv5/descriptors/pat.c
-index 67d267b..1d1c124 100644
+index 2000729..ac5b5d4 100644
 --- a/lib/libdvbv5/descriptors/pat.c
 +++ b/lib/libdvbv5/descriptors/pat.c
 @@ -94,10 +94,10 @@ void dvb_table_pat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pat *pa
@@ -377,7 +377,7 @@ index 67d267b..1d1c124 100644
  	}
  }
 diff --git a/lib/libdvbv5/descriptors/pmt.c b/lib/libdvbv5/descriptors/pmt.c
-index 5d42eb7..954a51f 100644
+index 2c23b16..eca47fc 100644
 --- a/lib/libdvbv5/descriptors/pmt.c
 +++ b/lib/libdvbv5/descriptors/pmt.c
 @@ -109,16 +109,17 @@ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_p
@@ -402,7 +402,7 @@ index 5d42eb7..954a51f 100644
  		dvb_print_descriptors(parms, stream->descriptor);
  		stream = stream->next;
 diff --git a/lib/libdvbv5/descriptors/sdt.c b/lib/libdvbv5/descriptors/sdt.c
-index c15512f..861a352 100644
+index 5e0c924..5c354f1 100644
 --- a/lib/libdvbv5/descriptors/sdt.c
 +++ b/lib/libdvbv5/descriptors/sdt.c
 @@ -73,7 +73,7 @@ void dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,

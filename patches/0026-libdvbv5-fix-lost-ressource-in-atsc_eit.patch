@@ -1,7 +1,7 @@
-From fa79656eb02ccf08e50d41df1cf20a6d37695a17 Mon Sep 17 00:00:00 2001
+From 8c35b9a2e024ea32f321bd35f27b04831b17240b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 13 Jan 2014 21:16:21 +0100
-Subject: [PATCH 26/26] libdvbv5: fix lost ressource in atsc_eit
+Subject: [PATCH 26/27] libdvbv5: fix lost ressource in atsc_eit
 
 if the title of the EIT event is longer than the available data,
 make sure the allocated buffer is not lost

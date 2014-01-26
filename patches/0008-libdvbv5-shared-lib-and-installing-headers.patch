@@ -1,7 +1,7 @@
-From 37f9880fe0c75508af42cdfcd4f14e17ea234a43 Mon Sep 17 00:00:00 2001
+From 71216e8da33080b13838848992fa2163a1cf7994 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 01:45:07 +0100
-Subject: [PATCH 08/26] libdvbv5: shared lib and installing headers
+Subject: [PATCH 08/27] libdvbv5: shared lib and installing headers
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -226,12 +226,12 @@ Signed-off-by: André Roth <neolynx@gmail.com>
 
 diff --git a/lib/include/descriptors.h b/lib/include/descriptors.h
 deleted file mode 100644
-index 6f89aeb..0000000
+index b482fa0..0000000
 --- a/lib/include/descriptors.h
 +++ /dev/null
 @@ -1,297 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
 - * This program is free software; you can redistribute it and/or
 - * modify it under the terms of the GNU General Public License
@@ -771,12 +771,12 @@ index 47113f2..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_cable_delivery.h b/lib/include/descriptors/desc_cable_delivery.h
 deleted file mode 100644
-index 70f5a5b..0000000
+index b4aa037..0000000
 --- a/lib/include/descriptors/desc_cable_delivery.h
 +++ /dev/null
 @@ -1,69 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -846,12 +846,12 @@ index 70f5a5b..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_event_extended.h b/lib/include/descriptors/desc_event_extended.h
 deleted file mode 100644
-index a543590..0000000
+index 306c2ab..0000000
 --- a/lib/include/descriptors/desc_event_extended.h
 +++ /dev/null
 @@ -1,60 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -912,12 +912,12 @@ index a543590..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_event_short.h b/lib/include/descriptors/desc_event_short.h
 deleted file mode 100644
-index 521fbca..0000000
+index b2c979a..0000000
 --- a/lib/include/descriptors/desc_event_short.h
 +++ /dev/null
 @@ -1,54 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1064,12 +1064,12 @@ index 5921cba..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_frequency_list.h b/lib/include/descriptors/desc_frequency_list.h
 deleted file mode 100644
-index e6e7945..0000000
+index 26d078a..0000000
 --- a/lib/include/descriptors/desc_frequency_list.h
 +++ /dev/null
 @@ -1,58 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1128,12 +1128,12 @@ index e6e7945..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_hierarchy.h b/lib/include/descriptors/desc_hierarchy.h
 deleted file mode 100644
-index 9dd44c2..0000000
+index 30bf082..0000000
 --- a/lib/include/descriptors/desc_hierarchy.h
 +++ /dev/null
 @@ -1,58 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1260,12 +1260,12 @@ index 4df30df..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_language.h b/lib/include/descriptors/desc_language.h
 deleted file mode 100644
-index 44fe1a4..0000000
+index 28738a3..0000000
 --- a/lib/include/descriptors/desc_language.h
 +++ /dev/null
 @@ -1,50 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1387,12 +1387,12 @@ index ce1206c..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_network_name.h b/lib/include/descriptors/desc_network_name.h
 deleted file mode 100644
-index 060b2e8..0000000
+index 1ddc86b..0000000
 --- a/lib/include/descriptors/desc_network_name.h
 +++ /dev/null
 @@ -1,51 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1507,12 +1507,12 @@ index c6c45f7..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_sat.h b/lib/include/descriptors/desc_sat.h
 deleted file mode 100644
-index bb55319..0000000
+index d28841b..0000000
 --- a/lib/include/descriptors/desc_sat.h
 +++ /dev/null
 @@ -1,67 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1580,12 +1580,12 @@ index bb55319..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_service.h b/lib/include/descriptors/desc_service.h
 deleted file mode 100644
-index 8f269aa..0000000
+index eea27ae..0000000
 --- a/lib/include/descriptors/desc_service.h
 +++ /dev/null
 @@ -1,54 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1640,12 +1640,12 @@ index 8f269aa..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_service_list.h b/lib/include/descriptors/desc_service_list.h
 deleted file mode 100644
-index 8e7d73f..0000000
+index bffce0e..0000000
 --- a/lib/include/descriptors/desc_service_list.h
 +++ /dev/null
 @@ -1,54 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -1858,12 +1858,12 @@ index a36f6c1..0000000
 -#endif
 diff --git a/lib/include/descriptors/desc_terrestrial_delivery.h b/lib/include/descriptors/desc_terrestrial_delivery.h
 deleted file mode 100644
-index 9404169..0000000
+index b6f039d..0000000
 --- a/lib/include/descriptors/desc_terrestrial_delivery.h
 +++ /dev/null
 @@ -1,70 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -2006,12 +2006,12 @@ index 523aa04..0000000
 -#endif
 diff --git a/lib/include/descriptors/eit.h b/lib/include/descriptors/eit.h
 deleted file mode 100644
-index ca08fd4..0000000
+index e0ecee3..0000000
 --- a/lib/include/descriptors/eit.h
 +++ /dev/null
 @@ -1,91 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -2103,12 +2103,12 @@ index ca08fd4..0000000
 -#endif
 diff --git a/lib/include/descriptors/header.h b/lib/include/descriptors/header.h
 deleted file mode 100644
-index c8cd466..0000000
+index 08f2ac8..0000000
 --- a/lib/include/descriptors/header.h
 +++ /dev/null
 @@ -1,81 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -2591,12 +2591,12 @@ index de4fc3f..0000000
 -#endif
 diff --git a/lib/include/descriptors/nit.h b/lib/include/descriptors/nit.h
 deleted file mode 100644
-index 4f19c5e..0000000
+index 52bdc6a..0000000
 --- a/lib/include/descriptors/nit.h
 +++ /dev/null
 @@ -1,103 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -2700,12 +2700,12 @@ index 4f19c5e..0000000
 -#endif
 diff --git a/lib/include/descriptors/pat.h b/lib/include/descriptors/pat.h
 deleted file mode 100644
-index edb58c5..0000000
+index 1f74741..0000000
 --- a/lib/include/descriptors/pat.h
 +++ /dev/null
 @@ -1,68 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -2774,12 +2774,12 @@ index edb58c5..0000000
 -#endif
 diff --git a/lib/include/descriptors/pmt.h b/lib/include/descriptors/pmt.h
 deleted file mode 100644
-index 79a6172..0000000
+index 0ca8210..0000000
 --- a/lib/include/descriptors/pmt.h
 +++ /dev/null
 @@ -1,119 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -2899,12 +2899,12 @@ index 79a6172..0000000
 -#endif
 diff --git a/lib/include/descriptors/sdt.h b/lib/include/descriptors/sdt.h
 deleted file mode 100644
-index 493b853..0000000
+index 9d27bd4..0000000
 --- a/lib/include/descriptors/sdt.h
 +++ /dev/null
 @@ -1,76 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -3114,7 +3114,7 @@ index f3dad6c..0000000
 -#endif
 diff --git a/lib/include/dvb-demux.h b/lib/include/dvb-demux.h
 deleted file mode 100644
-index 923016e..0000000
+index 51d2176..0000000
 --- a/lib/include/dvb-demux.h
 +++ /dev/null
 @@ -1,50 +0,0 @@
@@ -3143,7 +3143,7 @@ index 923016e..0000000
 - *	Originally licensed as GPLv2 or upper
 - *
 - * All subsequent changes are under GPLv2 only and are:
-- *	Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- *	Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
 - */
 -#ifndef _DVB_DEMUX_H
@@ -3170,12 +3170,12 @@ index 923016e..0000000
 -#endif
 diff --git a/lib/include/dvb-fe.h b/lib/include/dvb-fe.h
 deleted file mode 100644
-index 8cf2697..0000000
+index 4accd5e..0000000
 --- a/lib/include/dvb-fe.h
 +++ /dev/null
 @@ -1,231 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
 - * This program is free software; you can redistribute it and/or
 - * modify it under the terms of the GNU General Public License
@@ -3407,12 +3407,12 @@ index 8cf2697..0000000
 -#endif
 diff --git a/lib/include/dvb-file.h b/lib/include/dvb-file.h
 deleted file mode 100644
-index 5150195..0000000
+index 51b53cd..0000000
 --- a/lib/include/dvb-file.h
 +++ /dev/null
 @@ -1,161 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
 - * This program is free software; you can redistribute it and/or
 - * modify it under the terms of the GNU General Public License
@@ -4173,12 +4173,12 @@ index c56d77c..0000000
 -#endif /*_DVBFRONTEND_H_*/
 diff --git a/lib/include/dvb-log.h b/lib/include/dvb-log.h
 deleted file mode 100644
-index c085e82..0000000
+index a72adce..0000000
 --- a/lib/include/dvb-log.h
 +++ /dev/null
 @@ -1,49 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 - *
 - * This program is free software; you can redistribute it and/or
@@ -4228,12 +4228,12 @@ index c085e82..0000000
 -#endif
 diff --git a/lib/include/dvb-sat.h b/lib/include/dvb-sat.h
 deleted file mode 100644
-index 8b20c9e..0000000
+index a5d1698..0000000
 --- a/lib/include/dvb-sat.h
 +++ /dev/null
 @@ -1,57 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
 - * This program is free software; you can redistribute it and/or
 - * modify it under the terms of the GNU General Public License
@@ -4291,12 +4291,12 @@ index 8b20c9e..0000000
 -#endif // _LIBSAT_H
 diff --git a/lib/include/dvb-scan.h b/lib/include/dvb-scan.h
 deleted file mode 100644
-index 9aef531..0000000
+index 2a3a58f..0000000
 --- a/lib/include/dvb-scan.h
 +++ /dev/null
 @@ -1,113 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
 - * This program is free software; you can redistribute it and/or
 - * modify it under the terms of the GNU General Public License
@@ -4410,12 +4410,12 @@ index 9aef531..0000000
 -#endif
 diff --git a/lib/include/dvb-v5-std.h b/lib/include/dvb-v5-std.h
 deleted file mode 100644
-index 094ee12..0000000
+index e99cb9d..0000000
 --- a/lib/include/dvb-v5-std.h
 +++ /dev/null
 @@ -1,96 +0,0 @@
 -/*
-- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
 - * This program is free software; you can redistribute it and/or
 - * modify it under the terms of the GNU General Public License
@@ -4754,12 +4754,12 @@ index 0000000..47113f2
 +#endif
 diff --git a/lib/include/libdvbv5/desc_cable_delivery.h b/lib/include/libdvbv5/desc_cable_delivery.h
 new file mode 100644
-index 0000000..70f5a5b
+index 0000000..b4aa037
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_cable_delivery.h
 @@ -0,0 +1,69 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -4829,12 +4829,12 @@ index 0000000..70f5a5b
 +#endif
 diff --git a/lib/include/libdvbv5/desc_event_extended.h b/lib/include/libdvbv5/desc_event_extended.h
 new file mode 100644
-index 0000000..a543590
+index 0000000..306c2ab
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_event_extended.h
 @@ -0,0 +1,60 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -4895,12 +4895,12 @@ index 0000000..a543590
 +#endif
 diff --git a/lib/include/libdvbv5/desc_event_short.h b/lib/include/libdvbv5/desc_event_short.h
 new file mode 100644
-index 0000000..521fbca
+index 0000000..b2c979a
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_event_short.h
 @@ -0,0 +1,54 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5047,12 +5047,12 @@ index 0000000..5921cba
 +#endif
 diff --git a/lib/include/libdvbv5/desc_frequency_list.h b/lib/include/libdvbv5/desc_frequency_list.h
 new file mode 100644
-index 0000000..e6e7945
+index 0000000..26d078a
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_frequency_list.h
 @@ -0,0 +1,58 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5111,12 +5111,12 @@ index 0000000..e6e7945
 +#endif
 diff --git a/lib/include/libdvbv5/desc_hierarchy.h b/lib/include/libdvbv5/desc_hierarchy.h
 new file mode 100644
-index 0000000..9dd44c2
+index 0000000..30bf082
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_hierarchy.h
 @@ -0,0 +1,58 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5243,12 +5243,12 @@ index 0000000..4df30df
 +#endif
 diff --git a/lib/include/libdvbv5/desc_language.h b/lib/include/libdvbv5/desc_language.h
 new file mode 100644
-index 0000000..44fe1a4
+index 0000000..28738a3
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_language.h
 @@ -0,0 +1,50 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5370,12 +5370,12 @@ index 0000000..ce1206c
 +#endif
 diff --git a/lib/include/libdvbv5/desc_network_name.h b/lib/include/libdvbv5/desc_network_name.h
 new file mode 100644
-index 0000000..060b2e8
+index 0000000..1ddc86b
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_network_name.h
 @@ -0,0 +1,51 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5490,12 +5490,12 @@ index 0000000..c6c45f7
 +#endif
 diff --git a/lib/include/libdvbv5/desc_sat.h b/lib/include/libdvbv5/desc_sat.h
 new file mode 100644
-index 0000000..bb55319
+index 0000000..d28841b
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_sat.h
 @@ -0,0 +1,67 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5563,12 +5563,12 @@ index 0000000..bb55319
 +#endif
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
 new file mode 100644
-index 0000000..8f269aa
+index 0000000..eea27ae
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_service.h
 @@ -0,0 +1,54 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5623,12 +5623,12 @@ index 0000000..8f269aa
 +#endif
 diff --git a/lib/include/libdvbv5/desc_service_list.h b/lib/include/libdvbv5/desc_service_list.h
 new file mode 100644
-index 0000000..8e7d73f
+index 0000000..bffce0e
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_service_list.h
 @@ -0,0 +1,54 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5841,12 +5841,12 @@ index 0000000..a36f6c1
 +#endif
 diff --git a/lib/include/libdvbv5/desc_terrestrial_delivery.h b/lib/include/libdvbv5/desc_terrestrial_delivery.h
 new file mode 100644
-index 0000000..9404169
+index 0000000..b6f039d
 --- /dev/null
 +++ b/lib/include/libdvbv5/desc_terrestrial_delivery.h
 @@ -0,0 +1,70 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -5989,12 +5989,12 @@ index 0000000..523aa04
 +#endif
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
 new file mode 100644
-index 0000000..6f89aeb
+index 0000000..b482fa0
 --- /dev/null
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -0,0 +1,297 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -6292,7 +6292,7 @@ index 0000000..6f89aeb
 +#endif
 diff --git a/lib/include/libdvbv5/dvb-demux.h b/lib/include/libdvbv5/dvb-demux.h
 new file mode 100644
-index 0000000..923016e
+index 0000000..51d2176
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-demux.h
 @@ -0,0 +1,50 @@
@@ -6321,7 +6321,7 @@ index 0000000..923016e
 + *	Originally licensed as GPLv2 or upper
 + *
 + * All subsequent changes are under GPLv2 only and are:
-+ *	Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ *	Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
 + */
 +#ifndef _DVB_DEMUX_H
@@ -6348,12 +6348,12 @@ index 0000000..923016e
 +#endif
 diff --git a/lib/include/libdvbv5/dvb-fe.h b/lib/include/libdvbv5/dvb-fe.h
 new file mode 100644
-index 0000000..8cf2697
+index 0000000..4accd5e
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-fe.h
 @@ -0,0 +1,231 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -6585,12 +6585,12 @@ index 0000000..8cf2697
 +#endif
 diff --git a/lib/include/libdvbv5/dvb-file.h b/lib/include/libdvbv5/dvb-file.h
 new file mode 100644
-index 0000000..5150195
+index 0000000..51b53cd
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-file.h
 @@ -0,0 +1,161 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -7351,12 +7351,12 @@ index 0000000..c56d77c
 +#endif /*_DVBFRONTEND_H_*/
 diff --git a/lib/include/libdvbv5/dvb-log.h b/lib/include/libdvbv5/dvb-log.h
 new file mode 100644
-index 0000000..c085e82
+index 0000000..a72adce
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-log.h
 @@ -0,0 +1,49 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -7406,12 +7406,12 @@ index 0000000..c085e82
 +#endif
 diff --git a/lib/include/libdvbv5/dvb-sat.h b/lib/include/libdvbv5/dvb-sat.h
 new file mode 100644
-index 0000000..8b20c9e
+index 0000000..a5d1698
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-sat.h
 @@ -0,0 +1,57 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -7469,12 +7469,12 @@ index 0000000..8b20c9e
 +#endif // _LIBSAT_H
 diff --git a/lib/include/libdvbv5/dvb-scan.h b/lib/include/libdvbv5/dvb-scan.h
 new file mode 100644
-index 0000000..02bb471
+index 0000000..9c47c95
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-scan.h
 @@ -0,0 +1,113 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -7588,12 +7588,12 @@ index 0000000..02bb471
 +#endif
 diff --git a/lib/include/libdvbv5/dvb-v5-std.h b/lib/include/libdvbv5/dvb-v5-std.h
 new file mode 100644
-index 0000000..094ee12
+index 0000000..e99cb9d
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-v5-std.h
 @@ -0,0 +1,96 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -7690,12 +7690,12 @@ index 0000000..094ee12
 +
 diff --git a/lib/include/libdvbv5/eit.h b/lib/include/libdvbv5/eit.h
 new file mode 100644
-index 0000000..e62ef56
+index 0000000..62e070d
 --- /dev/null
 +++ b/lib/include/libdvbv5/eit.h
 @@ -0,0 +1,91 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -7787,12 +7787,12 @@ index 0000000..e62ef56
 +#endif
 diff --git a/lib/include/libdvbv5/header.h b/lib/include/libdvbv5/header.h
 new file mode 100644
-index 0000000..c8cd466
+index 0000000..08f2ac8
 --- /dev/null
 +++ b/lib/include/libdvbv5/header.h
 @@ -0,0 +1,81 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -8275,12 +8275,12 @@ index 0000000..de4fc3f
 +#endif
 diff --git a/lib/include/libdvbv5/nit.h b/lib/include/libdvbv5/nit.h
 new file mode 100644
-index 0000000..09fe596
+index 0000000..a2c4950
 --- /dev/null
 +++ b/lib/include/libdvbv5/nit.h
 @@ -0,0 +1,103 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -8384,12 +8384,12 @@ index 0000000..09fe596
 +#endif
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
 new file mode 100644
-index 0000000..899815c
+index 0000000..a3f9b30
 --- /dev/null
 +++ b/lib/include/libdvbv5/pat.h
 @@ -0,0 +1,68 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -8458,12 +8458,12 @@ index 0000000..899815c
 +#endif
 diff --git a/lib/include/libdvbv5/pmt.h b/lib/include/libdvbv5/pmt.h
 new file mode 100644
-index 0000000..e1d44cb
+index 0000000..59debf0
 --- /dev/null
 +++ b/lib/include/libdvbv5/pmt.h
 @@ -0,0 +1,119 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -8583,12 +8583,12 @@ index 0000000..e1d44cb
 +#endif
 diff --git a/lib/include/libdvbv5/sdt.h b/lib/include/libdvbv5/sdt.h
 new file mode 100644
-index 0000000..77ec5b1
+index 0000000..3d5b1d7
 --- /dev/null
 +++ b/lib/include/libdvbv5/sdt.h
 @@ -0,0 +1,76 @@
 +/*
-+ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab <mchehab@redhat.com>
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
 + *
 + * This program is free software; you can redistribute it and/or
@@ -8953,7 +8953,7 @@ index c6d2a42..ddf9ea1 100644
  libdvbv5_la_LIBADD = $(LTLIBICONV)
  
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 25fd620..17711c5 100644
+index f141028..1dad12c 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -22,39 +22,39 @@
@@ -9084,7 +9084,7 @@ index 5779ff0..5e3f461 100644
 \ No newline at end of file
 +}
 diff --git a/lib/libdvbv5/descriptors/desc_cable_delivery.c b/lib/libdvbv5/descriptors/desc_cable_delivery.c
-index 18c5774..0aa7719 100644
+index 3494b14..2cfc679 100644
 --- a/lib/libdvbv5/descriptors/desc_cable_delivery.c
 +++ b/lib/libdvbv5/descriptors/desc_cable_delivery.c
 @@ -20,9 +20,9 @@
@@ -9101,7 +9101,7 @@ index 18c5774..0aa7719 100644
  void dvb_desc_cable_delivery_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
  {
 diff --git a/lib/libdvbv5/descriptors/desc_event_extended.c b/lib/libdvbv5/descriptors/desc_event_extended.c
-index 0a92b3c..bb05951 100644
+index 89ad840..51c7d2b 100644
 --- a/lib/libdvbv5/descriptors/desc_event_extended.c
 +++ b/lib/libdvbv5/descriptors/desc_event_extended.c
 @@ -19,10 +19,10 @@
@@ -9120,7 +9120,7 @@ index 0a92b3c..bb05951 100644
  void dvb_desc_event_extended_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
  {
 diff --git a/lib/libdvbv5/descriptors/desc_event_short.c b/lib/libdvbv5/descriptors/desc_event_short.c
-index 26f42e9..1978beb 100644
+index d0fdaeb..8525579 100644
 --- a/lib/libdvbv5/descriptors/desc_event_short.c
 +++ b/lib/libdvbv5/descriptors/desc_event_short.c
 @@ -19,10 +19,10 @@
@@ -9158,7 +9158,7 @@ index 63715aa..400372f 100644
  const struct dvb_ext_descriptor dvb_ext_descriptors[] = {
  	[0 ...255 ] = {
 diff --git a/lib/libdvbv5/descriptors/desc_frequency_list.c b/lib/libdvbv5/descriptors/desc_frequency_list.c
-index 824b172..447e412 100644
+index de6f9fd..6cdc27d 100644
 --- a/lib/libdvbv5/descriptors/desc_frequency_list.c
 +++ b/lib/libdvbv5/descriptors/desc_frequency_list.c
 @@ -19,9 +19,9 @@
@@ -9175,7 +9175,7 @@ index 824b172..447e412 100644
  void dvb_desc_frequency_list_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
  {
 diff --git a/lib/libdvbv5/descriptors/desc_hierarchy.c b/lib/libdvbv5/descriptors/desc_hierarchy.c
-index 1de9806..a591ed8 100644
+index 37e6d6e..b6e0adc 100644
 --- a/lib/libdvbv5/descriptors/desc_hierarchy.c
 +++ b/lib/libdvbv5/descriptors/desc_hierarchy.c
 @@ -19,9 +19,9 @@
@@ -9216,7 +9216,7 @@ index 4257e79..df04580 100644
 \ No newline at end of file
 +}
 diff --git a/lib/libdvbv5/descriptors/desc_language.c b/lib/libdvbv5/descriptors/desc_language.c
-index d0c8acc..0b47371 100644
+index bd09872..3d234e1 100644
 --- a/lib/libdvbv5/descriptors/desc_language.c
 +++ b/lib/libdvbv5/descriptors/desc_language.c
 @@ -19,9 +19,9 @@
@@ -9252,7 +9252,7 @@ index 5eb5855..d3edbd9 100644
  void dvb_desc_logical_channel_init(struct dvb_v5_fe_parms *parms,
  			      const uint8_t *buf, struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_network_name.c b/lib/libdvbv5/descriptors/desc_network_name.c
-index 8b907d7..260856e 100644
+index c3ce3e4..b48cec1 100644
 --- a/lib/libdvbv5/descriptors/desc_network_name.c
 +++ b/lib/libdvbv5/descriptors/desc_network_name.c
 @@ -19,9 +19,9 @@
@@ -9288,7 +9288,7 @@ index 614a256..58d3fe6 100644
  void isdb_desc_partial_reception_init(struct dvb_v5_fe_parms *parms,
  			      const uint8_t *buf, struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/desc_sat.c b/lib/libdvbv5/descriptors/desc_sat.c
-index d45d130..b38ab5f 100644
+index 3a8bcf5..510de25 100644
 --- a/lib/libdvbv5/descriptors/desc_sat.c
 +++ b/lib/libdvbv5/descriptors/desc_sat.c
 @@ -19,9 +19,9 @@
@@ -9305,7 +9305,7 @@ index d45d130..b38ab5f 100644
  void dvb_desc_sat_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
  {
 diff --git a/lib/libdvbv5/descriptors/desc_service.c b/lib/libdvbv5/descriptors/desc_service.c
-index e4f8ec0..2f1b6ef 100644
+index 81d3d60..e73bf78 100644
 --- a/lib/libdvbv5/descriptors/desc_service.c
 +++ b/lib/libdvbv5/descriptors/desc_service.c
 @@ -19,10 +19,10 @@
@@ -9324,7 +9324,7 @@ index e4f8ec0..2f1b6ef 100644
  void dvb_desc_service_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
  {
 diff --git a/lib/libdvbv5/descriptors/desc_service_list.c b/lib/libdvbv5/descriptors/desc_service_list.c
-index 18aa313..b81f961 100644
+index 153918e..65ac6fa 100644
 --- a/lib/libdvbv5/descriptors/desc_service_list.c
 +++ b/lib/libdvbv5/descriptors/desc_service_list.c
 @@ -19,9 +19,9 @@
@@ -9375,7 +9375,7 @@ index ab4361d..a563164 100644
  void dvb_desc_t2_delivery_init(struct dvb_v5_fe_parms *parms,
  			       const uint8_t *buf,
 diff --git a/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
-index ce3fefe..745813f 100644
+index 9414a72..d7ebe1d 100644
 --- a/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
 +++ b/lib/libdvbv5/descriptors/desc_terrestrial_delivery.c
 @@ -21,9 +21,9 @@
@@ -9411,7 +9411,7 @@ index 0efb5f7..02fcb82 100644
  void dvb_desc_ts_info_init(struct dvb_v5_fe_parms *parms,
  			      const uint8_t *buf, struct dvb_desc *desc)
 diff --git a/lib/libdvbv5/descriptors/eit.c b/lib/libdvbv5/descriptors/eit.c
-index c2d01c3..e19d332 100644
+index 123dc91..1b64e29 100644
 --- a/lib/libdvbv5/descriptors/eit.c
 +++ b/lib/libdvbv5/descriptors/eit.c
 @@ -19,8 +19,8 @@
@@ -9426,7 +9426,7 @@ index c2d01c3..e19d332 100644
  void dvb_table_eit_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length)
  {
 diff --git a/lib/libdvbv5/descriptors/header.c b/lib/libdvbv5/descriptors/header.c
-index d371eec..66f8424 100644
+index 4453daf..192e8e1 100644
 --- a/lib/libdvbv5/descriptors/header.c
 +++ b/lib/libdvbv5/descriptors/header.c
 @@ -19,9 +19,9 @@
@@ -9509,7 +9509,7 @@ index b06cdf7..83e983a 100644
  ssize_t dvb_mpeg_ts_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length)
  {
 diff --git a/lib/libdvbv5/descriptors/nit.c b/lib/libdvbv5/descriptors/nit.c
-index f0f6d73..ca565dd 100644
+index 4e603eb..054a924 100644
 --- a/lib/libdvbv5/descriptors/nit.c
 +++ b/lib/libdvbv5/descriptors/nit.c
 @@ -19,8 +19,8 @@
@@ -9524,7 +9524,7 @@ index f0f6d73..ca565dd 100644
  void dvb_table_nit_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  			ssize_t buflen, uint8_t *table, ssize_t *table_length)
 diff --git a/lib/libdvbv5/descriptors/pat.c b/lib/libdvbv5/descriptors/pat.c
-index dec0eba..67d267b 100644
+index 180d30a..2000729 100644
 --- a/lib/libdvbv5/descriptors/pat.c
 +++ b/lib/libdvbv5/descriptors/pat.c
 @@ -19,9 +19,9 @@
@@ -9541,7 +9541,7 @@ index dec0eba..67d267b 100644
  void dvb_table_pat_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  			ssize_t buflen, uint8_t *table, ssize_t *table_length)
 diff --git a/lib/libdvbv5/descriptors/pmt.c b/lib/libdvbv5/descriptors/pmt.c
-index 308a910..3915414 100644
+index 1ba89ed..32ee7e4 100644
 --- a/lib/libdvbv5/descriptors/pmt.c
 +++ b/lib/libdvbv5/descriptors/pmt.c
 @@ -19,9 +19,9 @@
@@ -9558,7 +9558,7 @@ index 308a910..3915414 100644
  #include <string.h> /* memcpy */
  
 diff --git a/lib/libdvbv5/descriptors/sdt.c b/lib/libdvbv5/descriptors/sdt.c
-index 3650080..c15512f 100644
+index 30207b2..5e0c924 100644
 --- a/lib/libdvbv5/descriptors/sdt.c
 +++ b/lib/libdvbv5/descriptors/sdt.c
 @@ -19,8 +19,8 @@
@@ -9590,7 +9590,7 @@ index 493f184..5078991 100644
  void atsc_table_vct_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  			ssize_t buflen, uint8_t *table, ssize_t *table_length)
 diff --git a/lib/libdvbv5/dvb-demux.c b/lib/libdvbv5/dvb-demux.c
-index bd4331f..8421a49 100644
+index e867c35..df479ef 100644
 --- a/lib/libdvbv5/dvb-demux.c
 +++ b/lib/libdvbv5/dvb-demux.c
 @@ -38,7 +38,7 @@
@@ -9603,7 +9603,7 @@ index bd4331f..8421a49 100644
  int dvb_dmx_open(int adapter, int demux)
  {
 diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
-index 4672267..1072d29 100644
+index 41731e1..982e834 100644
 --- a/lib/libdvbv5/dvb-fe.c
 +++ b/lib/libdvbv5/dvb-fe.c
 @@ -19,8 +19,8 @@
@@ -9618,7 +9618,7 @@ index 4672267..1072d29 100644
  #include <inttypes.h>
  #include <math.h>
 diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
-index de19dc5..9a06411 100644
+index 34e3651..5ec34e7 100644
 --- a/lib/libdvbv5/dvb-file.c
 +++ b/lib/libdvbv5/dvb-file.c
 @@ -24,30 +24,30 @@
@@ -9674,10 +9674,10 @@ index de19dc5..9a06411 100644
 +#include <libdvbv5/desc_atsc_service_location.h>
 +#include <libdvbv5/desc_hierarchy.h>
  
- /*
-  * Generic parse function for all formats each channel is contained into
+ int store_entry_prop(struct dvb_entry *entry,
+ 		     uint32_t cmd, uint32_t value)
 diff --git a/lib/libdvbv5/dvb-legacy-channel-format.c b/lib/libdvbv5/dvb-legacy-channel-format.c
-index d05e3d2..a8a9ad0 100644
+index 90f08ad..9acf52c 100644
 --- a/lib/libdvbv5/dvb-legacy-channel-format.c
 +++ b/lib/libdvbv5/dvb-legacy-channel-format.c
 @@ -21,8 +21,8 @@
@@ -9692,7 +9692,7 @@ index d05e3d2..a8a9ad0 100644
  /*
   * Standard channel.conf format for DVB-T, DVB-C, DVB-S and ATSC
 diff --git a/lib/libdvbv5/dvb-log.c b/lib/libdvbv5/dvb-log.c
-index 2be056a..5bb7d44 100644
+index 137b188..14c8f73 100644
 --- a/lib/libdvbv5/dvb-log.c
 +++ b/lib/libdvbv5/dvb-log.c
 @@ -19,7 +19,7 @@
@@ -9705,7 +9705,7 @@ index 2be056a..5bb7d44 100644
  #include <stdio.h>
  #include <unistd.h>
 diff --git a/lib/libdvbv5/dvb-sat.c b/lib/libdvbv5/dvb-sat.c
-index ea3e2c1..9b3f73c 100644
+index 52dcffb..b087a36 100644
 --- a/lib/libdvbv5/dvb-sat.c
 +++ b/lib/libdvbv5/dvb-sat.c
 @@ -23,8 +23,8 @@
@@ -9720,7 +9720,7 @@ index ea3e2c1..9b3f73c 100644
  static const struct dvb_sat_lnb lnb[] = {
  	{
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index c0a763f..d37071a 100644
+index 9222305..ced358c 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -38,30 +38,30 @@
@@ -9777,7 +9777,7 @@ index c0a763f..d37071a 100644
  static int poll(struct dvb_v5_fe_parms *parms, int fd, unsigned int seconds)
  {
 diff --git a/lib/libdvbv5/dvb-v5-std.c b/lib/libdvbv5/dvb-v5-std.c
-index 574ae1e..3a5802a 100644
+index d193e83..0316d64 100644
 --- a/lib/libdvbv5/dvb-v5-std.c
 +++ b/lib/libdvbv5/dvb-v5-std.c
 @@ -21,7 +21,7 @@
@@ -9803,7 +9803,7 @@ index 1d920ce..bf2f550 100644
  	unsigned  idx;
  	char *name;
 diff --git a/lib/libdvbv5/dvb-zap-format.c b/lib/libdvbv5/dvb-zap-format.c
-index b087d76..49b73c8 100644
+index 5739e05..7b67cd6 100644
 --- a/lib/libdvbv5/dvb-zap-format.c
 +++ b/lib/libdvbv5/dvb-zap-format.c
 @@ -22,8 +22,8 @@
@@ -9840,7 +9840,7 @@ index 80e2642..df69700 100755
  EOF
  output_arrays ("fe_caps_name", \%fe_caps, "unsigned", 1, 0);
 diff --git a/lib/libdvbv5/parse_string.c b/lib/libdvbv5/parse_string.c
-index 5ae5a18..a5d2623 100644
+index ce3dc06..0e94cf2 100644
 --- a/lib/libdvbv5/parse_string.c
 +++ b/lib/libdvbv5/parse_string.c
 @@ -30,8 +30,8 @@
@@ -9855,7 +9855,7 @@ index 5ae5a18..a5d2623 100644
  #define CS_OPTIONS "//TRANSLIT"
  
 diff --git a/utils/dvb/dvb-fe-tool.c b/utils/dvb/dvb-fe-tool.c
-index 4c88afd..fe8ac6b 100644
+index 46612f2..d9d63af 100644
 --- a/utils/dvb/dvb-fe-tool.c
 +++ b/utils/dvb/dvb-fe-tool.c
 @@ -18,7 +18,7 @@
@@ -9868,7 +9868,7 @@ index 4c88afd..fe8ac6b 100644
  #include <argp.h>
  #include <stdlib.h>
 diff --git a/utils/dvb/dvb-format-convert.c b/utils/dvb/dvb-format-convert.c
-index cad0f59..98ab260 100644
+index 4f53295..ab3cd79 100644
 --- a/utils/dvb/dvb-format-convert.c
 +++ b/utils/dvb/dvb-format-convert.c
 @@ -31,9 +31,9 @@
@@ -9885,7 +9885,7 @@ index cad0f59..98ab260 100644
  #define PROGRAM_NAME	"dvb-format-convert"
  
 diff --git a/utils/dvb/dvbv5-scan.c b/utils/dvb/dvbv5-scan.c
-index d54d3c2..a23091b 100644
+index 8d3dbbe..63f030f 100644
 --- a/utils/dvb/dvbv5-scan.c
 +++ b/utils/dvb/dvbv5-scan.c
 @@ -33,10 +33,10 @@
@@ -9904,7 +9904,7 @@ index d54d3c2..a23091b 100644
  #define PROGRAM_NAME	"dvbv5-scan"
  #define DEFAULT_OUTPUT  "dvb_channel.conf"
 diff --git a/utils/dvb/dvbv5-zap.c b/utils/dvb/dvbv5-zap.c
-index 8399046..df5c1de 100644
+index 186fd1c..18895ee 100644
 --- a/utils/dvb/dvbv5-zap.c
 +++ b/utils/dvb/dvbv5-zap.c
 @@ -37,10 +37,10 @@

@@ -1,7 +1,7 @@
-From 969ff926f45fbf37caadc32c1793d5b82f3f2d7e Mon Sep 17 00:00:00 2001
+From b3f59e4a37a09a76395d0710b83d2509a4144882 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:00:24 +0100
-Subject: [PATCH 11/26] libdvbv5: fix dvb_parse_descriptors and make
+Subject: [PATCH 11/27] libdvbv5: fix dvb_parse_descriptors and make
  dvb_desc_init private
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -14,7 +14,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  2 files changed, 22 insertions(+), 24 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 6f89aeb..36bcc61 100644
+index b482fa0..f4d9288 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -78,8 +78,6 @@ void dvb_desc_default_print  (struct dvb_v5_fe_parms *parms, const struct dvb_de
@@ -27,7 +27,7 @@ index 6f89aeb..36bcc61 100644
  
  void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned char *buf, int len);
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 17711c5..6918959 100644
+index 1dad12c..199f6cd 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -56,12 +56,11 @@

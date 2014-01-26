@@ -1,7 +1,7 @@
-From 9f602c2c323fa70f1d1ec231bcd2d501f1ef711c Mon Sep 17 00:00:00 2001
+From 393aa15d74d0d5edaeb512e12acf91a46fb39711 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:43:02 +0100
-Subject: [PATCH 19/26] libdvbv5: use TABLE_INIT macro
+Subject: [PATCH 19/27] libdvbv5: use TABLE_INIT macro
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -13,7 +13,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  2 files changed, 14 insertions(+), 12 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index d5feb4f..bc80940 100644
+index 1ea0957..cc67a38 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -35,7 +35,7 @@
@@ -26,7 +26,7 @@ index d5feb4f..bc80940 100644
  struct dvb_table_init {
  	dvb_table_init_func init;
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 825994b..dd42d37 100644
+index 2d7a24b..ac63288 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -79,18 +79,20 @@ static void dvb_desc_default_print(struct dvb_v5_fe_parms *parms, const struct d
