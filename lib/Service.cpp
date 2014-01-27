@@ -42,7 +42,6 @@ Service::Service( Transponder &transponder, uint16_t service_id, uint16_t pid, i
   transponder(transponder),
   service_id(service_id),
   pid(pid),
-  scrambled(false),
   channel(NULL)
 {
 }
@@ -73,7 +72,6 @@ bool Service::SaveConfig( ConfigBase &config )
   config.WriteConfig( "Type",         type );
   config.WriteConfig( "Name",         name );
   config.WriteConfig( "Provider",     provider );
-  config.WriteConfig( "Scrambled",    scrambled );
   config.WriteConfig( "Channel",      channel ? channel->GetKey( ) : -1 );
 
   config.DeleteConfig( "Streams" );
@@ -108,7 +106,6 @@ bool Service::LoadConfig( ConfigBase &config )
   config.ReadConfig( "Name", t );
   SetName( t );
   config.ReadConfig( "Provider", provider );
-  config.ReadConfig( "Scrambled", scrambled );
   int channel_id;
   config.ReadConfig( "Channel", channel_id );
   if( channel_id != -1 )
@@ -184,7 +181,6 @@ void Service::json( json_object *entry ) const
   json_object_object_add( entry, "provider",       json_object_new_string( provider.c_str( )));
   json_object_object_add( entry, "id",             json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type",           json_object_new_int( type ));
-  json_object_object_add( entry, "scrambled",      json_object_new_int( scrambled ));
   json_object_object_add( entry, "channel",        json_object_new_int( channel ? 1 : 0 ));
   json_object_object_add( entry, "transponder_id", json_object_new_int( transponder.GetKey( )));
   json_object_object_add( entry, "source_id",      json_object_new_int( transponder.GetSource( ).GetKey( )));
@@ -334,4 +330,3 @@ int Service::Open( Frontend &frontend, int pid )
   }
   return fd;
 }
-

@@ -278,7 +278,6 @@ bool Transponder::UpdateService( uint16_t service_id, Service::Type type, std::s
   s->SetType( type );
   s->SetName( name );
   s->SetProvider( provider );
-  s->SetScrambled( scrambled );
   SetModified( );
   return true;
 }

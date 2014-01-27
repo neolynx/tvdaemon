@@ -61,8 +61,7 @@ class Service : public RPCObject
     void        SetName( std::string &name );
     std::string GetProvider( ) { return provider; }
     void        SetProvider( std::string provider ) { this->provider = provider; }
-    void        SetScrambled( bool scrambled ) { this->scrambled = scrambled; }
-    bool        GetScrambled( ) { return scrambled; }
+    bool        GetScrambled( ) { return !caids.empty(); }
     Channel    *GetChannel( ) { return channel; }
 
     void SetCA( uint16_t ca_id, uint16_t ca_pid );
@@ -95,7 +94,6 @@ class Service : public RPCObject
     Type type;
     Name name;
     std::string provider;
-    bool scrambled;
     Channel *channel;
 
     std::map<uint16_t, Stream *> streams;
