@@ -26,7 +26,8 @@
 #include "RPCObject.h"
 #include "Service.h"
 
-#include <map>
+#include <set>
+#include <utility>
 
 #include <libdvbv5/dvb-frontend.h>
 
@@ -66,12 +67,10 @@ class Transponder : public ConfigObject, public RPCObject
     uint32_t GetFrequency( ) const { return frequency; }
 
     bool UpdateProgram( uint16_t service_id, uint16_t pid );
-    bool UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider, bool scrambled );
+    bool UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider );
     bool UpdateStream( uint16_t pid, int id, int type );
 
     Service *CreateService( std::string  name );
-    //uint16_t GetTransportStreamID( ) { return TransportStreamID; }
-    //uint16_t GetVersionNumber( ) {  return VersionNumber; }
 
     int CountServices( ) const { return services.size( ); }
     const std::map<uint16_t, Service *> &GetServices( ) const { return services; };
@@ -82,7 +81,7 @@ class Transponder : public ConfigObject, public RPCObject
     void SetTSID( uint16_t TSID );
 
     void SetCA( uint16_t ca_id, uint16_t ca_pid );
-    void SetStreamCA( uint16_t service_id, uint16_t ca_id, uint16_t ca_pid );
+    void SetCA( uint16_t service_id, uint16_t ca_id, uint16_t ca_pid );
 
     uint16_t GetTSID( ) { return TSID; }
 
@@ -121,7 +120,7 @@ class Transponder : public ConfigObject, public RPCObject
 
     static const char *GetStateName( State state );
     bool HasChannels( ) const { return has_channels; }
-    bool HasChannels( bool b ) { has_channels = b; }
+    void HasChannels( bool b ) { has_channels = b; }
 
     // RPC
     void json( json_object *entry ) const;
@@ -130,7 +129,7 @@ class Transponder : public ConfigObject, public RPCObject
 
     bool Tune( Activity &act );
 
-    bool UpdateEPG( );
+    void UpdateEPG( );
     time_t LastEPGUpdate( ) const { return last_epg_update; }
     time_t LastEPGFailed( ) const { return last_epg_failed; }
     bool ReadEPG( const struct dvb_table_eit_event *event );
@@ -146,7 +145,7 @@ class Transponder : public ConfigObject, public RPCObject
 
     std::map<uint16_t, Service *> services;
 
-    std::map<uint16_t, uint16_t> caids;
+    std::set<std::pair<uint16_t, uint16_t> > caids;
 
     uint16_t TSID;
 

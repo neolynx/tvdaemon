@@ -25,7 +25,8 @@
 #include "RPCObject.h"
 
 #include <string>
-#include <map>
+#include <set>
+#include <utility>
 #include <stdint.h>
 
 #include "Stream.h"
@@ -61,7 +62,7 @@ class Service : public RPCObject
     void        SetName( std::string &name );
     std::string GetProvider( ) { return provider; }
     void        SetProvider( std::string provider ) { this->provider = provider; }
-    bool        GetScrambled( ) { return !caids.empty(); }
+    bool        GetScrambled( ) const { return !caids.empty(); }
     Channel    *GetChannel( ) { return channel; }
 
     void SetCA( uint16_t ca_id, uint16_t ca_pid );
@@ -98,7 +99,7 @@ class Service : public RPCObject
 
     std::map<uint16_t, Stream *> streams;
 
-    std::map<uint16_t, uint16_t> caids;
+    std::set<std::pair<uint16_t, uint16_t> > caids;
 };
 
 #endif

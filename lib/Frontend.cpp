@@ -62,7 +62,7 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
   , current_port(0)
   , state(State_New)
   , usecount( 0 )
-  , tune_timeout(5000)
+  , tune_timeout(2500)
   , up(true)
 {
   ports.push_back( new Port( *this, 0 ));

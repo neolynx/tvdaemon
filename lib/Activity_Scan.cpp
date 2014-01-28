@@ -117,7 +117,7 @@ bool Activity_Scan::Perform( )
           continue;
         }
 
-        transponder->UpdateService( ch->program_number, type, name, provider, ch->access_controlled );
+        transponder->UpdateService( ch->program_number, type, name, provider );
         services.push_back( ch->program_number );
       }
     }
@@ -178,7 +178,7 @@ bool Activity_Scan::Perform( )
         }
 
         frontend->Log( "  Service %5d: %s %-6s '%s'", service->service_id, service->free_CA_mode ? "§" : " ", Service::GetTypeName( type ), name );
-        transponder->UpdateService( service->service_id, type, name, provider, service->free_CA_mode );
+        transponder->UpdateService( service->service_id, type, name, provider );
         services.push_back( service->service_id );
       }
 
@@ -214,8 +214,7 @@ bool Activity_Scan::Perform( )
 
         dvb_desc_find( struct dvb_desc_ca, desc, pmt, conditional_access_descriptor )
         {
-          transponder->SetCA( desc->ca_id, desc->ca_pid );
-          transponder->SetStreamCA( program->service_id, desc->ca_id, desc->ca_pid );
+          transponder->SetCA( program->service_id, desc->ca_id, desc->ca_pid );
         }
 
         dvb_table_pmt_print( frontend->GetFE( ), pmt );

@@ -87,7 +87,7 @@ bool Service::SaveConfig( ConfigBase &config )
   config.DeleteConfig( "CA" );
   Setting &n2 = config.ConfigList( "CA" );
   ConfigBase c2( n2 );
-  for( std::map<uint16_t, uint16_t>::iterator it = caids.begin( ); it != caids.end( ); it++ )
+  for( std::set<std::pair<uint16_t, uint16_t> >::iterator it = caids.begin( ); it != caids.end( ); it++ )
   {
     Setting &n3 = c2.ConfigGroup( );
     ConfigBase c3( n3 );
@@ -134,7 +134,7 @@ bool Service::LoadConfig( ConfigBase &config )
     uint16_t ca_id, ca_pid;
     c3.ReadConfig( "CA_id", ca_id );
     c3.ReadConfig( "CA_pid", ca_pid );
-    caids[ca_id] = ca_pid;
+    SetCA(ca_id, ca_pid);
   }
 
   return true;
@@ -181,6 +181,7 @@ void Service::json( json_object *entry ) const
   json_object_object_add( entry, "provider",       json_object_new_string( provider.c_str( )));
   json_object_object_add( entry, "id",             json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type",           json_object_new_int( type ));
+  json_object_object_add( entry, "scrambled",      json_object_new_int( GetScrambled() ));
   json_object_object_add( entry, "channel",        json_object_new_int( channel ? 1 : 0 ));
   json_object_object_add( entry, "transponder_id", json_object_new_int( transponder.GetKey( )));
   json_object_object_add( entry, "source_id",      json_object_new_int( transponder.GetSource( ).GetKey( )));
@@ -297,12 +298,12 @@ bool Service::compare( const JSONObject &other, const int &p ) const
 
 void Service::SetCA( uint16_t ca_id, uint16_t ca_pid )
 {
-  caids[ca_id] = ca_pid;
+  caids.insert( std::pair<uint16_t, uint16_t>(ca_id, ca_pid) );
 }
 
 bool Service::GetECMPID( uint16_t &ca_pid, CAMClient **client )
 {
-  for( std::map<uint16_t, uint16_t>::iterator it = caids.begin( ); it != caids.end( ); it++ )
+  for( std::set<std::pair<uint16_t, uint16_t> >::iterator it = caids.begin( ); it != caids.end( ); it++ )
   {
     Log( "Trying CAID 0x%04x", it->first );
     CAMClient *c = CAMClientHandler::Instance( )->GetCAMClient( it->first );

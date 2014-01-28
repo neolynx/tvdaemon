@@ -106,7 +106,7 @@ bool CAMClient::Connect( )
 
   if( key.length( ) < sizeof(ts->camd.newcamd.hex_des_key) - 1 )
   {
-    LogError( "key length invalid: %d/%zd", key.length( ), sizeof(ts->camd.newcamd.hex_des_key) - 1 );
+    LogError( "key length invalid: %zu/%zu", key.length( ), sizeof(ts->camd.newcamd.hex_des_key) - 1u );
     return false;
   }
   strncpy(ts->camd.newcamd.hex_des_key, key.c_str( ), sizeof(ts->camd.newcamd.hex_des_key) - 1);

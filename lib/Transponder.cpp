@@ -195,7 +195,7 @@ bool Transponder::SaveConfig( )
   DeleteConfig( "CA" );
   Setting &n2 = ConfigList( "CA" );
   ConfigBase c2( n2 );
-  for( std::map<uint16_t, uint16_t>::iterator it = caids.begin( ); it != caids.end( ); it++ )
+  for( std::set<std::pair<uint16_t, uint16_t> >::iterator it = caids.begin( ); it != caids.end( ); it++ )
   {
     Setting &n3 = c2.ConfigGroup( );
     ConfigBase c3( n3 );
@@ -235,7 +235,7 @@ bool Transponder::LoadConfig( )
     uint16_t ca_id, ca_pid;
     c3.ReadConfig( "CA_id", ca_id );
     c3.ReadConfig( "CA_pid", ca_pid );
-    caids[ca_id] = ca_pid;
+    SetCA(ca_id, ca_pid);
   }
 
   return true;
@@ -264,7 +264,7 @@ bool Transponder::UpdateProgram( uint16_t service_id, uint16_t pid )
   return true;
 }
 
-bool Transponder::UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider, bool scrambled )
+bool Transponder::UpdateService( uint16_t service_id, Service::Type type, std::string name, std::string provider )
 {
   Service *s = NULL;
   std::map<uint16_t, Service *>::iterator it = services.find( service_id );
@@ -462,7 +462,7 @@ bool Transponder::Tune( Activity &act )
   return source.Tune( act );
 }
 
-bool Transponder::UpdateEPG( )
+void Transponder::UpdateEPG( )
 {
   last_epg_update = 0;
   last_epg_failed = 0;
@@ -486,13 +486,12 @@ bool Transponder::compare( const JSONObject &other, const int &p ) const
   return delsys < b.delsys;
 }
 
-
 void Transponder::SetCA( uint16_t ca_id, uint16_t ca_pid )
 {
-  caids[ca_id] = ca_pid;
+  caids.insert( std::pair<uint16_t, uint16_t>(ca_id, ca_pid) );
 }
 
-void Transponder::SetStreamCA( uint16_t service_id, uint16_t ca_id, uint16_t ca_pid )
+void Transponder::SetCA( uint16_t service_id, uint16_t ca_id, uint16_t ca_pid )
 {
   std::map<uint16_t, Service *>::iterator it = services.find( service_id );
   if( it == services.end( ))
