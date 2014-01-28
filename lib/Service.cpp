@@ -181,7 +181,7 @@ void Service::json( json_object *entry ) const
   json_object_object_add( entry, "provider",       json_object_new_string( provider.c_str( )));
   json_object_object_add( entry, "id",             json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type",           json_object_new_int( type ));
-  json_object_object_add( entry, "scrambled",      json_object_new_int( GetScrambled() ));
+  json_object_object_add( entry, "scrambled",      json_object_new_int( IsScrambled( ) ? 1 : 0 ));
   json_object_object_add( entry, "channel",        json_object_new_int( channel ? 1 : 0 ));
   json_object_object_add( entry, "transponder_id", json_object_new_int( transponder.GetKey( )));
   json_object_object_add( entry, "source_id",      json_object_new_int( transponder.GetSource( ).GetKey( )));

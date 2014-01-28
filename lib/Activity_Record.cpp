@@ -157,7 +157,7 @@ bool Activity_Record::Perform( )
   uint16_t ecm_pid = 0;
   int ecm_fd = -1;
   CAMClient *client = NULL;
-  if( service->GetScrambled( ))
+  if( service->IsScrambled( ))
   {
     frontend->Log( "Scrambled" );
     if( !service->GetECMPID( ecm_pid, &client ))
