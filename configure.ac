@@ -20,12 +20,12 @@ AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
-AC_CHECK_LIB([rt], [main])
-AC_CHECK_LIB([pthread], [pthread_create])
+AC_CHECK_LIB([rt], [main],, AC_MSG_ERROR(libc6-dev not found))
+AC_CHECK_LIB([pthread], [pthread_create],, AC_MSG_ERROR(libc6-dev not found))
 AC_CHECK_LIB([udev], [udev_new],, AC_MSG_ERROR(libudev-dev not found))
 AC_CHECK_LIB([ebml], [main],, AC_MSG_ERROR(libebml-dev not found))
 AC_CHECK_LIB([matroska], [main],, AC_MSG_ERROR(libmatroska-dev not found))
-
+AC_CHECK_LIB([avahi-client], [main],, AC_MSG_ERROR(libavahi-client-dev not found))
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h])
@@ -64,4 +64,3 @@ AC_CONFIG_FILES([Makefile
 #                 v4l-utils/lib/libdvbv5/Makefile
 #                 v4l-utils/lib/libdvbv5/libdvbv5.pc
 AC_OUTPUT
-
