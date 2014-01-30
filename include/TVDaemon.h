@@ -128,7 +128,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     Mutex frontends_mutex;
     Mutex channels_mutex;
 
-    Server_Avahi* srv_avahi;
+    Server_Avahi *srv_avahi;
 };
 
 #endif

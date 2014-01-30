@@ -123,4 +123,3 @@ void *Thread::run( void *ptr )
   pthread_exit( NULL );
   return NULL;
 }
-
