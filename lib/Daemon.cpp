@@ -54,11 +54,6 @@ Daemon::~Daemon( )
 bool Daemon::daemonize( const char *user, const char *pidfile, bool change_cwd )
 {
   pid_t pid, sid;
-  if( getppid() == 1 ) // already daemonized
-  {
-    LogError( "daemon cannot daemonize" );
-    return false;
-  }
   pid = fork();
   if( pid < 0 )
   {
