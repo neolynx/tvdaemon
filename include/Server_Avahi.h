@@ -3,7 +3,7 @@
  *
  *  Server_Avahi class
  *
- *  Copyright (C) 2014 André Roth
+ *  Copyright (C) 2014 Lars Schmohl
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,6 +22,10 @@
 #ifndef _Server_Avahi_
 #define _Server_Avahi_
 
+#include <avahi-client/client.h>
+#include <avahi-client/publish.h>
+#include <avahi-common/simple-watch.h>
+
 #include "Thread.h"
 
 class Server_Avahi : public Thread
@@ -32,8 +36,19 @@ public:
 
   bool Start( );
 
+  /* avahi functions */
+  void Client_Callback( AvahiClient *c, AvahiClientState state );
+  void Create_Services( AvahiClient *c );
+  void Modify_Callback( AvahiTimeout *e );
+  void Entry_Group_Callback( AvahiEntryGroup *g, AvahiEntryGroupState state );
+
 private:
+
   virtual void Run( );
+
+  AvahiClient *client;
+  AvahiEntryGroup *group;
+  AvahiSimplePoll *simple_poll;
 };
 
 #endif
