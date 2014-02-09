@@ -1,0 +1,64 @@
+From e6904e55641411f1cbc961cc4673d543d10665d6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 9 Feb 2014 15:10:13 +0100
+Subject: [PATCH 36/37] libdvbv5: allow standard terminal color for info logs
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/libdvbv5/dvb-log.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/lib/libdvbv5/dvb-log.c b/lib/libdvbv5/dvb-log.c
+index 14c8f73..55e7067 100644
+--- a/lib/libdvbv5/dvb-log.c
++++ b/lib/libdvbv5/dvb-log.c
+@@ -30,15 +30,15 @@ static const struct loglevel {
+ 	const char *color;
+ 	int fd;
+ } loglevels[9] = {
+-	{"EMERG   ", "\033[31m", STDERR_FILENO },
+-	{"ALERT   ", "\033[31m", STDERR_FILENO },
+-	{"CRITICAL", "\033[31m", STDERR_FILENO },
+-	{"ERROR   ", "\033[31m", STDERR_FILENO },
+-	{"WARNING ", "\033[33m", STDOUT_FILENO },
+-	{"NOTICE  ", "\033[36m", STDOUT_FILENO },
+-	{"INFO    ", "\033[36m", STDOUT_FILENO },
+-	{"DEBUG   ", "\033[32m", STDOUT_FILENO },
+-	{"",         "\033[0m",  STDOUT_FILENO },
++	{"EMERG    ", "\033[31m", STDERR_FILENO },
++	{"ALERT    ", "\033[31m", STDERR_FILENO },
++	{"CRITICAL ", "\033[31m", STDERR_FILENO },
++	{"ERROR    ", "\033[31m", STDERR_FILENO },
++	{"WARNING  ", "\033[33m", STDOUT_FILENO },
++	{"",          "\033[36m", STDOUT_FILENO }, /* NOTICE */
++	{"",          NULL,       STDOUT_FILENO }, /* INFO */
++	{"DEBUG    ", "\033[32m", STDOUT_FILENO },
++	{"",          "\033[0m",  STDOUT_FILENO }, /* reset*/
+ };
+ #define LOG_COLOROFF 8
+ 
+@@ -49,14 +49,14 @@ void dvb_default_log(int level, const char *fmt, ...)
+ 	va_list ap;
+ 	va_start(ap, fmt);
+ 	FILE *out = stdout;
+-	if(STDERR_FILENO == loglevels[level].fd)
++	if (STDERR_FILENO == loglevels[level].fd)
+ 		out = stderr;
+-	if(isatty(loglevels[level].fd))
++	if (loglevels[level].color && isatty(loglevels[level].fd))
+ 		fputs(loglevels[level].color, out);
+-	fprintf(out, "%s ", loglevels[level].name);
++	fprintf(out, "%s", loglevels[level].name);
+ 	vfprintf(out, fmt, ap);
+ 	fprintf(out, "\n");
+-	if(isatty(loglevels[level].fd))
++	if(loglevels[level].color && isatty(loglevels[level].fd))
+ 		fputs(loglevels[LOG_COLOROFF].color, out);
+ 	va_end(ap);
+ }
+-- 
+1.8.3.2
+

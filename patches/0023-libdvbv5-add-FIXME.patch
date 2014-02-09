@@ -1,7 +1,7 @@
 From 7f0040d5790c14f5a3129702ff345e8a53d44b07 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:44:27 +0100
-Subject: [PATCH 23/27] libdvbv5: add FIXME
+Subject: [PATCH 23/37] libdvbv5: add FIXME
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

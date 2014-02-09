@@ -1,7 +1,7 @@
 From 22a05ef09e327f6085ee1e5b686ced409c20322b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 18:06:21 +0100
-Subject: [PATCH 21/27] libdvbv5: remove unneeded includes
+Subject: [PATCH 21/37] libdvbv5: remove unneeded includes
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

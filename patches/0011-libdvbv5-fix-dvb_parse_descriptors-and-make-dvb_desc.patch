@@ -1,7 +1,7 @@
 From b3f59e4a37a09a76395d0710b83d2509a4144882 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:00:24 +0100
-Subject: [PATCH 11/27] libdvbv5: fix dvb_parse_descriptors and make
+Subject: [PATCH 11/37] libdvbv5: fix dvb_parse_descriptors and make
  dvb_desc_init private
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

@@ -1,0 +1,640 @@
+From ab56d831f707e64f850837cae855e0a8a6d01d82 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 9 Feb 2014 15:07:00 +0100
+Subject: [PATCH 32/37] fix descs and add generators
+
+---
+ lib/include/libdvbv5/desc_service.h              |   3 +
+ lib/include/libdvbv5/descriptors.h               |  11 +-
+ lib/include/libdvbv5/sdt.h                       |  10 +-
+ lib/libdvbv5/descriptors.c                       |  90 +++++++++++---
+ lib/libdvbv5/descriptors/atsc_eit.c              |   2 +-
+ lib/libdvbv5/descriptors/cat.c                   |   2 +-
+ lib/libdvbv5/descriptors/desc_service.c          |  24 +++-
+ lib/libdvbv5/descriptors/desc_service_location.c |   6 +-
+ lib/libdvbv5/descriptors/eit.c                   |   2 +-
+ lib/libdvbv5/descriptors/header.c                |  24 ++--
+ lib/libdvbv5/descriptors/mgt.c                   |   4 +-
+ lib/libdvbv5/descriptors/nit.c                   |   4 +-
+ lib/libdvbv5/descriptors/sdt.c                   | 143 +++++++++++++++++++----
+ lib/libdvbv5/descriptors/vct.c                   |   2 +-
+ 14 files changed, 261 insertions(+), 66 deletions(-)
+
+diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
+index da4423c..9089efa 100644
+--- a/lib/include/libdvbv5/desc_service.h
++++ b/lib/include/libdvbv5/desc_service.h
+@@ -42,6 +42,9 @@ extern "C" {
+ 
+ int dvb_desc_service_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc);
+ void dvb_desc_service_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
++struct dvb_desc *dvb_desc_service_create();
++void dvb_desc_service_calcsize(struct dvb_desc *desc);
++void dvb_desc_service_store(struct dvb_desc *desc, uint8_t *data);
+ void dvb_desc_service_free (struct dvb_desc *desc);
+ 
+ #ifdef __cplusplus
+diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
+index e81a05d..824fd3d 100644
+--- a/lib/include/libdvbv5/descriptors.h
++++ b/lib/include/libdvbv5/descriptors.h
+@@ -83,7 +83,10 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
+ 
+ int dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf, uint16_t section_length, struct dvb_desc **head_desc);
+ void dvb_free_descriptors(struct dvb_desc **list);
+-void dvb_print_descriptors(struct dvb_v5_fe_parms *parms, struct dvb_desc *desc);
++void dvb_desc_print(struct dvb_v5_fe_parms *parms, struct dvb_desc *desc);
++struct dvb_desc *dvb_desc_create(struct dvb_v5_fe_parms *parms, uint8_t type, struct dvb_desc **list);
++ssize_t dvb_desc_calcsize(struct dvb_v5_fe_parms *parms, struct dvb_desc *desc);
++int dvb_desc_store(struct dvb_desc *desc, uint8_t *data);
+ 
+ #ifdef __cplusplus
+ }
+@@ -94,12 +97,18 @@ struct dvb_v5_fe_parms;
+ typedef int (*dvb_desc_init_func) (struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc);
+ typedef void (*dvb_desc_print_func)(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
+ typedef void (*dvb_desc_free_func) (struct dvb_desc *desc);
++typedef void (*dvb_desc_calcsize_func) (struct dvb_desc *desc);
++typedef void (*dvb_desc_store_func) (struct dvb_desc *desc, uint8_t *data);
++typedef struct dvb_desc *(*dvb_desc_create_func) ();
+ 
+ struct dvb_descriptor {
+ 	const char *name;
+ 	dvb_desc_init_func init;
+ 	dvb_desc_print_func print;
+ 	dvb_desc_free_func free;
++	dvb_desc_calcsize_func calcsize;
++	dvb_desc_create_func create;
++	dvb_desc_store_func store;
+ 	ssize_t size;
+ };
+ 
+diff --git a/lib/include/libdvbv5/sdt.h b/lib/include/libdvbv5/sdt.h
+index 2b3e8e0..6bff0d1 100644
+--- a/lib/include/libdvbv5/sdt.h
++++ b/lib/include/libdvbv5/sdt.h
+@@ -30,7 +30,7 @@
+ 
+ #define DVB_TABLE_SDT      0x42
+ #define DVB_TABLE_SDT2     0x46
+-#define DVB_TABLE_SDT_PID  0x11
++#define DVB_TABLE_SDT_PID  0x0011
+ 
+ struct dvb_table_sdt_service {
+ 	uint16_t service_id;
+@@ -40,7 +40,7 @@ struct dvb_table_sdt_service {
+ 	union {
+ 		uint16_t bitfield;
+ 		struct {
+-			uint16_t section_length:12;
++			uint16_t desc_length:12;
+ 			uint16_t free_CA_mode:1;
+ 			uint16_t running_status:3;
+ 		} __attribute__((packed));
+@@ -65,9 +65,13 @@ struct dvb_v5_fe_parms;
+ extern "C" {
+ #endif
+ 
+-void dvb_table_sdt_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length);
++ssize_t dvb_table_sdt_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_lengh);
+ void dvb_table_sdt_free(struct dvb_table_sdt *sdt);
+ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sdt);
++struct dvb_table_sdt *dvb_table_sdt_create();
++struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt *sdt, uint16_t service_id);
++ssize_t dvb_table_sdt_calcsize(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sdt);
++ssize_t dvb_table_sdt_store(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sdt, uint8_t **data);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index 945ec4a..630ad8e 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -59,6 +59,27 @@
+ #include <libdvbv5/desc_ca_identifier.h>
+ #include <libdvbv5/desc_extension.h>
+ 
++struct dvb_desc *dvb_desc_create(struct dvb_v5_fe_parms *parms, uint8_t type, struct dvb_desc **list)
++{
++	dvb_desc_create_func create = dvb_descriptors[type].create;
++	struct dvb_desc **head = list;
++
++	if (!create) {
++		dvb_logerr("no generator found for %s (0x%02x)",
++				dvb_descriptors[type].name, type);
++		return NULL;
++	}
++
++	/* append to the list */
++	while (*head != NULL)
++		head = &(*head)->next;
++
++	 *head = create();
++	 (*head)->next = NULL;
++	 return *head;
++
++}
++
+ static void dvb_desc_init(uint8_t type, uint8_t length, struct dvb_desc *desc)
+ {
+ 	desc->type   = type;
+@@ -112,11 +133,16 @@ int dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ 		uint8_t desc_len  = ptr[1];
+ 		size_t size;
+ 
++		if (desc_type == 0xff ) {
++			dvb_logwarn("%s: stopping at invalid descriptor 0xff", __func__);
++			return 0;
++		}
++
+ 		ptr += 2; /* skip type and length */
+ 
+ 		if (ptr + desc_len > endbuf) {
+-			dvb_logerr("short read of %zd/%d bytes parsing descriptor %#02x",
+-				   endbuf - ptr, desc_len, desc_type);
++			dvb_logerr("%s: short read of %zd/%d bytes parsing descriptor %#02x",
++				   __func__, endbuf - ptr, desc_len, desc_type);
+ 			return -1;
+ 		}
+ 
+@@ -167,18 +193,48 @@ int dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ 	return 0;
+ }
+ 
+-void dvb_print_descriptors(struct dvb_v5_fe_parms *parms, struct dvb_desc *desc)
++void dvb_desc_print(struct dvb_v5_fe_parms *parms, struct dvb_desc *desc)
+ {
+ 	while (desc) {
+ 		dvb_desc_print_func print = dvb_descriptors[desc->type].print;
+ 		if (!print)
+ 			print = dvb_desc_default_print;
+-		dvb_log("|        0x%02x: %s", desc->type, dvb_descriptors[desc->type].name);
++		dvb_loginfo("|        0x%02x: %s", desc->type, dvb_descriptors[desc->type].name);
+ 		print(parms, desc);
+ 		desc = desc->next;
+ 	}
+ }
+ 
++ssize_t dvb_desc_calcsize(struct dvb_v5_fe_parms *parms, struct dvb_desc *desc)
++{
++	ssize_t size = 0;
++	while (desc) {
++		dvb_desc_calcsize_func calcsize = dvb_descriptors[desc->type].calcsize;
++		if (!calcsize) {
++			dvb_logerr("%s: no calcsize function defined for %s (0x%02x)",
++				__func__, dvb_descriptors[desc->type].name, desc->type);
++			return -1;
++		}
++		calcsize(desc);
++		size += desc->length;
++		desc = desc->next;
++	}
++	return size;
++}
++
++int dvb_desc_store(struct dvb_desc *desc, uint8_t *data)
++{
++	while (desc) {
++		dvb_desc_store_func store = dvb_descriptors[desc->type].store;
++		if (!store) {
++			return -1;
++		}
++		store(desc, data);
++		desc = desc->next;
++	}
++	return 0;
++}
++
+ void dvb_free_descriptors(struct dvb_desc **list)
+ {
+ 	struct dvb_desc *desc = *list;
+@@ -194,11 +250,14 @@ void dvb_free_descriptors(struct dvb_desc **list)
+ 
+ const struct dvb_descriptor dvb_descriptors[] = {
+ 	[0 ...255 ] = {
+-		.name  = "Unknown descriptor",
+-		.init  = NULL,
+-		.print = NULL,
+-		.free  = NULL,
+-		.size  = 0,
++		.name      = "Unknown descriptor",
++		.init      = NULL,
++		.print     = NULL,
++		.free      = NULL,
++		.calcsize  = NULL,
++		.create    = NULL,
++		.store     = NULL,
++		.size      = 0,
+ 	},
+ 	[video_stream_descriptor] = {
+ 		.name  = "video_stream_descriptor",
+@@ -502,11 +561,14 @@ const struct dvb_descriptor dvb_descriptors[] = {
+ 		.size  = 0,
+ 	},
+ 	[service_descriptor] = {
+-		.name  = "service_descriptor",
+-		.init  = dvb_desc_service_init,
+-		.print = dvb_desc_service_print,
+-		.free  = dvb_desc_service_free,
+-		.size  = sizeof(struct dvb_desc_service),
++		.name     = "service_descriptor",
++		.init     = dvb_desc_service_init,
++		.print    = dvb_desc_service_print,
++		.free     = dvb_desc_service_free,
++		.calcsize = dvb_desc_service_calcsize,
++		.create   = dvb_desc_service_create,
++		.store    = dvb_desc_service_store,
++		.size     = sizeof(struct dvb_desc_service),
+ 	},
+ 	[country_availability_descriptor] = {
+ 		.name  = "country_availability_descriptor",
+diff --git a/lib/libdvbv5/descriptors/atsc_eit.c b/lib/libdvbv5/descriptors/atsc_eit.c
+index c42c8e1..05c8ac3 100644
+--- a/lib/libdvbv5/descriptors/atsc_eit.c
++++ b/lib/libdvbv5/descriptors/atsc_eit.c
+@@ -144,7 +144,7 @@ void atsc_table_eit_print(struct dvb_v5_fe_parms *parms, struct atsc_table_eit *
+ 		dvb_log("|   Duration              %dh %dm %ds", event->duration / 3600, (event->duration % 3600) / 60, event->duration % 60);
+ 		dvb_log("|   ETM                   %d", event->etm);
+ 		dvb_log("|   title length          %d", event->title_length);
+-		dvb_print_descriptors(parms, event->descriptor);
++		dvb_desc_print(parms, event->descriptor);
+ 		event = event->next;
+ 		events++;
+ 	}
+diff --git a/lib/libdvbv5/descriptors/cat.c b/lib/libdvbv5/descriptors/cat.c
+index 82da031..74b83bc 100644
+--- a/lib/libdvbv5/descriptors/cat.c
++++ b/lib/libdvbv5/descriptors/cat.c
+@@ -61,6 +61,6 @@ void dvb_table_cat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_cat *ca
+ {
+ 	dvb_log("CAT");
+ 	dvb_table_header_print(parms, &cat->header);
+-	dvb_print_descriptors(parms, cat->descriptor);
++	dvb_desc_print(parms, cat->descriptor);
+ }
+ 
+diff --git a/lib/libdvbv5/descriptors/desc_service.c b/lib/libdvbv5/descriptors/desc_service.c
+index 7289219..83de5b9 100644
+--- a/lib/libdvbv5/descriptors/desc_service.c
++++ b/lib/libdvbv5/descriptors/desc_service.c
+@@ -62,8 +62,26 @@ void dvb_desc_service_free(struct dvb_desc *desc)
+ void dvb_desc_service_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
+ {
+ 	const struct dvb_desc_service *service = (const struct dvb_desc_service *) desc;
+-	dvb_log("|           service type  %d", service->service_type);
+-	dvb_log("|           name          '%s'", service->name);
+-	dvb_log("|           provider      '%s'", service->provider);
++	dvb_loginfo("|           service type  %d", service->service_type);
++	dvb_loginfo("|           name          '%s'", service->name);
++	dvb_loginfo("|           provider      '%s'", service->provider);
++}
++
++struct dvb_desc *dvb_desc_service_create()
++{
++	  struct dvb_desc_service *desc = calloc( sizeof( struct dvb_desc_service ), 1 );
++	  desc->type = service_descriptor;
++	  return (struct dvb_desc *) desc;
++}
++
++void dvb_desc_service_calcsize(struct dvb_desc *desc)
++{
++	desc->length = sizeof(struct dvb_desc);
++}
++
++void dvb_desc_service_store(struct dvb_desc *desc, uint8_t *data)
++{
++	data[0] = desc->type;
++	data[1] = desc->length;
+ }
+ 
+diff --git a/lib/libdvbv5/descriptors/desc_service_location.c b/lib/libdvbv5/descriptors/desc_service_location.c
+index fe5ed24..ac1b788 100644
+--- a/lib/libdvbv5/descriptors/desc_service_location.c
++++ b/lib/libdvbv5/descriptors/desc_service_location.c
+@@ -24,13 +24,13 @@
+ int dvb_desc_service_location_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
+ {
+ 	struct dvb_desc_service_location *service_location = (struct dvb_desc_service_location *) desc;
+-	uint8_t *endbuf = buf + desc->length;
++	uint8_t *endbuf = (uint8_t *) buf + desc->length;
+ 	ssize_t size = sizeof(struct dvb_desc_service_location) - sizeof(struct dvb_desc);
+ 	struct dvb_desc_service_location_element *element;
+ 	int i;
+ 
+ 	if (buf + size > endbuf) {
+-		dvb_logerr("%s: short read %d/%zd bytes", __FUNCTION__, endbuf - buf, size);
++		dvb_logerr("%s: short read %zd/%zd bytes", __FUNCTION__, endbuf - buf, size);
+ 		return -1;
+ 	}
+ 
+@@ -43,7 +43,7 @@ int dvb_desc_service_location_init(struct dvb_v5_fe_parms *parms, const uint8_t
+ 
+ 	size = service_location->elements * sizeof(struct dvb_desc_service_location_element);
+ 	if (buf + size > endbuf) {
+-		dvb_logerr("%s: short read %d/%zd bytes", __FUNCTION__, endbuf - buf, size);
++		dvb_logerr("%s: short read %zd/%zd bytes", __FUNCTION__, endbuf - buf, size);
+ 		return -2;
+ 	}
+ 	service_location->element = malloc(size);
+diff --git a/lib/libdvbv5/descriptors/eit.c b/lib/libdvbv5/descriptors/eit.c
+index 1b64e29..7b1142b 100644
+--- a/lib/libdvbv5/descriptors/eit.c
++++ b/lib/libdvbv5/descriptors/eit.c
+@@ -124,7 +124,7 @@ void dvb_table_eit_print(struct dvb_v5_fe_parms *parms, struct dvb_table_eit *ei
+ 		dvb_log("|   Duration              %dh %dm %ds", event->duration / 3600, (event->duration % 3600) / 60, event->duration % 60);
+ 		dvb_log("|   free CA mode          %d", event->free_CA_mode);
+ 		dvb_log("|   running status        %d: %s", event->running_status, dvb_eit_running_status_name[event->running_status] );
+-		dvb_print_descriptors(parms, event->descriptor);
++		dvb_desc_print(parms, event->descriptor);
+ 		event = event->next;
+ 		events++;
+ 	}
+diff --git a/lib/libdvbv5/descriptors/header.c b/lib/libdvbv5/descriptors/header.c
+index 192e8e1..5febb09 100644
+--- a/lib/libdvbv5/descriptors/header.c
++++ b/lib/libdvbv5/descriptors/header.c
+@@ -32,17 +32,17 @@ int dvb_table_header_init(struct dvb_table_header *t)
+ 
+ void dvb_table_header_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_header *t)
+ {
+-	dvb_log("| table_id       %d", t->table_id);
+-	dvb_log("| section_length %d", t->section_length);
+-	dvb_log("| zero           %d", t->zero);
+-	dvb_log("| one            %d", t->one);
+-	dvb_log("| zero2          %d", t->zero2);
+-	dvb_log("| syntax         %d", t->syntax);
+-	dvb_log("| id             %d", t->id);
+-	dvb_log("| current_next   %d", t->current_next);
+-	dvb_log("| version        %d", t->version);
+-	dvb_log("| one2           %d", t->one2);
+-	dvb_log("| section_id     %d", t->section_id);
+-	dvb_log("| last_section   %d", t->last_section);
++	dvb_loginfo("| table_id    0x%02x", t->table_id);
++	dvb_loginfo("| length         %d", t->section_length);
++	dvb_loginfo("| zero           %d", t->zero);
++	dvb_loginfo("| one            %d", t->one);
++	dvb_loginfo("| zero2          %d", t->zero2);
++	dvb_loginfo("| syntax         %d", t->syntax);
++	dvb_loginfo("| id             %d", t->id);
++	dvb_loginfo("| current_next   %d", t->current_next);
++	dvb_loginfo("| version        %d", t->version);
++	dvb_loginfo("| one2           %d", t->one2);
++	dvb_loginfo("| section_id     %d", t->section_id);
++	dvb_loginfo("| last_section   %d", t->last_section);
+ }
+ 
+diff --git a/lib/libdvbv5/descriptors/mgt.c b/lib/libdvbv5/descriptors/mgt.c
+index ba57c84..9dec561 100644
+--- a/lib/libdvbv5/descriptors/mgt.c
++++ b/lib/libdvbv5/descriptors/mgt.c
+@@ -85,7 +85,7 @@ void atsc_table_mgt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssiz
+ 		if(last)
+ 			last->next = table;
+ 
+-		/* get the descriptors for each table */
++		/* parse the descriptors */
+ 		size = table->desc_length;
+ 		if (p + size > endbuf) {
+ 			dvb_logerr("%s: short read %zd/%zd bytes", __func__,
+@@ -131,7 +131,7 @@ void atsc_table_mgt_print(struct dvb_v5_fe_parms *parms, struct atsc_table_mgt *
+                 dvb_log("|  size         %d", table->size);
+                 dvb_log("|  one3         %d", table->one3);
+                 dvb_log("|  desc_length  %d", table->desc_length);
+-		dvb_print_descriptors(parms, table->descriptor);
++		dvb_desc_print(parms, table->descriptor);
+ 		table = table->next;
+ 		tables++;
+ 	}
+diff --git a/lib/libdvbv5/descriptors/nit.c b/lib/libdvbv5/descriptors/nit.c
+index 1c08f0e..94a5c59 100644
+--- a/lib/libdvbv5/descriptors/nit.c
++++ b/lib/libdvbv5/descriptors/nit.c
+@@ -139,12 +139,12 @@ void dvb_table_nit_print(struct dvb_v5_fe_parms *parms, struct dvb_table_nit *ni
+ 	dvb_log("NIT");
+ 	dvb_table_header_print(parms, &nit->header);
+ 	dvb_log("| desc_length   %d", nit->desc_length);
+-	dvb_print_descriptors(parms, nit->descriptor);
++	dvb_desc_print(parms, nit->descriptor);
+ 	const struct dvb_table_nit_transport *transport = nit->transport;
+ 	uint16_t transports = 0;
+ 	while(transport) {
+ 		dvb_log("|- transport %04x network %04x", transport->transport_id, transport->network_id);
+-		dvb_print_descriptors(parms, transport->descriptor);
++		dvb_desc_print(parms, transport->descriptor);
+ 		transport = transport->next;
+ 		transports++;
+ 	}
+diff --git a/lib/libdvbv5/descriptors/sdt.c b/lib/libdvbv5/descriptors/sdt.c
+index 5c354f1..bc53403 100644
+--- a/lib/libdvbv5/descriptors/sdt.c
++++ b/lib/libdvbv5/descriptors/sdt.c
+@@ -21,8 +21,9 @@
+ 
+ #include <libdvbv5/sdt.h>
+ #include <libdvbv5/dvb-fe.h>
++#include <libdvbv5/mpeg_ts.h>
+ 
+-void dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
++ssize_t dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ 			ssize_t buflen, uint8_t *table, ssize_t *table_length)
+ {
+ 	const uint8_t *p = buf, *endbuf = buf + buflen - 4;
+@@ -30,18 +31,23 @@ void dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ 	struct dvb_table_sdt_service **head = &sdt->service;
+ 	size_t size = offsetof(struct dvb_table_sdt, service);
+ 
++	if (buf[0] != DVB_TABLE_SDT && buf[0] != DVB_TABLE_SDT2) {
++		dvb_logerr("%s: invalid marker 0x%02x, sould be 0x%02x or 0x%02x", __func__, buf[0], DVB_TABLE_SDT, DVB_TABLE_SDT2);
++		*table_length = 0;
++		return -1;
++	}
++
+ 	if (*table_length > 0) {
+ 		/* find end of curent list */
+ 		while (*head != NULL)
+ 			head = &(*head)->next;
+ 	} else {
+ 		if (p + size > endbuf) {
+-			dvb_logerr("SDT table was truncated. Need %zu bytes, but has only %zu.",
+-					size, buflen);
+-			return;
++			dvb_logerr("%s: short read %zd/%zd bytes", __func__,
++				   size, endbuf - p);
++			return -1;
+ 		}
+ 		memcpy(sdt, p, size);
+-		*table_length = sizeof(struct dvb_table_sdt);
+ 
+ 		bswap16(sdt->network_id);
+ 
+@@ -66,21 +72,30 @@ void dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ 		*head = service;
+ 		head = &(*head)->next;
+ 
+-		/* get the descriptors for each program */
+-		dvb_parse_descriptors(parms, p, service->section_length,
++		/* parse the descriptors */
++		size = service->desc_length;
++		if (p + size > endbuf) {
++			dvb_logwarn("%s: decsriptors short read %zd/%zd bytes", __func__,
++				   size, endbuf - p);
++			size = endbuf - p;
++		}
++		dvb_parse_descriptors(parms, p, size,
+ 				      &service->descriptor);
+ 
+-		p += service->section_length;
++		p += size;
+ 	}
+ 	if (endbuf - p)
+-		dvb_logerr("SDT table has %zu spurious bytes at the end.",
+-			   endbuf - p);
++		dvb_logwarn("%s: %zu spurious bytes at the end",
++			   __func__, endbuf - p);
++
++	*table_length = p - buf;
++	return p - buf;
+ }
+ 
+ void dvb_table_sdt_free(struct dvb_table_sdt *sdt)
+ {
+ 	struct dvb_table_sdt_service *service = sdt->service;
+-	while(service) {
++	while (service) {
+ 		dvb_free_descriptors((struct dvb_desc **) &service->descriptor);
+ 		struct dvb_table_sdt_service *tmp = service;
+ 		service = service->next;
+@@ -91,22 +106,106 @@ void dvb_table_sdt_free(struct dvb_table_sdt *sdt)
+ 
+ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sdt)
+ {
+-	dvb_log("SDT");
++	dvb_loginfo("SDT");
+ 	dvb_table_header_print(parms, &sdt->header);
+-	dvb_log("|- network_id         %d", sdt->network_id);
+-	dvb_log("|\\");
++	dvb_loginfo("| network_id     %d", sdt->network_id);
++	dvb_loginfo("| reserved       %d", sdt->reserved);
++	dvb_loginfo("|\\");
+ 	const struct dvb_table_sdt_service *service = sdt->service;
+ 	uint16_t services = 0;
+-	while(service) {
+-		dvb_log("|- service 0x%04x", service->service_id);
+-		dvb_log("|   EIT schedule          %d", service->EIT_schedule);
+-		dvb_log("|   EIT present following %d", service->EIT_present_following);
+-		dvb_log("|   free CA mode          %d", service->free_CA_mode);
+-		dvb_log("|   running status        %d", service->running_status);
+-		dvb_print_descriptors(parms, service->descriptor);
++	while (service) {
++		dvb_loginfo("|- service 0x%04x", service->service_id);
++		dvb_loginfo("|   EIT schedule          %d", service->EIT_schedule);
++		dvb_loginfo("|   EIT present following %d", service->EIT_present_following);
++		dvb_loginfo("|   free CA mode          %d", service->free_CA_mode);
++		dvb_loginfo("|   running status        %d", service->running_status);
++		dvb_loginfo("|   descriptor length     %d", service->desc_length);
++		dvb_desc_print(parms, service->descriptor);
+ 		service = service->next;
+ 		services++;
+ 	}
+-	dvb_log("|_  %d services", services);
++	dvb_loginfo("|_  %d services", services);
+ }
+ 
++struct dvb_table_sdt *dvb_table_sdt_create()
++{
++	struct dvb_table_sdt *sdt = calloc( sizeof( struct dvb_table_sdt ), 1 );
++	sdt->header.table_id = DVB_TABLE_SDT;
++	sdt->header.one = 3;
++	sdt->header.one2 = 3;
++	return sdt;
++}
++
++struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt *sdt, uint16_t service_id)
++{
++	struct dvb_table_sdt_service **head = &sdt->service;
++
++	/* append to the list */
++	while (*head != NULL)
++		head = &(*head)->next;
++	*head = calloc( sizeof( struct dvb_table_sdt_service ), 1 );
++	(*head)->service_id = service_id;
++	return *head;
++}
++
++ssize_t dvb_table_sdt_store(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sdt, uint8_t **data)
++{
++	ssize_t size_total = offsetof(struct dvb_table_sdt, service);
++	struct dvb_table_sdt_service *service = sdt->service;
++
++	*data = NULL;
++	while (service) {
++		ssize_t desc_size;
++
++		size_total += offsetof(struct dvb_table_sdt_service, descriptor);
++		desc_size = dvb_desc_calcsize(parms, service->descriptor);
++		if (desc_size < 0)
++			return -1;
++		service->desc_length = desc_size;
++		size_total += desc_size;
++		service = service->next;
++	}
++
++	int mpeg_headers = (size_total / 183) + 1;
++	dvb_loginfo( "need %d mpeg headers", mpeg_headers);
++	size_total += mpeg_headers * 5;
++
++	dvb_loginfo( "allocating %zd bytes", size_total);
++	*data = malloc( size_total );
++	uint8_t *p = *data;
++
++	sdt->header.section_length = size_total;
++	bswap16(sdt->header.bitfield);
++
++	bswap16(sdt->network_id);
++
++	ssize_t size = 5;
++	struct dvb_mpeg_ts *ts = (struct dvb_mpeg_ts *) *data;
++	ts->sync_byte = DVB_MPEG_TS;
++	ts->pid = DVB_TABLE_SDT_PID;
++	ts->payload_start = 1;
++	ts->payload = 1;
++	bswap16(ts->bitfield);
++	p += size;
++
++	size = offsetof(struct dvb_table_sdt, service);
++	memcpy(p, sdt, size);
++	p += size;
++
++	service = sdt->service;
++	while (service) {
++		size = offsetof(struct dvb_table_sdt_service, descriptor);
++
++		bswap16(service->service_id);
++		bswap16(service->bitfield);
++
++		memcpy(p, service, size);
++		p += size;
++
++		p += dvb_desc_store(service->descriptor, p);
++
++		service = service->next;
++	}
++
++	return size_total;
++}
+diff --git a/lib/libdvbv5/descriptors/vct.c b/lib/libdvbv5/descriptors/vct.c
+index 5078991..8d7420b 100644
+--- a/lib/libdvbv5/descriptors/vct.c
++++ b/lib/libdvbv5/descriptors/vct.c
+@@ -167,7 +167,7 @@ void atsc_table_vct_print(struct dvb_v5_fe_parms *parms, struct atsc_table_vct *
+ 		dvb_log("|   service type          %d", channel->service_type);
+ 		dvb_log("|   source id            %d", channel->source_id);
+ 
+-		dvb_print_descriptors(parms, channel->descriptor);
++		dvb_desc_print(parms, channel->descriptor);
+ 		channel = channel->next;
+ 		channels++;
+ 	}
+-- 
+1.8.3.2
+

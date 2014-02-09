@@ -1,7 +1,7 @@
 From 2c4a5810844db7d597d7f985e878d4d5f563d2bc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:40:38 +0100
-Subject: [PATCH 02/27] libdvbv5: fix reading multisection tables
+Subject: [PATCH 02/37] libdvbv5: fix reading multisection tables
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

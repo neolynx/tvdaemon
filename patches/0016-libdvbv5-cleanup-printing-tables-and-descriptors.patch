@@ -1,7 +1,7 @@
 From ca2f9bec7f6f348fb168f8f120e9a7b7e54ede03 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 17:53:06 +0100
-Subject: [PATCH 16/27] libdvbv5: cleanup printing tables and descriptors
+Subject: [PATCH 16/37] libdvbv5: cleanup printing tables and descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

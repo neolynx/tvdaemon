@@ -1,7 +1,7 @@
 From 57107f4887feba5f9b3b9911963704123478e9ea Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 19:43:40 +0100
-Subject: [PATCH 24/27] libdvbv5: build dynamic libdvbv5 by default
+Subject: [PATCH 24/37] libdvbv5: build dynamic libdvbv5 by default
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

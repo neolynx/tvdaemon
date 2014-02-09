@@ -1,7 +1,7 @@
 From 71216e8da33080b13838848992fa2163a1cf7994 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 01:45:07 +0100
-Subject: [PATCH 08/27] libdvbv5: shared lib and installing headers
+Subject: [PATCH 08/37] libdvbv5: shared lib and installing headers
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
