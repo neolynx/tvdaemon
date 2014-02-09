@@ -107,17 +107,17 @@ void Server_Avahi::Client_Callback( AvahiClient *c, AvahiClientState state )
 {
   if( !c )
   {
-    LogError("Avahi: client null pointer");
+    LogError( "Avahi: client null pointer" );
     return;
   }
 
   /* Called whenever the client or server state changes */
-  switch (state)
+  switch( state )
   {
     /* The server has startup successfully and registered its host
      * name on the network, so it's time to create our services */
     case AVAHI_CLIENT_S_RUNNING:
-        Create_Services(c);
+        Create_Services( c );
         break;
 
     case AVAHI_CLIENT_FAILURE:

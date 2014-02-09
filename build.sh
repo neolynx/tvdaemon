@@ -1,28 +1,35 @@
+SCRIPT_FILE=`readlink -f @0`
+SCRIPT_DIR=`dirname $SCRIPT_FILE`
+
 set -x
 
-git submodule init
-git submodule update
+die()
+{
+  echo $1
+  exit -1
+}
 
-cd v4l-utils
-git checkout master
-git reset --hard origin/master
-git am -3 ../patches/*
-cd -
+git submodule update --init --recursive || die "submodule update failed"
 
-cd tsdecrypt
-git checkout master
-git submodule init
-git submodule update
-cd -
+cd v4l-utils                            || die "change to v4l-utils failed"
+git checkout master                     || die "checkout v4l-utils failed"
+git reset --hard origin/master          || die "reset v4l-utils failed"
+git am -3 ../patches/*                  || die "patching v4l-utils failed"
+cd $SCRIPT_DIR                          || die "change to home failed"
 
-cd v4l-utils
-autoreconf -vfis
-./configure
-cd lib/libdvbv5
-make
-cd ../../..
+cd tsdecrypt                            || die "change to tsdecrypt failed"
+git checkout master                     || die "checkout tsdecrypt failed"
+git submodule update --init --recursive || die "tsdecrypt submodule update failed"
+cd $SCRIPT_DIR                          || die "change to home failed"
 
-autoreconf -vfis
-./configure
-make
+cd v4l-utils                            || die "change to v4l-utils failed"
+autoreconf -vfis                        || die "autoreconf v4l-utils failed"
+./configure                             || die "configure v4l-utils failed"
+cd lib/libdvbv5                         || die "change to libdvbv5 failed"
+make                                    || die "make libdvbv5 failed"
+cd $SCRIPT_DIR                          || die "change to home failed"
+
+autoreconf -vfis                        || die "autoreconf tvdaeon failed"
+./configure                             || die "configure tvdaemon failed"
+make                                    || die "make tvdaemon failed"
 
