@@ -146,7 +146,8 @@ function getAdapter( adapter )
     icon = "<img src=\"images/usb-icon.png\" " + imgstyle + "/>";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
     icon = "<img src=\"images/pci-icon.png\" " + imgstyle + "/>";
-  //else FIXME
+  else
+    icon = "<img src=\"images/pci-icon.png\" " + imgstyle + "/>";
   return icon;
 }
 
