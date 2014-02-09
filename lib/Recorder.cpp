@@ -77,6 +77,8 @@ bool Recorder::LoadConfig( )
   ReadConfig( "Directory", dir );
   if( dir.empty( ))
     dir = "~";
+  Log( "Recorder directoy: '%s'", dir.c_str( ));t log
+
   Lock( );
   bool ret = CreateFromConfig<Activity_Record, int, Recorder>( *this, "recording", recordings );
   Unlock( );
