@@ -32,7 +32,7 @@
 
 namespace Utils
 {
-  std::string Expand( std::string path );
+  std::string Expand( const std::string &path );
   bool IsDir( std::string path );
   bool IsFile( std::string path );
   bool MkDir( std::string path );

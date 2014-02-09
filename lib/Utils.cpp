@@ -33,11 +33,20 @@
 
 #include "Log.h"
 
-std::string Utils::Expand( std::string path )
+std::string Utils::Expand( const std::string &path )
 {
   wordexp_t p;
-  std::string ex;
-  if( wordexp( path.c_str( ), &p, 0 ) == 0 )
+  std::string ex = path;
+  size_t pos = 0;
+  while( true )
+  {
+    pos = ex.find( ' ', pos );
+    if( pos == std::string::npos )
+      break;
+    ex.insert( pos, "\\" );
+    pos += 2; // skip backslash and space
+  }
+  if( wordexp( ex.c_str( ), &p, 0 ) == 0 )
   {
     if( p.we_wordc > 0 )
       ex = p.we_wordv[0];
