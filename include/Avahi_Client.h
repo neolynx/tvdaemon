@@ -1,7 +1,7 @@
 /*
  *  tvdaemon
  *
- *  Server_Avahi class
+ *  Avahi_Client class
  *
  *  Copyright (C) 2014 Lars Schmohl
  *
@@ -19,28 +19,36 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _Server_Avahi_
-#define _Server_Avahi_
+#ifndef _Avahi_Client_
+#define _Avahi_Client_
 
 #include <avahi-client/client.h>
+#include <avahi-client/lookup.h>
 #include <avahi-client/publish.h>
 #include <avahi-common/simple-watch.h>
 
 #include "Thread.h"
 
-class Server_Avahi : public Thread
+class Avahi_Client : public Thread
 {
 public:
-  Server_Avahi( );
-  virtual ~Server_Avahi( );
+  Avahi_Client( );
+  virtual ~Avahi_Client( );
 
   bool Start( );
 
-  /* avahi functions */
+  // avahi functions
+  void Browse_Callback( AvahiServiceBrowser *b, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event,
+                        const char *name, const char *type, const char *domain,
+                        AvahiLookupResultFlags flags );
   void Client_Callback( AvahiClient *c, AvahiClientState state );
   void Create_Services( AvahiClient *c );
-  void Modify_Callback( AvahiTimeout *e );
   void Entry_Group_Callback( AvahiEntryGroup *g, AvahiEntryGroupState state );
+  // void Modify_Callback( AvahiTimeout *e );
+  void Resolve_Callback( AvahiServiceResolver *r, AvahiResolverEvent event,
+                         const char *name, const char *type, const char *domain, const char *host_name,
+                         const AvahiAddress *address, uint16_t port,
+                         AvahiStringList *txt, AvahiLookupResultFlags flags );
 
 private:
 
@@ -48,6 +56,7 @@ private:
 
   AvahiClient *client;
   AvahiEntryGroup *group;
+  AvahiServiceBrowser *browser;
   AvahiSimplePoll *simple_poll;
 };
 

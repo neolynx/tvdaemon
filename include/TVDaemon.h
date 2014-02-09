@@ -42,7 +42,7 @@ class Channel;
 class Recorder;
 class Event;
 class StreamingHandler;
-class Server_Avahi;
+class Avahi_Client;
 
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHandler, public Thread
 {
@@ -128,7 +128,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     Mutex frontends_mutex;
     Mutex channels_mutex;
 
-    Server_Avahi *srv_avahi;
+    Avahi_Client *avahi_client;
 };
 
 #endif

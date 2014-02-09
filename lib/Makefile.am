@@ -37,7 +37,7 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  CAMClient.cpp \
 			  CAMClientHandler.cpp \
 			  Daemon.cpp \
-			  Server_Avahi.cpp
+			  Avahi_Client.cpp
 
 libtvdaemon_la_LDFLAGS = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} ../v4l-utils/lib/libdvbv5/.libs/libdvbv5.la \
 			-lmatroska ${LIBCCRTP_LIBS} ${LIBAVFORMAT_LIBS} ${LIBAVCODEC_LIBS} \

@@ -43,7 +43,7 @@
 #include "SocketHandler.h"
 #include "Log.h"
 #include "StreamingHandler.h"
-#include "Server_Avahi.h"
+#include "Avahi_Client.h"
 
 TVDaemon *TVDaemon::instance = NULL;
 
@@ -81,13 +81,13 @@ TVDaemon::TVDaemon( ) :
   httpd(NULL),
   up(true),
   recorder(NULL),
-  srv_avahi(new Server_Avahi())
+  avahi_client(new Avahi_Client())
 {
 }
 
 TVDaemon::~TVDaemon( )
 {
-  delete srv_avahi;
+  delete avahi_client;
 
   Log( "TVDaemon terminating" );
   if( httpd )
@@ -172,11 +172,11 @@ bool TVDaemon::Start( const char* httpRoot )
   httpd->Start( );
   Log( "HTTP Server listening on port %d", HTTPDPORT );
 
-  if ( !srv_avahi->Start( ))
+  if ( !avahi_client->Start( ))
   {
-    LogError( "unable to start avahi server" );
+    LogError( "unable to start avahi client" );
   }
-  Log( "Avahi server started" );
+  Log( "Avahi client started" );
 
   return true;
 }
