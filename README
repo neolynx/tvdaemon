@@ -5,9 +5,10 @@ Prerequisites
 On Ubuntu >= quantal or Debian >= wheezy, install the following:
 
 sudo apt-get install autoconf libtool automake autopoint pkg-config g++ \
-                    libjpeg62-dev libudev-dev libconfig++8-dev libjson0-dev \
-                    libebml-dev libmatroska-dev libavformat-dev libccrtp-dev \
-                    libdvbcsa-dev dvb-apps libavahi-client-dev libssl-dev
+                    gettext libjpeg62-dev libudev-dev libconfig++8-dev \
+                    libjson0-dev libebml-dev libmatroska-dev libavformat-dev \
+                    libccrtp-dev libdvbcsa-dev dvb-apps libavahi-client-dev \
+                    libssl-dev
 
 
 Checkout TVDaemon
