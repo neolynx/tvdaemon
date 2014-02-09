@@ -89,8 +89,7 @@ bool Frame::ReadFrame( uint8_t *data, size_t length, RTPSession *session )
     case DVB_MPEG_PES_VIDEO:
       {
         uint8_t buf2[184];
-        ssize_t size2 = 0;
-        dvb_mpeg_pes_init( &fe, data, length, buf2, &size2 );
+        ssize_t size2 = dvb_mpeg_pes_init( &fe, data, length, buf2 );
         dvb_mpeg_pes *pes = (dvb_mpeg_pes *) buf2;
         //dvb_mpeg_pes_print( &fe, pes );
         if( pes->optional->PTS_DTS & 0x02 )
