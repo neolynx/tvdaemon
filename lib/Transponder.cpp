@@ -343,9 +343,10 @@ const char *Transponder::GetStateName( State state )
 
 void Transponder::json( json_object *entry ) const
 {
-  json_object_object_add( entry, "name",     json_object_new_string( toString( ).c_str( )));
-  json_object_object_add( entry, "id",       json_object_new_int( GetKey( )));
+  json_object_object_add( entry, "name",      json_object_new_string( toString( ).c_str( )));
+  json_object_object_add( entry, "id",        json_object_new_int( GetKey( )));
   json_object_object_add( entry, "source_id", json_object_new_int( source.GetKey( )));
+  json_object_object_add( entry, "source",    json_object_new_string( source.GetName( ).c_str( )));
   json_object_object_add( entry, "state",     json_object_new_int( state ));
   json_object_object_add( entry, "epg_state", json_object_new_int( epg_state ));
   json_object_object_add( entry, "enabled",   json_object_new_int( enabled ));

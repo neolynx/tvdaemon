@@ -15,6 +15,7 @@ function ready( )
     "tsid"      : "TS ID",
     "signal"    : [ "S/N", print_sn ],
     "services"  : "Services",
+    "source"    : "Source",
     ""  : [ "", print_scan ],
   };
   table.load( );
