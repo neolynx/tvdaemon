@@ -1,7 +1,7 @@
 From feb72c77708dfaef9fd646dee1b418b6a58d3da5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 12:57:08 +0100
-Subject: [PATCH 09/37] libdvbv5: remove header files from SOURCES in
+Subject: [PATCH 09/38] libdvbv5: remove header files from SOURCES in
  Makefile.am
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

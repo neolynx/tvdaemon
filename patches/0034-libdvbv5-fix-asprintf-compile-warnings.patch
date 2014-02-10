@@ -1,7 +1,7 @@
 From d925ad065b173991ffd51ac5562254e67fb3d933 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:08:31 +0100
-Subject: [PATCH 34/37] libdvbv5: fix asprintf compile warnings
+Subject: [PATCH 34/38] libdvbv5: fix asprintf compile warnings
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

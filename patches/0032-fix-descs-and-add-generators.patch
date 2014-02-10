@@ -1,7 +1,7 @@
 From ab56d831f707e64f850837cae855e0a8a6d01d82 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:07:00 +0100
-Subject: [PATCH 32/37] fix descs and add generators
+Subject: [PATCH 32/38] fix descs and add generators
 
 ---
  lib/include/libdvbv5/desc_service.h              |   3 +

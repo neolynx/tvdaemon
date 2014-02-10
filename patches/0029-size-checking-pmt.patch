@@ -1,7 +1,7 @@
 From e1ad009990e979dbdb7ffe1c73581d07c3799d1f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:04:27 +0100
-Subject: [PATCH 29/37] size checking pmt
+Subject: [PATCH 29/38] size checking pmt
 
 ---
  lib/include/libdvbv5/pmt.h     |  8 ++--

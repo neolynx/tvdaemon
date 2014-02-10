@@ -1,7 +1,7 @@
 From 5b41e2af493851c0805834318d5276ad4e6f318b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:04:02 +0100
-Subject: [PATCH 28/37] fix pes parser
+Subject: [PATCH 28/38] fix pes parser
 
 ---
  lib/include/libdvbv5/mpeg_pes.h     |  2 +-

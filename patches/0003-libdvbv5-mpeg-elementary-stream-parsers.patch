@@ -1,7 +1,7 @@
 From 4fce64347c213a8e9d1c867f290e0956d8fcd856 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 29 Dec 2013 15:19:26 +0100
-Subject: [PATCH 03/37] libdvbv5: mpeg elementary stream parsers
+Subject: [PATCH 03/38] libdvbv5: mpeg elementary stream parsers
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

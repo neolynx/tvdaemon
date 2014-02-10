@@ -1,7 +1,7 @@
 From 45f45bfc1da4f8e52128e704a1ea80bdcaa00420 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 22:45:56 +0100
-Subject: [PATCH 20/37] libdvbv5: descriptor parser return int
+Subject: [PATCH 20/38] libdvbv5: descriptor parser return int
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,7 +1,7 @@
-From c580bc5677453c2c5c38e47efa3230ded94ee9f9 Mon Sep 17 00:00:00 2001
+From d002bcd5b3a12e6995406f99c98eeb6ee2dd9200 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:10:41 +0100
-Subject: [PATCH 37/37] libdvbv5: allow logging in store_dvb_channel
+Subject: [PATCH 36/38] libdvbv5: allow logging in store_dvb_channel
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

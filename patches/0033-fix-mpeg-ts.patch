@@ -1,7 +1,7 @@
 From c1bf49657dbf23883460aeeceb8fbdfe44831881 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:07:08 +0100
-Subject: [PATCH 33/37] fix mpeg ts
+Subject: [PATCH 33/38] fix mpeg ts
 
 ---
  lib/include/libdvbv5/mpeg_ts.h     |  5 +--

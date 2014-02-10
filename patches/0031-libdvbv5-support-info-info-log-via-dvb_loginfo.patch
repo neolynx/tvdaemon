@@ -1,7 +1,7 @@
 From 34b2f99b9ae338dd8c1f0b569e5eb8ccd543a277 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:05:44 +0100
-Subject: [PATCH 31/37] libdvbv5: support info info log via dvb_loginfo
+Subject: [PATCH 31/38] libdvbv5: support info info log via dvb_loginfo
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

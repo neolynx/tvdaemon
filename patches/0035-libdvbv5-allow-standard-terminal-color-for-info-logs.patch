@@ -1,7 +1,7 @@
-From e6904e55641411f1cbc961cc4673d543d10665d6 Mon Sep 17 00:00:00 2001
+From ed18760cb12a08dab9a739410f890341ea42f78d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:10:13 +0100
-Subject: [PATCH 36/37] libdvbv5: allow standard terminal color for info logs
+Subject: [PATCH 35/38] libdvbv5: allow standard terminal color for info logs
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

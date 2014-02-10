@@ -1,7 +1,7 @@
 From 7fa0956c1335cfe5715ebb2c4b73271f7ad5898e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:41:06 +0100
-Subject: [PATCH 18/37] libdvbv5: make dvb_desc_default_init and
+Subject: [PATCH 18/38] libdvbv5: make dvb_desc_default_init and
  dvb_desc_default_print private
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
