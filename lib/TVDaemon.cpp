@@ -125,8 +125,8 @@ TVDaemon::~TVDaemon( )
   for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
     delete it->second;
 
-  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
-    delete *it;
+  for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    delete it->second;
 
   instance = NULL;
 }
@@ -194,10 +194,8 @@ bool TVDaemon::SaveConfig( )
     it->second->SaveConfig( );
   }
 
-  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
-  {
-    (*it)->SaveConfig( );
-  }
+  for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    it->second->SaveConfig( );
 
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
   {
@@ -225,7 +223,7 @@ bool TVDaemon::LoadConfig( )
   Log( "Found config version: %s", version.c_str( ));
 
   Log( "Loading Channels" );
-  if( !CreateFromConfig<Channel, TVDaemon>( *this, "channel", channels ))
+  if( !CreateFromConfig<Channel, int, TVDaemon>( *this, "channel", channels ))
     return false;
   Log( "Loading Sources" );
   if( !CreateFromConfig<Source, int, TVDaemon>( *this, "source", sources ))
@@ -568,16 +566,17 @@ Source *TVDaemon::GetSource( int id ) const
 Channel *TVDaemon::CreateChannel( Service *service )
 {
   SCOPELOCK( );
-  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+  for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
-    if( (*it)->HasService( service ))
+    if( it->second->HasService( service ))
     {
       LogError( "Channel '%s' already exists", service->GetName( ).c_str( ));
       return NULL;
     }
   }
   Channel *c = new Channel( *this, service, channels.size( ));
-  channels.push_back( c );
+  int next_id = GetAvailableKey<Channel, int>( channels );
+  channels[next_id] = c;
   return c;
 }
 
@@ -585,10 +584,8 @@ std::vector<std::string> TVDaemon::GetChannelList( )
 {
   SCOPELOCK( );
   std::vector<std::string> result;
-  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
-  {
-    result.push_back( (*it)->GetName( ));
-  }
+  for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    result.push_back( it->second->GetName( ));
   return result;
 }
 
@@ -605,11 +602,9 @@ Channel *TVDaemon::GetChannel( int id )
 
 void TVDaemon::UpdateEPG( )
 {
-  SCOPELOCK( );
-  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
-  {
-    (*it)->UpdateEPG( );
-  }
+  SCOPELOCK( ); // FIXME: use mutex on map
+  for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    it->second->UpdateEPG( );
 }
 
 bool TVDaemon::HandleDynamicHTTP( const HTTPRequest &request )
@@ -779,11 +774,11 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     }
 
     std::vector<const JSONObject *> result;
-    for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     {
-      if( !search.empty( ) && (*it)->GetName( ).find( search.c_str( ), 0, search.length( )) != 0 )
+      if( !search.empty( ) && it->second->GetName( ).find( search.c_str( ), 0, search.length( )) != 0 )
         continue;
-      result.push_back( *it );
+      result.push_back( it->second );
     }
     ServerSideTable( request, result );
     return true;
@@ -856,9 +851,9 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     }
 
     std::vector<const JSONObject *> result;
-    for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     {
-      const std::vector<Event *> &events = (*it)->GetEvents( );
+      const std::vector<Event *> &events = it->second->GetEvents( );
       for( std::vector<Event *>::const_iterator it2 = events.begin( ); it2 != events.end( ); it2++ )
       {
         //Log( "time : %d", time( NULL ));
@@ -1048,11 +1043,11 @@ StreamingHandler *TVDaemon::GetStreamingHandler( std::string url )
 
   LockChannels( );
   Channel *channel = NULL;
-  for( std::vector<Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+  for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
-    if( (*it)->GetName( ) == channel_name )
+    if( it->second->GetName( ) == channel_name )
     {
-      channel = *it;
+      channel = it->second;
       break;
     }
   }

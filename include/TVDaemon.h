@@ -100,7 +100,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
 
     std::vector<Adapter *> adapters;
     std::map<int, Source *>  sources;
-    std::vector<Channel *> channels;
+    std::map<int, Channel *> channels;
 
     bool up;
 
