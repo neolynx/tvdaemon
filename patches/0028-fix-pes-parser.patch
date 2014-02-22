@@ -1,11 +1,11 @@
-From 5b41e2af493851c0805834318d5276ad4e6f318b Mon Sep 17 00:00:00 2001
+From 08a7beb7bafdba99c2497d70ee2a8a511f525d2f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:04:02 +0100
-Subject: [PATCH 28/38] fix pes parser
+Subject: [PATCH 28/40] fix pes parser
 
 ---
- lib/include/libdvbv5/mpeg_pes.h     |  2 +-
- lib/libdvbv5/descriptors/mpeg_pes.c | 58 ++++++++++++++++++++-----------------
+ lib/include/libdvbv5/mpeg_pes.h     |    2 +-
+ lib/libdvbv5/descriptors/mpeg_pes.c |   58 +++++++++++++++++++----------------
  2 files changed, 32 insertions(+), 28 deletions(-)
 
 diff --git a/lib/include/libdvbv5/mpeg_pes.h b/lib/include/libdvbv5/mpeg_pes.h
@@ -131,5 +131,5 @@ index 65f5cf1..be2a6c1 100644
  }
  
 -- 
-1.8.3.2
+1.7.10.4
 

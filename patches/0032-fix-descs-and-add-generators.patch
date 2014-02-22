@@ -1,23 +1,23 @@
-From ab56d831f707e64f850837cae855e0a8a6d01d82 Mon Sep 17 00:00:00 2001
+From c0529e7a92d7738dfe92ecf99e1b68b2fcc3c5e3 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:07:00 +0100
-Subject: [PATCH 32/38] fix descs and add generators
+Subject: [PATCH 32/40] fix descs and add generators
 
 ---
- lib/include/libdvbv5/desc_service.h              |   3 +
- lib/include/libdvbv5/descriptors.h               |  11 +-
- lib/include/libdvbv5/sdt.h                       |  10 +-
- lib/libdvbv5/descriptors.c                       |  90 +++++++++++---
- lib/libdvbv5/descriptors/atsc_eit.c              |   2 +-
- lib/libdvbv5/descriptors/cat.c                   |   2 +-
- lib/libdvbv5/descriptors/desc_service.c          |  24 +++-
- lib/libdvbv5/descriptors/desc_service_location.c |   6 +-
- lib/libdvbv5/descriptors/eit.c                   |   2 +-
- lib/libdvbv5/descriptors/header.c                |  24 ++--
- lib/libdvbv5/descriptors/mgt.c                   |   4 +-
- lib/libdvbv5/descriptors/nit.c                   |   4 +-
- lib/libdvbv5/descriptors/sdt.c                   | 143 +++++++++++++++++++----
- lib/libdvbv5/descriptors/vct.c                   |   2 +-
+ lib/include/libdvbv5/desc_service.h              |    3 +
+ lib/include/libdvbv5/descriptors.h               |   11 +-
+ lib/include/libdvbv5/sdt.h                       |   10 +-
+ lib/libdvbv5/descriptors.c                       |   90 +++++++++++---
+ lib/libdvbv5/descriptors/atsc_eit.c              |    2 +-
+ lib/libdvbv5/descriptors/cat.c                   |    2 +-
+ lib/libdvbv5/descriptors/desc_service.c          |   24 +++-
+ lib/libdvbv5/descriptors/desc_service_location.c |    6 +-
+ lib/libdvbv5/descriptors/eit.c                   |    2 +-
+ lib/libdvbv5/descriptors/header.c                |   24 ++--
+ lib/libdvbv5/descriptors/mgt.c                   |    4 +-
+ lib/libdvbv5/descriptors/nit.c                   |    4 +-
+ lib/libdvbv5/descriptors/sdt.c                   |  143 ++++++++++++++++++----
+ lib/libdvbv5/descriptors/vct.c                   |    2 +-
  14 files changed, 261 insertions(+), 66 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
@@ -107,7 +107,7 @@ index 2b3e8e0..6bff0d1 100644
  #ifdef __cplusplus
  }
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 945ec4a..630ad8e 100644
+index 78a8708..c2239bb 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -59,6 +59,27 @@
@@ -138,8 +138,8 @@ index 945ec4a..630ad8e 100644
  static void dvb_desc_init(uint8_t type, uint8_t length, struct dvb_desc *desc)
  {
  	desc->type   = type;
-@@ -112,11 +133,16 @@ int dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
- 		uint8_t desc_len  = ptr[1];
+@@ -118,11 +139,16 @@ int dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ >>>>>>> libdvbv5: fix dvb_parse_descriptors and make dvb_desc_init private
  		size_t size;
  
 +		if (desc_type == 0xff ) {
@@ -157,7 +157,7 @@ index 945ec4a..630ad8e 100644
  			return -1;
  		}
  
-@@ -167,18 +193,48 @@ int dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+@@ -178,18 +204,48 @@ int dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  	return 0;
  }
  
@@ -208,7 +208,7 @@ index 945ec4a..630ad8e 100644
  void dvb_free_descriptors(struct dvb_desc **list)
  {
  	struct dvb_desc *desc = *list;
-@@ -194,11 +250,14 @@ void dvb_free_descriptors(struct dvb_desc **list)
+@@ -205,11 +261,14 @@ void dvb_free_descriptors(struct dvb_desc **list)
  
  const struct dvb_descriptor dvb_descriptors[] = {
  	[0 ...255 ] = {
@@ -228,7 +228,7 @@ index 945ec4a..630ad8e 100644
  	},
  	[video_stream_descriptor] = {
  		.name  = "video_stream_descriptor",
-@@ -502,11 +561,14 @@ const struct dvb_descriptor dvb_descriptors[] = {
+@@ -513,11 +572,14 @@ const struct dvb_descriptor dvb_descriptors[] = {
  		.size  = 0,
  	},
  	[service_descriptor] = {
@@ -623,10 +623,10 @@ index 5c354f1..bc53403 100644
 +	return size_total;
 +}
 diff --git a/lib/libdvbv5/descriptors/vct.c b/lib/libdvbv5/descriptors/vct.c
-index 5078991..8d7420b 100644
+index 0f051ac..643f7c5 100644
 --- a/lib/libdvbv5/descriptors/vct.c
 +++ b/lib/libdvbv5/descriptors/vct.c
-@@ -167,7 +167,7 @@ void atsc_table_vct_print(struct dvb_v5_fe_parms *parms, struct atsc_table_vct *
+@@ -177,7 +177,7 @@ void atsc_table_vct_print(struct dvb_v5_fe_parms *parms, struct atsc_table_vct *
  		dvb_log("|   service type          %d", channel->service_type);
  		dvb_log("|   source id            %d", channel->source_id);
  
@@ -636,5 +636,5 @@ index 5078991..8d7420b 100644
  		channels++;
  	}
 -- 
-1.8.3.2
+1.7.10.4
 

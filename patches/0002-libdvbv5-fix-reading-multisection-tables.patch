@@ -1,7 +1,7 @@
-From 2c4a5810844db7d597d7f985e878d4d5f563d2bc Mon Sep 17 00:00:00 2001
+From dfe73459b270f7c873113c41c65b5f0f24b8fc87 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:40:38 +0100
-Subject: [PATCH 02/38] libdvbv5: fix reading multisection tables
+Subject: [PATCH 02/40] libdvbv5: fix reading multisection tables
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -17,14 +17,14 @@ Thus, allow the table id to differ.
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/dvb-scan.c | 1 -
+ lib/libdvbv5/dvb-scan.c |    1 -
  1 file changed, 1 deletion(-)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 42e2c8c..890892b 100644
+index 2cdb413..1bb227a 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -199,7 +199,6 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
+@@ -192,7 +192,6 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
  			start_id = h->id;
  		if (start_section == -1)
  			start_section = h->section_id;
@@ -33,5 +33,5 @@ index 42e2c8c..890892b 100644
  			continue;
  		}
 -- 
-1.8.3.2
+1.7.10.4
 

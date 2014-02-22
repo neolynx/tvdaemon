@@ -1,7 +1,7 @@
-From 45f45bfc1da4f8e52128e704a1ea80bdcaa00420 Mon Sep 17 00:00:00 2001
+From 9b9ab4d86a95ebf132353c7c2505eed7c91ff263 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 22:45:56 +0100
-Subject: [PATCH 20/38] libdvbv5: descriptor parser return int
+Subject: [PATCH 20/40] libdvbv5: descriptor parser return int
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -12,50 +12,50 @@ error.
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_atsc_service_location.h     |  2 +-
- lib/include/libdvbv5/desc_ca.h                        |  2 +-
- lib/include/libdvbv5/desc_ca_identifier.h             |  2 +-
- lib/include/libdvbv5/desc_cable_delivery.h            |  2 +-
- lib/include/libdvbv5/desc_event_extended.h            |  2 +-
- lib/include/libdvbv5/desc_event_short.h               |  2 +-
- lib/include/libdvbv5/desc_extension.h                 |  4 ++--
- lib/include/libdvbv5/desc_frequency_list.h            |  2 +-
- lib/include/libdvbv5/desc_hierarchy.h                 |  2 +-
- lib/include/libdvbv5/desc_isdbt_delivery.h            |  2 +-
- lib/include/libdvbv5/desc_language.h                  |  2 +-
- lib/include/libdvbv5/desc_logical_channel.h           |  2 +-
- lib/include/libdvbv5/desc_network_name.h              |  2 +-
- lib/include/libdvbv5/desc_partial_reception.h         |  2 +-
- lib/include/libdvbv5/desc_sat.h                       |  2 +-
- lib/include/libdvbv5/desc_service.h                   |  2 +-
- lib/include/libdvbv5/desc_service_list.h              |  2 +-
- lib/include/libdvbv5/desc_service_location.h          |  2 +-
- lib/include/libdvbv5/desc_t2_delivery.h               |  2 +-
- lib/include/libdvbv5/desc_terrestrial_delivery.h      |  2 +-
- lib/include/libdvbv5/desc_ts_info.h                   |  2 +-
- lib/include/libdvbv5/descriptors.h                    |  4 ++--
- lib/libdvbv5/descriptors.c                            | 16 ++++++++++------
- lib/libdvbv5/descriptors/desc_atsc_service_location.c |  5 +++--
- lib/libdvbv5/descriptors/desc_ca.c                    |  3 ++-
- lib/libdvbv5/descriptors/desc_ca_identifier.c         |  5 +++--
- lib/libdvbv5/descriptors/desc_cable_delivery.c        |  3 ++-
- lib/libdvbv5/descriptors/desc_event_extended.c        |  3 ++-
- lib/libdvbv5/descriptors/desc_event_short.c           |  3 ++-
- lib/libdvbv5/descriptors/desc_extension.c             |  9 ++++++---
- lib/libdvbv5/descriptors/desc_frequency_list.c        |  3 ++-
- lib/libdvbv5/descriptors/desc_hierarchy.c             |  3 ++-
- lib/libdvbv5/descriptors/desc_isdbt_delivery.c        |  7 ++++---
- lib/libdvbv5/descriptors/desc_language.c              |  3 ++-
- lib/libdvbv5/descriptors/desc_logical_channel.c       |  5 +++--
- lib/libdvbv5/descriptors/desc_network_name.c          |  3 ++-
- lib/libdvbv5/descriptors/desc_partial_reception.c     |  5 +++--
- lib/libdvbv5/descriptors/desc_sat.c                   |  4 +++-
- lib/libdvbv5/descriptors/desc_service.c               |  3 ++-
- lib/libdvbv5/descriptors/desc_service_list.c          |  3 ++-
- lib/libdvbv5/descriptors/desc_service_location.c      |  9 +++++----
- lib/libdvbv5/descriptors/desc_t2_delivery.c           | 11 ++++++-----
- lib/libdvbv5/descriptors/desc_terrestrial_delivery.c  |  3 ++-
- lib/libdvbv5/descriptors/desc_ts_info.c               |  3 ++-
+ lib/include/libdvbv5/desc_atsc_service_location.h     |    2 +-
+ lib/include/libdvbv5/desc_ca.h                        |    2 +-
+ lib/include/libdvbv5/desc_ca_identifier.h             |    2 +-
+ lib/include/libdvbv5/desc_cable_delivery.h            |    2 +-
+ lib/include/libdvbv5/desc_event_extended.h            |    2 +-
+ lib/include/libdvbv5/desc_event_short.h               |    2 +-
+ lib/include/libdvbv5/desc_extension.h                 |    4 ++--
+ lib/include/libdvbv5/desc_frequency_list.h            |    2 +-
+ lib/include/libdvbv5/desc_hierarchy.h                 |    2 +-
+ lib/include/libdvbv5/desc_isdbt_delivery.h            |    2 +-
+ lib/include/libdvbv5/desc_language.h                  |    2 +-
+ lib/include/libdvbv5/desc_logical_channel.h           |    2 +-
+ lib/include/libdvbv5/desc_network_name.h              |    2 +-
+ lib/include/libdvbv5/desc_partial_reception.h         |    2 +-
+ lib/include/libdvbv5/desc_sat.h                       |    2 +-
+ lib/include/libdvbv5/desc_service.h                   |    2 +-
+ lib/include/libdvbv5/desc_service_list.h              |    2 +-
+ lib/include/libdvbv5/desc_service_location.h          |    2 +-
+ lib/include/libdvbv5/desc_t2_delivery.h               |    2 +-
+ lib/include/libdvbv5/desc_terrestrial_delivery.h      |    2 +-
+ lib/include/libdvbv5/desc_ts_info.h                   |    2 +-
+ lib/include/libdvbv5/descriptors.h                    |    4 ++--
+ lib/libdvbv5/descriptors.c                            |   16 ++++++++++------
+ lib/libdvbv5/descriptors/desc_atsc_service_location.c |    5 +++--
+ lib/libdvbv5/descriptors/desc_ca.c                    |    3 ++-
+ lib/libdvbv5/descriptors/desc_ca_identifier.c         |    5 +++--
+ lib/libdvbv5/descriptors/desc_cable_delivery.c        |    3 ++-
+ lib/libdvbv5/descriptors/desc_event_extended.c        |    3 ++-
+ lib/libdvbv5/descriptors/desc_event_short.c           |    3 ++-
+ lib/libdvbv5/descriptors/desc_extension.c             |    9 ++++++---
+ lib/libdvbv5/descriptors/desc_frequency_list.c        |    3 ++-
+ lib/libdvbv5/descriptors/desc_hierarchy.c             |    3 ++-
+ lib/libdvbv5/descriptors/desc_isdbt_delivery.c        |    7 ++++---
+ lib/libdvbv5/descriptors/desc_language.c              |    3 ++-
+ lib/libdvbv5/descriptors/desc_logical_channel.c       |    5 +++--
+ lib/libdvbv5/descriptors/desc_network_name.c          |    3 ++-
+ lib/libdvbv5/descriptors/desc_partial_reception.c     |    5 +++--
+ lib/libdvbv5/descriptors/desc_sat.c                   |    4 +++-
+ lib/libdvbv5/descriptors/desc_service.c               |    3 ++-
+ lib/libdvbv5/descriptors/desc_service_list.c          |    3 ++-
+ lib/libdvbv5/descriptors/desc_service_location.c      |    9 +++++----
+ lib/libdvbv5/descriptors/desc_t2_delivery.c           |   11 ++++++-----
+ lib/libdvbv5/descriptors/desc_terrestrial_delivery.c  |    3 ++-
+ lib/libdvbv5/descriptors/desc_ts_info.c               |    3 ++-
  44 files changed, 94 insertions(+), 66 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_atsc_service_location.h b/lib/include/libdvbv5/desc_atsc_service_location.h
@@ -363,7 +363,7 @@ index cc67a38..e81a05d 100644
  typedef void (*dvb_desc_free_func) (struct dvb_desc *desc);
  
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index ac63288..9b1473f 100644
+index fa6390e..23bf1bd 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -66,9 +66,10 @@ static void dvb_desc_init(uint8_t type, uint8_t length, struct dvb_desc *desc)
@@ -387,7 +387,7 @@ index ac63288..9b1473f 100644
  			   uint16_t buflen, struct dvb_desc **head_desc)
  {
  	const uint8_t *ptr = buf, *endbuf = buf + buflen;
-@@ -117,7 +118,7 @@ void dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+@@ -123,7 +124,7 @@ void dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  		if (ptr + desc_len > endbuf) {
  			dvb_logerr("short read of %zd/%d bytes parsing descriptor %#02x",
  				   endbuf - ptr, desc_len, desc_type);
@@ -396,7 +396,7 @@ index ac63288..9b1473f 100644
  		}
  
  		switch (parms->verbose) {
-@@ -145,16 +146,18 @@ void dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+@@ -156,16 +157,18 @@ void dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  		}
  		if (!size) {
  			dvb_logerr("descriptor type 0x%02x has no size defined", desc_type);
@@ -418,7 +418,7 @@ index ac63288..9b1473f 100644
  		if (!*head_desc)
  			*head_desc = current;
  		if (last)
-@@ -162,6 +165,7 @@ void dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+@@ -173,6 +176,7 @@ void dvb_parse_descriptors(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  		last = current;
  		ptr += current->length;     /* standard descriptor header plus descriptor length */
  	}
@@ -980,5 +980,5 @@ index 233d331..f2867e5 100644
  
  void dvb_desc_ts_info_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc)
 -- 
-1.8.3.2
+1.7.10.4
 

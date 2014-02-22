@@ -1,30 +1,30 @@
-From a3c1648823db69b25f92eb7cec56d6624d87e44e Mon Sep 17 00:00:00 2001
+From 518e2801015ec7e5184f2649cfba3a3d9bebb89b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:51:27 +0100
-Subject: [PATCH 12/38] libdvbv5: add attribute packed to structs and unions
+Subject: [PATCH 12/40] libdvbv5: add attribute packed to structs and unions
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/atsc_header.h                |  2 +-
- lib/include/libdvbv5/desc_atsc_service_location.h |  4 ++--
- lib/include/libdvbv5/desc_cable_delivery.h        |  8 ++++----
- lib/include/libdvbv5/desc_event_extended.h        |  4 ++--
- lib/include/libdvbv5/desc_frequency_list.h        |  4 ++--
- lib/include/libdvbv5/desc_isdbt_delivery.h        |  4 ++--
- lib/include/libdvbv5/desc_logical_channel.h       |  4 ++--
- lib/include/libdvbv5/desc_sat.h                   |  4 ++--
- lib/include/libdvbv5/desc_t2_delivery.h           |  4 ++--
- lib/include/libdvbv5/header.h                     |  4 ++--
- lib/include/libdvbv5/mpeg_es.h                    |  6 +++---
- lib/include/libdvbv5/mpeg_ts.h                    |  2 +-
- lib/include/libdvbv5/nit.h                        |  4 ++--
- lib/include/libdvbv5/pat.h                        |  2 +-
- lib/include/libdvbv5/pmt.h                        | 16 ++++++++--------
- lib/include/libdvbv5/sdt.h                        |  2 +-
- lib/include/libdvbv5/vct.h                        |  4 ++--
+ lib/include/libdvbv5/atsc_header.h                |    2 +-
+ lib/include/libdvbv5/desc_atsc_service_location.h |    4 ++--
+ lib/include/libdvbv5/desc_cable_delivery.h        |    8 ++++----
+ lib/include/libdvbv5/desc_event_extended.h        |    4 ++--
+ lib/include/libdvbv5/desc_frequency_list.h        |    4 ++--
+ lib/include/libdvbv5/desc_isdbt_delivery.h        |    4 ++--
+ lib/include/libdvbv5/desc_logical_channel.h       |    4 ++--
+ lib/include/libdvbv5/desc_sat.h                   |    4 ++--
+ lib/include/libdvbv5/desc_t2_delivery.h           |    4 ++--
+ lib/include/libdvbv5/header.h                     |    4 ++--
+ lib/include/libdvbv5/mpeg_es.h                    |    6 +++---
+ lib/include/libdvbv5/mpeg_ts.h                    |    2 +-
+ lib/include/libdvbv5/nit.h                        |    4 ++--
+ lib/include/libdvbv5/pat.h                        |    2 +-
+ lib/include/libdvbv5/pmt.h                        |   16 ++++++++--------
+ lib/include/libdvbv5/sdt.h                        |    2 +-
+ lib/include/libdvbv5/vct.h                        |    4 ++--
  17 files changed, 39 insertions(+), 39 deletions(-)
 
 diff --git a/lib/include/libdvbv5/atsc_header.h b/lib/include/libdvbv5/atsc_header.h
@@ -340,10 +340,10 @@ index 3d5b1d7..2b3e8e0 100644
  	struct dvb_table_sdt_service *next;
  } __attribute__((packed));
 diff --git a/lib/include/libdvbv5/vct.h b/lib/include/libdvbv5/vct.h
-index 6935f30..0dc64fd 100644
+index 8044af1..fd7b845 100644
 --- a/lib/include/libdvbv5/vct.h
 +++ b/lib/include/libdvbv5/vct.h
-@@ -104,8 +104,8 @@ union atsc_table_vct_descriptor_length {
+@@ -103,8 +103,8 @@ union atsc_table_vct_descriptor_length {
  	struct {
  		uint16_t descriptor_length:10;
  		uint16_t reserved:6;
@@ -355,5 +355,5 @@ index 6935f30..0dc64fd 100644
  #define atsc_vct_channel_foreach(_channel, _vct) \
  	for (struct atsc_table_vct_channel *_channel = _vct->channel; _channel; _channel = _channel->next) \
 -- 
-1.8.3.2
+1.7.10.4
 

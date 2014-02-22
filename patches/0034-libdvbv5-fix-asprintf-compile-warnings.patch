@@ -1,15 +1,15 @@
-From d925ad065b173991ffd51ac5562254e67fb3d933 Mon Sep 17 00:00:00 2001
+From fd5bc218d33d92a7f6b24dfaeb9783b4355c0720 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:08:31 +0100
-Subject: [PATCH 34/38] libdvbv5: fix asprintf compile warnings
+Subject: [PATCH 34/40] libdvbv5: fix asprintf compile warnings
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/dvb-file.c | 24 ++++++++++++++++++------
- utils/dvb/dvbv5-zap.c   |  9 +++++----
+ lib/libdvbv5/dvb-file.c |   24 ++++++++++++++++++------
+ utils/dvb/dvbv5-zap.c   |    9 +++++----
  2 files changed, 23 insertions(+), 10 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
@@ -95,10 +95,10 @@ index 5ec34e7..00cb155 100644
  		if (parms->verbose)
  			dvb_log("Storing as channel %s", channel);
 diff --git a/utils/dvb/dvbv5-zap.c b/utils/dvb/dvbv5-zap.c
-index 18895ee..108b51c 100644
+index f92a11e..86229f7 100644
 --- a/utils/dvb/dvbv5-zap.c
 +++ b/utils/dvb/dvbv5-zap.c
-@@ -674,6 +674,7 @@ int main(int argc, char **argv)
+@@ -692,6 +692,7 @@ int main(int argc, char **argv)
  	int audio_fd = -1, video_fd = -1;
  	int dvr_fd = -1, file_fd = -1;
  	int err = -1;
@@ -106,7 +106,7 @@ index 18895ee..108b51c 100644
  	struct dvb_v5_fe_parms *parms = NULL;
  	const struct argp argp = {
  		.options = options,
-@@ -713,10 +714,10 @@ int main(int argc, char **argv)
+@@ -732,10 +733,10 @@ int main(int argc, char **argv)
  		}
  	}
  
@@ -119,7 +119,7 @@ index 18895ee..108b51c 100644
  		 "/dev/dvb/adapter%i/dvr%i", args.adapter, args.demux);
  
  	if (args.silent < 2)
-@@ -725,11 +726,11 @@ int main(int argc, char **argv)
+@@ -744,11 +745,11 @@ int main(int argc, char **argv)
  	if (!args.confname) {
  		if (!homedir)
  			ERROR("$HOME not set");
@@ -134,5 +134,5 @@ index 18895ee..108b51c 100644
  		}
  	}
 -- 
-1.8.3.2
+1.7.10.4
 

@@ -1,11 +1,11 @@
-From e1ad009990e979dbdb7ffe1c73581d07c3799d1f Mon Sep 17 00:00:00 2001
+From e2bd402c4c46fe31f54c5a1e4233e6aac13cf5a9 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:04:27 +0100
-Subject: [PATCH 29/38] size checking pmt
+Subject: [PATCH 29/40] size checking pmt
 
 ---
- lib/include/libdvbv5/pmt.h     |  8 ++--
- lib/libdvbv5/descriptors/pmt.c | 84 ++++++++++++++++++++++++++----------------
+ lib/include/libdvbv5/pmt.h     |    8 ++--
+ lib/libdvbv5/descriptors/pmt.c |   84 +++++++++++++++++++++++++---------------
  2 files changed, 56 insertions(+), 36 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pmt.h b/lib/include/libdvbv5/pmt.h
@@ -190,5 +190,5 @@ index eca47fc..9d8b64d 100644
  
  const char *pmt_stream_name[] = {
 -- 
-1.8.3.2
+1.7.10.4
 

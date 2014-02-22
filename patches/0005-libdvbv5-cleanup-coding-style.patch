@@ -1,22 +1,22 @@
-From 656f207ace3c3c322f6cc0c596ca63cb415f1ff9 Mon Sep 17 00:00:00 2001
+From a6d5435d1658d54bf1e31340a7a89b7b4725d932 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 28 Dec 2013 16:08:53 +0100
-Subject: [PATCH 05/38] libdvbv5: cleanup coding style
+Subject: [PATCH 05/40] libdvbv5: cleanup coding style
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/descriptors.c          | 2 +-
- lib/libdvbv5/descriptors/mpeg_pes.c | 2 +-
+ lib/libdvbv5/descriptors.c          |    2 +-
+ lib/libdvbv5/descriptors/mpeg_pes.c |    2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 2b7bf56..f141028 100644
+index 92ebc54..3bbb5d1 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -1359,6 +1359,6 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
+@@ -1360,6 +1360,6 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
  		for (i = strlen(hex); i < 49; i++)
  			strncat(spaces, " ", sizeof(spaces));
  		ascii[j] = '\0';
@@ -38,5 +38,5 @@ index 1b518a3..98364a3 100644
  		return;
  	}
 -- 
-1.8.3.2
+1.7.10.4
 

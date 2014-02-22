@@ -1,11 +1,11 @@
-From c1bf49657dbf23883460aeeceb8fbdfe44831881 Mon Sep 17 00:00:00 2001
+From 20369236ec3e9b08052955c85d016a909610334f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:07:08 +0100
-Subject: [PATCH 33/38] fix mpeg ts
+Subject: [PATCH 33/40] fix mpeg ts
 
 ---
- lib/include/libdvbv5/mpeg_ts.h     |  5 +--
- lib/libdvbv5/descriptors/mpeg_ts.c | 65 +++++++++++++++++++-------------------
+ lib/include/libdvbv5/mpeg_ts.h     |    5 +--
+ lib/libdvbv5/descriptors/mpeg_ts.c |   65 ++++++++++++++++++------------------
  2 files changed, 35 insertions(+), 35 deletions(-)
 
 diff --git a/lib/include/libdvbv5/mpeg_ts.h b/lib/include/libdvbv5/mpeg_ts.h
@@ -129,5 +129,5 @@ index c2154af..5e405fc 100644
  }
  
 -- 
-1.8.3.2
+1.7.10.4
 

@@ -1,7 +1,7 @@
-From 57107f4887feba5f9b3b9911963704123478e9ea Mon Sep 17 00:00:00 2001
+From b49c0fafac437f0109694dd6c6b8055df4dfa4f3 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 19:43:40 +0100
-Subject: [PATCH 24/38] libdvbv5: build dynamic libdvbv5 by default
+Subject: [PATCH 24/40] libdvbv5: build dynamic libdvbv5 by default
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -12,7 +12,7 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- configure.ac | 24 ++++++++++++------------
+ configure.ac |   24 ++++++++++++------------
  1 file changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
@@ -77,5 +77,5 @@ index 4080d1e..474c681 100644
  # misc
  
 -- 
-1.8.3.2
+1.7.10.4
 

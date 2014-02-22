@@ -1,12 +1,12 @@
-From 8c35b9a2e024ea32f321bd35f27b04831b17240b Mon Sep 17 00:00:00 2001
+From 4be25c2a8154e798b0f887b4833e2d4e6073b44c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 13 Jan 2014 21:16:21 +0100
-Subject: [PATCH 26/38] libdvbv5: fix lost ressource in atsc_eit
+Subject: [PATCH 26/40] libdvbv5: fix lost ressource in atsc_eit
 
 if the title of the EIT event is longer than the available data,
 make sure the allocated buffer is not lost
 ---
- lib/libdvbv5/descriptors/atsc_eit.c | 10 +++++-----
+ lib/libdvbv5/descriptors/atsc_eit.c |   10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors/atsc_eit.c b/lib/libdvbv5/descriptors/atsc_eit.c
@@ -38,5 +38,5 @@ index 86a7b11..c42c8e1 100644
  		size = sizeof(union atsc_table_eit_desc_length);
  		if (p + size > endbuf) {
 -- 
-1.8.3.2
+1.7.10.4
 

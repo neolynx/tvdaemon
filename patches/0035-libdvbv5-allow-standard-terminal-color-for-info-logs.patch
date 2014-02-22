@@ -1,14 +1,14 @@
-From ed18760cb12a08dab9a739410f890341ea42f78d Mon Sep 17 00:00:00 2001
+From 16932dc621f7127de526587ec3b43a0634d358bd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:10:13 +0100
-Subject: [PATCH 35/38] libdvbv5: allow standard terminal color for info logs
+Subject: [PATCH 35/40] libdvbv5: allow standard terminal color for info logs
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/dvb-log.c | 26 +++++++++++++-------------
+ lib/libdvbv5/dvb-log.c |   26 +++++++++++++-------------
  1 file changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-log.c b/lib/libdvbv5/dvb-log.c
@@ -60,5 +60,5 @@ index 14c8f73..55e7067 100644
  	va_end(ap);
  }
 -- 
-1.8.3.2
+1.7.10.4
 

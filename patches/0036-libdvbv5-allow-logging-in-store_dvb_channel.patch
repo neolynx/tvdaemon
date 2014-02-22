@@ -1,14 +1,14 @@
-From d002bcd5b3a12e6995406f99c98eeb6ee2dd9200 Mon Sep 17 00:00:00 2001
+From ba05fca6299ed8d7f93a23116e68d77217d72569 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:10:41 +0100
-Subject: [PATCH 36/38] libdvbv5: allow logging in store_dvb_channel
+Subject: [PATCH 36/40] libdvbv5: allow logging in store_dvb_channel
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/dvb-file.c | 4 ++--
+ lib/libdvbv5/dvb-file.c |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
@@ -34,5 +34,5 @@ index 00cb155..e17103c 100644
  		rc = get_program_and_store(parms, *dvb_file, dvb_scan_handler,
  					   service->service_id,
 -- 
-1.8.3.2
+1.7.10.4
 

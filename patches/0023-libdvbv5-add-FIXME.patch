@@ -1,14 +1,14 @@
-From 7f0040d5790c14f5a3129702ff345e8a53d44b07 Mon Sep 17 00:00:00 2001
+From 90133ed7c6caa06706459d32109c1834b4046ed4 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:44:27 +0100
-Subject: [PATCH 23/38] libdvbv5: add FIXME
+Subject: [PATCH 23/40] libdvbv5: add FIXME
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_service_list.h | 3 ++-
+ lib/include/libdvbv5/desc_service_list.h |    3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/lib/include/libdvbv5/desc_service_list.h b/lib/include/libdvbv5/desc_service_list.h
@@ -26,5 +26,5 @@ index e71e321..7b8f575 100644
  
  struct dvb_v5_fe_parms;
 -- 
-1.8.3.2
+1.7.10.4
 

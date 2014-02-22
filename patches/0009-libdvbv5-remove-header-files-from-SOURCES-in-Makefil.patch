@@ -1,7 +1,7 @@
-From feb72c77708dfaef9fd646dee1b418b6a58d3da5 Mon Sep 17 00:00:00 2001
+From 876b7a5aa57438122dd6ba8bf1e57de12881f22d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 12:57:08 +0100
-Subject: [PATCH 09/38] libdvbv5: remove header files from SOURCES in
+Subject: [PATCH 09/40] libdvbv5: remove header files from SOURCES in
  Makefile.am
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -9,7 +9,7 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/Makefile.am | 87 ++++++++++++++++++++++++------------------------
+ lib/libdvbv5/Makefile.am |   87 +++++++++++++++++++++++-----------------------
  1 file changed, 43 insertions(+), 44 deletions(-)
 
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
@@ -113,5 +113,5 @@ index ddf9ea1..8f89531 100644
  libdvbv5_la_CPPFLAGS = -I../.. $(ENFORCE_LIBDVBV5_STATIC)
  libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) -lm
 -- 
-1.8.3.2
+1.7.10.4
 

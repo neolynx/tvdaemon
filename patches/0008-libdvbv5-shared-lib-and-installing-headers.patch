@@ -1,146 +1,146 @@
-From 71216e8da33080b13838848992fa2163a1cf7994 Mon Sep 17 00:00:00 2001
+From e00a89eba00da1a969efbf6a31d732e90bad56ea Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 30 Dec 2013 01:45:07 +0100
-Subject: [PATCH 08/38] libdvbv5: shared lib and installing headers
+Subject: [PATCH 08/40] libdvbv5: shared lib and installing headers
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors.h                          | 297 -----------
- lib/include/descriptors/atsc_eit.h                 |  90 ----
- lib/include/descriptors/atsc_header.h              |  63 ---
- .../descriptors/desc_atsc_service_location.h       |  71 ---
- lib/include/descriptors/desc_cable_delivery.h      |  69 ---
- lib/include/descriptors/desc_event_extended.h      |  60 ---
- lib/include/descriptors/desc_event_short.h         |  54 --
- lib/include/descriptors/desc_extension.h           |  86 ---
- lib/include/descriptors/desc_frequency_list.h      |  58 --
- lib/include/descriptors/desc_hierarchy.h           |  58 --
- lib/include/descriptors/desc_isdbt_delivery.h      |  62 ---
- lib/include/descriptors/desc_language.h            |  50 --
- lib/include/descriptors/desc_logical_channel.h     |  65 ---
- lib/include/descriptors/desc_network_name.h        |  51 --
- lib/include/descriptors/desc_partial_reception.h   |  57 --
- lib/include/descriptors/desc_sat.h                 |  67 ---
- lib/include/descriptors/desc_service.h             |  54 --
- lib/include/descriptors/desc_service_list.h        |  54 --
- lib/include/descriptors/desc_service_location.h    |  68 ---
- lib/include/descriptors/desc_t2_delivery.h         |  78 ---
- .../descriptors/desc_terrestrial_delivery.h        |  70 ---
- lib/include/descriptors/desc_ts_info.h             |  66 ---
- lib/include/descriptors/eit.h                      |  91 ----
- lib/include/descriptors/header.h                   |  81 ---
- lib/include/descriptors/mgt.h                      |  79 ---
- lib/include/descriptors/mpeg_es.h                  | 109 ----
- lib/include/descriptors/mpeg_pes.h                 | 111 ----
- lib/include/descriptors/mpeg_ts.h                  |  78 ---
- lib/include/descriptors/nit.h                      | 103 ----
- lib/include/descriptors/pat.h                      |  68 ---
- lib/include/descriptors/pmt.h                      | 119 -----
- lib/include/descriptors/sdt.h                      |  76 ---
- lib/include/descriptors/vct.h                      | 127 -----
- lib/include/dvb-demux.h                            |  50 --
- lib/include/dvb-fe.h                               | 231 --------
- lib/include/dvb-file.h                             | 161 ------
- lib/include/dvb-frontend.h                         | 593 ---------------------
- lib/include/dvb-log.h                              |  49 --
- lib/include/dvb-sat.h                              |  57 --
- lib/include/dvb-scan.h                             | 113 ----
- lib/include/dvb-v5-std.h                           |  96 ----
- lib/include/libdvbv5/atsc_eit.h                    |  90 ++++
- lib/include/libdvbv5/atsc_header.h                 |  63 +++
- lib/include/libdvbv5/desc_atsc_service_location.h  |  71 +++
- lib/include/libdvbv5/desc_cable_delivery.h         |  69 +++
- lib/include/libdvbv5/desc_event_extended.h         |  60 +++
- lib/include/libdvbv5/desc_event_short.h            |  54 ++
- lib/include/libdvbv5/desc_extension.h              |  86 +++
- lib/include/libdvbv5/desc_frequency_list.h         |  58 ++
- lib/include/libdvbv5/desc_hierarchy.h              |  58 ++
- lib/include/libdvbv5/desc_isdbt_delivery.h         |  62 +++
- lib/include/libdvbv5/desc_language.h               |  50 ++
- lib/include/libdvbv5/desc_logical_channel.h        |  65 +++
- lib/include/libdvbv5/desc_network_name.h           |  51 ++
- lib/include/libdvbv5/desc_partial_reception.h      |  57 ++
- lib/include/libdvbv5/desc_sat.h                    |  67 +++
- lib/include/libdvbv5/desc_service.h                |  54 ++
- lib/include/libdvbv5/desc_service_list.h           |  54 ++
- lib/include/libdvbv5/desc_service_location.h       |  68 +++
- lib/include/libdvbv5/desc_t2_delivery.h            |  78 +++
- lib/include/libdvbv5/desc_terrestrial_delivery.h   |  70 +++
- lib/include/libdvbv5/desc_ts_info.h                |  66 +++
- lib/include/libdvbv5/descriptors.h                 | 297 +++++++++++
- lib/include/libdvbv5/dvb-demux.h                   |  50 ++
- lib/include/libdvbv5/dvb-fe.h                      | 231 ++++++++
- lib/include/libdvbv5/dvb-file.h                    | 161 ++++++
- lib/include/libdvbv5/dvb-frontend.h                | 593 +++++++++++++++++++++
- lib/include/libdvbv5/dvb-log.h                     |  49 ++
- lib/include/libdvbv5/dvb-sat.h                     |  57 ++
- lib/include/libdvbv5/dvb-scan.h                    | 113 ++++
- lib/include/libdvbv5/dvb-v5-std.h                  |  96 ++++
- lib/include/libdvbv5/eit.h                         |  91 ++++
- lib/include/libdvbv5/header.h                      |  81 +++
- lib/include/libdvbv5/mgt.h                         |  79 +++
- lib/include/libdvbv5/mpeg_es.h                     | 109 ++++
- lib/include/libdvbv5/mpeg_pes.h                    | 111 ++++
- lib/include/libdvbv5/mpeg_ts.h                     |  78 +++
- lib/include/libdvbv5/nit.h                         | 103 ++++
- lib/include/libdvbv5/pat.h                         |  68 +++
- lib/include/libdvbv5/pmt.h                         | 119 +++++
- lib/include/libdvbv5/sdt.h                         |  76 +++
- lib/include/libdvbv5/vct.h                         | 127 +++++
- lib/libdvbv5/Makefile.am                           | 138 +++--
- lib/libdvbv5/descriptors.c                         |  62 +--
- lib/libdvbv5/descriptors/atsc_eit.c                |   4 +-
- lib/libdvbv5/descriptors/atsc_header.c             |   6 +-
- .../descriptors/desc_atsc_service_location.c       |   8 +-
- lib/libdvbv5/descriptors/desc_cable_delivery.c     |   6 +-
- lib/libdvbv5/descriptors/desc_event_extended.c     |   8 +-
- lib/libdvbv5/descriptors/desc_event_short.c        |   8 +-
- lib/libdvbv5/descriptors/desc_extension.c          |   8 +-
- lib/libdvbv5/descriptors/desc_frequency_list.c     |   6 +-
- lib/libdvbv5/descriptors/desc_hierarchy.c          |   6 +-
- lib/libdvbv5/descriptors/desc_isdbt_delivery.c     |   8 +-
- lib/libdvbv5/descriptors/desc_language.c           |   6 +-
- lib/libdvbv5/descriptors/desc_logical_channel.c    |   8 +-
- lib/libdvbv5/descriptors/desc_network_name.c       |   6 +-
- lib/libdvbv5/descriptors/desc_partial_reception.c  |   8 +-
- lib/libdvbv5/descriptors/desc_sat.c                |   6 +-
- lib/libdvbv5/descriptors/desc_service.c            |   8 +-
- lib/libdvbv5/descriptors/desc_service_list.c       |   6 +-
- lib/libdvbv5/descriptors/desc_service_location.c   |   4 +-
- lib/libdvbv5/descriptors/desc_t2_delivery.c        |   8 +-
- .../descriptors/desc_terrestrial_delivery.c        |   6 +-
- lib/libdvbv5/descriptors/desc_ts_info.c            |   8 +-
- lib/libdvbv5/descriptors/eit.c                     |   4 +-
- lib/libdvbv5/descriptors/header.c                  |   6 +-
- lib/libdvbv5/descriptors/mgt.c                     |   4 +-
- lib/libdvbv5/descriptors/mpeg_es.c                 |   6 +-
- lib/libdvbv5/descriptors/mpeg_pes.c                |   6 +-
- lib/libdvbv5/descriptors/mpeg_ts.c                 |   6 +-
- lib/libdvbv5/descriptors/nit.c                     |   4 +-
- lib/libdvbv5/descriptors/pat.c                     |   6 +-
- lib/libdvbv5/descriptors/pmt.c                     |   6 +-
- lib/libdvbv5/descriptors/sdt.c                     |   4 +-
- lib/libdvbv5/descriptors/vct.c                     |   6 +-
- lib/libdvbv5/dvb-demux.c                           |   2 +-
- lib/libdvbv5/dvb-fe.c                              |   4 +-
- lib/libdvbv5/dvb-file.c                            |  48 +-
- lib/libdvbv5/dvb-legacy-channel-format.c           |   4 +-
- lib/libdvbv5/dvb-log.c                             |   2 +-
- lib/libdvbv5/dvb-sat.c                             |   4 +-
- lib/libdvbv5/dvb-scan.c                            |  44 +-
- lib/libdvbv5/dvb-v5-std.c                          |   2 +-
- lib/libdvbv5/dvb-v5.h                              |   2 +-
- lib/libdvbv5/dvb-zap-format.c                      |   4 +-
- lib/libdvbv5/gen_dvb_structs.pl                    |   4 +-
- lib/libdvbv5/parse_string.c                        |   4 +-
- utils/dvb/dvb-fe-tool.c                            |   2 +-
- utils/dvb/dvb-format-convert.c                     |   6 +-
- utils/dvb/dvbv5-scan.c                             |   8 +-
- utils/dvb/dvbv5-zap.c                              |   8 +-
- 132 files changed, 4337 insertions(+), 4291 deletions(-)
+ lib/include/descriptors.h                          |  297 ----------
+ lib/include/descriptors/atsc_eit.h                 |   90 ---
+ lib/include/descriptors/atsc_header.h              |   63 ---
+ .../descriptors/desc_atsc_service_location.h       |   71 ---
+ lib/include/descriptors/desc_cable_delivery.h      |   69 ---
+ lib/include/descriptors/desc_event_extended.h      |   60 --
+ lib/include/descriptors/desc_event_short.h         |   54 --
+ lib/include/descriptors/desc_extension.h           |   86 ---
+ lib/include/descriptors/desc_frequency_list.h      |   58 --
+ lib/include/descriptors/desc_hierarchy.h           |   58 --
+ lib/include/descriptors/desc_isdbt_delivery.h      |   62 --
+ lib/include/descriptors/desc_language.h            |   50 --
+ lib/include/descriptors/desc_logical_channel.h     |   65 ---
+ lib/include/descriptors/desc_network_name.h        |   51 --
+ lib/include/descriptors/desc_partial_reception.h   |   57 --
+ lib/include/descriptors/desc_sat.h                 |   67 ---
+ lib/include/descriptors/desc_service.h             |   54 --
+ lib/include/descriptors/desc_service_list.h        |   54 --
+ lib/include/descriptors/desc_service_location.h    |   68 ---
+ lib/include/descriptors/desc_t2_delivery.h         |   78 ---
+ .../descriptors/desc_terrestrial_delivery.h        |   70 ---
+ lib/include/descriptors/desc_ts_info.h             |   66 ---
+ lib/include/descriptors/eit.h                      |   91 ---
+ lib/include/descriptors/header.h                   |   81 ---
+ lib/include/descriptors/mgt.h                      |   79 ---
+ lib/include/descriptors/mpeg_es.h                  |  109 ----
+ lib/include/descriptors/mpeg_pes.h                 |  111 ----
+ lib/include/descriptors/mpeg_ts.h                  |   78 ---
+ lib/include/descriptors/nit.h                      |  103 ----
+ lib/include/descriptors/pat.h                      |   68 ---
+ lib/include/descriptors/pmt.h                      |  119 ----
+ lib/include/descriptors/sdt.h                      |   76 ---
+ lib/include/descriptors/vct.h                      |  126 -----
+ lib/include/dvb-demux.h                            |   57 --
+ lib/include/dvb-fe.h                               |  232 --------
+ lib/include/dvb-file.h                             |  161 ------
+ lib/include/dvb-frontend.h                         |  593 --------------------
+ lib/include/dvb-log.h                              |   49 --
+ lib/include/dvb-sat.h                              |   57 --
+ lib/include/dvb-scan.h                             |  113 ----
+ lib/include/dvb-v5-std.h                           |   96 ----
+ lib/include/libdvbv5/atsc_eit.h                    |   90 +++
+ lib/include/libdvbv5/atsc_header.h                 |   63 +++
+ lib/include/libdvbv5/desc_atsc_service_location.h  |   71 +++
+ lib/include/libdvbv5/desc_cable_delivery.h         |   69 +++
+ lib/include/libdvbv5/desc_event_extended.h         |   60 ++
+ lib/include/libdvbv5/desc_event_short.h            |   54 ++
+ lib/include/libdvbv5/desc_extension.h              |   86 +++
+ lib/include/libdvbv5/desc_frequency_list.h         |   58 ++
+ lib/include/libdvbv5/desc_hierarchy.h              |   58 ++
+ lib/include/libdvbv5/desc_isdbt_delivery.h         |   62 ++
+ lib/include/libdvbv5/desc_language.h               |   50 ++
+ lib/include/libdvbv5/desc_logical_channel.h        |   65 +++
+ lib/include/libdvbv5/desc_network_name.h           |   51 ++
+ lib/include/libdvbv5/desc_partial_reception.h      |   57 ++
+ lib/include/libdvbv5/desc_sat.h                    |   67 +++
+ lib/include/libdvbv5/desc_service.h                |   54 ++
+ lib/include/libdvbv5/desc_service_list.h           |   54 ++
+ lib/include/libdvbv5/desc_service_location.h       |   68 +++
+ lib/include/libdvbv5/desc_t2_delivery.h            |   78 +++
+ lib/include/libdvbv5/desc_terrestrial_delivery.h   |   70 +++
+ lib/include/libdvbv5/desc_ts_info.h                |   66 +++
+ lib/include/libdvbv5/descriptors.h                 |  297 ++++++++++
+ lib/include/libdvbv5/dvb-demux.h                   |   57 ++
+ lib/include/libdvbv5/dvb-fe.h                      |  232 ++++++++
+ lib/include/libdvbv5/dvb-file.h                    |  161 ++++++
+ lib/include/libdvbv5/dvb-frontend.h                |  593 ++++++++++++++++++++
+ lib/include/libdvbv5/dvb-log.h                     |   49 ++
+ lib/include/libdvbv5/dvb-sat.h                     |   57 ++
+ lib/include/libdvbv5/dvb-scan.h                    |  113 ++++
+ lib/include/libdvbv5/dvb-v5-std.h                  |   96 ++++
+ lib/include/libdvbv5/eit.h                         |   91 +++
+ lib/include/libdvbv5/header.h                      |   81 +++
+ lib/include/libdvbv5/mgt.h                         |   79 +++
+ lib/include/libdvbv5/mpeg_es.h                     |  109 ++++
+ lib/include/libdvbv5/mpeg_pes.h                    |  111 ++++
+ lib/include/libdvbv5/mpeg_ts.h                     |   78 +++
+ lib/include/libdvbv5/nit.h                         |  103 ++++
+ lib/include/libdvbv5/pat.h                         |   68 +++
+ lib/include/libdvbv5/pmt.h                         |  119 ++++
+ lib/include/libdvbv5/sdt.h                         |   76 +++
+ lib/include/libdvbv5/vct.h                         |  126 +++++
+ lib/libdvbv5/Makefile.am                           |  138 +++--
+ lib/libdvbv5/descriptors.c                         |   62 +-
+ lib/libdvbv5/descriptors/atsc_eit.c                |    4 +-
+ lib/libdvbv5/descriptors/atsc_header.c             |    6 +-
+ .../descriptors/desc_atsc_service_location.c       |    8 +-
+ lib/libdvbv5/descriptors/desc_cable_delivery.c     |    6 +-
+ lib/libdvbv5/descriptors/desc_event_extended.c     |    8 +-
+ lib/libdvbv5/descriptors/desc_event_short.c        |    8 +-
+ lib/libdvbv5/descriptors/desc_extension.c          |    8 +-
+ lib/libdvbv5/descriptors/desc_frequency_list.c     |    6 +-
+ lib/libdvbv5/descriptors/desc_hierarchy.c          |    6 +-
+ lib/libdvbv5/descriptors/desc_isdbt_delivery.c     |    8 +-
+ lib/libdvbv5/descriptors/desc_language.c           |    6 +-
+ lib/libdvbv5/descriptors/desc_logical_channel.c    |    8 +-
+ lib/libdvbv5/descriptors/desc_network_name.c       |    6 +-
+ lib/libdvbv5/descriptors/desc_partial_reception.c  |    8 +-
+ lib/libdvbv5/descriptors/desc_sat.c                |    6 +-
+ lib/libdvbv5/descriptors/desc_service.c            |    8 +-
+ lib/libdvbv5/descriptors/desc_service_list.c       |    6 +-
+ lib/libdvbv5/descriptors/desc_service_location.c   |    4 +-
+ lib/libdvbv5/descriptors/desc_t2_delivery.c        |    8 +-
+ .../descriptors/desc_terrestrial_delivery.c        |    6 +-
+ lib/libdvbv5/descriptors/desc_ts_info.c            |    8 +-
+ lib/libdvbv5/descriptors/eit.c                     |    4 +-
+ lib/libdvbv5/descriptors/header.c                  |    6 +-
+ lib/libdvbv5/descriptors/mgt.c                     |    4 +-
+ lib/libdvbv5/descriptors/mpeg_es.c                 |    6 +-
+ lib/libdvbv5/descriptors/mpeg_pes.c                |    6 +-
+ lib/libdvbv5/descriptors/mpeg_ts.c                 |    6 +-
+ lib/libdvbv5/descriptors/nit.c                     |    4 +-
+ lib/libdvbv5/descriptors/pat.c                     |    6 +-
+ lib/libdvbv5/descriptors/pmt.c                     |    6 +-
+ lib/libdvbv5/descriptors/sdt.c                     |    4 +-
+ lib/libdvbv5/descriptors/vct.c                     |    6 +-
+ lib/libdvbv5/dvb-demux.c                           |    2 +-
+ lib/libdvbv5/dvb-fe.c                              |    4 +-
+ lib/libdvbv5/dvb-file.c                            |   48 +-
+ lib/libdvbv5/dvb-legacy-channel-format.c           |    4 +-
+ lib/libdvbv5/dvb-log.c                             |    2 +-
+ lib/libdvbv5/dvb-sat.c                             |    4 +-
+ lib/libdvbv5/dvb-scan.c                            |   44 +-
+ lib/libdvbv5/dvb-v5-std.c                          |    2 +-
+ lib/libdvbv5/dvb-v5.h                              |    2 +-
+ lib/libdvbv5/dvb-zap-format.c                      |    4 +-
+ lib/libdvbv5/gen_dvb_structs.pl                    |    4 +-
+ lib/libdvbv5/parse_string.c                        |    4 +-
+ utils/dvb/dvb-fe-tool.c                            |    2 +-
+ utils/dvb/dvb-format-convert.c                     |    6 +-
+ utils/dvb/dvbv5-scan.c                             |    8 +-
+ utils/dvb/dvbv5-zap.c                              |    8 +-
+ 132 files changed, 4344 insertions(+), 4298 deletions(-)
  delete mode 100644 lib/include/descriptors.h
  delete mode 100644 lib/include/descriptors/atsc_eit.h
  delete mode 100644 lib/include/descriptors/atsc_header.h
@@ -2981,10 +2981,10 @@ index 9d27bd4..0000000
 -#endif
 diff --git a/lib/include/descriptors/vct.h b/lib/include/descriptors/vct.h
 deleted file mode 100644
-index f3dad6c..0000000
+index bb3250f..0000000
 --- a/lib/include/descriptors/vct.h
 +++ /dev/null
-@@ -1,127 +0,0 @@
+@@ -1,126 +0,0 @@
 -/*
 - * Copyright (c) 2013 - Mauro Carvalho Chehab <m.chehab@samsung.com>
 - * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
@@ -3074,7 +3074,6 @@ index f3dad6c..0000000
 -struct atsc_table_vct {
 -	struct atsc_table_header header;
 -
--	uint8_t ATSC_protocol_version;
 -	uint8_t num_channels_in_section;
 -
 -	/*
@@ -3114,10 +3113,10 @@ index f3dad6c..0000000
 -#endif
 diff --git a/lib/include/dvb-demux.h b/lib/include/dvb-demux.h
 deleted file mode 100644
-index 51d2176..0000000
+index fc3df0b..0000000
 --- a/lib/include/dvb-demux.h
 +++ /dev/null
-@@ -1,50 +0,0 @@
+@@ -1,57 +0,0 @@
 -/*
 - * This program is free software; you can redistribute it and/or
 - * modify it under the terms of the GNU General Public License
@@ -3159,7 +3158,14 @@ index 51d2176..0000000
 -void dvb_dmx_close(int dmx_fd);
 -void dvb_dmx_stop(int dmx_fd);
 -
--int dvb_set_pesfilter(int dmxfd, int pid, dmx_pes_type_t type, dmx_output_t output, int buffersize);
+-int dvb_set_pesfilter(int dmxfd, int pid, dmx_pes_type_t type,
+-		      dmx_output_t output, int buffersize);
+-
+-int dvb_set_section_filter(int dmxfd, int pid, unsigned filtsize,
+-			   unsigned char *filter,
+-			   unsigned char *mask,
+-			   unsigned char *mode,
+-			   unsigned int flags);
 -
 -int get_pmt_pid(const char *dmxdev, int sid);
 -
@@ -3170,10 +3176,10 @@ index 51d2176..0000000
 -#endif
 diff --git a/lib/include/dvb-fe.h b/lib/include/dvb-fe.h
 deleted file mode 100644
-index 4accd5e..0000000
+index 40dbe1a..0000000
 --- a/lib/include/dvb-fe.h
 +++ /dev/null
-@@ -1,231 +0,0 @@
+@@ -1,232 +0,0 @@
 -/*
 - * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 - *
@@ -3273,6 +3279,7 @@ index 4accd5e..0000000
 -	struct dtv_property		dvb_prop[DTV_MAX_COMMAND];
 -	int				legacy_fe;
 -	struct dvb_v5_stats		stats;
+-	int				lna;
 -
 -	/* Satellite specific stuff, specified by the library client */
 -	const struct dvb_sat_lnb       	*lnb;
@@ -6292,10 +6299,10 @@ index 0000000..b482fa0
 +#endif
 diff --git a/lib/include/libdvbv5/dvb-demux.h b/lib/include/libdvbv5/dvb-demux.h
 new file mode 100644
-index 0000000..51d2176
+index 0000000..fc3df0b
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-demux.h
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,57 @@
 +/*
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -6337,7 +6344,14 @@ index 0000000..51d2176
 +void dvb_dmx_close(int dmx_fd);
 +void dvb_dmx_stop(int dmx_fd);
 +
-+int dvb_set_pesfilter(int dmxfd, int pid, dmx_pes_type_t type, dmx_output_t output, int buffersize);
++int dvb_set_pesfilter(int dmxfd, int pid, dmx_pes_type_t type,
++		      dmx_output_t output, int buffersize);
++
++int dvb_set_section_filter(int dmxfd, int pid, unsigned filtsize,
++			   unsigned char *filter,
++			   unsigned char *mask,
++			   unsigned char *mode,
++			   unsigned int flags);
 +
 +int get_pmt_pid(const char *dmxdev, int sid);
 +
@@ -6348,10 +6362,10 @@ index 0000000..51d2176
 +#endif
 diff --git a/lib/include/libdvbv5/dvb-fe.h b/lib/include/libdvbv5/dvb-fe.h
 new file mode 100644
-index 0000000..4accd5e
+index 0000000..40dbe1a
 --- /dev/null
 +++ b/lib/include/libdvbv5/dvb-fe.h
-@@ -0,0 +1,231 @@
+@@ -0,0 +1,232 @@
 +/*
 + * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
 + *
@@ -6451,6 +6465,7 @@ index 0000000..4accd5e
 +	struct dtv_property		dvb_prop[DTV_MAX_COMMAND];
 +	int				legacy_fe;
 +	struct dvb_v5_stats		stats;
++	int				lna;
 +
 +	/* Satellite specific stuff, specified by the library client */
 +	const struct dvb_sat_lnb       	*lnb;
@@ -8665,10 +8680,10 @@ index 0000000..3d5b1d7
 +#endif
 diff --git a/lib/include/libdvbv5/vct.h b/lib/include/libdvbv5/vct.h
 new file mode 100644
-index 0000000..6935f30
+index 0000000..8044af1
 --- /dev/null
 +++ b/lib/include/libdvbv5/vct.h
-@@ -0,0 +1,127 @@
+@@ -0,0 +1,126 @@
 +/*
 + * Copyright (c) 2013 - Mauro Carvalho Chehab <m.chehab@samsung.com>
 + * Copyright (c) 2013 - Andre Roth <neolynx@gmail.com>
@@ -8758,7 +8773,6 @@ index 0000000..6935f30
 +struct atsc_table_vct {
 +	struct atsc_table_header header;
 +
-+	uint8_t ATSC_protocol_version;
 +	uint8_t num_channels_in_section;
 +
 +	/*
@@ -8953,7 +8967,7 @@ index c6d2a42..ddf9ea1 100644
  libdvbv5_la_LIBADD = $(LTLIBICONV)
  
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index f141028..1dad12c 100644
+index 3bbb5d1..b4ef81d 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -22,39 +22,39 @@
@@ -9573,7 +9587,7 @@ index 30207b2..5e0c924 100644
  void dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  			ssize_t buflen, uint8_t *table, ssize_t *table_length)
 diff --git a/lib/libdvbv5/descriptors/vct.c b/lib/libdvbv5/descriptors/vct.c
-index 493f184..5078991 100644
+index cb75b8b..0f051ac 100644
 --- a/lib/libdvbv5/descriptors/vct.c
 +++ b/lib/libdvbv5/descriptors/vct.c
 @@ -19,9 +19,9 @@
@@ -9590,7 +9604,7 @@ index 493f184..5078991 100644
  void atsc_table_vct_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  			ssize_t buflen, uint8_t *table, ssize_t *table_length)
 diff --git a/lib/libdvbv5/dvb-demux.c b/lib/libdvbv5/dvb-demux.c
-index e867c35..df479ef 100644
+index cfd075f..baddbb1 100644
 --- a/lib/libdvbv5/dvb-demux.c
 +++ b/lib/libdvbv5/dvb-demux.c
 @@ -38,7 +38,7 @@
@@ -9603,7 +9617,7 @@ index e867c35..df479ef 100644
  int dvb_dmx_open(int adapter, int demux)
  {
 diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
-index 41731e1..982e834 100644
+index 28e6354..8f5460c 100644
 --- a/lib/libdvbv5/dvb-fe.c
 +++ b/lib/libdvbv5/dvb-fe.c
 @@ -19,8 +19,8 @@
@@ -9720,7 +9734,7 @@ index 52dcffb..b087a36 100644
  static const struct dvb_sat_lnb lnb[] = {
  	{
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 9222305..ced358c 100644
+index 84c0f86..c72bfb4 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
 @@ -38,30 +38,30 @@
@@ -9885,7 +9899,7 @@ index 4f53295..ab3cd79 100644
  #define PROGRAM_NAME	"dvb-format-convert"
  
 diff --git a/utils/dvb/dvbv5-scan.c b/utils/dvb/dvbv5-scan.c
-index 8d3dbbe..63f030f 100644
+index d47ac57..501b332 100644
 --- a/utils/dvb/dvbv5-scan.c
 +++ b/utils/dvb/dvbv5-scan.c
 @@ -33,10 +33,10 @@
@@ -9904,7 +9918,7 @@ index 8d3dbbe..63f030f 100644
  #define PROGRAM_NAME	"dvbv5-scan"
  #define DEFAULT_OUTPUT  "dvb_channel.conf"
 diff --git a/utils/dvb/dvbv5-zap.c b/utils/dvb/dvbv5-zap.c
-index 186fd1c..18895ee 100644
+index cffac98..f92a11e 100644
 --- a/utils/dvb/dvbv5-zap.c
 +++ b/utils/dvb/dvbv5-zap.c
 @@ -37,10 +37,10 @@
@@ -9923,5 +9937,5 @@ index 186fd1c..18895ee 100644
  #define CHANNEL_FILE	"channels.conf"
  #define PROGRAM_NAME	"dvbv5-zap"
 -- 
-1.8.3.2
+1.7.10.4
 
