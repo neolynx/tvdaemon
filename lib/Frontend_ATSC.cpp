@@ -23,12 +23,13 @@
 
 #include "Transponder.h"
 #include "Log.h"
+#include "Adapter.h"
 
-Frontend_ATSC::Frontend_ATSC( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
-  Frontend( adapter, adapter_id, frontend_id, config_id )
+Frontend_ATSC::Frontend_ATSC( Adapter &adapter, std::string name, int frontend_id, int config_id ) :
+  Frontend( adapter, name, frontend_id, config_id )
 {
   type = Source::Type_ATSC;
-  Log( "  Creating Frontend ATSC /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+  Log( "  Creating Frontend ATSC /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
 }
 
 Frontend_ATSC::Frontend_ATSC( Adapter &adapter, std::string configfile ) : Frontend( adapter, configfile )

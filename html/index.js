@@ -143,18 +143,18 @@ function getAdapter( adapter )
   else
     imgstyle = "class=\"icon\";";
   if( adapter["path"].indexOf( "/usb" ) != -1 )
-    icon = "<img src=\"images/usb-icon.png\" " + imgstyle + "/>";
+    icon = adapter["name"] + " <img src=\"images/usb-icon.png\" " + imgstyle + "/>";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
-    icon = "<img src=\"images/pci-icon.png\" " + imgstyle + "/>";
+    icon = adapter["name"] + " <img src=\"images/pci-icon.png\" " + imgstyle + "/>";
   else
-    icon = "<img src=\"images/pci-icon.png\" " + imgstyle + "/>";
+    icon = adapter["name"] + " <img src=\"images/pci-icon.png\" " + imgstyle + "/>";
   return icon;
 }
 
 function getFrontend( frontend )
 {
   adapter = adapters[frontend["adapter_id"]];
-  return "<a href=\"javascript: click_frontend( " + frontend["adapter_id"] + ", " + frontend["id"] + " );\">" + adapter["name"] + "</a>";
+  return "<a href=\"javascript: click_frontend( " + frontend["adapter_id"] + ", " + frontend["id"] + " );\">" + frontend["name"] + "</a>";
 }
 
 function getPort( port )

@@ -332,8 +332,8 @@ class ConfigObject : public ConfigBase
       }
     }
 
-    std::string GetConfigDir( )  { return configdir; }
-    std::string GetConfigFile( ) { return configfile; }
+    std::string GetConfigDir( )  const { return configdir; }
+    std::string GetConfigFile( ) const { return configfile; }
     bool SetConfigFile( std::string configfile );
     bool WriteConfigFile( );
     bool ReadConfigFile( );

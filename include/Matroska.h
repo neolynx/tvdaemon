@@ -43,7 +43,7 @@ template<typename A, typename B> B &GetChildAs( EbmlMaster &m )
 class Matroska
 {
   public:
-    Matroska( std::string name );
+    Matroska( const std::string& name );
     ~Matroska( );
 
     void WriteHeader( );

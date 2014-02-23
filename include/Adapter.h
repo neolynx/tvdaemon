@@ -26,7 +26,7 @@
 #include "RPCObject.h"
 
 #include <string>
-#include <map>
+#include <vector>
 
 class TVDaemon;
 class Frontend;
@@ -35,25 +35,26 @@ class HTTPServer;
 class Adapter : public ConfigObject, public RPCObject
 {
   public:
-    Adapter( TVDaemon &tvd, std::string uid, std::string name, int config_id );
-    Adapter( TVDaemon &tvd, std::string uid, int config_id );
-    Adapter( TVDaemon &tvd, std::string configfile );
+    Adapter( TVDaemon &tvd, const std::string &name, const int adapter_id, const int config_id );
+    Adapter( TVDaemon &tvd, const std::string &configfile );
     virtual ~Adapter( );
     void Shutdown( );
 
-    void SetFrontend( std::string frontend, int adapter_id, int frontend_id );
-
-    void FindConfig( );
+    void SetFrontend( const std::string &name, const int frontend_id );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
-    std::string GetName( ) { return name; }
-    std::string GetUID( ) { return uid; }
+    std::string GetName( ) const { return name; }
+    std::string GetUID( ) const { return uid; }
+    std::string GetPath( ) const;
+    void SetUID( const std::string &uid ) { this->uid = uid; }
+    int GetAdapterId( ) const { return adapter_id; }
+    void SetAdapterId( const int adapter_id ) { this->adapter_id = adapter_id; }
     int GetFrontendCount( ) { return frontends.size( ); }
-    Frontend *GetFrontend( int id );
-    void SetPresence( bool present );
-    bool IsPresent( ) const { return present; }
+    Frontend *GetFrontend ( const int id ) const;
+    void ResetPresence( );
+    bool IsPresent( ) const;
 
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
@@ -64,10 +65,10 @@ class Adapter : public ConfigObject, public RPCObject
     std::string uid;
     bool present;
 
-    std::vector<Frontend *> frontends;
-    std::vector<std::string> ftempnames;
+    typedef std::vector<Frontend *> FrontendList;
+    FrontendList frontends;
     std::string name;
-    std::string configdir;
+    int adapter_id;
 };
 
 #endif

@@ -43,18 +43,19 @@ class Activity;
 class Frontend : public ConfigObject, public RPCObject, public Thread
 {
   public:
-    static Frontend *Create( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
+    static Frontend *Create( Adapter &adapter, int frontend_id, int config_id );
     static Frontend *Create( Adapter &adapter, std::string configfile );
     virtual ~Frontend( );
     void Shutdown( ) { up = false; }
 
     Port *AddPort( std::string name, int port_num );
 
-    void SetPresence( bool present ) { this->present = present; }
-    bool IsPresent( ) { return present; }
+    std::string GetName( ) { return name; }
 
-    void SetIDs( int adapter_id, int frontend_id );
-    void GetIDs( int &adapter_id, int &frontend_id ) const;
+    bool IsPresent( ) { return frontend_id > -1; }
+
+    void SetFrontendId( int frontend_id );
+    int GetFrontendId( ) const;
 
     Port *GetPort( int id ); // FIXME: used ?
     Port *GetCurrentPort( );
@@ -93,12 +94,11 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
 
   protected:
-    Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
+    Frontend( Adapter &adapter, std::string name, int frontend_id, int config_id );
     Frontend( Adapter &adapter, std::string configfile );
 
-    bool present;
+    std::string name;
     bool enabled;
-    int adapter_id;
     int frontend_id;
     Adapter &adapter;
 
@@ -108,7 +108,6 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
 
     struct dvb_v5_fe_parms *fe;
 
-    int config_id;
     int current_port;
 
     std::vector<Port *> ports;

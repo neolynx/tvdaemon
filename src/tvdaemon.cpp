@@ -70,15 +70,7 @@ int main( int argc, char *argv[] )
         debug = true;
         break;
       case 'r':
-        {
-          //Log( "Setting http root dir" );
-          //char *tempPath = canonicalize_file_name( optarg );
-          //if( tempPath )
-          //{
-            httpRoot = optarg; //tempPath;
-            //free( tempPath );
-          //}
-        }
+        httpRoot = optarg;
         break;
       default:
         usage( argv[0] );
@@ -119,4 +111,3 @@ int main( int argc, char *argv[] )
   delete logger;
   return 0;
 }
-

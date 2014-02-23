@@ -172,6 +172,18 @@ void Utils::ToLower( const std::string &string, std::string &lower )
   std::transform( lower.begin( ), lower.end( ), lower.begin( ), std::bind2nd( std::ptr_fun( &std::tolower<char> ), std::locale( "" )));
 }
 
+std::string Utils::Trim( const std::string input )
+{
+  if( input.empty() )
+    return "";
+
+  const std::string whitespace = " \t\n";
+  const size_t strBegin = input.find_first_not_of(whitespace);
+  const size_t strEnd = input.find_last_not_of(whitespace);
+  const size_t strRange = strEnd - strBegin + 1;
+
+  return input.substr(strBegin, strRange);
+}
 
 Name::Name( ) : std::string( )
 {
@@ -241,7 +253,7 @@ Name &Name::operator=( const char *str )
   return *this;
 }
 
-int Utils::Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count )
+void Utils::Tokenize( const std::string &string, const char delims[], std::vector<std::string> &tokens, int count )
 {
   int len = string.length( );
   int dlen = strlen( delims );

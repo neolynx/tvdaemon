@@ -64,14 +64,11 @@ void Condition::Signal( ) const
 bool Condition::Wait( int seconds ) const
 {
   struct timespec ts;
-  struct timeval  tp;
 
   while( seconds-- )
   {
-    gettimeofday( &tp, NULL );
-    ts.tv_sec  = tp.tv_sec;
-    ts.tv_nsec = tp.tv_usec * 1000;
-    ts.tv_sec += 1;
+    clock_gettime( CLOCK_REALTIME, &ts );
+    ts.tv_sec++;
 
     int r = pthread_cond_timedwait( &cond, &mutex, &ts );
     switch( r )

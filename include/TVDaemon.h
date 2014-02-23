@@ -48,7 +48,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
 {
   public:
     static TVDaemon *Instance( );
-    bool Create( std::string configdir );
+    bool Create( const std::string& configdir );
     virtual ~TVDaemon( );
 
     bool Start( const char* httpRoot );
@@ -56,10 +56,10 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
-    std::vector<std::string> GetAdapterList( );
-    Adapter *GetAdapter( int id );
+    std::vector<std::string> GetAdapterList( ) const;
+    Adapter *GetAdapter( const int id ) const;
 
-    Source *CreateSource( std::string name, Source::Type type, std::string scanfile = "" );
+    Source *CreateSource( const std::string &name, Source::Type type, std::string scanfile = "" );
     std::vector<std::string> GetSourceList( );
     Source *GetSource( int id ) const;
 
@@ -92,7 +92,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
 
   private:
     TVDaemon( );
-    int FindAdapters( );
+    void FindAdapters( );
     void MonitorAdapters( );
 
     static TVDaemon *instance;
@@ -105,14 +105,12 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     bool up;
 
     // udev
-    Adapter *UdevAdd( struct udev_device *dev, const char *path );
+    std::string GetAdapterName( struct udev_device *dev );
+    void AddFrontend( struct udev_device *dev, const char *path, int adapter_id=-1, int frontend_id=-1 );
     void UdevRemove( const char *path );
     struct udev *udev;
     struct udev_monitor *udev_mon;
     int udev_fd;
-
-    // non-udev
-    Adapter *NonUdevAdd( int adapter_id, int frontend_id );
 
     HTTPServer *httpd;
 

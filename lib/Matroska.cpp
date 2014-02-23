@@ -40,12 +40,15 @@
 //#include "matroska/KaxChapters.h"
 //#include "matroska/KaxContentEncoding.h"
 
-Matroska::Matroska( std::string name ) : name(name), out(NULL), cluster(NULL)
+Matroska::Matroska( const std::string& name ) :
+  name(name),
+  timecode_scale(1000000),   // default scale: 1 milisecond;
+  out(NULL),
+  cluster(NULL),
+  track_count(0),
+  curr_seg_size(0),
+  cluster_size(0)
 {
-  track_count = 0;
-  timecode_scale = 1000000;  // default scale: 1 milisecond;
-  curr_seg_size = 0;
-  cluster_size = 0;
 }
 
 Matroska::~Matroska( )

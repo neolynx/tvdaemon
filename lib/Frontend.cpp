@@ -49,14 +49,13 @@
 #include <errno.h> // ETIMEDOUT
 #include <sys/time.h>
 
-Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
+Frontend::Frontend( Adapter &adapter, std::string name, int frontend_id, int config_id ) :
   ConfigObject( adapter, "frontend", config_id )
   , Thread( )
   , adapter(adapter)
   , fe(NULL)
-  , adapter_id(adapter_id)
   , frontend_id(frontend_id)
-  , present(false)
+  , name(name)
   , transponder(NULL)
   , activity(NULL)
   , current_port(0)
@@ -73,9 +72,9 @@ Frontend::Frontend( Adapter &adapter, int adapter_id, int frontend_id, int confi
 Frontend::Frontend( Adapter &adapter, std::string configfile ) :
   ConfigObject( adapter, configfile )
   , Thread( )
+  , frontend_id(-1)
   , adapter(adapter)
   , fe(NULL)
-  , present(false)
   , transponder(NULL)
   , activity(NULL)
   , current_port(0)
@@ -125,10 +124,11 @@ Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
   return NULL;
 }
 
-Frontend *Frontend::Create( Adapter &adapter, int adapter_id, int frontend_id, int config_id )
+Frontend *Frontend::Create( Adapter &adapter, int frontend_id, int config_id )
 {
+  std::string name;
   fe_delivery_system_t delsys;
-  if( !GetInfo( adapter_id, frontend_id, &delsys ))
+  if( !GetInfo( adapter.GetAdapterId( ), frontend_id, &delsys, &name ))
     return NULL;
 
   switch( delsys )
@@ -143,22 +143,22 @@ Frontend *Frontend::Create( Adapter &adapter, int adapter_id, int frontend_id, i
     case SYS_CMMB:
     case SYS_DAB:
     case SYS_TURBO:
-      ::LogError( "%d.%d Delivery system %s not supported", adapter_id, frontend_id, delivery_system_name[delsys] );
+      ::LogError( "%d.%d Delivery system %s not supported", adapter.GetAdapterId( ), frontend_id, delivery_system_name[delsys] );
       return NULL;
     case SYS_ATSC:
     case SYS_ATSCMH:
-      return new Frontend_ATSC( adapter, adapter_id, frontend_id, config_id );
+      return new Frontend_ATSC( adapter, name, frontend_id, config_id );
       break;
     case SYS_DVBT:
     case SYS_DVBT2:
-      return new Frontend_DVBT( adapter, adapter_id, frontend_id, config_id );
+      return new Frontend_DVBT( adapter, name, frontend_id, config_id );
     case SYS_DVBC_ANNEX_A:
     case SYS_DVBC_ANNEX_B:
     case SYS_DVBC_ANNEX_C:
-      return new Frontend_DVBC( adapter, adapter_id, frontend_id, config_id );
+      return new Frontend_DVBC( adapter, name, frontend_id, config_id );
     case SYS_DVBS:
     case SYS_DVBS2:
-      return new Frontend_DVBS( adapter, adapter_id, frontend_id, config_id );
+      return new Frontend_DVBS( adapter, name, frontend_id, config_id );
   }
   return NULL;
 }
@@ -183,16 +183,16 @@ bool Frontend::Open()
   if( fe )
     return true;
   // FIXME: handle adapter_id == -1
-  if( adapter_id == -1 )
+  if( adapter.GetAdapterId() == -1 )
   {
     LogError( "adapter_id not set" );
     return false;
   }
-  Log( "Opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
-  fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
+  Log( "Opening /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
+  fe = dvb_fe_open2( adapter.GetAdapterId(), frontend_id, 0, 0, TVD_Log );
   if( !fe )
   {
-    LogError( "Error opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+    LogError( "Error opening /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
     return false;
   }
   state = State_Opened;
@@ -203,7 +203,7 @@ void Frontend::Close()
 {
   if( fe )
   {
-    Log( "Closing /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+    Log( "Closing /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
     dvb_fe_close( fe );
     transponder = NULL;
     fe = NULL;
@@ -233,6 +233,7 @@ bool Frontend::GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *d
 
 bool Frontend::SaveConfig( )
 {
+  WriteConfig( "Name", name );
   WriteConfig( "Type", type );
   WriteConfig( "TuneTimeout", tune_timeout );
 
@@ -250,6 +251,7 @@ bool Frontend::LoadConfig( )
   if( !ReadConfigFile( ))
     return false;
 
+  ReadConfig( "Name", name );
   ReadConfig( "Type", (int &) type );
   ReadConfig( "TuneTimeout", tune_timeout );
   if( tune_timeout == 0 )
@@ -261,17 +263,15 @@ bool Frontend::LoadConfig( )
   return true;
 }
 
-void Frontend::SetIDs( int adapter_id, int frontend_id )
+void Frontend::SetFrontendId( int frontend_id )
 {
-  this->adapter_id  = adapter_id;
   this->frontend_id = frontend_id;
-  Log( "  Frontend on /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+  Log( "  Frontend on /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId(), frontend_id );
 }
 
-void Frontend::GetIDs( int &adapter_id, int &frontend_id ) const
+int Frontend::GetFrontendId( ) const
 {
-  adapter_id  = this->adapter_id;
-  frontend_id = this->frontend_id;
+  return frontend_id;
 }
 
 bool Frontend::SetPort( int id )
@@ -304,7 +304,7 @@ Port *Frontend::GetCurrentPort( )
 
 int Frontend::OpenDemux( )
 {
-  return dvb_dmx_open( adapter_id, frontend_id );
+  return dvb_dmx_open( adapter.GetAdapterId(), frontend_id );
 }
 
 void Frontend::CloseDemux( int fd )
@@ -321,7 +321,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
 
   struct timeval ts;
   gettimeofday( &ts, NULL );
-  long start = ts.tv_sec * 1000 + ts.tv_usec / 1000; // mili seconds
+  long start = ts.tv_sec * 1000 + ts.tv_usec / 1000; // milli seconds
 
   while( state == State_Tuning && up )
   {
@@ -465,9 +465,7 @@ bool Frontend::SetTuneParams( Transponder & )
 
 void Frontend::json( json_object *entry ) const
 {
-  char name[32];
-  snprintf( name, sizeof( name ), "Frontend%d", GetKey( ));
-  json_object_object_add( entry, "name", json_object_new_string( name ));
+  json_object_object_add( entry, "name", json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type", json_object_new_int( type ));
 

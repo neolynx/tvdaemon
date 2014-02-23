@@ -22,13 +22,14 @@
 #include "Frontend_DVBT.h"
 
 #include "Log.h"
+#include "Adapter.h"
 
-Frontend_DVBT::Frontend_DVBT( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
-  Frontend( adapter, adapter_id, frontend_id, config_id )
+Frontend_DVBT::Frontend_DVBT( Adapter &adapter, std::string name, int frontend_id, int config_id ) :
+  Frontend( adapter, name, frontend_id, config_id )
 {
   tune_timeout = 2500;
   type = Source::Type_DVBT;
-  Log( "  Creating Frontend DVB-T /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+  Log( "  Creating Frontend DVB-T /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
 }
 
 Frontend_DVBT::Frontend_DVBT( Adapter &adapter, std::string configfile ) : Frontend( adapter, configfile )
@@ -48,9 +49,7 @@ bool Frontend_DVBT::SaveConfig( )
 bool Frontend_DVBT::LoadConfig( )
 {
   Log( "  Loading Frontend DVB-T" );
-  if( !Frontend::LoadConfig( ))
-    return false;
-  return true;
+  return Frontend::LoadConfig( );
 }
 
 bool Frontend_DVBT::HandleNIT( struct dvb_table_nit *nit )

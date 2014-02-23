@@ -26,12 +26,13 @@
 
 #include "Log.h"
 #include "Transponder_DVBC.h"
+#include "Adapter.h"
 
-Frontend_DVBC::Frontend_DVBC( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
-  Frontend( adapter, adapter_id, frontend_id, config_id )
+Frontend_DVBC::Frontend_DVBC( Adapter &adapter, std::string name, int frontend_id, int config_id ) :
+  Frontend( adapter, name, frontend_id, config_id )
 {
   type = Source::Type_DVBC;
-  Log( "  Creating Frontend DVB-C /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+  Log( "  Creating Frontend DVB-C /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
 }
 
 Frontend_DVBC::Frontend_DVBC( Adapter &adapter, std::string configfile ) : Frontend( adapter, configfile )
@@ -50,9 +51,7 @@ bool Frontend_DVBC::SaveConfig( )
 bool Frontend_DVBC::LoadConfig( )
 {
   Log( "  Loading Frontend DVB-C" );
-  if( !Frontend::LoadConfig( ))
-    return false;
-  return true;
+  return Frontend::LoadConfig( );
 }
 
 bool Frontend_DVBC::HandleNIT( struct dvb_table_nit *nit )
@@ -117,11 +116,11 @@ bool Frontend_DVBC::HandleNIT( struct dvb_table_nit *nit )
       }
       Source &source = transponder->GetSource( );
       Transponder_DVBC *t = new Transponder_DVBC( source,
-						  desc->frequency,
-						  desc->symbol_rate,
-						  fec,
+                                                  desc->frequency,
+                                                  desc->symbol_rate,
+                                                  fec,
                                                   modulation,
-						  source.GetTransponderCount( ));
+                                                  source.GetTransponderCount( ));
       if( !source.AddTransponder( t ))
         delete t;
       else

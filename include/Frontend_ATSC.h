@@ -30,7 +30,7 @@ class Frontend_ATSC : public Frontend
 {
   public:
     Frontend_ATSC( Adapter &adapter, std::string configfile );
-    Frontend_ATSC( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
+    Frontend_ATSC( Adapter &adapter, std::string name, int frontend_id, int config_id );
     virtual ~Frontend_ATSC( );
 
     virtual bool SaveConfig( );

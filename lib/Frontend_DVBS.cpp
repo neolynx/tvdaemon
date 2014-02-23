@@ -25,17 +25,18 @@
 #include "Transponder_DVBS.h"
 #include "Log.h"
 #include "Source.h"
+#include "Adapter.h"
 
 #include <libdvbv5/dvb-fe.h>
 #include <libdvbv5/dvb-frontend.h>
 #include <libdvbv5/nit.h>
 #include <libdvbv5/desc_sat.h>
 
-Frontend_DVBS::Frontend_DVBS( Adapter &adapter, int adapter_id, int frontend_id, int config_id ) :
-  Frontend( adapter, adapter_id, frontend_id, config_id )
+Frontend_DVBS::Frontend_DVBS( Adapter &adapter, std::string name, int frontend_id, int config_id ) :
+  Frontend( adapter, name, frontend_id, config_id )
 {
   type = Source::Type_DVBS;
-  Log( "  Creating Frontend DVB-S /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+  Log( "  Creating Frontend DVB-S /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
   LNB = "UNIVERSAL";
 }
 
@@ -191,14 +192,14 @@ bool Frontend_DVBS::HandleNIT( struct dvb_table_nit *nit )
 
       Source &source = transponder->GetSource( );
       Transponder_DVBS *t = new Transponder_DVBS( source,
-						  delsys,
-						  desc->frequency,
-						  polarization,
-						  desc->symbol_rate,
-						  fec,
+                                                  delsys,
+                                                  desc->frequency,
+                                                  polarization,
+                                                  desc->symbol_rate,
+                                                  fec,
                                                   modulation,
-						  rolloff,
-						  source.GetTransponderCount( ));
+                                                  rolloff,
+                                                  source.GetTransponderCount( ));
       if( !source.AddTransponder( t ))
         delete t;
       else

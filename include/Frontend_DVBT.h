@@ -30,7 +30,7 @@ class Frontend_DVBT : public Frontend
 {
   public:
     Frontend_DVBT( Adapter &adapter, std::string configfile );
-    Frontend_DVBT( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
+    Frontend_DVBT( Adapter &adapter, std::string name, int frontend_id, int config_id );
     virtual ~Frontend_DVBT( );
 
     virtual bool SaveConfig( );
