@@ -352,7 +352,11 @@ std::string TVDaemon::GetAdapterName( struct udev_device *dev )
 void TVDaemon::AddFrontend( struct udev_device *dev, const char *path, int adapter_id, int frontend_id )
 {
   std::string uid  = Utils::DirName( path );
-  std::string frontend = Utils::BaseName( path );
+  if( uid.empty() )
+  {
+    LogError( "adapter without a uid, '%s'", path );
+    return;
+  }
 
   if( adapter_id == -1)
   {
@@ -378,6 +382,35 @@ void TVDaemon::AddFrontend( struct udev_device *dev, const char *path, int adapt
   if( !Frontend::GetInfo( adapter_id, frontend_id, NULL, &fe_name ))
     return;
 
+  //
+  // first round - try to match name and udev uid
+  //
+  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+  {
+    Adapter *a = *it;
+    if( a->GetName( ) == name && ( a->GetUID( ) == uid || a->GetPath( ) == uid ))
+    {
+      if( false == a->IsPresent( ))
+      {
+        a->SetAdapterId( adapter_id );
+      }
+      if( adapter_id == a->GetAdapterId( ))
+      {
+        a->SetFrontend( fe_name, frontend_id );
+        return;
+      }
+    }
+    // prevent double adding of adapters
+    // the uid can only be present once
+    if( a->IsPresent( ) && ( a->GetUID() == uid || a->GetPath() == uid ))
+    {
+      return;
+    }
+  }
+
+  //
+  // second round - try to match only the name
+  //
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
   {
     Adapter *a = *it;
@@ -391,13 +424,8 @@ void TVDaemon::AddFrontend( struct udev_device *dev, const char *path, int adapt
       if( adapter_id == a->GetAdapterId( ))
       {
         a->SetFrontend( fe_name, frontend_id );
+        return;
       }
-    }
-    // prevent double adding of adapters
-    // the uid has to be reset on remove
-    if( a->GetUID() == uid || a->GetPath() == uid )
-    {
-      return;
     }
   }
 

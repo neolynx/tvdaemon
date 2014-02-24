@@ -68,6 +68,7 @@ void Adapter::Shutdown( )
 bool Adapter::SaveConfig( )
 {
   WriteConfig( "Name", name );
+  WriteConfig( "UDev-ID", uid );
 
   WriteConfigFile( );
 
@@ -83,8 +84,9 @@ bool Adapter::LoadConfig( )
   if( !ReadConfigFile( ))
     return false;
   ReadConfig( "Name", name );
+  ReadConfig( "UDev-ID", uid );
 
-  Log( "Loading Adapter %s", name.c_str( ));
+  Log( "Loading Adapter '%s'", name.c_str( ));
 
   if( !CreateFromConfigFactory<Frontend, Adapter>( *this, "frontend", frontends ))
     return false;
@@ -141,7 +143,6 @@ void Adapter::ResetPresence( )
 
   Log( "Adapter %d hardware removed '%s'", GetKey( ), GetName().c_str( ));
   adapter_id = -1;
-  uid = "";
 }
 
 bool Adapter::IsPresent( ) const
