@@ -29,7 +29,7 @@
 
 #include <map>
 #include <vector>
-#include <queue>
+#include <list>
 #include <libudev.h>
 
 #define SCANFILE_DIR "/usr/share/dvb/"
@@ -93,6 +93,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
   private:
     TVDaemon( );
     void FindAdapters( );
+    void ProcessAdapters( );
     void MonitorAdapters( );
 
     static TVDaemon *instance;
@@ -106,7 +107,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
 
     // udev
     std::string GetAdapterName( struct udev_device *dev );
-    void AddFrontend( struct udev_device *dev, const char *path, int adapter_id=-1, int frontend_id=-1 );
+    void AddFrontendToList( struct udev_device *dev, const char *path, const int adapter_id=-1, const int frontend_id=-1 );
     void UdevRemove( const char *path );
     struct udev *udev;
     struct udev_monitor *udev_mon;
@@ -127,6 +128,15 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     Mutex channels_mutex;
 
     Avahi_Client *avahi_client;
+
+    struct device_t {
+      std::string adapter_name;
+      std::string frontend_name;
+      std::string uid;
+      int adapter_id;
+      int frontend_id;
+    };
+    std::list<device_t> device_list;
 };
 
 #endif

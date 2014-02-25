@@ -155,6 +155,7 @@ bool TVDaemon::Start( const char* httpRoot )
   udev_monitor_filter_add_match_subsystem_devtype( udev_mon, "dvb", NULL );
 
   FindAdapters( );
+  ProcessAdapters( );
 
   Log( "Creating Recorder" );
   recorder = new Recorder( *this );
@@ -255,7 +256,7 @@ void TVDaemon::FindAdapters( )
 
     if( strcmp( type, "frontend" ) == 0 )
     {
-      AddFrontend( dev, udev_device_get_devpath( dev ));
+      AddFrontendToList( dev, udev_device_get_devpath( dev ));
     }
   }
 
@@ -291,13 +292,101 @@ void TVDaemon::FindAdapters( )
         if( sscanf( dp2.d_name, "frontend%d", &frontend_id ) == 1 )
         {
           std::string path = std::string( adapter ) + "/" + dp2.d_name;
-          AddFrontend( NULL, path.c_str(), adapter_id, frontend_id );
+          AddFrontendToList( NULL, path.c_str(), adapter_id, frontend_id );
         }
       }
       closedir( dir2 );
     }
   }
   closedir( dir );
+}
+
+void TVDaemon::ProcessAdapters( )
+{
+  bool found;
+  std::list<device_t>::iterator dev_it = device_list.begin( );
+  while( dev_it != device_list.end( ))
+  {
+    found = false;
+    //
+    // first round - try to match name and udev uid
+    //
+    for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    {
+      Adapter *a = *it;
+      if( a->GetName( ) == dev_it->adapter_name && ( a->GetUID( ) == dev_it->uid || a->GetPath( ) == dev_it->uid ))
+      {
+        if( false == a->IsPresent( ))
+        {
+          a->SetAdapterId( dev_it->adapter_id );
+        }
+        if( dev_it->adapter_id == a->GetAdapterId( ))
+        {
+          a->SetFrontend( dev_it->frontend_name, dev_it->frontend_id );
+          dev_it = device_list.erase( dev_it );
+          found = true;
+          break;
+        }
+      }
+      // prevent double adding of adapters
+      // a uid can only be present once
+      if( a->IsPresent( ) && ( a->GetUID( ) == dev_it->uid || a->GetPath( ) == dev_it->uid ))
+      {
+        dev_it = device_list.erase( dev_it );
+        found = true;
+        break;
+      }
+    }
+    if( !found )
+      dev_it++;
+  }
+
+  dev_it = device_list.begin( );
+  while( dev_it != device_list.end( ))
+  {
+    found = false;
+    //
+    // second round - try to match only the name
+    //
+    for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    {
+      Adapter *a = *it;
+      if( a->GetName( ) == dev_it->adapter_name )
+      {
+        if( false == a->IsPresent( ))
+        {
+          a->SetUID( dev_it->uid );
+          a->SetAdapterId( dev_it->adapter_id );
+        }
+        if( dev_it->adapter_id == a->GetAdapterId( ))
+        {
+          a->SetFrontend( dev_it->frontend_name, dev_it->frontend_id );
+          dev_it = device_list.erase( dev_it );
+          found = true;
+          break;
+        }
+      }
+      // prevent double adding of adapters
+      // a uid can only be present once
+      if( a->IsPresent( ) && ( a->GetUID( ) == dev_it->uid || a->GetPath( ) == dev_it->uid ))
+      {
+        dev_it = device_list.erase( dev_it );
+        found = true;
+        break;
+      }
+    }
+    if( found )
+      continue;
+
+    //
+    // Adapter not found, create new
+    //
+    Adapter *a = new Adapter( *this, dev_it->adapter_name, dev_it->adapter_id, adapters.size( ));
+    adapters.push_back( a );
+    a->SetUID( dev_it->uid );
+    a->SetFrontend( dev_it->frontend_name, dev_it->frontend_id );
+    dev_it = device_list.erase( dev_it );
+  }
 }
 
 std::string TVDaemon::GetAdapterName( struct udev_device *dev )
@@ -349,10 +438,12 @@ std::string TVDaemon::GetAdapterName( struct udev_device *dev )
   return name;
 }
 
-void TVDaemon::AddFrontend( struct udev_device *dev, const char *path, int adapter_id, int frontend_id )
+void TVDaemon::AddFrontendToList( struct udev_device *dev, const char *path, const int adapter_id, const int frontend_id )
 {
-  std::string uid  = Utils::DirName( path );
-  if( uid.empty() )
+  struct device_t device;
+
+  device.uid  = Utils::DirName( path );
+  if( device.uid.empty() )
   {
     LogError( "adapter without a uid, '%s'", path );
     return;
@@ -362,78 +453,31 @@ void TVDaemon::AddFrontend( struct udev_device *dev, const char *path, int adapt
   {
     const char *temp = udev_device_get_property_value( dev, "DVB_ADAPTER_NUM" );
     if( temp )
-      adapter_id  = strtol( temp, NULL, 10);
+      device.adapter_id  = strtol( temp, NULL, 10);
   }
+  else
+    device.adapter_id = adapter_id;
+
   if( frontend_id == -1)
   {
     const char *temp = udev_device_get_property_value( dev, "DVB_DEVICE_NUM" );
     if( temp )
-      frontend_id = strtol( temp, NULL, 10);
+      device.frontend_id = strtol( temp, NULL, 10);
   }
-  if( adapter_id == -1 || frontend_id == -1)
+  else
+    device.frontend_id = frontend_id;
+
+  if( device.adapter_id == -1 || device.frontend_id == -1)
   {
     LogError( "discovered not correctly initialized adapter, '%s'", path );
     return;
   }
 
-  std::string name = GetAdapterName( dev );
-
-  std::string fe_name;
-  if( !Frontend::GetInfo( adapter_id, frontend_id, NULL, &fe_name ))
+  device.adapter_name = GetAdapterName( dev );
+  if( !Frontend::GetInfo( device.adapter_id, device.frontend_id, NULL, &device.frontend_name ))
     return;
 
-  //
-  // first round - try to match name and udev uid
-  //
-  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-  {
-    Adapter *a = *it;
-    if( a->GetName( ) == name && ( a->GetUID( ) == uid || a->GetPath( ) == uid ))
-    {
-      if( false == a->IsPresent( ))
-      {
-        a->SetAdapterId( adapter_id );
-      }
-      if( adapter_id == a->GetAdapterId( ))
-      {
-        a->SetFrontend( fe_name, frontend_id );
-        return;
-      }
-    }
-    // prevent double adding of adapters
-    // the uid can only be present once
-    if( a->IsPresent( ) && ( a->GetUID() == uid || a->GetPath() == uid ))
-    {
-      return;
-    }
-  }
-
-  //
-  // second round - try to match only the name
-  //
-  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-  {
-    Adapter *a = *it;
-    if( a->GetName( ) == name )
-    {
-      if( false == a->IsPresent( ))
-      {
-        a->SetUID( uid );
-        a->SetAdapterId( adapter_id );
-      }
-      if( adapter_id == a->GetAdapterId( ))
-      {
-        a->SetFrontend( fe_name, frontend_id );
-        return;
-      }
-    }
-  }
-
-  // Adapter not found, create new
-  Adapter *a = new Adapter( *this, name, adapter_id, adapters.size( ));
-  adapters.push_back( a );
-  a->SetUID( uid );
-  a->SetFrontend( fe_name, frontend_id );
+  device_list.push_back( device );
 }
 
 void TVDaemon::UdevRemove( const char *path )
@@ -489,7 +533,8 @@ void TVDaemon::HandleUdev( )
         if( strcmp( action, "add" ) == 0 )
         {
           Log( "Frontend added: %s", path );
-          AddFrontend( dev, path );
+          AddFrontendToList( dev, path );
+          ProcessAdapters();
         }
         else if( strcmp( action, "remove" ) == 0 )
         {
