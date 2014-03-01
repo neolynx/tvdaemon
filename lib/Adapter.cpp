@@ -32,13 +32,12 @@
 #include <fcntl.h>   // open
 #include <unistd.h>  // read
 
-Adapter::Adapter( TVDaemon &tvd, const std::string &name, const int adapter_id, const int config_id ) :
+Adapter::Adapter( TVDaemon &tvd, const std::string &name, const std::string &uid, const int config_id ) :
   ConfigObject( tvd, "adapter", config_id ),
   tvd(tvd),
-  present(false),
+  uid(uid),
   frontends(),
-  name(name),
-  adapter_id(adapter_id)
+  name(name)
 {
   Log( "Create new adapter: '%s'", name.c_str() );
 }
@@ -46,10 +45,8 @@ Adapter::Adapter( TVDaemon &tvd, const std::string &name, const int adapter_id, 
 Adapter::Adapter( TVDaemon &tvd, const std::string &configfile ) :
   ConfigObject( tvd, configfile ),
   tvd(tvd),
-  present(false),
   frontends(),
-  name(),
-  adapter_id(-1)
+  name()
 {
 }
 
@@ -93,37 +90,60 @@ bool Adapter::LoadConfig( )
   return true;
 }
 
-std::string Adapter::GetPath( ) const
+void Adapter::ResetPresence( )
 {
-  char path[255];
-  snprintf( path, sizeof(path), "/dev/dvb/adapter%d", adapter_id );
-  return path;
+  for( FrontendList::iterator it = frontends.begin( ); it != frontends.end( ); ++it)
+  {
+    (*it)->SetAdapterId( -1 );
+    (*it)->SetFrontendId( -1 );
+  }
 }
 
-void Adapter::SetFrontend( const std::string &name, const int frontend_id )
+bool Adapter::IsPresent( ) const
+{
+  for( FrontendList::const_iterator it = frontends.begin( ); it != frontends.end( ); ++it)
+  {
+    if( (*it)->IsPresent( ))
+      return true;
+  }
+  return false;
+}
+
+bool Adapter::HasFrontend( int adapter_id, int frontend_id )
+{
+  for( FrontendList::iterator it = frontends.begin( ); it != frontends.end( ); ++it)
+  {
+    if( adapter_id == (*it)->GetAdapterId( ) && frontend_id == (*it)->GetFrontendId( ))
+      return true;
+  }
+  return false;
+}
+
+void Adapter::SetFrontend( const std::string &name, const int adapter_id, const int frontend_id )
 {
   // we have to be sure we are at the right adapter at this point
 
   // search for a not-present frontend
-  for( FrontendList::const_iterator it = frontends.begin(); it != frontends.end(); ++it)
+  for( FrontendList::const_iterator it = frontends.begin( ); it != frontends.end( ); ++it)
   {
     Frontend *f = *it;
-    if( f->GetName() == name && false == f->IsPresent() )
+    if( f->GetName( ) == name && false == f->IsPresent( ))
     {
       // we have found a not-taken frontend - occupy it
+      f->SetAdapterId( adapter_id );
       f->SetFrontendId( frontend_id );
       return;
     }
-    if( frontend_id == f->GetFrontendId( ))
+    if( adapter_id == f->GetAdapterId( ) && frontend_id == f->GetFrontendId( ))
       return;
   }
 
   // no free frontend object found - we are creating a new one
-  Frontend *f = Frontend::Create( *this, frontend_id, frontends.size( ));
+  Frontend *f = Frontend::Create( *this, adapter_id, frontend_id, frontends.size( ));
   if( !f )
   {
     LogError( "%s: unable to create frontend '%s' adapter id '%d' frontend id '%d'",
-              GetName().c_str(), name.c_str(), adapter_id, frontend_id );
+              GetName( ).c_str( ), name.c_str( ), adapter_id, frontend_id );
     return;
   }
   frontends.push_back( f );
@@ -134,20 +154,6 @@ Frontend *Adapter::GetFrontend( const int id ) const
   if( id >= frontends.size( ))
     return NULL;
   return frontends[id];
-}
-
-void Adapter::ResetPresence( )
-{
-  if( !IsPresent() )
-    return;
-
-  Log( "Adapter %d hardware removed '%s'", GetKey( ), GetName().c_str( ));
-  adapter_id = -1;
-}
-
-bool Adapter::IsPresent( ) const
-{
-  return adapter_id > -1;
 }
 
 void Adapter::json( json_object *entry ) const

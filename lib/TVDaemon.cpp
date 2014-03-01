@@ -314,23 +314,17 @@ void TVDaemon::ProcessAdapters( )
     for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
       Adapter *a = *it;
-      if( a->GetName( ) == dev_it->adapter_name && ( a->GetUID( ) == dev_it->uid || a->GetPath( ) == dev_it->uid ))
+      if( a->GetName( ) == dev_it->adapter_name &&
+          a->GetUID( ) == dev_it->uid &&
+          a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ) == false )
       {
-        if( false == a->IsPresent( ))
-        {
-          a->SetAdapterId( dev_it->adapter_id );
-        }
-        if( dev_it->adapter_id == a->GetAdapterId( ))
-        {
-          a->SetFrontend( dev_it->frontend_name, dev_it->frontend_id );
-          dev_it = device_list.erase( dev_it );
-          found = true;
-          break;
-        }
+        a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
+        dev_it = device_list.erase( dev_it );
+        found = true;
+        break;
       }
-      // prevent double adding of adapters
-      // a uid can only be present once
-      if( a->IsPresent( ) && ( a->GetUID( ) == dev_it->uid || a->GetPath( ) == dev_it->uid ))
+      // prevent double adding of non-udev adapters
+      if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
         dev_it = device_list.erase( dev_it );
         found = true;
@@ -351,24 +345,16 @@ void TVDaemon::ProcessAdapters( )
     for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
       Adapter *a = *it;
-      if( a->GetName( ) == dev_it->adapter_name )
+      if( a->GetName( ) == dev_it->adapter_name &&
+          a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ) == false )
       {
-        if( false == a->IsPresent( ))
-        {
-          a->SetUID( dev_it->uid );
-          a->SetAdapterId( dev_it->adapter_id );
-        }
-        if( dev_it->adapter_id == a->GetAdapterId( ))
-        {
-          a->SetFrontend( dev_it->frontend_name, dev_it->frontend_id );
-          dev_it = device_list.erase( dev_it );
-          found = true;
-          break;
-        }
+        a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
+        dev_it = device_list.erase( dev_it );
+        found = true;
+        break;
       }
-      // prevent double adding of adapters
-      // a uid can only be present once
-      if( a->IsPresent( ) && ( a->GetUID( ) == dev_it->uid || a->GetPath( ) == dev_it->uid ))
+      // prevent double adding of non-udev adapters
+      if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
         dev_it = device_list.erase( dev_it );
         found = true;
@@ -381,10 +367,9 @@ void TVDaemon::ProcessAdapters( )
     //
     // Adapter not found, create new
     //
-    Adapter *a = new Adapter( *this, dev_it->adapter_name, dev_it->adapter_id, adapters.size( ));
+    Adapter *a = new Adapter( *this, dev_it->adapter_name, dev_it->uid, adapters.size( ));
     adapters.push_back( a );
-    a->SetUID( dev_it->uid );
-    a->SetFrontend( dev_it->frontend_name, dev_it->frontend_id );
+    a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
     dev_it = device_list.erase( dev_it );
   }
 }

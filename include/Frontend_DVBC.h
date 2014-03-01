@@ -29,8 +29,8 @@ class Adapter;
 class Frontend_DVBC : public Frontend
 {
   public:
+    Frontend_DVBC( Adapter &adapter, std::string name, int adapter_id, int frontend_id, int config_id );
     Frontend_DVBC( Adapter &adapter, std::string configfile );
-    Frontend_DVBC( Adapter &adapter, std::string name, int frontend_id, int config_id );
     virtual ~Frontend_DVBC( );
 
     virtual bool SaveConfig( );

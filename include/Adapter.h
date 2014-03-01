@@ -35,26 +35,25 @@ class HTTPServer;
 class Adapter : public ConfigObject, public RPCObject
 {
   public:
-    Adapter( TVDaemon &tvd, const std::string &name, const int adapter_id, const int config_id );
+    Adapter( TVDaemon &tvd, const std::string &name, const std::string &uid, const int config_id );
     Adapter( TVDaemon &tvd, const std::string &configfile );
     virtual ~Adapter( );
     void Shutdown( );
 
-    void SetFrontend( const std::string &name, const int frontend_id );
+    void SetFrontend( const std::string &name, const int adapter_id, const int frontend_id );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
     std::string GetName( ) const { return name; }
     std::string GetUID( ) const { return uid; }
-    std::string GetPath( ) const;
     void SetUID( const std::string &uid ) { this->uid = uid; }
-    int GetAdapterId( ) const { return adapter_id; }
-    void SetAdapterId( const int adapter_id ) { this->adapter_id = adapter_id; }
     int GetFrontendCount( ) { return frontends.size( ); }
     Frontend *GetFrontend ( const int id ) const;
     void ResetPresence( );
     bool IsPresent( ) const;
+
+    bool HasFrontend( int adapter_id, int frontend_id );
 
     void json( json_object *entry ) const;
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
@@ -63,12 +62,10 @@ class Adapter : public ConfigObject, public RPCObject
   private:
     TVDaemon &tvd;
     std::string uid;
-    bool present;
 
     typedef std::vector<Frontend *> FrontendList;
     FrontendList frontends;
     std::string name;
-    int adapter_id;
 };
 
 #endif

@@ -28,11 +28,11 @@
 #include "Transponder_DVBC.h"
 #include "Adapter.h"
 
-Frontend_DVBC::Frontend_DVBC( Adapter &adapter, std::string name, int frontend_id, int config_id ) :
-  Frontend( adapter, name, frontend_id, config_id )
+Frontend_DVBC::Frontend_DVBC( Adapter &adapter, std::string name, int adapter_id, int frontend_id, int config_id ) :
+  Frontend( adapter, name, adapter_id, frontend_id, config_id )
 {
   type = Source::Type_DVBC;
-  Log( "  Creating Frontend DVB-C /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
+  Log( "  Creating Frontend DVB-C /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
 }
 
 Frontend_DVBC::Frontend_DVBC( Adapter &adapter, std::string configfile ) : Frontend( adapter, configfile )
@@ -130,4 +130,3 @@ bool Frontend_DVBC::HandleNIT( struct dvb_table_nit *nit )
 
   return true;
 }
-

@@ -29,8 +29,8 @@ class Adapter;
 class Frontend_DVBS : public Frontend
 {
   public:
+    Frontend_DVBS( Adapter &adapter, std::string name, int adapter_id, int frontend_id, int config_id );
     Frontend_DVBS( Adapter &adapter, std::string configfile );
-    Frontend_DVBS( Adapter &adapter, std::string name, int frontend_id, int config_id );
     virtual ~Frontend_DVBS( );
 
     virtual bool SetTuneParams( Transponder &transponder );

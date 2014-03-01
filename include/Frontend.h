@@ -43,7 +43,7 @@ class Activity;
 class Frontend : public ConfigObject, public RPCObject, public Thread
 {
   public:
-    static Frontend *Create( Adapter &adapter, int frontend_id, int config_id );
+    static Frontend *Create( Adapter &adapter, int adapter_id, int frontend_id, int config_id );
     static Frontend *Create( Adapter &adapter, std::string configfile );
     virtual ~Frontend( );
     void Shutdown( ) { up = false; }
@@ -52,8 +52,10 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
 
     std::string GetName( ) { return name; }
 
-    bool IsPresent( ) { return frontend_id > -1; }
+    bool IsPresent( ) { return adapter_id > -1 && frontend_id > -1; }
 
+    void SetAdapterId( int adapter_id ) { this->adapter_id = adapter_id; }
+    int GetAdapterId( ) const { return this->adapter_id; }
     void SetFrontendId( int frontend_id );
     int GetFrontendId( ) const;
 
@@ -94,11 +96,11 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
 
   protected:
-    Frontend( Adapter &adapter, std::string name, int frontend_id, int config_id );
+    Frontend( Adapter &adapter, std::string name, int adapter_id, int frontend_id, int config_id );
     Frontend( Adapter &adapter, std::string configfile );
 
     std::string name;
-    bool enabled;
+    int adapter_id;
     int frontend_id;
     Adapter &adapter;
 

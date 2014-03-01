@@ -32,11 +32,11 @@
 #include <libdvbv5/nit.h>
 #include <libdvbv5/desc_sat.h>
 
-Frontend_DVBS::Frontend_DVBS( Adapter &adapter, std::string name, int frontend_id, int config_id ) :
-  Frontend( adapter, name, frontend_id, config_id )
+Frontend_DVBS::Frontend_DVBS( Adapter &adapter, std::string name, int adapter_id, int frontend_id, int config_id ) :
+  Frontend( adapter, name, adapter_id, frontend_id, config_id )
 {
   type = Source::Type_DVBS;
-  Log( "  Creating Frontend DVB-S /dev/dvb/adapter%d/frontend%d", adapter.GetAdapterId( ), frontend_id );
+  Log( "  Creating Frontend DVB-S /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
   LNB = "UNIVERSAL";
 }
 
