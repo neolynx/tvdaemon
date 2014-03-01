@@ -348,6 +348,7 @@ void TVDaemon::ProcessAdapters( )
       if( a->GetName( ) == dev_it->adapter_name &&
           a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ) == false )
       {
+        a->SetUID( dev_it->uid );
         a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
         dev_it = device_list.erase( dev_it );
         found = true;
