@@ -1,33 +1,33 @@
-From ce69c51ff0800cab73eabd861bc9823c65afed25 Mon Sep 17 00:00:00 2001
+From 66ea1036080c3c8833b8cbfa7571fede2c32b383 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 18:06:21 +0100
-Subject: [PATCH 21/40] libdvbv5: remove unneeded includes
+Subject: [PATCH 21/41] libdvbv5: remove unneeded includes
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/descriptors/desc_atsc_service_location.c |    1 -
- lib/libdvbv5/descriptors/desc_ca.c                    |    1 -
- lib/libdvbv5/descriptors/desc_ca_identifier.c         |    1 -
- lib/libdvbv5/descriptors/desc_cable_delivery.c        |    1 -
- lib/libdvbv5/descriptors/desc_event_extended.c        |    1 -
- lib/libdvbv5/descriptors/desc_event_short.c           |    1 -
- lib/libdvbv5/descriptors/desc_extension.c             |    1 -
- lib/libdvbv5/descriptors/desc_frequency_list.c        |    1 -
- lib/libdvbv5/descriptors/desc_hierarchy.c             |    1 -
- lib/libdvbv5/descriptors/desc_isdbt_delivery.c        |    1 -
- lib/libdvbv5/descriptors/desc_language.c              |    1 -
- lib/libdvbv5/descriptors/desc_logical_channel.c       |    1 -
- lib/libdvbv5/descriptors/desc_network_name.c          |    1 -
- lib/libdvbv5/descriptors/desc_partial_reception.c     |    1 -
- lib/libdvbv5/descriptors/desc_sat.c                   |    1 -
- lib/libdvbv5/descriptors/desc_service.c               |    1 -
- lib/libdvbv5/descriptors/desc_service_list.c          |    1 -
- lib/libdvbv5/descriptors/desc_t2_delivery.c           |    1 -
- lib/libdvbv5/descriptors/desc_terrestrial_delivery.c  |    1 -
- lib/libdvbv5/descriptors/desc_ts_info.c               |    1 -
+ lib/libdvbv5/descriptors/desc_atsc_service_location.c | 1 -
+ lib/libdvbv5/descriptors/desc_ca.c                    | 1 -
+ lib/libdvbv5/descriptors/desc_ca_identifier.c         | 1 -
+ lib/libdvbv5/descriptors/desc_cable_delivery.c        | 1 -
+ lib/libdvbv5/descriptors/desc_event_extended.c        | 1 -
+ lib/libdvbv5/descriptors/desc_event_short.c           | 1 -
+ lib/libdvbv5/descriptors/desc_extension.c             | 1 -
+ lib/libdvbv5/descriptors/desc_frequency_list.c        | 1 -
+ lib/libdvbv5/descriptors/desc_hierarchy.c             | 1 -
+ lib/libdvbv5/descriptors/desc_isdbt_delivery.c        | 1 -
+ lib/libdvbv5/descriptors/desc_language.c              | 1 -
+ lib/libdvbv5/descriptors/desc_logical_channel.c       | 1 -
+ lib/libdvbv5/descriptors/desc_network_name.c          | 1 -
+ lib/libdvbv5/descriptors/desc_partial_reception.c     | 1 -
+ lib/libdvbv5/descriptors/desc_sat.c                   | 1 -
+ lib/libdvbv5/descriptors/desc_service.c               | 1 -
+ lib/libdvbv5/descriptors/desc_service_list.c          | 1 -
+ lib/libdvbv5/descriptors/desc_t2_delivery.c           | 1 -
+ lib/libdvbv5/descriptors/desc_terrestrial_delivery.c  | 1 -
+ lib/libdvbv5/descriptors/desc_ts_info.c               | 1 -
  20 files changed, 20 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors/desc_atsc_service_location.c b/lib/libdvbv5/descriptors/desc_atsc_service_location.c
@@ -271,5 +271,5 @@ index f2867e5..7a6e520 100644
  #include <libdvbv5/dvb-fe.h>
  #include <parse_string.h>
 -- 
-1.7.10.4
+1.8.3.2
 

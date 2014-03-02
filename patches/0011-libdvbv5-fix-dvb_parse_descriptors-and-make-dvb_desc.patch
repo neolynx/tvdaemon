@@ -1,7 +1,7 @@
-From b0cc13227bdfc3cdaf1416e4d1e0c9a94de8628f Mon Sep 17 00:00:00 2001
+From 6bbcdbfd2764d970cde82bf4700ade1bd0fbe225 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:00:24 +0100
-Subject: [PATCH 11/40] libdvbv5: fix dvb_parse_descriptors and make
+Subject: [PATCH 11/41] libdvbv5: fix dvb_parse_descriptors and make
  dvb_desc_init private
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -9,8 +9,8 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/descriptors.h |    2 --
- lib/libdvbv5/descriptors.c         |   38 +++++++++++++++++++++++-------------
+ lib/include/libdvbv5/descriptors.h |  2 --
+ lib/libdvbv5/descriptors.c         | 38 ++++++++++++++++++++++++--------------
  2 files changed, 24 insertions(+), 16 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
@@ -108,5 +108,5 @@ index b4ef81d..b139c26 100644
  		if (!*head_desc)
  			*head_desc = current;
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,15 +1,15 @@
-From 0065aa8fad3a8b55e6ece805fc8c2e85e690bb62 Mon Sep 17 00:00:00 2001
+From db0ec3ddc2a6ba0c5d2b1a5f3b984ee91e5d3284 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:43:02 +0100
-Subject: [PATCH 19/40] libdvbv5: use TABLE_INIT macro
+Subject: [PATCH 19/41] libdvbv5: use TABLE_INIT macro
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/descriptors.h |    2 +-
- lib/libdvbv5/descriptors.c         |   24 +++++++++++++-----------
+ lib/include/libdvbv5/descriptors.h |  2 +-
+ lib/libdvbv5/descriptors.c         | 24 +++++++++++++-----------
  2 files changed, 14 insertions(+), 12 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
@@ -62,5 +62,5 @@ index 856e3bb..fa6390e 100644
  
  char *default_charset = "iso-8859-1";
 -- 
-1.7.10.4
+1.8.3.2
 

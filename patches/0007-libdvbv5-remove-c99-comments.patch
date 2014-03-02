@@ -1,18 +1,18 @@
-From bb76e71a42beec14391f0d5f86c1db87e26906de Mon Sep 17 00:00:00 2001
+From 966d3332c4832d4fa0d94f3fe5c423ea4c9c0376 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:45:59 +0100
-Subject: [PATCH 07/40] libdvbv5: remove c99 comments
+Subject: [PATCH 07/41] libdvbv5: remove c99 comments
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/descriptors/desc_service_list.c |    4 +++-
- lib/libdvbv5/dvb-file.c                      |   21 +++++++++++----------
- lib/libdvbv5/dvb-log.c                       |    2 +-
- lib/libdvbv5/dvb-sat.c                       |    2 --
- lib/libdvbv5/dvb-scan.c                      |    2 ++
+ lib/libdvbv5/descriptors/desc_service_list.c |  4 +++-
+ lib/libdvbv5/dvb-file.c                      | 21 +++++++++++----------
+ lib/libdvbv5/dvb-log.c                       |  2 +-
+ lib/libdvbv5/dvb-sat.c                       |  2 --
+ lib/libdvbv5/dvb-scan.c                      |  2 ++
  5 files changed, 17 insertions(+), 14 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors/desc_service_list.c b/lib/libdvbv5/descriptors/desc_service_list.c
@@ -113,5 +113,5 @@ index 1bb227a..84c0f86 100644
  	if (dvb_set_section_filter(dmx_fd, pid, 1, &tid, &mask, NULL,
  				   DMX_IMMEDIATE_START | DMX_CHECK_CRC))
 -- 
-1.7.10.4
+1.8.3.2
 

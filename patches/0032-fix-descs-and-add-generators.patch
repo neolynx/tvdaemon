@@ -1,23 +1,23 @@
-From c0529e7a92d7738dfe92ecf99e1b68b2fcc3c5e3 Mon Sep 17 00:00:00 2001
+From 4e461e04a075b1690e129a0dc41c792767147165 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:07:00 +0100
-Subject: [PATCH 32/40] fix descs and add generators
+Subject: [PATCH 32/41] fix descs and add generators
 
 ---
- lib/include/libdvbv5/desc_service.h              |    3 +
- lib/include/libdvbv5/descriptors.h               |   11 +-
- lib/include/libdvbv5/sdt.h                       |   10 +-
- lib/libdvbv5/descriptors.c                       |   90 +++++++++++---
- lib/libdvbv5/descriptors/atsc_eit.c              |    2 +-
- lib/libdvbv5/descriptors/cat.c                   |    2 +-
- lib/libdvbv5/descriptors/desc_service.c          |   24 +++-
- lib/libdvbv5/descriptors/desc_service_location.c |    6 +-
- lib/libdvbv5/descriptors/eit.c                   |    2 +-
- lib/libdvbv5/descriptors/header.c                |   24 ++--
- lib/libdvbv5/descriptors/mgt.c                   |    4 +-
- lib/libdvbv5/descriptors/nit.c                   |    4 +-
- lib/libdvbv5/descriptors/sdt.c                   |  143 ++++++++++++++++++----
- lib/libdvbv5/descriptors/vct.c                   |    2 +-
+ lib/include/libdvbv5/desc_service.h              |   3 +
+ lib/include/libdvbv5/descriptors.h               |  11 +-
+ lib/include/libdvbv5/sdt.h                       |  10 +-
+ lib/libdvbv5/descriptors.c                       |  90 +++++++++++---
+ lib/libdvbv5/descriptors/atsc_eit.c              |   2 +-
+ lib/libdvbv5/descriptors/cat.c                   |   2 +-
+ lib/libdvbv5/descriptors/desc_service.c          |  24 +++-
+ lib/libdvbv5/descriptors/desc_service_location.c |   6 +-
+ lib/libdvbv5/descriptors/eit.c                   |   2 +-
+ lib/libdvbv5/descriptors/header.c                |  24 ++--
+ lib/libdvbv5/descriptors/mgt.c                   |   4 +-
+ lib/libdvbv5/descriptors/nit.c                   |   4 +-
+ lib/libdvbv5/descriptors/sdt.c                   | 143 +++++++++++++++++++----
+ lib/libdvbv5/descriptors/vct.c                   |   2 +-
  14 files changed, 261 insertions(+), 66 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
@@ -636,5 +636,5 @@ index 0f051ac..643f7c5 100644
  		channels++;
  	}
 -- 
-1.7.10.4
+1.8.3.2
 

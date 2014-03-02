@@ -1,11 +1,11 @@
-From 60c6e26b603ca2fd470ccacbe0ad8e3b57823d62 Mon Sep 17 00:00:00 2001
+From a1f9b7d7e2326d593fee6aafc916c7050f169d9e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 10 Feb 2014 19:38:51 +0100
-Subject: [PATCH 38/40] fix parse descriptors
+Subject: [PATCH 38/41] fix parse descriptors
 
 ---
- lib/libdvbv5/descriptors/pmt.c |   28 ++++++++++++++--------------
- lib/libdvbv5/descriptors/sdt.c |   18 ++++++++++--------
+ lib/libdvbv5/descriptors/pmt.c | 28 ++++++++++++++--------------
+ lib/libdvbv5/descriptors/sdt.c | 18 ++++++++++--------
  2 files changed, 24 insertions(+), 22 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors/pmt.c b/lib/libdvbv5/descriptors/pmt.c
@@ -91,5 +91,5 @@ index bc53403..50f465a 100644
  	if (endbuf - p)
  		dvb_logwarn("%s: %zu spurious bytes at the end",
 -- 
-1.7.10.4
+1.8.3.2
 

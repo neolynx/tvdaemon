@@ -1,7 +1,7 @@
-From 72a034ce1fe6d3d7553ccec1c53f4aebb35f8232 Mon Sep 17 00:00:00 2001
+From 0ae1c64cf74725da37c796b435064d82b0bdd2a2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:15:02 +0100
-Subject: [PATCH 14/40] libdvbv5: add parser for ca and ca_identifier
+Subject: [PATCH 14/41] libdvbv5: add parser for ca and ca_identifier
  descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -9,12 +9,12 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_ca.h                |   63 ++++++++++++++++++++++++
- lib/include/libdvbv5/desc_ca_identifier.h     |   55 +++++++++++++++++++++
- lib/libdvbv5/Makefile.am                      |   10 ++--
- lib/libdvbv5/descriptors.c                    |   18 +++----
- lib/libdvbv5/descriptors/desc_ca.c            |   64 +++++++++++++++++++++++++
- lib/libdvbv5/descriptors/desc_ca_identifier.c |   58 ++++++++++++++++++++++
+ lib/include/libdvbv5/desc_ca.h                | 63 ++++++++++++++++++++++++++
+ lib/include/libdvbv5/desc_ca_identifier.h     | 55 +++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am                      | 10 +++--
+ lib/libdvbv5/descriptors.c                    | 18 ++++----
+ lib/libdvbv5/descriptors/desc_ca.c            | 64 +++++++++++++++++++++++++++
+ lib/libdvbv5/descriptors/desc_ca_identifier.c | 58 ++++++++++++++++++++++++
  6 files changed, 257 insertions(+), 11 deletions(-)
  create mode 100644 lib/include/libdvbv5/desc_ca.h
  create mode 100644 lib/include/libdvbv5/desc_ca_identifier.h
@@ -364,5 +364,5 @@ index 0000000..4740a01
 +}
 +
 -- 
-1.7.10.4
+1.8.3.2
 

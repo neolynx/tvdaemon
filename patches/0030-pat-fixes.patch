@@ -1,11 +1,11 @@
-From 42c677587a22faed4f3b035a014e3bf1501aae73 Mon Sep 17 00:00:00 2001
+From 7aac0fe81d17bd3e89219a4c8b6e942c8cdda428 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:05:20 +0100
-Subject: [PATCH 30/40] pat fixes
+Subject: [PATCH 30/41] pat fixes
 
 ---
- lib/include/libdvbv5/pat.h     |    6 ++--
- lib/libdvbv5/descriptors/pat.c |   63 ++++++++++++++++++++++++----------------
+ lib/include/libdvbv5/pat.h     |  6 ++--
+ lib/libdvbv5/descriptors/pat.c | 63 +++++++++++++++++++++++++-----------------
  2 files changed, 41 insertions(+), 28 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
@@ -155,5 +155,5 @@ index ac5b5d4..5c24a60 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

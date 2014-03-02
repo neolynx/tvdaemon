@@ -1,15 +1,15 @@
-From 5af53824903f2043ae717b52382e19198fd74738 Mon Sep 17 00:00:00 2001
+From 85491f2903257b720c4e9107e72abea258abdb15 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 28 Dec 2013 16:09:35 +0100
-Subject: [PATCH 06/40] libdvbv5: improve TS parsing
+Subject: [PATCH 06/41] libdvbv5: improve TS parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors/mpeg_ts.h  |    4 ++--
- lib/libdvbv5/descriptors/mpeg_ts.c |   11 ++++++++---
+ lib/include/descriptors/mpeg_ts.h  |  4 ++--
+ lib/libdvbv5/descriptors/mpeg_ts.c | 11 ++++++++---
  2 files changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/lib/include/descriptors/mpeg_ts.h b/lib/include/descriptors/mpeg_ts.h
@@ -75,5 +75,5 @@ index d7ec2c4..b06cdf7 100644
  
  void dvb_mpeg_ts_free(struct dvb_mpeg_ts *ts)
 -- 
-1.7.10.4
+1.8.3.2
 

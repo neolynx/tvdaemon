@@ -1,15 +1,15 @@
-From b4f9217de8207b22af804e2c88290d6cd5ca8b97 Mon Sep 17 00:00:00 2001
+From bfe62222e61ec6d3b053aee9e039a311c7e3188c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:18:30 +0100
-Subject: [PATCH 15/40] libdvbv5: fix PMT parser
+Subject: [PATCH 15/41] libdvbv5: fix PMT parser
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/pmt.h     |    6 +++++-
- lib/libdvbv5/descriptors/pmt.c |   22 +++++++++++++++-------
+ lib/include/libdvbv5/pmt.h     |  6 +++++-
+ lib/libdvbv5/descriptors/pmt.c | 22 +++++++++++++++-------
  2 files changed, 20 insertions(+), 8 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pmt.h b/lib/include/libdvbv5/pmt.h
@@ -115,5 +115,5 @@ index 32ee7e4..2c23b16 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

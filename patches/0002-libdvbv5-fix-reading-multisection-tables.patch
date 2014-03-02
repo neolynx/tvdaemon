@@ -1,7 +1,7 @@
-From dfe73459b270f7c873113c41c65b5f0f24b8fc87 Mon Sep 17 00:00:00 2001
+From 3686a74d9cd7cc7e499b050c92ea52928de9045c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 8 Jan 2014 20:40:38 +0100
-Subject: [PATCH 02/40] libdvbv5: fix reading multisection tables
+Subject: [PATCH 02/41] libdvbv5: fix reading multisection tables
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -17,7 +17,7 @@ Thus, allow the table id to differ.
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/dvb-scan.c |    1 -
+ lib/libdvbv5/dvb-scan.c | 1 -
  1 file changed, 1 deletion(-)
 
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
@@ -33,5 +33,5 @@ index 2cdb413..1bb227a 100644
  			continue;
  		}
 -- 
-1.7.10.4
+1.8.3.2
 

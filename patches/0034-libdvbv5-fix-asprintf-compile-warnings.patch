@@ -1,15 +1,15 @@
-From fd5bc218d33d92a7f6b24dfaeb9783b4355c0720 Mon Sep 17 00:00:00 2001
+From 9d441ce0cc3c8b5b8ad2600a64961670b3c9a4a3 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:08:31 +0100
-Subject: [PATCH 34/40] libdvbv5: fix asprintf compile warnings
+Subject: [PATCH 34/41] libdvbv5: fix asprintf compile warnings
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/dvb-file.c |   24 ++++++++++++++++++------
- utils/dvb/dvbv5-zap.c   |    9 +++++----
+ lib/libdvbv5/dvb-file.c | 24 ++++++++++++++++++------
+ utils/dvb/dvbv5-zap.c   |  9 +++++----
  2 files changed, 23 insertions(+), 10 deletions(-)
 
 diff --git a/lib/libdvbv5/dvb-file.c b/lib/libdvbv5/dvb-file.c
@@ -134,5 +134,5 @@ index f92a11e..86229f7 100644
  		}
  	}
 -- 
-1.7.10.4
+1.8.3.2
 

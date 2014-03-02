@@ -1,17 +1,17 @@
-From 487fc26c4e948e50845be783c1c1e8313d7727d2 Mon Sep 17 00:00:00 2001
+From 52f8204ce3d05f2c2741c6a8b6093f220c2bf17b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 16:13:30 +0100
-Subject: [PATCH 13/40] libdvbv5: add parser for CAT
+Subject: [PATCH 13/41] libdvbv5: add parser for CAT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/cat.h     |   51 +++++++++++++++++++++++++++++++
- lib/libdvbv5/Makefile.am       |    2 ++
- lib/libdvbv5/descriptors.c     |    2 ++
- lib/libdvbv5/descriptors/cat.c |   66 ++++++++++++++++++++++++++++++++++++++++
+ lib/include/libdvbv5/cat.h     | 51 ++++++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am       |  2 ++
+ lib/libdvbv5/descriptors.c     |  2 ++
+ lib/libdvbv5/descriptors/cat.c | 66 ++++++++++++++++++++++++++++++++++++++++++
  4 files changed, 121 insertions(+)
  create mode 100644 lib/include/libdvbv5/cat.h
  create mode 100644 lib/libdvbv5/descriptors/cat.c
@@ -186,5 +186,5 @@ index 0000000..e6fc64e
 +}
 +
 -- 
-1.7.10.4
+1.8.3.2
 

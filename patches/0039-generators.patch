@@ -1,19 +1,19 @@
-From f36c75398149f7c2dc6b4db056e2c5498b702518 Mon Sep 17 00:00:00 2001
+From 60a5a758462bade4719de67e5c4e760d374caace Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 22 Feb 2014 18:51:32 +0100
-Subject: [PATCH 39/40] generators
+Subject: [PATCH 39/41] generators
 
 ---
- lib/include/libdvbv5/desc_service.h     |    2 +-
- lib/include/libdvbv5/descriptors.h      |    6 +-
- lib/libdvbv5/descriptors.c              |    5 +-
- lib/libdvbv5/descriptors/desc_service.c |  101 +++++++++++++++++++++++++++----
- lib/libdvbv5/descriptors/header.c       |    1 +
- lib/libdvbv5/descriptors/pat.c          |    2 +-
- lib/libdvbv5/descriptors/sdt.c          |    2 +-
- lib/libdvbv5/dvb-scan.c                 |    4 +-
- lib/libdvbv5/parse_string.c             |    7 ++-
- lib/libdvbv5/parse_string.h             |    2 +-
+ lib/include/libdvbv5/desc_service.h     |   2 +-
+ lib/include/libdvbv5/descriptors.h      |   6 +-
+ lib/libdvbv5/descriptors.c              |   5 +-
+ lib/libdvbv5/descriptors/desc_service.c | 101 ++++++++++++++++++++++++++++----
+ lib/libdvbv5/descriptors/header.c       |   1 +
+ lib/libdvbv5/descriptors/pat.c          |   2 +-
+ lib/libdvbv5/descriptors/sdt.c          |   2 +-
+ lib/libdvbv5/dvb-scan.c                 |   4 +-
+ lib/libdvbv5/parse_string.c             |   7 ++-
+ lib/libdvbv5/parse_string.h             |   2 +-
  10 files changed, 108 insertions(+), 24 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
@@ -342,5 +342,5 @@ index 61d0ed4..4d838d0 100644
  		      size_t destlen,
  		      const unsigned char *src,
 -- 
-1.7.10.4
+1.8.3.2
 

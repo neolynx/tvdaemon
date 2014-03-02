@@ -1,14 +1,14 @@
-From 1e8361146cf375fffe8e8b11582fd2d8c9cc1c1e Mon Sep 17 00:00:00 2001
+From 72fe19dd91c4531f72bdeac384ef88ac1d2f7499 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 9 Feb 2014 15:05:44 +0100
-Subject: [PATCH 31/40] libdvbv5: support info info log via dvb_loginfo
+Subject: [PATCH 31/41] libdvbv5: support info info log via dvb_loginfo
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/dvb-log.h |    3 +++
+ lib/include/libdvbv5/dvb-log.h | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/lib/include/libdvbv5/dvb-log.h b/lib/include/libdvbv5/dvb-log.h
@@ -26,5 +26,5 @@ index a72adce..755167a 100644
  
  #define dvb_perror(msg) do {\
 -- 
-1.7.10.4
+1.8.3.2
 

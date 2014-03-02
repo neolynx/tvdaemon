@@ -1,7 +1,7 @@
-From 5bafe2bcf7eff232dc21384bae80d82c3d3e21fe Mon Sep 17 00:00:00 2001
+From bd1577c0399bbd5023243530b39ab87693f8334f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 29 Dec 2013 15:37:30 +0100
-Subject: [PATCH 04/40] libdvbv5: fix EIT parsing
+Subject: [PATCH 04/41] libdvbv5: fix EIT parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -11,8 +11,8 @@ indicating where the events belong to.
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/descriptors/eit.h  |    3 ++-
- lib/libdvbv5/descriptors/eit.c |   35 ++++++++++++++++++++++++++---------
+ lib/include/descriptors/eit.h  |  3 ++-
+ lib/libdvbv5/descriptors/eit.c | 35 ++++++++++++++++++++++++++---------
  2 files changed, 28 insertions(+), 10 deletions(-)
 
 diff --git a/lib/include/descriptors/eit.h b/lib/include/descriptors/eit.h
@@ -110,5 +110,5 @@ index 64a8897..123dc91 100644
  
  
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,10 +1,10 @@
-From 8664ee6ce8534fd3f1bf682b09d8ba0432e28216 Mon Sep 17 00:00:00 2001
+From b3425fdb8c53051e92cddee6b6fbec19b1554052 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 22 Feb 2014 18:58:03 +0100
-Subject: [PATCH 40/40] fix conflict
+Subject: [PATCH 40/41] fix conflict
 
 ---
- lib/libdvbv5/descriptors.c |   12 ------------
+ lib/libdvbv5/descriptors.c | 12 ------------
  1 file changed, 12 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
@@ -43,5 +43,5 @@ index d7060d0..4857936 100644
  		if (!init) {
  			init = dvb_desc_default_init;
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,35 +1,35 @@
-From cd41df8d4569dc424d75d684eeae3c52d840c9da Mon Sep 17 00:00:00 2001
+From 30bfeb0a1f51285eef40ddf9faf28619c60edad9 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 3 Jan 2014 17:39:20 +0100
-Subject: [PATCH 17/40] libdvbv5: use DVB_DESC_HEADER macro in all descriptors
+Subject: [PATCH 17/41] libdvbv5: use DVB_DESC_HEADER macro in all descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_atsc_service_location.h |    7 ++-----
- lib/include/libdvbv5/desc_ca.h                    |    7 ++-----
- lib/include/libdvbv5/desc_ca_identifier.h         |    7 ++-----
- lib/include/libdvbv5/desc_cable_delivery.h        |    7 ++-----
- lib/include/libdvbv5/desc_event_extended.h        |    7 ++-----
- lib/include/libdvbv5/desc_event_short.h           |    7 ++-----
- lib/include/libdvbv5/desc_extension.h             |    7 ++-----
- lib/include/libdvbv5/desc_frequency_list.h        |    7 ++-----
- lib/include/libdvbv5/desc_hierarchy.h             |    6 ++----
- lib/include/libdvbv5/desc_isdbt_delivery.h        |    8 +++-----
- lib/include/libdvbv5/desc_language.h              |    7 ++-----
- lib/include/libdvbv5/desc_logical_channel.h       |    7 ++-----
- lib/include/libdvbv5/desc_network_name.h          |    7 ++-----
- lib/include/libdvbv5/desc_partial_reception.h     |    7 ++-----
- lib/include/libdvbv5/desc_sat.h                   |    7 ++-----
- lib/include/libdvbv5/desc_service.h               |    7 ++-----
- lib/include/libdvbv5/desc_service_list.h          |    7 ++-----
- lib/include/libdvbv5/desc_service_location.h      |    6 ++----
- lib/include/libdvbv5/desc_t2_delivery.h           |    5 +++--
- lib/include/libdvbv5/desc_terrestrial_delivery.h  |    7 ++-----
- lib/include/libdvbv5/desc_ts_info.h               |    7 ++-----
- lib/include/libdvbv5/descriptors.h                |    9 ++++++---
+ lib/include/libdvbv5/desc_atsc_service_location.h | 7 ++-----
+ lib/include/libdvbv5/desc_ca.h                    | 7 ++-----
+ lib/include/libdvbv5/desc_ca_identifier.h         | 7 ++-----
+ lib/include/libdvbv5/desc_cable_delivery.h        | 7 ++-----
+ lib/include/libdvbv5/desc_event_extended.h        | 7 ++-----
+ lib/include/libdvbv5/desc_event_short.h           | 7 ++-----
+ lib/include/libdvbv5/desc_extension.h             | 7 ++-----
+ lib/include/libdvbv5/desc_frequency_list.h        | 7 ++-----
+ lib/include/libdvbv5/desc_hierarchy.h             | 6 ++----
+ lib/include/libdvbv5/desc_isdbt_delivery.h        | 8 +++-----
+ lib/include/libdvbv5/desc_language.h              | 7 ++-----
+ lib/include/libdvbv5/desc_logical_channel.h       | 7 ++-----
+ lib/include/libdvbv5/desc_network_name.h          | 7 ++-----
+ lib/include/libdvbv5/desc_partial_reception.h     | 7 ++-----
+ lib/include/libdvbv5/desc_sat.h                   | 7 ++-----
+ lib/include/libdvbv5/desc_service.h               | 7 ++-----
+ lib/include/libdvbv5/desc_service_list.h          | 7 ++-----
+ lib/include/libdvbv5/desc_service_location.h      | 6 ++----
+ lib/include/libdvbv5/desc_t2_delivery.h           | 5 +++--
+ lib/include/libdvbv5/desc_terrestrial_delivery.h  | 7 ++-----
+ lib/include/libdvbv5/desc_ts_info.h               | 7 ++-----
+ lib/include/libdvbv5/descriptors.h                | 9 ++++++---
  22 files changed, 50 insertions(+), 103 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_atsc_service_location.h b/lib/include/libdvbv5/desc_atsc_service_location.h
@@ -510,5 +510,5 @@ index f4d9288..b869a14 100644
  	uint8_t data[];
  } __attribute__((packed));
 -- 
-1.7.10.4
+1.8.3.2
 

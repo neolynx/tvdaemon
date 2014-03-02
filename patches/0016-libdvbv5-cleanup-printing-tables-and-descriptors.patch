@@ -1,7 +1,7 @@
-From a1e6741a4aab0d3de87881769b47dfde722b974f Mon Sep 17 00:00:00 2001
+From 175d8e8e34fefbf8fefc87a6be8d3d1a1bb8e8cc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 17:53:06 +0100
-Subject: [PATCH 16/40] libdvbv5: cleanup printing tables and descriptors
+Subject: [PATCH 16/41] libdvbv5: cleanup printing tables and descriptors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -11,29 +11,29 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/descriptors.c                            |    3 ++-
- lib/libdvbv5/descriptors/cat.c                        |    2 +-
- lib/libdvbv5/descriptors/desc_atsc_service_location.c |    1 -
- lib/libdvbv5/descriptors/desc_ca.c                    |    4 ++--
- lib/libdvbv5/descriptors/desc_ca_identifier.c         |    2 +-
- lib/libdvbv5/descriptors/desc_cable_delivery.c        |    1 -
- lib/libdvbv5/descriptors/desc_event_extended.c        |    2 +-
- lib/libdvbv5/descriptors/desc_event_short.c           |    6 +++---
- lib/libdvbv5/descriptors/desc_extension.c             |    2 +-
- lib/libdvbv5/descriptors/desc_frequency_list.c        |    4 ++--
- lib/libdvbv5/descriptors/desc_hierarchy.c             |    1 -
- lib/libdvbv5/descriptors/desc_isdbt_delivery.c        |    1 -
- lib/libdvbv5/descriptors/desc_language.c              |    2 +-
- lib/libdvbv5/descriptors/desc_service.c               |    7 +++----
- lib/libdvbv5/descriptors/desc_t2_delivery.c           |    1 -
- lib/libdvbv5/descriptors/desc_terrestrial_delivery.c  |    1 -
- lib/libdvbv5/descriptors/desc_ts_info.c               |    1 -
- lib/libdvbv5/descriptors/mpeg_pes.c                   |   10 +++++-----
- lib/libdvbv5/descriptors/mpeg_ts.c                    |    6 +++---
- lib/libdvbv5/descriptors/nit.c                        |    2 +-
- lib/libdvbv5/descriptors/pat.c                        |    4 ++--
- lib/libdvbv5/descriptors/pmt.c                        |    7 ++++---
- lib/libdvbv5/descriptors/sdt.c                        |    6 +++---
+ lib/libdvbv5/descriptors.c                            |  3 ++-
+ lib/libdvbv5/descriptors/cat.c                        |  2 +-
+ lib/libdvbv5/descriptors/desc_atsc_service_location.c |  1 -
+ lib/libdvbv5/descriptors/desc_ca.c                    |  4 ++--
+ lib/libdvbv5/descriptors/desc_ca_identifier.c         |  2 +-
+ lib/libdvbv5/descriptors/desc_cable_delivery.c        |  1 -
+ lib/libdvbv5/descriptors/desc_event_extended.c        |  2 +-
+ lib/libdvbv5/descriptors/desc_event_short.c           |  6 +++---
+ lib/libdvbv5/descriptors/desc_extension.c             |  2 +-
+ lib/libdvbv5/descriptors/desc_frequency_list.c        |  4 ++--
+ lib/libdvbv5/descriptors/desc_hierarchy.c             |  1 -
+ lib/libdvbv5/descriptors/desc_isdbt_delivery.c        |  1 -
+ lib/libdvbv5/descriptors/desc_language.c              |  2 +-
+ lib/libdvbv5/descriptors/desc_service.c               |  7 +++----
+ lib/libdvbv5/descriptors/desc_t2_delivery.c           |  1 -
+ lib/libdvbv5/descriptors/desc_terrestrial_delivery.c  |  1 -
+ lib/libdvbv5/descriptors/desc_ts_info.c               |  1 -
+ lib/libdvbv5/descriptors/mpeg_pes.c                   | 10 +++++-----
+ lib/libdvbv5/descriptors/mpeg_ts.c                    |  6 +++---
+ lib/libdvbv5/descriptors/nit.c                        |  2 +-
+ lib/libdvbv5/descriptors/pat.c                        |  4 ++--
+ lib/libdvbv5/descriptors/pmt.c                        |  7 ++++---
+ lib/libdvbv5/descriptors/sdt.c                        |  6 +++---
  23 files changed, 35 insertions(+), 41 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
@@ -429,5 +429,5 @@ index 5e0c924..5c354f1 100644
  		dvb_log("|   EIT present following %d", service->EIT_present_following);
  		dvb_log("|   free CA mode          %d", service->free_CA_mode);
 -- 
-1.7.10.4
+1.8.3.2
 
