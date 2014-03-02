@@ -9,14 +9,14 @@ var no_update = false;
 function ready( )
 {
   theme = "";
-  $('#port_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
-  $('#port_popup').bind( 'closed', function ( event ) { no_update = false; } );
-  $('#port_ok').bind( 'click', function ( event ) { savePort( ); } );
-  $('#port_source').bind( 'change', function ( event ) { if( $(this).val( ) == -2 ) editSource( ); } );
+  //$('#port_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
+  //$('#port_popup').bind( 'closed', function ( event ) { no_update = false; } );
+  //$('#port_ok').bind( 'click', function ( event ) { savePort( ); } );
+  //$('#port_source').bind( 'change', function ( event ) { if( $(this).val( ) == -2 ) editSource( ); } );
 
-  $('#source_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#source_cancel"), modalOpacity: 0.30 });
-  $('#source_popup').bind( 'closed', function ( event ) { no_update = false; } );
-  $('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
+  //$('#source_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#source_cancel"), modalOpacity: 0.30 });
+  //$('#source_popup').bind( 'closed', function ( event ) { no_update = false; } );
+  //$('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
 
   $('#setup').attr( 'class', 'setup' );
 
@@ -179,7 +179,8 @@ function getSource( port )
 {
   source_id = port["source_id"];
   if( source_id >= 0 )
-    return "<a href=\"tvd?c=source&a=show&source_id=" + source_id + "\"><b>" + sources[source_id]["name"] + "</b></a>"
+    //return "<a href=\"tvd?c=source&a=show&source_id=" + source_id + "\"><b>" + sources[source_id]["name"] + "</b></a>"
+    return "<b>" + sources[source_id]["name"] + "</b>"
       + "<br/>Transponders: " + sources[source_id]["transponders"]
       + "<br/>Services: " + sources[source_id]["services"];
   else
@@ -231,7 +232,7 @@ function savePort( )
     cache: false,
     url: u,
     data: $('#port_form').serialize( ),
-    success: function(msg) { $("#port_popup").jqxWindow( 'hide' ); },
+    //success: function(msg) { $("#port_popup").jqxWindow( 'hide' ); },
     error: function( jqXHR, status, errorThrown ) { alert( 'Error: ' + jqXHR.responseText ); }
   } );
 }
@@ -261,7 +262,7 @@ function loadScanfiles( scanfiles, errmsg )
   for( i in scanfiles )
     $("#source_scanfile").append( new Option( scanfiles[i], scanfiles[i] ));
 
-  $("#source_popup").jqxWindow('show');
+  //$("#source_popup").jqxWindow('show');
 }
 
 function saveSource( )
@@ -272,9 +273,9 @@ function saveSource( )
     url: 'tvd?c=tvdaemon&a=create_source',
     data: $('#source_form').serialize( ),
     success: function(msg) {
-      $("#source_popup").jqxWindow( 'hide' );
-      port["source_id"] = msg;
-      getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
+      //$("#source_popup").jqxWindow( 'hide' );
+      //port["source_id"] = msg;
+      //getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
       },
     error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
   } );
@@ -292,15 +293,15 @@ function scan( )
 function click_frontend( adapter_id, frontend_id )
 {
   no_update = true;
-  $("#port_popup").jqxWindow('show');
-  frontend = adapters[adapter_id]["frontends"][frontend_id];
-  $("#port_name").focus( );
-  $("#port_name").val( "" );
-  $("#port_num").val( frontend["ports"].length );
-  $("#port_adapter_id").val( adapter_id );
-  $("#port_frontend_id").val( frontend_id );
-  $("#port_port_id").val( null );
-  $("#port_type").val( frontend["type"] );
+  //$("#port_popup").jqxWindow('show');
+  //frontend = adapters[adapter_id]["frontends"][frontend_id];
+  //$("#port_name").focus( );
+  //$("#port_name").val( "" );
+  //$("#port_num").val( frontend["ports"].length );
+  //$("#port_adapter_id").val( adapter_id );
+  //$("#port_frontend_id").val( frontend_id );
+  //$("#port_port_id").val( null );
+  //$("#port_type").val( frontend["type"] );
 
   getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
 }

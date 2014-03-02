@@ -23,7 +23,7 @@ nobase_dist_tvdaemon_DATA = \
   html/recorder.css \
   html/recorder.html \
   html/recorder.js \
-  html/css/tvdaemon.css \
+  html/style/tvdaemon.css \
   html/scripts/tvdaemon.js \
   html/images/antenna-cable.smal.png \
   html/images/antenna-icon.png \
@@ -34,5 +34,6 @@ nobase_dist_tvdaemon_DATA = \
   html/images/TVDeamon_large_users.png \
   html/images/TVDeamon_small.png \
   html/images/usb-icon.png \
-  html/scripts/lib/jquery-1.8.2.min.js \
-  html/favicon.ico
+  html/favicon.ico \
+  html/scripts/lib/jquery.js \
+  html/scripts/lib/jquery-1.11.0.min.js
