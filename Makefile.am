@@ -34,10 +34,5 @@ nobase_dist_tvdaemon_DATA = \
   html/images/TVDeamon_large_users.png \
   html/images/TVDeamon_small.png \
   html/images/usb-icon.png \
-  html/scripts/jquery-1.8.2.min.js \
-  html/jqwidgets/styles/jqx.base.css \
-  html/jqwidgets/jqxcore.js \
-  html/jqwidgets/jqxwindow.js \
-  html/jqwidgets/styles/images/close.png \
-  html/jqwidgets/styles/images/icon-up.png \
+  html/scripts/lib/jquery-1.8.2.min.js \
   html/favicon.ico
