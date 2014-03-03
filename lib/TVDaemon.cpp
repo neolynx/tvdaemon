@@ -314,18 +314,18 @@ void TVDaemon::ProcessAdapters( )
     for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
       Adapter *a = *it;
-      if( a->GetName( ) == dev_it->adapter_name &&
-          a->GetUID( ) == dev_it->uid &&
-          a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ) == false )
+      // prevent double adding of non-udev adapters
+      if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
-        a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
         dev_it = device_list.erase( dev_it );
         found = true;
         break;
       }
-      // prevent double adding of non-udev adapters
-      if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
+      // try matching the adapter - precise matching
+      if( a->GetName( ) == dev_it->adapter_name &&
+          a->GetUID( ) == dev_it->uid )
       {
+        a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
         dev_it = device_list.erase( dev_it );
         found = true;
         break;
@@ -345,18 +345,28 @@ void TVDaemon::ProcessAdapters( )
     for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
       Adapter *a = *it;
-      if( a->GetName( ) == dev_it->adapter_name &&
-          a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ) == false )
+      // prevent double adding of non-udev adapters
+      if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
-        a->SetUID( dev_it->uid );
+        dev_it = device_list.erase( dev_it );
+        found = true;
+        break;
+      }
+      // try matching the adapter - precise matching
+      if( a->GetName( ) == dev_it->adapter_name &&
+          a->GetUID( ) == dev_it->uid )
+      {
         a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
         dev_it = device_list.erase( dev_it );
         found = true;
         break;
       }
-      // prevent double adding of non-udev adapters
-      if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
+      // try matching the adapter - loose matching
+      if( a->GetName( ) == dev_it->adapter_name &&
+          a->IsPresent() == false )
       {
+        a->SetUID( dev_it->uid );
+        a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
         dev_it = device_list.erase( dev_it );
         found = true;
         break;
