@@ -276,14 +276,17 @@ bool Service::ReadEPG( const struct dvb_table_eit_event *event )
   if( !channel )
     return false;
   channel->ClearEPG( );
+  int i = 0;
   while( event )
   {
     if( event->service_id == GetKey( ))
     {
       channel->AddEPGEvent( event );
+      i++;
     }
     event = event->next;
   }
+  Log( "%s: got %d EPG events", name.c_str( ), i );
   channel->SaveConfig( );
   return true;
 }

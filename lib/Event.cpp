@@ -36,30 +36,38 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
 
   id = event->event_id;
 
+  /* Summer:
+   * utc  :  0 0 Sun Mar 30 15:01:10 2014
+   * local: 7200 1 Sun Mar 30 17:01:10 2014
+   * event utc  : Tue Apr  1 19:50:00 2014
+   * event local: Tue Apr  1 21:50:00 2014
+   * name: 10vor10
+   */
+
   struct tm t;
 
   time_t now;
   time( &now );
-  //gmtime_r( &now, &t );
-  //printf( "utc:  %d %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
+  gmtime_r( &now, &t );
+  printf( "utc  :  %d %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
   //t.tm_isdst = 1; // dst in effect, do not adjust
   //time_t utc = mktime( &t );
 
   //time( &now );
   localtime_r( &now, &t );
-  //printf( "local: %s, %d %d\n", asctime( &t ), t.tm_gmtoff, t.tm_isdst);
+  printf( "local: %d %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
   //t.tm_isdst = 1; // dst in effect, do not adjust
   //time_t local = mktime( &t );
 
-  double diff = t.tm_gmtoff + 3600; //difftime( utc, local );
+  double diff = t.tm_gmtoff; // + 3600; //difftime( utc, local );
   //printf( "diff: %f\n", diff );
 
   t = event->start;
   mktime( &t );
-  //printf( "event utc: %s\n", asctime( &t ));
+  printf( "event utc  : %s", asctime( &t ));
   t.tm_hour  += (int)( diff / 3600.0 );
   start = mktime( &t );
-  //printf( "event local: %s\n", asctime( &t ));
+  printf( "event local: %s", asctime( &t ));
 
   duration = event->duration;
 
@@ -88,7 +96,7 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
     }
     desc = desc->next;
   }
-  //printf( "name: %s\n\n", name.c_str( ));
+  printf( "name: %s\n\n", name.c_str( ));
 
 }
 
