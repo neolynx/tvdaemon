@@ -26,6 +26,7 @@ AC_CHECK_LIB([udev], [udev_new],, AC_MSG_ERROR(libudev-dev not found))
 AC_CHECK_LIB([ebml], [main],, AC_MSG_ERROR(libebml-dev not found))
 AC_CHECK_LIB([matroska], [main],, AC_MSG_ERROR(libmatroska-dev not found))
 AC_CHECK_LIB([avahi-client], [main],, AC_MSG_ERROR(libavahi-client-dev not found))
+AC_CHECK_LIB([hdhomerun], [main])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h])
