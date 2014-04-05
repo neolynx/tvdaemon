@@ -17,34 +17,10 @@ Checkout TVDaemon
 git clone https://github.com/neolynx/tvdaemon.git
 cd tvdaemon
 
-git submodule init
-git submodule update
-
-cd v4l-utils
-git checkout master
-git am ../patches/*
-cd -
-
-cd tsdecrypt
-git checkout master
-git submodule init
-git submodule update
-cd -
-
 Build tvdaemon
 ===============
 
-cd v4l-utils
-autoreconf -vfis
-./configure
-cd lib/libdvbv5
-make
-cd ../../..
-
-autoreconf -vfis
-./configure
-make
-
+./build.sh
 
 Start tvdaemon locally
 =======================
@@ -59,9 +35,6 @@ cd v4l-utils/lib/libdvbv5
 sudo make install
 cd -
 sudo make install
-
-
-
 
 GDB
 ====
