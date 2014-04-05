@@ -1,0 +1,42 @@
+From bb0c65710015baa24d03a1eaaedf03c4d5567518 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sat, 5 Apr 2014 12:59:15 +0200
+Subject: [PATCH 03/11] libdvbv5: fix asprintf compile warning in dvbv5-scan
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ utils/dvb/dvbv5-scan.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/utils/dvb/dvbv5-scan.c b/utils/dvb/dvbv5-scan.c
+index 501b332..7eb3bf5 100644
+--- a/utils/dvb/dvbv5-scan.c
++++ b/utils/dvb/dvbv5-scan.c
+@@ -407,6 +407,7 @@ int main(int argc, char **argv)
+ {
+ 	struct arguments args;
+ 	int err, lnb = -1,idx = -1;
++	int r;
+ 	const struct argp argp = {
+ 		.options = options,
+ 		.parser = parse_opt,
+@@ -459,8 +460,12 @@ int main(int argc, char **argv)
+ 		return -1;
+ 	}
+ 
+-	asprintf(&args.demux_dev,
++	r = asprintf(&args.demux_dev,
+ 		 "/dev/dvb/adapter%i/demux%i", args.adapter_dmx, args.demux);
++	if (r < 0) {
++		fprintf(stderr, "asprintf error\n" );
++		return -1;
++	}
+ 
+ 	if (verbose)
+ 		fprintf(stderr, "using demux '%s'\n", args.demux_dev);
+-- 
+1.9.1
+

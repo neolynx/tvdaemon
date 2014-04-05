@@ -1,0 +1,113 @@
+From 7495e87c0be9689fd13ea557477fdb0f38484fc9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sat, 4 Jan 2014 18:04:58 +0100
+Subject: [PATCH 08/11] libdvbv5: check memory in descriptor parsing
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/libdvbv5/descriptors/desc_sat.c     | 12 +++++---
+ lib/libdvbv5/descriptors/desc_service.c | 50 +++++++++++++++++++++++++++------
+ 2 files changed, 49 insertions(+), 13 deletions(-)
+
+diff --git a/lib/libdvbv5/descriptors/desc_sat.c b/lib/libdvbv5/descriptors/desc_sat.c
+index 5494799..a15a97d 100644
+--- a/lib/libdvbv5/descriptors/desc_sat.c
++++ b/lib/libdvbv5/descriptors/desc_sat.c
+@@ -25,10 +25,14 @@
+ int dvb_desc_sat_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
+ {
+ 	struct dvb_desc_sat *sat = (struct dvb_desc_sat *) desc;
+-	/* copy from .length */
+-	memcpy(((uint8_t *) sat ) + sizeof(sat->type) + sizeof(sat->next) + sizeof(sat->length),
+-		buf,
+-		sat->length);
++	ssize_t size = sizeof(struct dvb_desc_sat) - sizeof(struct dvb_desc);
++
++	if (size > desc->length) {
++		dvb_logerr("dvb_desc_sat_init short read %d/%zd bytes", desc->length, size);
++		return -1;
++	}
++
++	memcpy(desc->data, buf, size);
+ 	bswap16(sat->orbit);
+ 	bswap32(sat->bitfield);
+ 	bswap32(sat->frequency);
+diff --git a/lib/libdvbv5/descriptors/desc_service.c b/lib/libdvbv5/descriptors/desc_service.c
+index 069317a..983fd74 100644
+--- a/lib/libdvbv5/descriptors/desc_service.c
++++ b/lib/libdvbv5/descriptors/desc_service.c
+@@ -26,27 +26,59 @@
+ int dvb_desc_service_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc)
+ {
+ 	struct dvb_desc_service *service = (struct dvb_desc_service *) desc;
++	const uint8_t *endbuf = buf + desc->length;
+ 	uint8_t len;        /* the length of the string in the input data */
+ 	uint8_t len1, len2; /* the lenght of the output strings */
+ 
++	service->provider = NULL;
++	service->provider_emph = NULL;
++	service->name = NULL;
++	service->name_emph = NULL;
++
++	if (buf + 1 > endbuf) {
++		dvb_logerr("%s: short read %d bytes", __func__, 1);
++		return -1;
++	}
+ 	service->service_type = buf[0];
+ 	buf++;
+ 
+-	service->provider = NULL;
+-	service->provider_emph = NULL;
++	if (buf + 1 > endbuf) {
++		dvb_logerr("%s: a short read %d bytes", __func__, 1);
++		return -1;
++	}
++
+ 	len = buf[0];
+-	buf++;
+ 	len1 = len;
+-	parse_string(parms, &service->provider, &service->provider_emph, buf, len1, default_charset, output_charset);
+-	buf += len;
++	buf++;
++
++	if (buf + len > endbuf) {
++		dvb_logerr("%s: b short read %d bytes", __func__, len);
++		return -1;
++	}
++
++	if (len) {
++		parse_string(parms, &service->provider, &service->provider_emph, buf, len1, default_charset, output_charset);
++		buf += len;
++	}
++
++	if (buf + 1 > endbuf) {
++		dvb_logerr("%s: c short read %d bytes", __func__, 1);
++		return -1;
++	}
+ 
+-	service->name = NULL;
+-	service->name_emph = NULL;
+ 	len = buf[0];
+ 	len2 = len;
+ 	buf++;
+-	parse_string(parms, &service->name, &service->name_emph, buf, len2, default_charset, output_charset);
+-	buf += len;
++
++	if (buf + len > endbuf) {
++		dvb_logerr("%s: d short read %d bytes", __func__, len);
++		return -1;
++	}
++
++	if (len) {
++		parse_string(parms, &service->name, &service->name_emph, buf, len2, default_charset, output_charset);
++		buf += len;
++	}
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
+

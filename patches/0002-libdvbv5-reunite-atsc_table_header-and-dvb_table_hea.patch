@@ -1,34 +1,33 @@
-From 1effb8d90c421a726e0dae8d7d68839c027d27a1 Mon Sep 17 00:00:00 2001
+From f01c122c2faff796bbb8246b8c3b8539f07a95a4 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Sat, 1 Mar 2014 22:59:43 +0100
-Subject: [PATCH 41/41] libdvbv5: reunite atsc_table_header and
+Date: Sat, 5 Apr 2014 13:22:23 +0200
+Subject: [PATCH 02/11] libdvbv5: reunite atsc_table_header and
  dvb_table_header
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-this solves theambiguity when parsing the dvb/atsc header
+this solves the ambiguity when parsing the dvb/atsc header
 in dvb-scan.c
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
  lib/include/libdvbv5/atsc_eit.h        |  2 +-
  lib/include/libdvbv5/atsc_header.h     | 39 ++++++----------------------
- lib/include/libdvbv5/header.h          |  3 +--
+ lib/include/libdvbv5/header.h          |  5 ++--
  lib/include/libdvbv5/mgt.h             |  2 +-
  lib/include/libdvbv5/vct.h             |  2 +-
  lib/libdvbv5/Makefile.am               |  1 -
  lib/libdvbv5/descriptors/atsc_eit.c    |  2 +-
  lib/libdvbv5/descriptors/atsc_header.c | 47 ----------------------------------
- lib/libdvbv5/descriptors/header.c      |  1 -
+ lib/libdvbv5/descriptors/header.c      |  3 +--
  lib/libdvbv5/descriptors/mgt.c         |  2 +-
  lib/libdvbv5/descriptors/vct.c         |  2 +-
- lib/libdvbv5/dvb-scan.c                |  1 -
- 12 files changed, 15 insertions(+), 89 deletions(-)
+ 11 files changed, 17 insertions(+), 90 deletions(-)
  delete mode 100644 lib/libdvbv5/descriptors/atsc_header.c
 
 diff --git a/lib/include/libdvbv5/atsc_eit.h b/lib/include/libdvbv5/atsc_eit.h
-index 0c0d830..57f7881 100644
+index c527b1d..8b093de 100644
 --- a/lib/include/libdvbv5/atsc_eit.h
 +++ b/lib/include/libdvbv5/atsc_eit.h
 @@ -64,7 +64,7 @@ union atsc_table_eit_desc_length {
@@ -94,10 +93,10 @@ index 9685b37..12e7379 100644
  
  #endif
 diff --git a/lib/include/libdvbv5/header.h b/lib/include/libdvbv5/header.h
-index 54c4d61..071fa85 100644
+index 67b7694..dc85f46 100644
 --- a/lib/include/libdvbv5/header.h
 +++ b/lib/include/libdvbv5/header.h
-@@ -49,8 +49,7 @@ struct dvb_table_header {
+@@ -50,10 +50,9 @@ struct dvb_table_header {
  	union {
  		uint16_t bitfield;
  		struct {
@@ -105,10 +104,13 @@ index 54c4d61..071fa85 100644
 -			uint8_t  zero:2;
 +			uint16_t section_length:12;
  			uint8_t  one:2;
- 			uint8_t  zero2:1;
+-			uint8_t  zero2:1;
++			uint8_t  zero:1;
  			uint8_t  syntax:1;
+ 		} __attribute__((packed));
+ 	} __attribute__((packed));
 diff --git a/lib/include/libdvbv5/mgt.h b/lib/include/libdvbv5/mgt.h
-index 346cbb5..70b5ba6 100644
+index 4ea905d..cb8d63a 100644
 --- a/lib/include/libdvbv5/mgt.h
 +++ b/lib/include/libdvbv5/mgt.h
 @@ -53,7 +53,7 @@ struct atsc_table_mgt_table {
@@ -121,7 +123,7 @@ index 346cbb5..70b5ba6 100644
          struct atsc_table_mgt_table *table;
  	struct dvb_desc *descriptor;
 diff --git a/lib/include/libdvbv5/vct.h b/lib/include/libdvbv5/vct.h
-index fd7b845..3e1457f 100644
+index 6d41ac5..83bad06 100644
 --- a/lib/include/libdvbv5/vct.h
 +++ b/lib/include/libdvbv5/vct.h
 @@ -85,7 +85,7 @@ struct atsc_table_vct_channel {
@@ -146,10 +148,10 @@ index 667a1af..df67544 100644
  	descriptors/pmt.c		\
  	descriptors/nit.c		\
 diff --git a/lib/libdvbv5/descriptors/atsc_eit.c b/lib/libdvbv5/descriptors/atsc_eit.c
-index 05c8ac3..3cd5c93 100644
+index 9e1397d..286748c 100644
 --- a/lib/libdvbv5/descriptors/atsc_eit.c
 +++ b/lib/libdvbv5/descriptors/atsc_eit.c
-@@ -129,7 +129,7 @@ void atsc_table_eit_free(struct atsc_table_eit *eit)
+@@ -132,7 +132,7 @@ void atsc_table_eit_free(struct atsc_table_eit *eit)
  void atsc_table_eit_print(struct dvb_v5_fe_parms *parms, struct atsc_table_eit *eit)
  {
  	dvb_log("EIT");
@@ -212,22 +214,25 @@ index 06d1bb1..0000000
 -}
 -
 diff --git a/lib/libdvbv5/descriptors/header.c b/lib/libdvbv5/descriptors/header.c
-index b5dc73a..d85c7ce 100644
+index da3f970..3df73af 100644
 --- a/lib/libdvbv5/descriptors/header.c
 +++ b/lib/libdvbv5/descriptors/header.c
-@@ -35,7 +35,6 @@ void dvb_table_header_print(struct dvb_v5_fe_parms *parms, const struct dvb_tabl
+@@ -34,9 +34,8 @@ void dvb_table_header_print(struct dvb_v5_fe_parms *parms, const struct dvb_tabl
  {
- 	dvb_loginfo("| table_id    0x%02x", t->table_id);
- 	dvb_loginfo("| length         %d", t->section_length);
--	dvb_loginfo("| zero           %d", t->zero);
- 	dvb_loginfo("| one            %d", t->one);
- 	dvb_loginfo("| zero2          %d", t->zero2);
- 	dvb_loginfo("| syntax         %d", t->syntax);
+ 	dvb_log("| table_id            %d", t->table_id);
+ 	dvb_log("| section_length      %d", t->section_length);
+-	dvb_log("| zero                %d", t->zero);
+ 	dvb_log("| one                 %d", t->one);
+-	dvb_log("| zero2               %d", t->zero2);
++	dvb_log("| zero                %d", t->zero);
+ 	dvb_log("| syntax              %d", t->syntax);
+ 	dvb_log("| transport_stream_id %d", t->id);
+ 	dvb_log("| current_next        %d", t->current_next);
 diff --git a/lib/libdvbv5/descriptors/mgt.c b/lib/libdvbv5/descriptors/mgt.c
-index 9dec561..fa4c923 100644
+index b445294..4d34740 100644
 --- a/lib/libdvbv5/descriptors/mgt.c
 +++ b/lib/libdvbv5/descriptors/mgt.c
-@@ -121,7 +121,7 @@ void atsc_table_mgt_print(struct dvb_v5_fe_parms *parms, struct atsc_table_mgt *
+@@ -125,7 +125,7 @@ void atsc_table_mgt_print(struct dvb_v5_fe_parms *parms, struct atsc_table_mgt *
  	uint16_t tables = 0;
  
  	dvb_log("MGT");
@@ -237,10 +242,10 @@ index 9dec561..fa4c923 100644
  	while(table) {
                  dvb_log("|- type %04x    %d", table->type, table->pid);
 diff --git a/lib/libdvbv5/descriptors/vct.c b/lib/libdvbv5/descriptors/vct.c
-index 643f7c5..127612d 100644
+index 8606d7e..c0d531a 100644
 --- a/lib/libdvbv5/descriptors/vct.c
 +++ b/lib/libdvbv5/descriptors/vct.c
-@@ -149,7 +149,7 @@ void atsc_table_vct_print(struct dvb_v5_fe_parms *parms, struct atsc_table_vct *
+@@ -150,7 +150,7 @@ void atsc_table_vct_print(struct dvb_v5_fe_parms *parms, struct atsc_table_vct *
  	else
  		dvb_log("TVCT");
  
@@ -249,18 +254,6 @@ index 643f7c5..127612d 100644
  
  	dvb_log("|- #channels        %d", vct->num_channels_in_section);
  	dvb_log("|\\  channel_id");
-diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 99fffa2..6a8c934 100644
---- a/lib/libdvbv5/dvb-scan.c
-+++ b/lib/libdvbv5/dvb-scan.c
-@@ -184,7 +184,6 @@ int dvb_read_section_with_id(struct dvb_v5_fe_parms *parms, int dmx_fd,
- 		}
- 
- 		h = (struct dvb_table_header *) buf;
--		// FIXME: atsc_table_header_init
- 		dvb_table_header_init(h);
- 
- 		if (start_id == h->id && start_section == h->section_id) {
 -- 
-1.8.3.2
+1.9.1
 

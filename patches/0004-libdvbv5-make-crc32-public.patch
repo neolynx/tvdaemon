@@ -1,0 +1,138 @@
+From 24f9cfa79a1d38da428b9922a1cbc720fd94418b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sat, 5 Apr 2014 12:01:04 +0200
+Subject: [PATCH 04/11] libdvbv5: make crc32 public
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+applications reading dvb files might want to
+check crc, therefore provide the crc32 function
+in the header files.
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/include/libdvbv5/crc32.h | 31 +++++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am     |  1 +
+ lib/libdvbv5/crc32.c         |  2 +-
+ lib/libdvbv5/crc32.h         | 31 -------------------------------
+ lib/libdvbv5/dvb-scan.c      |  2 +-
+ 5 files changed, 34 insertions(+), 33 deletions(-)
+ create mode 100644 lib/include/libdvbv5/crc32.h
+ delete mode 100644 lib/libdvbv5/crc32.h
+
+diff --git a/lib/include/libdvbv5/crc32.h b/lib/include/libdvbv5/crc32.h
+new file mode 100644
+index 0000000..d1968e8
+--- /dev/null
++++ b/lib/include/libdvbv5/crc32.h
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
++ * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation version 2
++ * of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
++ *
++ */
++
++#ifndef _CRC32_H
++#define _CRC32_H
++
++#include <stdint.h>
++#include <unistd.h> /* size_t */
++
++uint32_t crc32(uint8_t *data, size_t datalen, uint32_t crc);
++
++#endif
++
+diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
+index df67544..ce3f806 100644
+--- a/lib/libdvbv5/Makefile.am
++++ b/lib/libdvbv5/Makefile.am
+@@ -6,6 +6,7 @@ otherinclude_HEADERS = \
+ 	../include/libdvbv5/dvb-demux.h \
+ 	../include/libdvbv5/dvb-v5-std.h \
+ 	../include/libdvbv5/dvb-file.h \
++	../include/libdvbv5/crc32.h \
+ 	../include/libdvbv5/dvb-frontend.h \
+ 	../include/libdvbv5/dvb-fe.h \
+ 	../include/libdvbv5/dvb-sat.h \
+diff --git a/lib/libdvbv5/crc32.c b/lib/libdvbv5/crc32.c
+index f14dbe1..69d0be3 100644
+--- a/lib/libdvbv5/crc32.c
++++ b/lib/libdvbv5/crc32.c
+@@ -19,7 +19,7 @@
+  *
+  */
+ 
+-#include "crc32.h"
++#include <libdvbv5/crc32.h>
+ 
+ static uint32_t crctab[256] = {
+   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
+diff --git a/lib/libdvbv5/crc32.h b/lib/libdvbv5/crc32.h
+deleted file mode 100644
+index d1968e8..0000000
+--- a/lib/libdvbv5/crc32.h
++++ /dev/null
+@@ -1,31 +0,0 @@
+-/*
+- * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
+- * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation version 2
+- * of the License.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+- * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+- *
+- */
+-
+-#ifndef _CRC32_H
+-#define _CRC32_H
+-
+-#include <stdint.h>
+-#include <unistd.h> /* size_t */
+-
+-uint32_t crc32(uint8_t *data, size_t datalen, uint32_t crc);
+-
+-#endif
+-
+diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
+index b0636b9..e522225 100644
+--- a/lib/libdvbv5/dvb-scan.c
++++ b/lib/libdvbv5/dvb-scan.c
+@@ -42,7 +42,7 @@
+ #include <libdvbv5/dvb-frontend.h>
+ #include <libdvbv5/descriptors.h>
+ #include "parse_string.h"
+-#include "crc32.h"
++#include <libdvbv5/crc32.h>
+ #include <libdvbv5/dvb-fe.h>
+ #include <libdvbv5/dvb-file.h>
+ #include <libdvbv5/dvb-scan.h>
+-- 
+1.9.1
+
