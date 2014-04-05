@@ -184,8 +184,12 @@ void Avahi_Client::Create_Services( AvahiClient *c )
 
     // Add the service for HTTP
     int ret;
+    char hostname[HOST_NAME_MAX] = { 0 };
+    gethostname( hostname, HOST_NAME_MAX);
+    std::string temp = "TVDaemon Web Interface on ";
+    temp += hostname;
     if(( ret = avahi_entry_group_add_service( group, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET, AVAHI_PUBLISH_USE_MULTICAST,
-                                              "TVDaemon Web Interface", "_http._tcp", NULL, NULL, HTTPDPORT, NULL )) < 0 )
+                                              temp.c_str(), "_http._tcp", NULL, NULL, HTTPDPORT, NULL )) < 0 )
     {
       LogError( "Avahi: Failed to add _http._tcp service: %s", avahi_strerror( ret ));
       goto fail;
