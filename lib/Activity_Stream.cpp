@@ -215,7 +215,7 @@ bool Activity_Stream::Perform( )
 
       struct dvb_table_pat *pat = (struct dvb_table_pat *) malloc( MAX_TABLE_SIZE );
       ssize_t pat_len = 0;
-      dvb_table_pat_init ( frontend->GetFE( ), data, len, (uint8_t *) pat, &pat_len );
+      dvb_table_pat_init( frontend->GetFE( ), data, len, pat, &pat_len );
       //dvb_table_pat_print( frontend->GetFE( ), pat );
       dvb_table_pat_free( pat );
     }

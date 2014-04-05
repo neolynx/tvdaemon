@@ -25,6 +25,7 @@
 #include "Frontend.h"
 #include "Channel.h"
 
+#include <libdvbv5/dvb-fe.h>
 #include <libdvbv5/eit.h>
 #include <libdvbv5/mgt.h>
 //#include <libdvbv5/atsc_eit.h>
@@ -107,7 +108,14 @@ bool Activity_UpdateEPG::Perform( )
   {
     frontend->Log( "Reading EIT" );
     struct dvb_table_eit *eit = NULL;
-    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT_SCHEDULE, DVB_TABLE_EIT_PID, (uint8_t **) &eit, timeout );
+    struct dvb_table_filter eit_filter;
+    eit_filter.tid = DVB_TABLE_EIT_SCHEDULE;
+    eit_filter.pid = DVB_TABLE_EIT_PID;
+    eit_filter.ts_id = -1;
+    eit_filter.table = (void **) &eit;
+    eit_filter.allow_section_gaps = 1;
+    frontend->GetFE( )->verbose = 1;
+    dvb_read_sections( frontend->GetFE( ), fd_demux, &eit_filter, timeout );
     if( eit )
     {
       transponder->ReadEPG( eit->event );
@@ -116,7 +124,8 @@ bool Activity_UpdateEPG::Perform( )
     else
     {
       frontend->Log( "Reading EIT now/next" );
-      dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_EIT, DVB_TABLE_EIT_PID, (uint8_t **) &eit, timeout );
+      eit_filter.tid = DVB_TABLE_EIT;
+      dvb_read_sections( frontend->GetFE( ), fd_demux, &eit_filter, timeout );
       if( eit )
       {
         transponder->ReadEPG( eit->event );

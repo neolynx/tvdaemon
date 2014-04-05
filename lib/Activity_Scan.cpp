@@ -79,7 +79,7 @@ bool Activity_Scan::Perform( )
   transponder->SetState( Transponder::State_Scanning );
 
   frontend->Log( "Reading PAT" );
-  dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (uint8_t **) &pat, time );
+  dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_PAT, DVB_TABLE_PAT_PID, (void **) &pat, time );
   if( !pat )
   {
     frontend->LogError( "Error reading PAT table" );
@@ -131,7 +131,7 @@ bool Activity_Scan::Perform( )
   {
     frontend->Log( "Reading SDT" );
     struct dvb_table_sdt *sdt;
-    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (uint8_t **) &sdt, time );
+    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_SDT, DVB_TABLE_SDT_PID, (void **) &sdt, time );
     if( sdt )
     {
       dvb_table_sdt_print( frontend->GetFE( ), sdt );
@@ -207,7 +207,7 @@ bool Activity_Scan::Perform( )
 
         frontend->Log( "Reading PMT %04x", program->pid );
         struct dvb_table_pmt *pmt;
-        dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_PMT, program->pid, (uint8_t **) &pmt, time );
+        dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_PMT, program->pid, (void **) &pmt, time );
         if( !pmt )
         {
           frontend->LogWarn( "  No PMT for pid %d", program->pid );
@@ -289,7 +289,7 @@ bool Activity_Scan::Perform( )
   {
     frontend->Log( "Reading NIT" );
     struct dvb_table_nit *nit;
-    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (uint8_t **) &nit, time );
+    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_NIT, DVB_TABLE_NIT_PID, (void **) &nit, time );
     if( nit )
     {
       dvb_desc_find( struct dvb_desc_network_name, desc, nit, network_name_descriptor )
@@ -310,7 +310,7 @@ bool Activity_Scan::Perform( )
   {
     frontend->Log( "Reading CAT" );
     struct dvb_table_cat *cat;
-    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_CAT, DVB_TABLE_CAT_PID, (uint8_t **) &cat, time );
+    dvb_read_section( frontend->GetFE( ), fd_demux, DVB_TABLE_CAT, DVB_TABLE_CAT_PID, (void **) &cat, time );
     if( cat )
     {
       dvb_desc_find( struct dvb_desc_ca, desc, cat, conditional_access_descriptor )
