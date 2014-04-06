@@ -49,13 +49,13 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
   time_t now;
   time( &now );
   gmtime_r( &now, &t );
-  printf( "utc  :  %d %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
+  printf( "utc  :  %ld %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
   //t.tm_isdst = 1; // dst in effect, do not adjust
   //time_t utc = mktime( &t );
 
   //time( &now );
   localtime_r( &now, &t );
-  printf( "local: %d %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
+  printf( "local: %ld %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
   //t.tm_isdst = 1; // dst in effect, do not adjust
   //time_t local = mktime( &t );
 

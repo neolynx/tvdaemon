@@ -37,7 +37,7 @@ class Event : public RPCObject
 {
   public:
     Event( Channel &channel, const struct dvb_table_eit_event *event = NULL );
-    ~Event( );
+    virtual ~Event( );
 
     bool SaveConfig( ConfigBase &config );
     bool LoadConfig( ConfigBase &config );
