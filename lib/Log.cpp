@@ -50,24 +50,24 @@ void Logger::Log( int level, char *log )
 {
   const char *color = "", *term = "";
   const struct loglevel loglevels[9] = {
-    {"EMERG   ", "\033[31m", stderr },
-    {"ALERT   ", "\033[31m", stderr },
-    {"CRITICAL", "\033[31m", stderr },
-    {"ERROR   ", "\033[31m", stderr },
-    {"WARNING ", "\033[33m", stdout },
-    {"NOTICE  ", "\033[36m", stdout },
-    {"INFO    ", "\033[36m", stdout },
-    {"DEBUG   ", "\033[32m", stdout },
-    {"",         "\033[0m",  stdout },
+    {"EMERG    ", "\033[31m", stderr },
+    {"ALERT    ", "\033[31m", stderr },
+    {"CRITICAL ", "\033[31m", stderr },
+    {"ERROR    ", "\033[31m", stderr },
+    {"WARNING  ", "\033[33m", stdout },
+    {"",       "\033[36m",    stdout }, // NOTICE
+    {"",       NULL,          stdout }, // INFO
+    {"DEBUG    ", "\033[32m", stdout },
+    {"",       "\033[0m",     stdout },
   };
   if( level > sizeof( loglevels ) / sizeof( struct loglevel ) - 2 )
     level = LOG_INFO;
-  if( isatty( loglevels[level].io->_fileno ))
+  if( loglevels[level].color && isatty( loglevels[level].io->_fileno ))
     color = loglevels[level].color;
   const char *tag = loglevels[level].name;
-  if( isatty( loglevels[level].io->_fileno ))
+  if( loglevels[level].color && isatty( loglevels[level].io->_fileno ))
     term = loglevels[LOG_COLOROFF].color;
-  fprintf( loglevels[level].io, "%s%s %s%s\n", color, tag, log, term );
+  fprintf( loglevels[level].io, "%s%s%s%s\n", color, tag, log, term );
 }
 
 LoggerSyslog::LoggerSyslog( const char *ident )
