@@ -1,0 +1,372 @@
+From 7e418c49dffa703ea7f155d1a30a3a312a556c8d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Thu, 17 Apr 2014 00:28:32 +0200
+Subject: [PATCH 7/7] libdvbv5: generators for PAT and PMT
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+plus code and logging cleanups
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/include/libdvbv5/pat.h    |    3 ++
+ lib/include/libdvbv5/pmt.h    |    9 ++--
+ lib/include/libdvbv5/sdt.h    |    1 -
+ lib/libdvbv5/tables/mpeg_ts.c |    3 +-
+ lib/libdvbv5/tables/pat.c     |   77 +++++++++++++++++++++++++++++++++-
+ lib/libdvbv5/tables/pmt.c     |   92 ++++++++++++++++++++++++++++++++++++++---
+ lib/libdvbv5/tables/sdt.c     |   17 ++++----
+ 7 files changed, 179 insertions(+), 23 deletions(-)
+
+diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
+index a2180d5..f63b611 100644
+--- a/lib/include/libdvbv5/pat.h
++++ b/lib/include/libdvbv5/pat.h
+@@ -60,6 +60,9 @@ extern "C" {
+ ssize_t dvb_table_pat_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, struct dvb_table_pat **table);
+ void dvb_table_pat_free(struct dvb_table_pat *pat);
+ void dvb_table_pat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pat *t);
++struct dvb_table_pat *dvb_table_pat_create();
++struct dvb_table_pat_program *dvb_table_pat_program_create(struct dvb_table_pat *pat, uint16_t pid, uint16_t service_id);
++ssize_t dvb_table_pat_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_pat *pat, uint8_t **data);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/lib/include/libdvbv5/pmt.h b/lib/include/libdvbv5/pmt.h
+index 150b45a..fc27f46 100644
+--- a/lib/include/libdvbv5/pmt.h
++++ b/lib/include/libdvbv5/pmt.h
+@@ -84,7 +84,7 @@ struct dvb_table_pmt {
+ 		uint16_t bitfield;
+ 		struct {
+ 			uint16_t pcr_pid:13;
+-			uint16_t reserved2:3;
++			uint16_t reserved:3;
+ 		} __attribute__((packed));
+ 	} __attribute__((packed));
+ 
+@@ -92,8 +92,8 @@ struct dvb_table_pmt {
+ 		uint16_t bitfield2;
+ 		struct {
+ 			uint16_t desc_length:10;
+-			uint16_t zero3:2;
+-			uint16_t reserved3:4;
++			uint16_t zero:2;
++			uint16_t reserved2:4;
+ 		} __attribute__((packed));
+ 	} __attribute__((packed));
+ 	struct dvb_desc *descriptor;
+@@ -115,6 +115,9 @@ extern "C" {
+ ssize_t dvb_table_pmt_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, struct dvb_table_pmt **table);
+ void dvb_table_pmt_free(struct dvb_table_pmt *pmt);
+ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_pmt *pmt);
++struct dvb_table_pmt *dvb_table_pmt_create(uint16_t pcr_pid);
++struct dvb_table_pmt_stream *dvb_table_pmt_stream_create(struct dvb_table_pmt *pmt, uint16_t elementary_pid, uint8_t type);
++ssize_t dvb_table_pmt_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_pmt *pmt, uint8_t **data);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/lib/include/libdvbv5/sdt.h b/lib/include/libdvbv5/sdt.h
+index 993c5f3..0a5732f 100644
+--- a/lib/include/libdvbv5/sdt.h
++++ b/lib/include/libdvbv5/sdt.h
+@@ -69,7 +69,6 @@ void dvb_table_sdt_free(struct dvb_table_sdt *sdt);
+ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sdt);
+ struct dvb_table_sdt *dvb_table_sdt_create();
+ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt *sdt, uint16_t service_id);
+-ssize_t dvb_table_sdt_calcsize(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sdt);
+ ssize_t dvb_table_sdt_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_sdt *sdt, uint8_t **data);
+ 
+ #ifdef __cplusplus
+diff --git a/lib/libdvbv5/tables/mpeg_ts.c b/lib/libdvbv5/tables/mpeg_ts.c
+index 96b3226..22d2c8d 100644
+--- a/lib/libdvbv5/tables/mpeg_ts.c
++++ b/lib/libdvbv5/tables/mpeg_ts.c
+@@ -63,8 +63,9 @@ void dvb_mpeg_ts_print(struct dvb_v5_fe_parms *parms, struct dvb_mpeg_ts *ts)
+ 	dvb_loginfo("| pid           0x%04x", ts->pid);
+ 	dvb_loginfo("| scrambling         %d", ts->scrambling);
+ 	dvb_loginfo("| adaptation_field   %d", ts->adaptation_field);
++	dvb_loginfo("| payload            %d", ts->payload);
+ 	dvb_loginfo("| continuity_counter %d", ts->continuity_counter);
+-	if (ts->adaptation_field & 0x2) {
++	if (ts->adaptation_field) {
+ 		dvb_loginfo("|- Adaption Field");
+                 dvb_loginfo("|   length         %d", ts->adaption->length);
+                 dvb_loginfo("|   discontinued   %d", ts->adaption->discontinued);
+diff --git a/lib/libdvbv5/tables/pat.c b/lib/libdvbv5/tables/pat.c
+index 03b75b0..1a5abdd 100644
+--- a/lib/libdvbv5/tables/pat.c
++++ b/lib/libdvbv5/tables/pat.c
+@@ -22,6 +22,8 @@
+ #include <libdvbv5/pat.h>
+ #include <libdvbv5/descriptors.h>
+ #include <libdvbv5/dvb-fe.h>
++#include <libdvbv5/mpeg_ts.h>
++#include <libdvbv5/crc32.h>
+ 
+ ssize_t dvb_table_pat_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ 			ssize_t buflen, struct dvb_table_pat **table)
+@@ -120,11 +122,82 @@ void dvb_table_pat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pat *pa
+ 
+ 	dvb_loginfo("PAT");
+ 	dvb_table_header_print(parms, &pat->header);
+-	dvb_loginfo("|\\ %d program pid%s", pat->programs, pat->programs != 1 ? "s" : "");
++	dvb_loginfo("|\\ program  service");
+ 
+ 	while (prog) {
+-		dvb_loginfo("|  pid 0x%04x: service 0x%04x", prog->pid, prog->service_id);
++		dvb_loginfo("|-  0x%04x   0x%04x", prog->pid, prog->service_id);
+ 		prog = prog->next;
+ 	}
++	dvb_loginfo("|_ %d program%s", pat->programs, pat->programs != 1 ? "s" : "");
++}
++
++struct dvb_table_pat *dvb_table_pat_create()
++{
++	struct dvb_table_pat *pat;
++
++	pat = calloc(sizeof(struct dvb_table_pat), 1);
++	pat->header.table_id = DVB_TABLE_PAT;
++	pat->header.one = 3;
++	pat->header.syntax = 1;
++	pat->header.current_next = 1;
++	pat->header.id = 1;
++	pat->header.one2 = 3;
++	pat->programs = 0;
++
++	return pat;
++}
++
++struct dvb_table_pat_program *dvb_table_pat_program_create(struct dvb_table_pat *pat, uint16_t pid, uint16_t service_id)
++{
++	struct dvb_table_pat_program **head = &pat->program;
++
++	/* append to the list */
++	while (*head != NULL)
++		head = &(*head)->next;
++	*head = calloc(sizeof(struct dvb_table_pat_program), 1);
++	(*head)->service_id = service_id;
++	(*head)->pid = pid;
++	pat->programs++;
++	return *head;
++}
++
++ssize_t dvb_table_pat_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_pat *pat, uint8_t **data)
++{
++	const struct dvb_table_pat_program *program;
++	uint8_t *p;
++	ssize_t size, size_total;
++
++	*data = malloc( DVB_MAX_PAYLOAD_PACKET_SIZE );
++	p = *data;
++
++
++	size = offsetof(struct dvb_table_pat, programs);
++	memcpy(p, pat, size);
++	struct dvb_table_pat *pat_dump = (struct dvb_table_pat *) p;
++	p += size;
++
++	program = pat->program;
++	while (program) {
++		size = offsetof(struct dvb_table_pat_program, next);
++
++		memcpy(p, program, size);
++		struct dvb_table_pat_program *program_dump = (struct dvb_table_pat_program *) p;
++		p += size;
++
++		bswap16(program_dump->service_id);
++		bswap16(program_dump->bitfield);
++
++		program = program->next;
++	}
++
++	size_total = p - *data + DVB_CRC_SIZE;
++	pat_dump->header.section_length = size_total - offsetof(struct dvb_table_header, id);
++	bswap16(pat_dump->header.bitfield);
++
++	uint32_t crc = crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
++	bswap32(crc);
++	*(uint32_t *) p = crc;
++
++	return size_total;
+ }
+ 
+diff --git a/lib/libdvbv5/tables/pmt.c b/lib/libdvbv5/tables/pmt.c
+index d2e2693..a16fe9c 100644
+--- a/lib/libdvbv5/tables/pmt.c
++++ b/lib/libdvbv5/tables/pmt.c
+@@ -22,6 +22,8 @@
+ #include <libdvbv5/pmt.h>
+ #include <libdvbv5/descriptors.h>
+ #include <libdvbv5/dvb-fe.h>
++#include <libdvbv5/mpeg_ts.h>
++#include <libdvbv5/crc32.h>
+ 
+ #include <string.h> /* memcpy */
+ 
+@@ -152,11 +154,11 @@ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_p
+ {
+ 	dvb_loginfo("PMT");
+ 	dvb_table_header_print(parms, &pmt->header);
+-	dvb_loginfo("|- pcr_pid          %04x", pmt->pcr_pid);
+-	dvb_loginfo("|  reserved2           %d", pmt->reserved2);
+-	dvb_loginfo("|  descriptor length   %d", pmt->desc_length);
+-	dvb_loginfo("|  zero3               %d", pmt->zero3);
+-	dvb_loginfo("|  reserved3          %d", pmt->reserved3);
++	dvb_loginfo("|- pcr_pid       0x%04x", pmt->pcr_pid);
++	dvb_loginfo("|  reserved           %d", pmt->reserved);
++	dvb_loginfo("|  descriptor length  %d", pmt->desc_length);
++	dvb_loginfo("|  zero               %d", pmt->zero);
++	dvb_loginfo("|  reserved2          %d", pmt->reserved2);
+ 	dvb_desc_print(parms, pmt->descriptor);
+ 	dvb_loginfo("|\\");
+ 	const struct dvb_table_pmt_stream *stream = pmt->stream;
+@@ -169,7 +171,7 @@ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_p
+ 		stream = stream->next;
+ 		streams++;
+ 	}
+-	dvb_loginfo("|_  %d streams", streams);
++	dvb_loginfo("|_ %d stream%s", streams, streams != 1 ? "s" : "");
+ }
+ 
+ const char *pmt_stream_name[] = {
+@@ -198,3 +200,81 @@ const char *pmt_stream_name[] = {
+ 	[stream_private  ... 0xff] = "User Private"
+ };
+ 
++
++struct dvb_table_pmt *dvb_table_pmt_create(uint16_t pcr_pid)
++{
++	struct dvb_table_pmt *pmt;
++
++	pmt = calloc(sizeof(struct dvb_table_pmt), 1);
++	pmt->header.table_id = DVB_TABLE_PMT;
++	pmt->header.one = 3;
++	pmt->header.syntax = 1;
++	pmt->header.current_next = 1;
++	pmt->header.id = 1;
++	pmt->header.one2 = 3;
++	pmt->pcr_pid = pcr_pid;
++	pmt->reserved = 7;
++	pmt->reserved2 = 15;
++
++	return pmt;
++}
++
++struct dvb_table_pmt_stream *dvb_table_pmt_stream_create(struct dvb_table_pmt *pmt, uint16_t elementary_pid, uint8_t type)
++{
++	struct dvb_table_pmt_stream **head = &pmt->stream;
++
++	/* append to the list */
++	while (*head != NULL)
++		head = &(*head)->next;
++	*head = calloc(sizeof(struct dvb_table_pmt_stream), 1);
++	(*head)->elementary_pid = elementary_pid;
++	(*head)->type = type;
++	return *head;
++}
++
++ssize_t dvb_table_pmt_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_pmt *pmt, uint8_t **data)
++{
++	const struct dvb_table_pmt_stream *stream;
++	uint8_t *p;
++	ssize_t size, size_total;
++
++	*data = malloc( DVB_MAX_PAYLOAD_PACKET_SIZE );
++	p = *data;
++
++
++	size = offsetof(struct dvb_table_pmt, descriptor);
++	memcpy(p, pmt, size);
++	struct dvb_table_pmt *pmt_dump = (struct dvb_table_pmt *) p;
++	p += size;
++	bswap16(pmt_dump->bitfield);
++	bswap16(pmt_dump->bitfield2);
++
++	stream = pmt->stream;
++	while (stream) {
++		size = offsetof(struct dvb_table_pmt_stream, descriptor);
++
++		memcpy(p, stream, size);
++		struct dvb_table_pmt_stream *stream_dump = (struct dvb_table_pmt_stream *) p;
++		p += size;
++
++		size = dvb_desc_store(parms, stream->descriptor, p);
++		p += size;
++
++		stream_dump->desc_length = size;
++
++		bswap16(stream_dump->bitfield);
++		bswap16(stream_dump->bitfield2);
++
++		stream = stream->next;
++	}
++
++	size_total = p - *data + DVB_CRC_SIZE;
++	pmt_dump->header.section_length = size_total - offsetof(struct dvb_table_header, id);
++	bswap16(pmt_dump->header.bitfield);
++
++	uint32_t crc = crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
++	bswap32(crc);
++	*(uint32_t *) p = crc;
++
++	return size_total;
++}
+diff --git a/lib/libdvbv5/tables/sdt.c b/lib/libdvbv5/tables/sdt.c
+index a3741c1..8e8feaa 100644
+--- a/lib/libdvbv5/tables/sdt.c
++++ b/lib/libdvbv5/tables/sdt.c
+@@ -149,26 +149,23 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
+ 		service = service->next;
+ 		services++;
+ 	}
+-	dvb_loginfo("|_  %d services", services);
++	dvb_loginfo("|_ %d service%s", services, services != 1 ? "s" : "");
+ }
+ 
+ struct dvb_table_sdt *dvb_table_sdt_create()
+ {
+-	struct dvb_table_sdt *sdt = calloc( sizeof( struct dvb_table_sdt ), 1 );
++	struct dvb_table_sdt *sdt;
++
++	sdt = calloc(sizeof(struct dvb_table_sdt), 1);
+ 	sdt->header.table_id = DVB_TABLE_SDT;
+ 	sdt->header.one = 3;
+-	sdt->header.zero = 1;
+ 	sdt->header.syntax = 1;
+ 	sdt->header.current_next = 1;
+ 	sdt->header.id = 1;
+-	sdt->header.current_next = 1;
+-	sdt->header.version = 0;
+ 	sdt->header.one2 = 3;
+-	sdt->header.section_id = 0;
+-	sdt->header.last_section = 0;
+-
+ 	sdt->network_id = 1;
+ 	sdt->reserved = 255;
++
+ 	return sdt;
+ }
+ 
+@@ -179,7 +176,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
+ 	/* append to the list */
+ 	while (*head != NULL)
+ 		head = &(*head)->next;
+-	*head = calloc( sizeof( struct dvb_table_sdt_service ), 1 );
++	*head = calloc(sizeof(struct dvb_table_sdt_service), 1);
+ 	(*head)->service_id = service_id;
+ 	(*head)->running_status = 4;
+ 	(*head)->reserved = 63;
+@@ -188,7 +185,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
+ 
+ ssize_t dvb_table_sdt_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_sdt *sdt, uint8_t **data)
+ {
+-	const struct dvb_table_sdt_service *service = sdt->service;
++	const struct dvb_table_sdt_service *service;
+ 	uint8_t *p;
+ 	ssize_t size, size_total;
+ 
+-- 
+1.7.10.4
+

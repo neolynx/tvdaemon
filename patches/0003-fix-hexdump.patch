@@ -1,0 +1,25 @@
+From 250d5b8182d6999b17923bfa971b1c95970725d2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Wed, 16 Apr 2014 23:26:48 +0200
+Subject: [PATCH 3/7] fix hexdump
+
+---
+ lib/libdvbv5/descriptors.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index bfbf529..1b51962 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -1364,7 +1364,7 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
+ 			strncat(hex, " ", sizeof(hex) - 1);
+ 		if (j == 16) {
+ 			ascii[j] = '\0';
+-			dvb_log("%s%s  %s", prefix, hex, ascii);
++			dvb_loginfo("%s%s  %s", prefix, hex, ascii);
+ 			j = 0;
+ 			hex[0] = '\0';
+ 		}
+-- 
+1.7.10.4
+

@@ -1,19 +1,19 @@
-From 7495e87c0be9689fd13ea557477fdb0f38484fc9 Mon Sep 17 00:00:00 2001
+From 6fe0cf3577b3bc86b05f7467216688283feb4db2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 4 Jan 2014 18:04:58 +0100
-Subject: [PATCH 08/11] libdvbv5: check memory in descriptor parsing
+Subject: [PATCH 4/7] libdvbv5: check memory in descriptor parsing
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/descriptors/desc_sat.c     | 12 +++++---
- lib/libdvbv5/descriptors/desc_service.c | 50 +++++++++++++++++++++++++++------
+ lib/libdvbv5/descriptors/desc_sat.c     |   12 +++++---
+ lib/libdvbv5/descriptors/desc_service.c |   50 +++++++++++++++++++++++++------
  2 files changed, 49 insertions(+), 13 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors/desc_sat.c b/lib/libdvbv5/descriptors/desc_sat.c
-index 5494799..a15a97d 100644
+index f7fb8f1..cbaba4c 100644
 --- a/lib/libdvbv5/descriptors/desc_sat.c
 +++ b/lib/libdvbv5/descriptors/desc_sat.c
 @@ -25,10 +25,14 @@
@@ -109,5 +109,5 @@ index 069317a..983fd74 100644
  }
  
 -- 
-1.9.1
+1.7.10.4
 
