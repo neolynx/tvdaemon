@@ -28,6 +28,8 @@
 
 #include <RPCObject.h>
 
+#include <libdvbv5/pmt.h>
+
 Stream::Stream( Service &service, uint16_t id, Type type, int config_id ) :
   service(service),
   id(id),
@@ -88,6 +90,51 @@ const char *Stream::GetTypeName( Type type )
     default:
       return "Unknown";
   }
+}
+
+int Stream::GetTypeMPEG( )
+{
+  switch( type )
+  {
+    case Stream::Type_Video:
+      return stream_video;            // 0x01
+    case Stream::Type_Video_H262:
+      return stream_video_h262;       // 0x02
+    case Stream::Type_Video_H264:
+      return 0x1b;                    // 0x1b H.264 AVC
+
+    case Stream::Type_Audio:
+      return stream_audio;            // 0x03
+    case Stream::Type_Audio_13818_3:
+      return stream_audio_13818_3;    // 0x04
+    case Stream::Type_Audio_ADTS:
+      return stream_audio_adts;       // 0x0F
+    case Stream::Type_Audio_LATM:
+      return stream_audio_latm;       // 0x11
+    case Stream::Type_Audio_AC3:
+      return stream_private + 1;      // 0x81  user private - in general ATSC Dolby - AC-3
+
+    // FIXME: support those types
+    //case stream_private_sections: // 0x05
+    //case stream_private_data:     // 0x06
+      //dvb_desc_find( struct dvb_desc, desc, stream, AC_3_descriptor )
+      //{
+        //type = Stream::Type_Audio_AC3;
+        //break;
+      //}
+      //dvb_desc_find( struct dvb_desc, desc, stream, enhanced_AC_3_descriptor )
+      //{
+        //type = Stream::Type_Audio_AC3;
+        //frontend->LogWarn( "  Found AC3 enhanced" );
+        //break;
+      //}
+      //break;
+
+    default:
+      LogError( "Unhandled stream type %d", type );
+      break;
+  }
+  return -1;
 }
 
 bool Stream::Update( Type type )

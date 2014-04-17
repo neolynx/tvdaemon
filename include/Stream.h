@@ -73,6 +73,7 @@ class Stream : public Thread
 
     bool Update( Type type );
     Type GetType( ) { return type; }
+    int GetTypeMPEG( );
     const char *GetTypeName( ) { return GetTypeName( type ); };
     bool IsVideo( ) { return type > _start_video_types && type < _start_audio_types; }
     bool IsAudio( ) { return type > _start_audio_types && type < _end_audio_types; }

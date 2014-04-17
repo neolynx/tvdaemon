@@ -38,6 +38,11 @@
 #include <libdvbv5/mpeg_ts.h>
 #include <libdvbv5/mpeg_pes.h>
 #include <libdvbv5/dvb-demux.h>
+#include <libdvbv5/sdt.h>
+#include <libdvbv5/desc_service.h>
+#include <libdvbv5/pat.h>
+#include <libdvbv5/pmt.h>
+
 #include <fcntl.h>
 #include <errno.h>
 #include <algorithm> // replace
@@ -176,6 +181,32 @@ bool Activity_Record::Perform( )
     fds.push_back( ecm_fd );
   }
 
+  /* SDT */
+  struct dvb_table_sdt *sdt = dvb_table_sdt_create( );
+  sdt->header.id = 256;
+  struct dvb_table_sdt_service *sdt_service = dvb_table_sdt_service_create( sdt, 0x0001 );
+
+  struct dvb_desc_service *desc = (struct dvb_desc_service *) dvb_desc_create( frontend->GetFE( ), 0x48, &sdt_service->descriptor );
+  if( !desc )
+  {
+    frontend->LogError( "cannot create descriptor" );
+    return false;
+  }
+  desc->service_type = 0x1;
+  desc->provider = strdup( "tvdaemon" );
+  desc->name = strdup( name.c_str( ));
+
+  /* PAT */
+  struct dvb_table_pat *pat = dvb_table_pat_create( );
+  pat->header.id = 256;
+  struct dvb_table_pat_program *program = dvb_table_pat_program_create( pat, 0x1000, 0x0001 );
+
+  /* PMT */
+  struct dvb_table_pmt *pmt = dvb_table_pmt_create( 0x0100 );
+  pmt->header.id = 256;
+
+
+
   int fd_pat = frontend->OpenDemux( );
   frontend->Log( "Opening PAT demux %d", fd_pat );
   // FIXME check fd
@@ -203,8 +234,11 @@ bool Activity_Record::Perform( )
       else
         LogError( "Error opening demux" );
 
+      struct dvb_table_pmt_stream *stream = dvb_table_pmt_stream_create( pmt, it->second->GetKey( ), it->second->GetTypeMPEG( ));
+
       if( it->second->IsVideo( ))
       {
+        pmt->pcr_pid = it->second->GetKey( );
         std::string desc;
         it->second->GetSDPDescriptor( desc );
         frontend->LogWarn( "SDP: %s", desc.c_str( ));
@@ -304,6 +338,52 @@ bool Activity_Record::Perform( )
     }
 
     frontend->Log( "Recording '%s' ...", filename.c_str( ));
+
+    {
+      /* SDT */
+      uint8_t *data;
+      ssize_t size = dvb_table_sdt_store( frontend->GetFE( ), sdt, &data );
+      dvb_table_sdt_free( sdt );
+      if( !data )
+      {
+        frontend->LogError( "cannot store" );
+        return -2;
+      }
+
+      uint8_t *mpegts;
+      size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_SDT_PID, 0 );
+      free( data );
+      write( file_fd, mpegts, size );
+      free( mpegts );
+
+      /* PAT */
+      size = dvb_table_pat_store( frontend->GetFE( ), pat, &data );
+      dvb_table_pat_free( pat );
+      if( !data )
+      {
+        frontend->LogError( "cannot store" );
+        return -2;
+      }
+
+      size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_PAT_PID, 0 );
+      free( data );
+      write( file_fd, mpegts, size );
+      free( mpegts );
+
+      /* PMT */
+      size = dvb_table_pmt_store( frontend->GetFE( ), pmt, &data );
+      dvb_table_pmt_free( pmt );
+      if( !data )
+      {
+        frontend->LogError( "cannot store" );
+        return -2;
+      }
+
+      size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, 0x1000, 0 );
+      free( data );
+      write( file_fd, mpegts, size );
+      free( mpegts );
+    }
 
     bool started = false;
 
