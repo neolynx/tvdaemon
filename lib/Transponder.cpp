@@ -420,6 +420,11 @@ bool Transponder::RPC( const HTTPRequest &request, const std::string &cat, const
       return true;
     }
 
+    else if( action == "dump" )
+    {
+      request.Reply( HTTP_OK );
+      return true;
+    }
   }
 
   else if( cat == "service" )

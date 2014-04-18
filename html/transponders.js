@@ -16,7 +16,8 @@ function ready( )
     "signal"    : [ "S/N", print_sn ],
     "services"  : "Services",
     "source"    : "Source",
-    ""  : [ "", print_scan ],
+    "_scan"  : [ "", print_scan ],
+    "_dump"  : [ "", print_dump ],
   };
   table.load( );
   table.filters( [ "search" ] );
@@ -64,6 +65,11 @@ function print_scan( row )
   return "<a href=\"javascript: scan( " + row['source_id'] + ", " + row['id'] + " );\">scan</a>";
 }
 
+function print_dump( row )
+{
+  return "<a href=\"javascript: dump( " + row['source_id'] + ", " + row['id'] + " );\">dump</a>";
+}
+
 function scan( source_id, id )
 {
   getJSON( 'tvd?c=transponder&a=scan&source_id=' + source_id +
@@ -73,5 +79,11 @@ function scan( source_id, id )
 function scanTransponder( data, errmsg )
 {
   table.load( );
+}
+
+function dump( source_id, id )
+{
+  getJSON( 'tvd?c=transponder&a=dump&source_id=' + source_id +
+      '&transponder_id=' + id, scanTransponder );
 }
 
