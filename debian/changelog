@@ -1,3 +1,10 @@
+tvdaemon (0.2) UNRELEASED; urgency=low
+
+  * valid mpeg ts files
+  * v4l updates
+
+ -- André Roth <neolynx@gmail.com>  Thu, 17 Apr 2014 03:21:36 +0200
+
 tvdaemon (0.1) raring; urgency=low
 
   * Initial build
