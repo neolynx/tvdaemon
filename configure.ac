@@ -57,11 +57,11 @@ AM_GNU_GETTEXT([external])
 AM_ICONV
 
 AC_CONFIG_FILES([Makefile
+                 v4l-utils/lib/libdvbv5/Makefile
+                 v4l-utils/lib/libdvbv5/libdvbv5.pc
                  lib/Makefile
                  src/Makefile
                  tsdecrypt/Makefile
                  ])
                  #po/Makefile
-#                 v4l-utils/lib/libdvbv5/Makefile
-#                 v4l-utils/lib/libdvbv5/libdvbv5.pc
 AC_OUTPUT

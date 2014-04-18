@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = tsdecrypt lib src #po
+SUBDIRS = tsdecrypt v4l-utils/lib/libdvbv5 lib src #po
 noinst_HEADERS = include
 
 tvdaemondir = $(datadir)/tvdaemon
