@@ -1,23 +1,46 @@
-From 7e3d5b110c137e52dfc9f5d3c0524eff7ab33fe3 Mon Sep 17 00:00:00 2001
+From 248a1b04ce9d2650664bade7ae91697756aedb33 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Wed, 16 Apr 2014 19:37:30 +0200
-Subject: [PATCH 6/7] libdvbv5: SDT, desc_service and mpeg_ts generators
+Date: Thu, 17 Apr 2014 16:25:37 +0200
+Subject: [PATCH 3/4] libdvbv5: generators for SDT, desc_service and mpeg_ts
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+this allows to create an SDT table with a service descriptor
+enclosed in mpeg transport stream.
+
+Example usage:
+
+  struct dvb_table_sdt *sdt = dvb_table_sdt_create( );
+  struct dvb_table_sdt_service *service = dvb_table_sdt_service_create( sdt, 0x0001 );
+
+  struct dvb_desc_service *desc = (struct dvb_desc_service *) dvb_desc_create( fe, 0x48, &service->descriptor );
+  desc->service_type = 0x1;
+  desc->provider = strdup( "libdvbv5" );
+  desc->name = strdup( "Service01" );
+
+  uint8_t *data;
+  ssize_t size = dvb_table_sdt_store( fe, sdt, &data );
+  dvb_table_sdt_free( sdt );
+
+  uint8_t *mpegts;
+  size = dvb_mpeg_ts_create( fe, data, size, &mpegts, DVB_TABLE_SDT_PID, 0 );
+  free( data );
+  write( fd, mpegts, size );
+  free( mpegts );
+
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_service.h     |    2 +
- lib/include/libdvbv5/descriptors.h      |    8 +++
- lib/include/libdvbv5/mpeg_ts.h          |    6 +-
- lib/include/libdvbv5/sdt.h              |    4 ++
- lib/libdvbv5/descriptors.c              |   59 +++++++++++++---
- lib/libdvbv5/descriptors/desc_service.c |   52 ++++++++++++++
- lib/libdvbv5/parse_string.c             |    7 +-
- lib/libdvbv5/parse_string.h             |    2 +-
- lib/libdvbv5/tables/mpeg_ts.c           |  112 ++++++++++++++++++++++++++-----
- lib/libdvbv5/tables/sdt.c               |   85 ++++++++++++++++++++++-
+ lib/include/libdvbv5/desc_service.h     |   2 +
+ lib/include/libdvbv5/descriptors.h      |   8 +++
+ lib/include/libdvbv5/mpeg_ts.h          |   6 +-
+ lib/include/libdvbv5/sdt.h              |   4 ++
+ lib/libdvbv5/descriptors.c              |  59 ++++++++++++++---
+ lib/libdvbv5/descriptors/desc_service.c |  52 +++++++++++++++
+ lib/libdvbv5/parse_string.c             |   7 +-
+ lib/libdvbv5/parse_string.h             |   2 +-
+ lib/libdvbv5/tables/mpeg_ts.c           | 112 +++++++++++++++++++++++++++-----
+ lib/libdvbv5/tables/sdt.c               |  85 +++++++++++++++++++++++-
  10 files changed, 303 insertions(+), 34 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
@@ -543,5 +566,5 @@ index d27cec8..a3741c1 100644
 +	return size_total;
 +}
 -- 
-1.7.10.4
+1.9.1
 

@@ -1,22 +1,49 @@
-From 7e418c49dffa703ea7f155d1a30a3a312a556c8d Mon Sep 17 00:00:00 2001
+From 3dec02f7244ba108b05aac000b3ad117e692a87f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Thu, 17 Apr 2014 00:28:32 +0200
-Subject: [PATCH 7/7] libdvbv5: generators for PAT and PMT
+Date: Fri, 18 Apr 2014 13:41:32 +0200
+Subject: [PATCH 4/4] libdvbv5: generators for PAT and PMT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-plus code and logging cleanups
+- add support for generating PAT and PMT tables.
+- code and logging cleanups
+
+Example usage:
+
+  /* PAT */
+  struct dvb_table_pat *pat = dvb_table_pat_create( );
+  struct dvb_table_pat_program *program = dvb_table_pat_program_create( pat, 0x1000, 0x0001 );
+  uint8_t *data;
+  size = dvb_table_pat_store( fe, pat, &data );
+  dvb_table_pat_free( pat );
+  uint8_t *mpegts;
+  size = dvb_mpeg_ts_create( fe, data, size, &mpegts, DVB_TABLE_PAT_PID, 0 );
+  free( data );
+  write( fd, mpegts, size );
+  free( mpegts );
+
+  /* PMT */
+  struct dvb_table_pmt *pmt = dvb_table_pmt_create( 0x0100 );
+  struct dvb_table_pmt_stream *stream = dvb_table_pmt_stream_create( pmt, 0x0100, 2 );
+
+  size = dvb_table_pmt_store( fe, pmt, &data );
+  dvb_table_pmt_free( pmt );
+
+  size = dvb_mpeg_ts_create( fe, data, size, &mpegts, 0x1000, 0 );
+  free( data );
+  write( fd, mpegts, size );
+  free( mpegts );
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/pat.h    |    3 ++
- lib/include/libdvbv5/pmt.h    |    9 ++--
- lib/include/libdvbv5/sdt.h    |    1 -
- lib/libdvbv5/tables/mpeg_ts.c |    3 +-
- lib/libdvbv5/tables/pat.c     |   77 +++++++++++++++++++++++++++++++++-
- lib/libdvbv5/tables/pmt.c     |   92 ++++++++++++++++++++++++++++++++++++++---
- lib/libdvbv5/tables/sdt.c     |   17 ++++----
+ lib/include/libdvbv5/pat.h    |  3 ++
+ lib/include/libdvbv5/pmt.h    |  9 +++--
+ lib/include/libdvbv5/sdt.h    |  1 -
+ lib/libdvbv5/tables/mpeg_ts.c |  3 +-
+ lib/libdvbv5/tables/pat.c     | 77 +++++++++++++++++++++++++++++++++++-
+ lib/libdvbv5/tables/pmt.c     | 92 ++++++++++++++++++++++++++++++++++++++++---
+ lib/libdvbv5/tables/sdt.c     | 17 ++++----
  7 files changed, 179 insertions(+), 23 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
@@ -368,5 +395,5 @@ index a3741c1..8e8feaa 100644
  	ssize_t size, size_total;
  
 -- 
-1.7.10.4
+1.9.1
 

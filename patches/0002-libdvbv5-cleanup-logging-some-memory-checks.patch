@@ -1,17 +1,50 @@
-From 6fe0cf3577b3bc86b05f7467216688283feb4db2 Mon Sep 17 00:00:00 2001
+From 12d90e58704ef7a64a1296c725bd78edc92d4c83 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Sat, 4 Jan 2014 18:04:58 +0100
-Subject: [PATCH 4/7] libdvbv5: check memory in descriptor parsing
+Date: Thu, 17 Apr 2014 16:12:49 +0200
+Subject: [PATCH 2/4] libdvbv5: cleanup logging, some memory checks
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+- use loginfo in hexdump
+- use C comments
+- memory checking in desc_sat and desc_service
+
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/libdvbv5/descriptors/desc_sat.c     |   12 +++++---
- lib/libdvbv5/descriptors/desc_service.c |   50 +++++++++++++++++++++++++------
- 2 files changed, 49 insertions(+), 13 deletions(-)
+ lib/include/libdvbv5/desc_service_list.h |  3 +-
+ lib/libdvbv5/descriptors.c               |  2 +-
+ lib/libdvbv5/descriptors/desc_sat.c      | 12 +++++---
+ lib/libdvbv5/descriptors/desc_service.c  | 50 ++++++++++++++++++++++++++------
+ 4 files changed, 52 insertions(+), 15 deletions(-)
 
+diff --git a/lib/include/libdvbv5/desc_service_list.h b/lib/include/libdvbv5/desc_service_list.h
+index e71e321..7b8f575 100644
+--- a/lib/include/libdvbv5/desc_service_list.h
++++ b/lib/include/libdvbv5/desc_service_list.h
+@@ -32,7 +32,8 @@ struct dvb_desc_service_list_table {
+ struct dvb_desc_service_list {
+ 	DVB_DESC_HEADER();
+ 
+-	//struct dvb_desc_service_list_table services[];
++	/* FIXME */
++	/* struct dvb_desc_service_list_table services[]; */
+ } __attribute__((packed));
+ 
+ struct dvb_v5_fe_parms;
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index bfbf529..1b51962 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -1364,7 +1364,7 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
+ 			strncat(hex, " ", sizeof(hex) - 1);
+ 		if (j == 16) {
+ 			ascii[j] = '\0';
+-			dvb_log("%s%s  %s", prefix, hex, ascii);
++			dvb_loginfo("%s%s  %s", prefix, hex, ascii);
+ 			j = 0;
+ 			hex[0] = '\0';
+ 		}
 diff --git a/lib/libdvbv5/descriptors/desc_sat.c b/lib/libdvbv5/descriptors/desc_sat.c
 index f7fb8f1..cbaba4c 100644
 --- a/lib/libdvbv5/descriptors/desc_sat.c
@@ -109,5 +142,5 @@ index 069317a..983fd74 100644
  }
  
 -- 
-1.7.10.4
+1.9.1
 
