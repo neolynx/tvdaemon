@@ -251,7 +251,7 @@ bool HTTPServer::GET( HTTPRequest &request )
       return true;
     }
 
-  // Handle http files
+  // Handle files
 
   std::string url = _root;
   Utils::EnsureSlash( url );
@@ -260,11 +260,13 @@ bool HTTPServer::GET( HTTPRequest &request )
   size_t pos;
   while(( pos = t.find( ".." )) != std::string::npos )
     t.replace( pos, 2, "." );
+  while( t[0] == '/' )
+    t = t.substr( 1, std::string::npos );
   url += t;
 
   if( url.empty( ))
   {
-    LogError( "HTTPServer: file not found: %s", request.url.c_str( ));
+    LogError( "HTTPServer: file not found: '%s'", request.url.c_str( ));
     Response err_response;
     err_response.AddStatus( HTTP_NOT_FOUND );
     err_response.AddTimeStamp( );
