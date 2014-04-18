@@ -1034,7 +1034,6 @@ bool TVDaemon::RPC_Source( const HTTPRequest &request, const std::string &cat, c
   int i = atoi( t.c_str( ));
   if( i >= 0 && i < sources.size( ))
   {
-    Log( "RPC on source %d", i );
     return sources[i]->RPC( request, cat, action );
   }
 

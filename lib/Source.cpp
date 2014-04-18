@@ -346,7 +346,6 @@ bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std:
     if( !request.GetParam( "transponder_id", t ))
       return false;
 
-    Log( "Source: %s", name.c_str( ));
     int obj_id = atoi( t.c_str( ));
     if( obj_id >= 0 && obj_id < transponders.size( ))
     {
