@@ -6,6 +6,9 @@ var sources = [];
 var adapters = [];
 var no_update = false;
 
+//$(function(){
+//});
+
 function ready( )
 {
   theme = "";
@@ -19,6 +22,37 @@ function ready( )
   //$('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
 
   $('#setup').attr( 'class', 'setup' );
+
+  $( "#test" ).menu();
+
+  //$("document").contextmenu({
+    //delegate: ".hasmenu",
+    //menu: "#test",
+    //// position: {my: "left top", at: "left bottom"},
+    //position: function(event, ui){
+      //return {my: "left top", at: "left bottom", of: ui.target};
+    //},
+    //preventSelect: true,
+    //focus: function(event, ui) {
+      //var menuId = ui.item.find(">a").attr("href");
+      //$("#info").text("focus " + menuId);
+      //console.log("focus", ui.item);
+    //},
+    //blur: function(event, ui) {
+      //$("#info").text("");
+      //console.log("blur", ui.item);
+    //},
+    //beforeOpen: function(event, ui) {
+      //// $("#container").contextmenu("replaceMenu", "#options2");
+      //// $("#container").contextmenu("replaceMenu", [{title: "aaa"}, {title: "bbb"}]);
+    //},
+    //open: function(event, ui) {
+      //// alert("open on " + ui.target.text());
+    //},
+    //select: function(event, ui) {
+      //alert("select " + ui.cmd + " on " + ui.target.text());
+    //}
+  //});
 
   Menu( "Setup" );
   update( );
@@ -66,53 +100,53 @@ function readDevices( data, errmsg )
     adapterports = 0;
 
     frontends = adapter["frontends"]
-    for( f in frontends )
-    {
-      frontend = frontends[f];
-      frontend["adapter_id"] = adapter["id"];
-
-      cell2 = $('<td>');
-      cell2.html( getFrontend( frontend ));
-      if( f != frontends.length - 1 || a != adapters.length - 1 )
-        cell2.attr( "class", "frontend" );
-      else
-        cell2.attr( "class", "frontend_last" );
-      //cell2.bind( "click", function( ) { alert ( 'bla' ); } );
-      row.append( cell2 );
-
-      ports = Object.keys( frontend["ports"] ).length;
-      adapterports += ports;
-      cell2.attr( "rowspan", ports );
-
-      ports = frontend["ports"];
-      for( p in ports )
+      for( f in frontends )
       {
-        port = ports[p];
-        port["frontend_id"] = frontend["id"];
-        port["adapter_id"] = adapter["id"];
+        frontend = frontends[f];
+        frontend["adapter_id"] = adapter["id"];
 
-        cell3 = $('<td>');
-        cell3.html( getPort( port ));
-        if( p != ports.length - 1 || a != adapters.length - 1 || f != frontends.length -1 )
-          cell3.attr( "class", "port" );
+        cell2 = $('<td>');
+        cell2.html( getFrontend( frontend ));
+        if( f != frontends.length - 1 || a != adapters.length - 1 )
+          cell2.attr( "class", "frontend" );
         else
-          cell3.attr( "class", "port_last" );
-        row.append( cell3 );
+          cell2.attr( "class", "frontend_last" );
+        //cell2.bind( "click", function( ) { alert ( 'bla' ); } );
+        row.append( cell2 );
 
-        cell4 = $('<td>');
-        cell4.html( getSource( port ));
-        if( p != ports.length - 1 || a != adapters.length - 1 || f != frontends.length -1 )
-          cell4.attr( "class", "source" );
-        else
-          cell4.attr( "class", "source_last" );
-        row.append( cell4 );
+        ports = Object.keys( frontend["ports"] ).length;
+        adapterports += ports;
+        cell2.attr( "rowspan", ports );
+
+        ports = frontend["ports"];
+        for( p in ports )
+        {
+          port = ports[p];
+          port["frontend_id"] = frontend["id"];
+          port["adapter_id"] = adapter["id"];
+
+          cell3 = $('<td>');
+          cell3.html( getPort( port ));
+          if( p != ports.length - 1 || a != adapters.length - 1 || f != frontends.length -1 )
+            cell3.attr( "class", "port" );
+          else
+            cell3.attr( "class", "port_last" );
+          row.append( cell3 );
+
+          cell4 = $('<td>');
+          cell4.html( getSource( port ));
+          if( p != ports.length - 1 || a != adapters.length - 1 || f != frontends.length -1 )
+            cell4.attr( "class", "source" );
+          else
+            cell4.attr( "class", "source_last" );
+          row.append( cell4 );
 
 
-        row.appendTo( table );
-        row = $('<tr>');
+          row.appendTo( table );
+          row = $('<tr>');
+        }
+
       }
-
-    }
     cell.attr( "rowspan", adapterports );
   }
 
@@ -133,6 +167,7 @@ function readDevices( data, errmsg )
 
   row.appendTo( table );
   table.appendTo( '#setup' );
+
 }
 
 function getAdapter( adapter )
@@ -190,7 +225,7 @@ function getSource( port )
 function editPort( adapter_id, frontend_id, port_id )
 {
   no_update = true;
-  $("#port_popup").jqxWindow('show');
+  //$("#port_popup").jqxWindow('show');
   frontend = adapters[adapter_id]["frontends"][frontend_id];
   port = frontend["ports"][port_id];
   $("#port_name").focus( );
@@ -269,15 +304,15 @@ function saveSource( )
 {
   $.ajax( {
     type: 'POST',
-    cache: false,
-    url: 'tvd?c=tvdaemon&a=create_source',
-    data: $('#source_form').serialize( ),
-    success: function(msg) {
-      //$("#source_popup").jqxWindow( 'hide' );
-      //port["source_id"] = msg;
-      //getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
-      },
-    error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
+  cache: false,
+  url: 'tvd?c=tvdaemon&a=create_source',
+  data: $('#source_form').serialize( ),
+  success: function(msg) {
+    //$("#source_popup").jqxWindow( 'hide' );
+    //port["source_id"] = msg;
+    //getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
+  },
+  error: function( jqXHR, status, errorThrown ) { alert( jqXHR.responseText ); }
   } );
 }
 
@@ -285,8 +320,8 @@ function scan( )
 {
   $.ajax( {
     type: 'GET',
-    cache: false,
-    url: 'tvd?c=tvdaemon&a=scan',
+  cache: false,
+  url: 'tvd?c=tvdaemon&a=scan',
   } );
 }
 
@@ -303,6 +338,23 @@ function click_frontend( adapter_id, frontend_id )
   //$("#port_port_id").val( null );
   //$("#port_type").val( frontend["type"] );
 
-  getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
+  $("#popup").css( "position", "absolute" );
+  $("#popup").css( "top", "0" );
+  $("#popup").css( "bottom", "0" );
+  $("#popup").css( "background", "#eee" );
+  $("#popup").css( "width", "100%" );
+  $("#popup").css( "height", "100%" );
+  $("#popup").css( "opacity", "0.1" );
+
+  $("#test").css( "margin", "auto" );
+  $("#test").css( "position", "absolute" );
+  $("#test").css( "top", "50%" );
+  $("#test").css( "left", "50%" );
+  $("#test").css( "background", "#eee" );
+  $("#popup").show();
+  //getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
+
+  //$("#menu2").contextmenu("open", $(".hasmenu:first"), {foo: "bar"});
+
 }
 

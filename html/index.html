@@ -1,63 +1,89 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>TVDaemon</title>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/ico" href="favicon.ico">
-    <link rel="stylesheet" type="text/css" href="style/tvdaemon.css">
-    <link rel="stylesheet" type="text/css" href="index.css">
-    <script type="text/javascript" src="scripts/lib/jquery.js"></script>
-    <script type="text/javascript" src="scripts/tvdaemon.js"></script>
-    <script type="text/javascript" src="index.js"></script>
-  </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <div class="logo">TVDaemon</div>
-        <div id="menu"></div>
-      </div>
-      <div class="content">
-        <div id="setup"></div>
-      </div>
-    </div>
-    <div class="footer"></div>
+<head>
+<title>TVDaemon</title>
+<meta charset="UTF-8">
+<link rel="icon" type="image/ico" href="favicon.ico">
+<link rel="stylesheet" type="text/css" href="style/tvdaemon.css">
+<link rel="stylesheet" type="text/css" href="style/jquery-ui.css">
+<script type="text/javascript" src="scripts/lib/jquery.js"></script>
+<script type="text/javascript" src="scripts/lib/jquery-ui.min.js"></script>
+<script type="text/javascript" src="scripts/lib/jquery.ui-contextmenu.min.js"></script>
+<script type="text/javascript" src="scripts/tvdaemon.js"></script>
 
-    <div id="port_popup" style="display: none; overflow: hidden;">
-      <div>Port</div>
-      <div style="overflow: hidden;">
-        <form id="port_form" method="POST">
-          <input type="hidden" name="adapter_id" id="port_adapter_id"/>
-          <input type="hidden" name="frontend_id" id="port_frontend_id"/>
-          <input type="hidden" name="port_id" id="port_port_id"/>
-          <input type="hidden" id="port_type"/>
-          <div class="right"><label>Name  </label><input type="text" name="name" id="port_name"/></div>
-          <div class="right"><label>LNB ID</label><input type="text" name="port_num" id="port_num"/></div>
-          <div class="right"><label>Source</label><select name="source_id" id="port_source"></select></div>
-          <div class="right">
-            <input style="margin-right: 5px;" type="button" id="port_ok" value="Ok"/><input id="port_cancel" type="button" value="Cancel"/>
-          </div>
-        </form>
-      </div>
-    </div>
+<script type="text/javascript" src="index.js"></script>
+<link rel="stylesheet" type="text/css" href="index.css">
 
-    <div id="source_popup" style="display: none; overflow: hidden;">
-      <div>Create Source</div>
-      <div style="overflow: hidden;">
-        <form id="source_form" method="POST">
-          <input type="hidden" name="type" id="source_type"/>
-          <div class="right"><label>Name  </label><input type="text" name="name" id="source_name"/></div>
-          <div class="right">
-            <label>Load Transponders</label>
-            <select name="scanfile" id="source_scanfile">
-              <option>loading...</option>
-            </select>
-          </div>
-          <div class="right">
-            <input style="margin-right: 5px;" type="button" id="source_ok" value="Ok"/><input id="source_cancel" type="button" value="Cancel"/>
-          </div>
-        </form>
+</script>
+<style>
+.ui-menu { width: 150px; }
+.hasmenu {
+  border: 1px solid #008;
+  margin: 3px;
+  padding: 5px;
+  width: 30px;
+}
+</style>
+
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">TVDaemon</div>
+    <div id="menu"></div>
+  </div>
+  <div class="content">
+    <div id="menu1" class="hasmenu">menu1</div>
+    <div id="setup"></div>
+  </div>
+</div>
+<div class="footer"></div>
+
+<div id="popup" style="display: none;">
+
+  <ul id="test">
+    <li><a href="#">Edit</a></li>
+    <li><a href="#">Remove</a></li>
+  </ul>
+
+</div>
+
+<div id="port_popup" style="display: none; overflow: hidden;">
+  <div>Port</div>
+  <div style="overflow: hidden;">
+    <form id="port_form" method="POST">
+      <input type="hidden" name="adapter_id" id="port_adapter_id"/>
+      <input type="hidden" name="frontend_id" id="port_frontend_id"/>
+      <input type="hidden" name="port_id" id="port_port_id"/>
+      <input type="hidden" id="port_type"/>
+      <div class="right"><label>Name  </label><input type="text" name="name" id="port_name"/></div>
+      <div class="right"><label>LNB ID</label><input type="text" name="port_num" id="port_num"/></div>
+      <div class="right"><label>Source</label><select name="source_id" id="port_source"></select></div>
+      <div class="right">
+        <input style="margin-right: 5px;" type="button" id="port_ok" value="Ok"/><input id="port_cancel" type="button" value="Cancel"/>
       </div>
-    </div>
-  </body>
+    </form>
+  </div>
+</div>
+
+<div id="source_popup" style="display: none; overflow: hidden;">
+  <div>Create Source</div>
+  <div style="overflow: hidden;">
+    <form id="source_form" method="POST">
+      <input type="hidden" name="type" id="source_type"/>
+      <div class="right"><label>Name  </label><input type="text" name="name" id="source_name"/></div>
+      <div class="right">
+        <label>Load Transponders</label>
+        <select name="scanfile" id="source_scanfile">
+          <option>loading...</option>
+        </select>
+      </div>
+      <div class="right">
+        <input style="margin-right: 5px;" type="button" id="source_ok" value="Ok"/><input id="source_cancel" type="button" value="Cancel"/>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
 </html>
 
