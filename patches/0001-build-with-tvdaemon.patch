@@ -1,17 +1,17 @@
-From 2bb23b54a0efa9a1d5e71f36f741180efa4857bb Mon Sep 17 00:00:00 2001
+From d396c99949a706f55b8997d856129423db74d0b8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:53:01 +0200
-Subject: [PATCH 1/5] build inside tvdaemon
+Subject: [PATCH 1/5] build with tvdaemon
 
 ---
- lib/libdvbv5/Makefile.am |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ lib/libdvbv5/Makefile.am | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 515adc3..7b7a50f 100644
+index 515adc3..4190d06 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
-@@ -104,7 +104,7 @@ libdvbv5_la_SOURCES = \
+@@ -104,10 +104,12 @@ libdvbv5_la_SOURCES = \
  	descriptors/desc_ca.c			\
  	descriptors/desc_ca_identifier.c
  
@@ -20,6 +20,11 @@ index 515adc3..7b7a50f 100644
  libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) -lm
  libdvbv5_la_LIBADD = $(LTLIBICONV)
  
++AUTOMAKE_OPTIONS = subdir-objects
++
+ EXTRA_DIST = README gen_dvb_structs.pl
+ 
+ sync-with-kernel:
 -- 
-1.7.10.4
+1.9.1
 

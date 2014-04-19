@@ -1,10 +1,10 @@
-From 734558983f54047a56efa9f6a30f524d485fee8b Mon Sep 17 00:00:00 2001
+From c5044e0155f5ea8c97e5e6ab1264a5a3e9e979f2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 5 Oct 2013 14:09:47 +0200
 Subject: [PATCH 2/5] v4l: lvimrc
 
 ---
- .lvimrc |    4 ++++
+ .lvimrc | 4 ++++
  1 file changed, 4 insertions(+)
  create mode 100644 .lvimrc
 
@@ -19,5 +19,5 @@ index 0000000..b8658a7
 +set softtabstop=8
 +
 -- 
-1.7.10.4
+1.9.1
 

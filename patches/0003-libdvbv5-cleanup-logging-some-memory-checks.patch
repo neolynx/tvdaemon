@@ -1,4 +1,4 @@
-From 564a4ec382721105e4fbd0e987beb4cc082dadbc Mon Sep 17 00:00:00 2001
+From eb9f7c366ea5dba0af3b9f681d972d1ded5c90d0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:12:49 +0200
 Subject: [PATCH 3/5] libdvbv5: cleanup logging, some memory checks
@@ -12,10 +12,10 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_service_list.h |    3 +-
- lib/libdvbv5/descriptors.c               |    2 +-
- lib/libdvbv5/descriptors/desc_sat.c      |   12 ++++---
- lib/libdvbv5/descriptors/desc_service.c  |   50 ++++++++++++++++++++++++------
+ lib/include/libdvbv5/desc_service_list.h |  3 +-
+ lib/libdvbv5/descriptors.c               |  2 +-
+ lib/libdvbv5/descriptors/desc_sat.c      | 12 +++++---
+ lib/libdvbv5/descriptors/desc_service.c  | 50 ++++++++++++++++++++++++++------
  4 files changed, 52 insertions(+), 15 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service_list.h b/lib/include/libdvbv5/desc_service_list.h
@@ -142,5 +142,5 @@ index 069317a..983fd74 100644
  }
  
 -- 
-1.7.10.4
+1.9.1
 
