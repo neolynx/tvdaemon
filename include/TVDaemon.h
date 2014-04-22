@@ -41,7 +41,6 @@ class Source;
 class Channel;
 class Recorder;
 class Event;
-class StreamingHandler;
 class Avahi_Client;
 
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHandler, public Thread
@@ -65,6 +64,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
 
     std::vector<std::string> GetChannelList( );
     Channel *GetChannel( int id );
+    Channel *GetChannel( std::string &channel_name );
     Channel *CreateChannel( Service *service );
 
     void LockFrontends( );
@@ -85,9 +85,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     void Record( Channel &channel );
     void UpdateEPG( );
     int GetEPGUpdateInterval( ) const { return epg_update_interval; }
-
-    // RTSP
-    virtual StreamingHandler *GetStreamingHandler( std::string url );
 
 
   private:
@@ -121,8 +118,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     Recorder *recorder;
 
     std::vector<Transponder *> epg_transponders;
-
-    std::map<Channel *, StreamingHandler *> streaming_handlers;
 
     Mutex frontends_mutex;
     Mutex channels_mutex;

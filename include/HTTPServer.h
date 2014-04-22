@@ -157,10 +157,9 @@ class HTTPDynamicHandler
 };
 
 class StreamingHandler;
-class RTSPHandler // StreamingProvider ?
+class RTSPHandler // FIXME StreamingProvider ?
 {
   public:
-    virtual StreamingHandler *GetStreamingHandler( std::string url ) = 0;
 };
 
 class HTTPRequest

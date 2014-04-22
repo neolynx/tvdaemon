@@ -239,9 +239,6 @@ bool Activity_Record::Perform( )
       if( it->second->IsVideo( ))
       {
         pmt->pcr_pid = it->second->GetKey( );
-        std::string desc;
-        it->second->GetSDPDescriptor( desc );
-        frontend->LogWarn( "SDP: %s", desc.c_str( ));
       ////rec.AddTrack( );
       //videofd = fd;
       //
@@ -353,7 +350,7 @@ bool Activity_Record::Perform( )
       uint8_t *mpegts;
       size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_SDT_PID, 0 );
       free( data );
-      write( file_fd, mpegts, size );
+      int r = write( file_fd, mpegts, size );
       free( mpegts );
 
       /* PAT */
@@ -367,7 +364,7 @@ bool Activity_Record::Perform( )
 
       size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_PAT_PID, 0 );
       free( data );
-      write( file_fd, mpegts, size );
+      r = write( file_fd, mpegts, size );
       free( mpegts );
 
       /* PMT */
@@ -381,7 +378,7 @@ bool Activity_Record::Perform( )
 
       size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, 0x1000, 0 );
       free( data );
-      write( file_fd, mpegts, size );
+      r = write( file_fd, mpegts, size );
       free( mpegts );
     }
 

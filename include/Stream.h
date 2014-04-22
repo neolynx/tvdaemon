@@ -80,8 +80,6 @@ class Stream : public Thread
 
     static const char *GetTypeName( Type type );
 
-    bool GetSDPDescriptor( std::string &desc );
-
     bool Init( ost::RTPSession *session );
     void HandleData( uint8_t *data, ssize_t len );
 

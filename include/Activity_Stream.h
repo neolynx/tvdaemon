@@ -31,15 +31,16 @@ class Channel;
 class Activity_Stream : public Activity
 {
   public:
-    Activity_Stream( Channel &channel );
+    Activity_Stream( Channel &channel, ost::RTPSession *session );
     virtual ~Activity_Stream( );
 
     virtual std::string GetName( ) const;
-    void AddStream( ost::RTPSession *session );
 
   private:
     virtual bool Perform( );
     virtual void Failed( ) { }
+
+    void SendRTP( const uint8_t *data, int length );
 
     Channel &channel;
     ost::RTPSession *session;

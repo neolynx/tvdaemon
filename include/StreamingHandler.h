@@ -23,6 +23,8 @@
 #define _StreamingHandler_
 
 #include <string>
+#include <map>
+#include <list>
 
 #include <ccrtp/rtp.h> // FIXME: make interfase/impl
 
@@ -32,20 +34,41 @@ class Activity_Stream;
 class StreamingHandler
 {
   public:
-    StreamingHandler( Channel *channel );
+    static StreamingHandler *Instance( );
     virtual ~StreamingHandler( );
 
-    void Setup( std::string server, std::string client, int port );
-    bool Play( std::string url );
+    int GetFreeRTPPort( );
+
+    int Setup( Channel *channel, std::string server, std::string client, int port );
+    bool Play( int session );
+    bool Stop( int session );
 
   private:
-    Channel *channel;
-    Activity_Stream *activity;
-    std::string server;
-    std::string client;
-    int         port;
+    StreamingHandler( );
 
-    ost::RTPSession *socket;
+    class Client
+    {
+      public:
+        Client( Channel *channel, std::string server, std::string client, int port );
+        ~Client( );
+
+        bool Play( );
+        bool Stop( );
+
+        Channel *channel;
+
+        std::string server;
+        std::string client;
+        int         port;
+
+        Activity_Stream *activity;
+        ost::RTPSession *socket;
+    };
+
+    static StreamingHandler *instance;
+    std::map<int, Client *> clients;
+
+    std::list<int> rtpports;
 };
 
 #endif

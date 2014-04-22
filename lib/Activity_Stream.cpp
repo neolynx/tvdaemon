@@ -35,6 +35,11 @@
 #include <libdvbv5/dvb-scan.h>
 #include <libdvbv5/mpeg_ts.h>
 #include <libdvbv5/dvb-demux.h>
+#include <libdvbv5/sdt.h>
+#include <libdvbv5/desc_service.h>
+#include <libdvbv5/pat.h>
+#include <libdvbv5/pmt.h>
+
 #include <errno.h>
 #include <sys/ioctl.h>
 
@@ -48,10 +53,10 @@ extern "C" {
 using namespace ost;
 #endif
 
-Activity_Stream::Activity_Stream( Channel &channel ) :
+Activity_Stream::Activity_Stream( Channel &channel, ost::RTPSession *session ) :
   Activity( ),
   channel(channel),
-  session(NULL)
+  session(session)
 {
   SetChannel( &channel ); // FIXME: use channel_id
 }
@@ -66,19 +71,61 @@ std::string Activity_Stream::GetName( ) const
   return "Streaming " + channel.GetName( );
 }
 
-void Activity_Stream::AddStream( RTPSession *session )
-{
-  this->session = session;
-  if( GetState( ) == State_New )
-    Start( );
-}
-
 bool Activity_Stream::Perform( )
 {
   // FIXME: verify all pointers...
 
   bool ret = true;
-  std::map<int, Stream *> fds;
+  std::vector<int> fds;
+
+  // encrypted
+  uint16_t ecm_pid = 0;
+  int ecm_fd = -1;
+  CAMClient *client = NULL;
+  if( service->IsScrambled( ))
+  {
+    frontend->Log( "Scrambled" );
+    if( !service->GetECMPID( ecm_pid, &client ))
+    {
+      LogError( "CA id not found" );
+      return false;
+    }
+
+    frontend->Log( "Opening ECM pid 0x%04x, cam client %p", ecm_pid, client );
+    ecm_fd = service->Open( *frontend, ecm_pid );
+    if( ecm_fd < 0 )
+    {
+      LogError( "Error opening demux" );
+      return false;
+    }
+    fds.push_back( ecm_fd );
+  }
+
+  /* SDT */
+  struct dvb_table_sdt *sdt = dvb_table_sdt_create( );
+  sdt->header.id = 256;
+  struct dvb_table_sdt_service *sdt_service = dvb_table_sdt_service_create( sdt, 0x0001 );
+
+  struct dvb_desc_service *desc = (struct dvb_desc_service *) dvb_desc_create( frontend->GetFE( ), 0x48, &sdt_service->descriptor );
+  if( !desc )
+  {
+    frontend->LogError( "cannot create descriptor" );
+    return false;
+  }
+  desc->service_type = 0x1;
+  desc->provider = strdup( "tvdaemon" );
+  desc->name = strdup( channel.GetName( ).c_str( ));
+
+  /* PAT */
+  struct dvb_table_pat *pat = dvb_table_pat_create( );
+  pat->header.id = 256;
+  struct dvb_table_pat_program *program = dvb_table_pat_program_create( pat, 0x1000, 0x0001 );
+
+  /* PMT */
+  struct dvb_table_pmt *pmt = dvb_table_pmt_create( 0x0100 );
+  pmt->header.id = 256;
+
+
 
   int fd_pat = frontend->OpenDemux( );
   frontend->Log( "Opening PAT demux %d", fd_pat );
@@ -105,16 +152,15 @@ bool Activity_Stream::Perform( )
       frontend->Log( "Adding Stream %d: %s", it->first, it->second->GetTypeName( ));
       int fd = service->Open( *frontend, it->second->GetKey( ));
       if( fd )
-        fds[fd] = it->second;
+        fds.push_back( fd );
+      else
+        LogError( "Error opening demux" );
+
+      struct dvb_table_pmt_stream *stream = dvb_table_pmt_stream_create( pmt, it->second->GetKey( ), it->second->GetTypeMPEG( ));
+
       if( it->second->IsVideo( ))
       {
-        ////rec.AddTrack( );
-        videofd = fd;
-        if( !it->second->Init( session ))
-        {
-          // FIXME: free all stuff
-          return false;
-        }
+        pmt->pcr_pid = it->second->GetKey( );
       }
     }
     else
@@ -161,6 +207,52 @@ bool Activity_Stream::Perform( )
 
   frontend->Log( "Streaming ..." );
 
+  {
+    /* SDT */
+    uint8_t *data;
+    ssize_t size = dvb_table_sdt_store( frontend->GetFE( ), sdt, &data );
+    dvb_table_sdt_free( sdt );
+    if( !data )
+    {
+      frontend->LogError( "cannot store" );
+      return -2;
+    }
+
+    uint8_t *mpegts;
+    size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_SDT_PID, 0 );
+    free( data );
+    SendRTP( mpegts, size );
+    free( mpegts );
+
+    /* PAT */
+    size = dvb_table_pat_store( frontend->GetFE( ), pat, &data );
+    dvb_table_pat_free( pat );
+    if( !data )
+    {
+      frontend->LogError( "cannot store" );
+      return -2;
+    }
+
+    size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_PAT_PID, 0 );
+    free( data );
+    SendRTP( mpegts, size );
+    free( mpegts );
+
+    /* PMT */
+    size = dvb_table_pmt_store( frontend->GetFE( ), pmt, &data );
+    dvb_table_pmt_free( pmt );
+    if( !data )
+    {
+      frontend->LogError( "cannot store" );
+      return -2;
+    }
+
+    size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, 0x1000, 0 );
+    free( data );
+    SendRTP( mpegts, size );
+    free( mpegts );
+  }
+
   int stage = 0;
 
   fd_set tmp_fdset;
@@ -168,11 +260,11 @@ bool Activity_Stream::Perform( )
   FD_ZERO( &fdset );
   int fdmax = fd_pat;
   FD_SET ( fd_pat, &fdset );
-  for( std::map<int, Stream *>::iterator it = fds.begin( ); it != fds.end( ); it++ )
+  for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
   {
-    FD_SET ( it->first, &fdset );
-    if( it->first > fdmax )
-      fdmax = it->first;
+    FD_SET ( *it, &fdset );
+    if( *it > fdmax )
+      fdmax = *it;
   }
 
   //RingBuffer *buffer = new RingBuffer( 64 * 1024 );
@@ -220,9 +312,9 @@ bool Activity_Stream::Perform( )
       dvb_table_pat_free( pat );
     }
 
-    for( std::map<int, Stream *>::iterator it = fds.begin( ); IsActive( ) && it != fds.end( ); it++ )
+    for( std::vector<int>::iterator it = fds.begin( ); IsActive( ) && it != fds.end( ); it++ )
     {
-      int fd = it->first;
+      int fd = *it;
       if( FD_ISSET( fd, &tmp_fdset ))
       {
         idle = false;
@@ -240,62 +332,7 @@ bool Activity_Stream::Perform( )
           continue;
         }
 
-        if( fd == videofd )
-        {
-          it->second->HandleData( data, len );
-          //Utils::dump( data, len );
-
-          //int remaining = len;
-          //int pos = 0;
-          //uint8_t *p = data;
-          //uint8_t buf[188];
-          //ssize_t size = 0;
-          //while( IsActive( ) && remaining > 0 )
-          //{
-            //int chunk = 188;
-
-            //if( remaining < chunk ) chunk = remaining;
-            //remaining -= chunk;
-
-            ////Utils::dump( p, chunk );
-            //size = 0;
-            //dvb_mpeg_ts_init( frontend->GetFE( ), p, chunk, buf, &size );
-            //if( size == 0 )
-            //{
-              //LogError( "Error parsing TS" );
-              //break;
-            //}
-
-            //p += size;
-            //chunk -= size;
-
-            //dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
-
-            //if( ts->payload_start )
-            //{
-              //Log( "payload start" );
-              //stage = 1;
-            //}
-
-            //if( stage < 1 )
-            //{
-              //p += chunk;
-              //continue;
-            //}
-
-            //av_free_packet( pkt );
-
-            //buffer->append( p, chunk );
-
-            //uint8_t *buf2;
-            //size_t buflen2;
-            //if( buffer->GetFrame( buf2, buflen2 ))
-            //{
-
-              ////if( frame->ReadFrame( buf2, buflen2, session ))
-              ////Log( "stream !" );
-
-              ////Utils::dump( p, chunk );
+        SendRTP( data, len );
 
 
               //if( timestamp == 0 )
@@ -311,44 +348,6 @@ bool Activity_Stream::Perform( )
 
             //p += chunk;
           //}
-        }
-
-        //int ret = write( file_fd, data, len );
-
-        //if( fd == videofd )
-        //{
-        ////Log( "Video Packet: %d bytes", len );
-        //int packets = 0;
-        //ssize_t size = 0;
-        //ssize_t size2 = 0;
-        //uint8_t buf[188];
-        //int remaining = len;
-        //int pos = 0;
-        //uint8_t *p = data;
-        //while( IsActive( ) && remaining > 0 )
-        //{
-        //int chunk = 188;
-        //if( remaining < chunk ) chunk = remaining;
-        //remaining -= chunk;
-        //dvb_mpeg_ts_init( frontend->GetFE( ), p, chunk, buf, &size );
-        //if( size == 0 )
-        //{
-        //break;
-        //}
-        //p += size;
-        //chunk -= size;
-
-
-        //dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
-        //if( ts->payload_start )
-        //started = true;
-
-        ////if( started )
-        ////rec.record( p, chunk );
-
-        //p += chunk;
-        //}
-        //}
       }
     }
 
@@ -368,9 +367,15 @@ bool Activity_Stream::Perform( )
 
 exit:
   frontend->CloseDemux( fd_pat );
-  for( std::map<int, Stream *>::iterator it = fds.begin( ); it != fds.end( ); it++ )
-    frontend->CloseDemux( it->first );
+  for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
+    frontend->CloseDemux( *it );
 
   return ret;
 }
 
+
+void Activity_Stream::SendRTP( const uint8_t *data, int length )
+{
+  uint64_t timestamp = session->getCurrentTimestamp( );
+  session->putData( timestamp, data, length );
+}

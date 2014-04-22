@@ -43,7 +43,6 @@ Recorder::Recorder( TVDaemon &tvd ) :
 
 Recorder::~Recorder( )
 {
-  Log( "Stopping Recorder" );
   up = false;
   JoinThread( );
   Lock( );

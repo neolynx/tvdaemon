@@ -107,12 +107,11 @@ TVDaemon::~TVDaemon( )
   LogInfo( "Stopping Recorder" );
   recorder->Stop( );
 
+  LogInfo( "Stopping StreamingHandler" );
+  delete StreamingHandler::Instance( );
 
   LogInfo( "Stopping CAMClientHandler" );
   delete CAMClientHandler::Instance( );
-  Log( "Stopping StreamingHandlers" );
-  for( std::map<Channel *, StreamingHandler *>::iterator it = streaming_handlers.begin( ); it != streaming_handlers.end( ); it++ )
-    delete it->second;
 
   LogInfo( "Saving Config" );
   SaveConfig( );
@@ -175,7 +174,7 @@ bool TVDaemon::Start( const char* httpRoot )
   }
 
   httpd->Start( );
-  Log( "HTTP Server listening on port %d", HTTPDPORT );
+  LogInfo( "HTTP Server listening on port %d", HTTPDPORT );
 
   if ( !avahi_client->Start( ))
   {
@@ -1087,17 +1086,8 @@ void TVDaemon::UnlockChannels( )
   channels_mutex.Unlock( );
 }
 
-StreamingHandler *TVDaemon::GetStreamingHandler( std::string url )
+Channel *TVDaemon::GetChannel( std::string &channel_name )
 {
-  std::vector<std::string> tokens;
-  Utils::Tokenize( url,"/", tokens, 3 );
-  if( tokens.size( ) != 3 ) // rtsp://server:port/channel
-  {
-    LogError( "RTSP: invalid setup url: %s", url.c_str( ));
-    return NULL;
-  }
-  std::string channel_name = tokens[2];
-
   LockChannels( );
   Channel *channel = NULL;
   for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
@@ -1115,16 +1105,6 @@ StreamingHandler *TVDaemon::GetStreamingHandler( std::string url )
     return NULL;
   }
 
-  StreamingHandler *streaming_handler = NULL;
-  std::map<Channel *, StreamingHandler *>::iterator it = streaming_handlers.find( channel ); // FIXME: key should be channel and remote_ip, maybe session
-  if( it == streaming_handlers.end( ))
-  {
-    streaming_handler = new StreamingHandler( channel );
-    streaming_handlers[channel] = streaming_handler;
-  }
-  else
-    streaming_handler = streaming_handlers[channel];
-
   UnlockChannels( );
-  return streaming_handler;
+  return channel;
 }

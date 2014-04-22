@@ -23,6 +23,7 @@
 #include <arpa/inet.h> // inet_ntop
 
 #include "StreamingHandler.h" // FIXME: mm.. needed?
+#include "TVDaemon.h" // FIXME: mm.. needed?
 
 static const struct http_status response_status[] = {
   { HTTP_OK, "OK" },
@@ -402,7 +403,8 @@ bool HTTPServer::OPTIONS( HTTPRequest &request )
   response.AddHeader( "Supported", "play.basic, con.persistent" );
   response.AddHeader( "Cseq", "%d", seq );
   response.AddHeader( "Server", "TVDaemon" );
-  response.AddHeader( "Public", "DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, OPTIONS, ANNOUNCE, RECORD, GET_PARAMETER" );
+  //response.AddHeader( "Public", "DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, OPTIONS, ANNOUNCE, RECORD, GET_PARAMETER" );
+  response.AddHeader( "Public", "DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER" );
   response.AddHeader( "Cache-Control", "no-cache" );
   request.Reply( response );
   request.KeepAlive( true );
@@ -418,6 +420,44 @@ bool HTTPServer::DESCRIBE( HTTPRequest &request )
     return false;
   }
 
+  std::vector<std::string> tokens;
+  Utils::Tokenize( request.url, "/", tokens, 3 );
+  if( tokens.size( ) != 3 ) // rtsp://server:port/channel
+  {
+    LogError( "TVDaemon::GetStreamingHandler: invalid url: %s (%d tokens)", request.url.c_str( ), tokens.size( ));
+    return false;
+  }
+  std::string channel_name = tokens[2];
+
+  int rtp_port = StreamingHandler::Instance( )->GetFreeRTPPort( );
+
+  char t[255];
+  snprintf( t, sizeof( t ), "%d", rtp_port );
+
+  std::string sdp = "v=0\r\n\
+o=- 15492257274586900535 15492257274586900535 IN IP6 neutrino\r\n\
+s=";
+  sdp += channel_name;
+  sdp += "\r\n\
+i=N/A\r\n\
+c=IN IP6 ::1\r\n\
+t=0 0\r\n\
+a=tool:tvdaemon\r\n\
+a=recvonly\r\n\
+a=type:broadcast\r\n\
+a=charset:UTF-8\r\n\
+a=control:";
+  sdp += request.url;
+  sdp += "\r\n\
+m=video ";
+  sdp += t;
+  sdp += " RTP/AVP 33\r\n\
+b=RR:0\r\n\
+a=rtpmap:33 MP2T/90000\r\n\
+a=control:";
+  sdp += request.url;
+  sdp += "\r\n";
+
   Response response;
   response.AddStatus( RTSP_OK );
   response.AddTimeStamp( );
@@ -425,43 +465,8 @@ bool HTTPServer::DESCRIBE( HTTPRequest &request )
   response.AddHeader( "Cseq", "%d", seq );
   response.AddHeader( "Server", "TVDaemon" );
   response.AddHeader( "Cache-Control", "no-cache" );
-  //response.AddContent( "v=0\r\n\
-  //o=- 1487767593 1487767593 IN IP4 127.0.0.1\r\n\
-  //s=B.mov\r\n\
-  //c=IN IP4 0.0.0.0\r\n\
-  //t=0 0\r\n\
-  //a=sdplang:en\r\n\
-  //a=range:npt=0- 596.48\r\n\
-  //a=control:*\r\n\
-  //m=audio 0 RTP/AVP 96\r\n\
-  //a=rtpmap:96 mpeg4-generic/12000/2\r\n\
-  //a=fmtp:96 profile-level-id=1;mode=AAC-hbr;sizelength=13;indexlength=3;indexdeltalength=3;config=1490\r\n\
-  //a=control:trackID=1\r\n\
-  //m=video 0 RTP/AVP 97\r\n\
-  //a=rtpmap:97 H264/90000\r\n\
-  //a=fmtp:97 packetization-mode=1;profile-level-id=42C01E;sprop-parameter-sets=Z0LAHtkDxWhAAAADAEAAAAwDxYuS,aMuMsg==\r\n\
-  //a=cliprect:0,0,160,240\r\n\
-  //a=framesize:97 240-160\r\n\
-  //a=framerate:24.0\r\n\
-  //a=control:trackID=2\r\n\
-  //");
 
-  response.AddContent( "v=0\r\n\
-o=- 1487767593 1487767593 IN IP4 127.0.0.1\r\n\
-s=B.mov\r\n\
-c=IN IP4 0.0.0.0\r\n\
-t=0 0\r\n\
-a=sdplang:en\r\n\
-a=range:npt=0- 596.48\r\n\
-a=control:*\r\n\
-m=video 0 RTP/AVP 97\r\n\
-a=rtpmap:97 MPV/90000\r\n\
-a=fmtp:97 packetization-mode=1;profile-level-id=42C01E;sprop-parameter-sets=Z0LAHtkDxWhAAAADAEAAAAwDxYuS,aMuMsg==\r\n\
-a=cliprect:0,0,160,240\r\n\
-a=framesize:97 240-160\r\n\
-a=framerate:24.0\r\n\
-a=control:trackID=1\r\n\
-");
+  response.AddContent( sdp.c_str( ));
   request.KeepAlive( true );
   request.Reply( response );
   return true;
@@ -511,35 +516,31 @@ bool HTTPServer::SETUP( HTTPRequest &request )
     return false;
   }
 
-  Utils::Tokenize( request.url, "/", tokens, 2 );
-  if( tokens.size( ) != 2 ) // rtsp://server:port/channel
+  Utils::Tokenize( request.url, "/", tokens, 3 );
+  if( tokens.size( ) != 3 ) // rtsp://server:port/channel
   {
-    LogError( "RTSP: invalid setup url: %s", request.url.c_str( ));
-    return NULL;
+    LogError( "RTSP: invalid setup url (/): %s", request.url.c_str( ));
+    return false;
   }
   std::string server = tokens[1];
+  std::string channel_name;
+  HTTPServer::URLDecode( tokens[2], channel_name );
+
+  Channel *channel = TVDaemon::Instance( )->GetChannel( channel_name );
 
   Utils::Tokenize( server, ":", tokens, 2 );
   if( tokens.size( ) < 1 ) // server:port
   {
-    LogError( "RTSP: invalid setup url: %s", request.url.c_str( ));
-    return NULL;
-  }
-  std::string hostname = tokens[0];
-
-  StreamingHandler *streaming_handler = rtsp_handler->GetStreamingHandler( request.url );
-  if( !streaming_handler )
-  {
-    LogError( "RTSP: no streaming handler found for %s", request.url.c_str( ));
+    LogError( "RTSP: invalid setup url (:): %s", request.url.c_str( ));
     return false;
   }
+  std::string hostname = tokens[0];
 
   char str[INET_ADDRSTRLEN];
   in_addr addr = request.GetClientIP( );
   inet_ntop( AF_INET, &addr, str, sizeof( str ));
 
-  Log( "Client Addr: %s", str );
-  streaming_handler->Setup( hostname, str, rtp_port );
+  int session_id = StreamingHandler::Instance( )->Setup( channel, hostname, str, rtp_port );
 
   Response response;
   response.AddStatus( RTSP_OK );
@@ -549,7 +550,7 @@ bool HTTPServer::SETUP( HTTPRequest &request )
   transport += ";source=exciton;server_port=7066-7067;ssrc=02E34D2C";
   response.AddHeader( "Transport", "%s", transport.c_str( ));
   char session[256];
-  snprintf( session, sizeof( session ), "%d;timeout=60", request.client );
+  snprintf( session, sizeof( session ), "%d;timeout=60", session_id );
   response.AddHeader( "Session", "%s", session );
   // FIXME: Expires
   response.AddHeader( "Cache-Control", "no-cache" );
@@ -568,15 +569,16 @@ bool HTTPServer::PLAY( HTTPRequest &request )
     return false;
   }
 
-  StreamingHandler *streaming_handler = rtsp_handler->GetStreamingHandler( request.url );
-  if( !streaming_handler )
+  std::vector<std::string> tokens;
+  std::string session;
+  if( !request.GetHeader( "Session", session ))
   {
-    LogError( "RTSP: no streaming handler found for %s", request.url.c_str( ));
+    LogError( "RTSP:PLAY no session parameter found" );
     return false;
   }
+  int session_id = atoi( session.c_str( ));
 
-  Log( "Calling streaming_handler->Play %p", streaming_handler );
-  streaming_handler->Play( request.url );
+  StreamingHandler::Instance( )->Play( session_id );
 
   Response response;
   response.AddStatus( RTSP_OK );
@@ -588,6 +590,24 @@ bool HTTPServer::PLAY( HTTPRequest &request )
 
 bool HTTPServer::TEARDOWN( HTTPRequest &request )
 {
+  Log( "HTTPServer::TEARDOWN" );
+  if( !rtsp_handler )
+  {
+    LogError( "RTSP: no handler defined" );
+    return false;
+  }
+
+  std::vector<std::string> tokens;
+  std::string session;
+  if( !request.GetHeader( "Session", session ))
+  {
+    LogError( "RTSP:TEARDOWN no session parameter found" );
+    return false;
+  }
+  int session_id = atoi( session.c_str( ));
+
+  StreamingHandler::Instance( )->Stop( session_id );
+
   Response response;
   response.AddStatus( RTSP_OK );
   request.KeepAlive( false );

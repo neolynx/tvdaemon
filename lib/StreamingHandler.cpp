@@ -30,29 +30,117 @@ using namespace ost;
 //using namespace std;
 #endif
 
-StreamingHandler::StreamingHandler( Channel *channel ) : channel(channel), activity(NULL)
+StreamingHandler *StreamingHandler::instance = NULL;
+
+StreamingHandler *StreamingHandler::Instance( )
 {
-  Log( "StreamingHandler created" );
+  if( !instance )
+    instance = new StreamingHandler( );
+  return instance;
+}
+
+StreamingHandler::StreamingHandler( )
+{
 }
 
 StreamingHandler::~StreamingHandler( )
 {
-  delete activity;
+  for( std::map<int, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
+    delete it->second;
 }
 
-void StreamingHandler::Setup( std::string server, std::string client, int port )
+int StreamingHandler::Setup( Channel *channel, std::string server, std::string client, int port )
 {
-  this->server = server;
-  this->client = client;
-  this->port = port;
+  int session_id;
+  // FIXME Lock
+  std::map<int, Client *>::iterator it;
+  do
+  {
+    session_id = rand( );
+    it = clients.find( session_id );
+  } while( it != clients.end( ));
 
-  Log( "StreamingHandler::Setup %s -> %s:%d", server.c_str( ), client.c_str( ), port );
+  clients[session_id] = new Client( channel, server, client, port );
+
+  Log( "StreamingHandler::Setup %s -> %s:%d session %04x", server.c_str( ), client.c_str( ), port, session_id );
+
+  return session_id;
 }
 
 
-bool StreamingHandler::Play( std::string url )
+bool StreamingHandler::Play( int session_id )
 {
-  Log( "StreamingHandler::Play %s", url.c_str( ));
+  Log( "StreamingHandler::Play session %04x", session_id );
+
+  std::map<int, Client *>::iterator it = clients.find( session_id );
+  if( it == clients.end( ))
+  {
+    LogError( "StreamingHandler::Play session not found %04x", session_id );
+    return false;
+  }
+
+  return it->second->Play( );
+}
+
+bool StreamingHandler::Stop( int session_id )
+{
+  Log( "StreamingHandler::Stop session %04x", session_id );
+
+  std::map<int, Client *>::iterator it = clients.find( session_id );
+  if( it == clients.end( ))
+  {
+    LogError( "StreamingHandler::Stop session not found %04x", session_id );
+    return false;
+  }
+
+  it->second->Stop( );
+  std::list<int>::iterator it2 = std::find( rtpports.begin( ), rtpports.end( ), it->second->port );
+  if( it2 != rtpports.end( ))
+    rtpports.erase( it2 );
+  delete it->second;
+  clients.erase( it );
+  return true;
+}
+
+int StreamingHandler::GetFreeRTPPort( )
+{
+  // FIXME lock
+  int port = 7766;
+  while( std::find( rtpports.begin( ), rtpports.end( ), port ) != rtpports.end( ))
+    port += 2;
+  rtpports.push_back( port );
+  return port;
+}
+
+StreamingHandler::Client::Client( Channel *channel, std::string server, std::string client, int port ) :
+  channel(channel),
+  server(server),
+  client(client),
+  port(port),
+  activity(NULL),
+  socket(NULL)
+{
+}
+
+StreamingHandler::Client::~Client( )
+{
+  if( activity )
+    delete activity;
+}
+
+bool StreamingHandler::Client::Play( )
+{
+  if( !channel )
+  {
+    LogError( "StreamingHandler::Client::Play no channel defined" );
+    return false;
+  }
+
+  if( activity )
+  {
+    LogError( "StreamingHandler::Client::Play activita already started" );
+    return false;
+  }
 
   InetHostAddress local_ip = server.c_str( );
   if( !local_ip )
@@ -77,7 +165,7 @@ bool StreamingHandler::Play( std::string url )
     return false;
   }
 
-  socket->setPayloadFormat( StaticPayloadFormat( sptMPV ));
+  socket->setPayloadFormat( StaticPayloadFormat( sptMP2T ));
 
   socket->startRunning();
   if( !socket->isActive() )
@@ -86,9 +174,24 @@ bool StreamingHandler::Play( std::string url )
     return false;
   }
 
-  if( !activity )
-    activity = new Activity_Stream( *channel );
+  activity = new Activity_Stream( *channel, socket );
 
-  activity->AddStream( socket );
+  activity->Start( );
 
+  return true;
 }
+
+bool StreamingHandler::Client::Stop( )
+{
+  if( !activity )
+  {
+    LogError( "StreamingHandler::Client::Stop activity not started" );
+    return false;
+  }
+
+  delete activity;
+  activity = NULL;
+
+  return true;
+}
+
