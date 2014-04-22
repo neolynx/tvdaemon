@@ -63,7 +63,7 @@ bool TVDaemon::Create( const std::string &configdir )
   SetConfigFile( d + "config" );
   if( !Utils::IsFile( GetConfigFile( )))
     SaveConfig( );
-  Log( "Config directory: %s", d.c_str( ));
+  LogInfo( "Config directory: %s", d.c_str( ));
 
   return true;
 }
@@ -93,31 +93,31 @@ TVDaemon::~TVDaemon( )
 {
   delete avahi_client;
 
-  Log( "TVDaemon terminating" );
+  LogInfo( "TVDaemon terminating" );
   if( httpd )
   {
     Log( "Stopping HTTPServer" );
     httpd->Stop( );
     delete httpd;
   }
-  Log( "Closing Tuners" );
+  LogInfo( "Closing Tuners" );
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     (*it)->Shutdown( );
 
-  Log( "Stopping Recorder" );
+  LogInfo( "Stopping Recorder" );
   recorder->Stop( );
 
-  Log( "Stopping CAMClientHandler" );
-  delete CAMClientHandler::Instance( );
 
+  LogInfo( "Stopping CAMClientHandler" );
+  delete CAMClientHandler::Instance( );
   Log( "Stopping StreamingHandlers" );
   for( std::map<Channel *, StreamingHandler *>::iterator it = streaming_handlers.begin( ); it != streaming_handlers.end( ); it++ )
     delete it->second;
 
-  Log( "Saving Config" );
+  LogInfo( "Saving Config" );
   SaveConfig( );
 
-  Log( "Cleanup" );
+  LogInfo( "Cleanup" );
   delete recorder;
 
   if( up ) up = false;
@@ -137,18 +137,18 @@ TVDaemon::~TVDaemon( )
 
 bool TVDaemon::Start( const char* httpRoot )
 {
-  Log( "Loading Config" );
+  LogInfo( "Loading Config" );
   if( !LoadConfig( ))
   {
     LogError( "Error loading config directory '%s'", GetConfigDir( ).c_str( ));
     return false;
   }
 
-  Log( "Creating CAM clients" );
+  LogInfo( "Creating CAM clients" );
   CAMClientHandler *camclienthandler = CAMClientHandler::Instance( );
   camclienthandler->LoadConfig( );
 
-  Log( "Setting up udev" );
+  LogInfo( "Setting up udev" );
   // Setup udev
   udev = udev_new( );
   udev_mon = udev_monitor_new_from_netlink( udev, "udev" );
@@ -157,7 +157,7 @@ bool TVDaemon::Start( const char* httpRoot )
   FindAdapters( );
   ProcessAdapters( );
 
-  Log( "Creating Recorder" );
+  LogInfo( "Creating Recorder" );
   recorder = new Recorder( *this );
   recorder->LoadConfig( );
 
@@ -225,15 +225,15 @@ bool TVDaemon::LoadConfig( )
   if( epg_update_interval == 0 )
     epg_update_interval = 12 * 60 * 60; // 12h
 
-  Log( "Found config version: %s", version.c_str( ));
+  LogInfo( "Found config version: %s", version.c_str( ));
 
-  Log( "Loading Channels" );
+  LogInfo( "Loading Channels" );
   if( !CreateFromConfig<Channel, int, TVDaemon>( *this, "channel", channels ))
     return false;
-  Log( "Loading Sources" );
+  LogInfo( "Loading Sources" );
   if( !CreateFromConfig<Source, int, TVDaemon>( *this, "source", sources ))
     return false;
-  Log( "Loading Adapters" );
+  LogInfo( "Loading Adapters" );
   if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
     return false;
 

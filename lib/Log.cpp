@@ -106,6 +106,16 @@ void Log( const char *fmt, ... )
   Logger::Instance( )->Log( LOG_INFO, msg );
 }
 
+void LogInfo( const char *fmt, ... )
+{
+  char msg[255];
+  va_list ap;
+  va_start( ap, fmt );
+  vsnprintf( msg, sizeof( msg ), fmt, ap );
+  va_end( ap );
+  Logger::Instance( )->Log( LOG_NOTICE, msg );
+}
+
 void LogWarn( const char *fmt, ... )
 {
   char msg[255];

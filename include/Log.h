@@ -59,6 +59,7 @@ class LoggerSyslog : public Logger
 void TVD_Log( int level, const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
 
 void Log( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
+void LogInfo( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
 void LogWarn( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
 void LogError( const char *fmt, ... ) __attribute__ (( format( printf, 1, 2 )));
 
