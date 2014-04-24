@@ -127,21 +127,21 @@ bool Activity_Stream::Perform( )
 
 
 
-  int fd_pat = frontend->OpenDemux( );
-  frontend->Log( "Opening PAT demux %d", fd_pat );
-  // FIXME check fd
-  struct dmx_sct_filter_params f;
-  memset(&f, 0, sizeof(f));
-  f.pid = DVB_TABLE_PAT_PID;
-  f.filter.filter[0] = DVB_TABLE_PAT;
-  f.filter.mask[0] = 0xff;
-  f.timeout = 0;
-  f.flags = DMX_IMMEDIATE_START | DMX_CHECK_CRC;
-  if( ioctl( fd_pat, DMX_SET_FILTER, &f) == -1 )
-  {
-    frontend->Log("dvb_read_section: ioctl DMX_SET_FILTER failed");
-    return false;
-  }
+  //int fd_pat = frontend->OpenDemux( );
+  //frontend->Log( "Opening PAT demux %d", fd_pat );
+  //// FIXME check fd
+  //struct dmx_sct_filter_params f;
+  //memset(&f, 0, sizeof(f));
+  //f.pid = DVB_TABLE_PAT_PID;
+  //f.filter.filter[0] = DVB_TABLE_PAT;
+  //f.filter.mask[0] = 0xff;
+  //f.timeout = 0;
+  //f.flags = DMX_IMMEDIATE_START | DMX_CHECK_CRC;
+  //if( ioctl( fd_pat, DMX_SET_FILTER, &f) == -1 )
+  //{
+    //frontend->Log("dvb_read_section: ioctl DMX_SET_FILTER failed");
+    //return false;
+  //}
 
   int videofd = -1;
   std::map<uint16_t, Stream *> &streams = service->GetStreams( );
@@ -258,8 +258,8 @@ bool Activity_Stream::Perform( )
   fd_set tmp_fdset;
   fd_set fdset;
   FD_ZERO( &fdset );
-  int fdmax = fd_pat;
-  FD_SET ( fd_pat, &fdset );
+  int fdmax = 0;
+  //FD_SET ( fd_pat, &fdset );
   for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
   {
     FD_SET ( *it, &fdset );
@@ -290,27 +290,27 @@ bool Activity_Stream::Perform( )
       break;
     }
 
-    if( FD_ISSET( fd_pat, &tmp_fdset ))
-    {
-      len = read( fd_pat, data, DMX_BUFSIZE );
-      if( len < 0 )
-      {
-        frontend->LogError( "Error receiving data... %d", errno );
-        continue;
-      }
+    //if( FD_ISSET( fd_pat, &tmp_fdset ))
+    //{
+      //len = read( fd_pat, data, DMX_BUFSIZE );
+      //if( len < 0 )
+      //{
+        //frontend->LogError( "Error receiving data... %d", errno );
+        //continue;
+      //}
 
-      if( len == 0 )
-      {
-        frontend->Log( "no data received" );
-        continue;
-      }
+      //if( len == 0 )
+      //{
+        //frontend->Log( "no data received" );
+        //continue;
+      //}
 
-      struct dvb_table_pat *pat = NULL;
-      ssize_t pat_len = 0;
-      dvb_table_pat_init( frontend->GetFE( ), data, len, &pat );
-      //dvb_table_pat_print( frontend->GetFE( ), pat );
-      dvb_table_pat_free( pat );
-    }
+      //struct dvb_table_pat *pat = NULL;
+      //ssize_t pat_len = 0;
+      //dvb_table_pat_init( frontend->GetFE( ), data, len, &pat );
+      ////dvb_table_pat_print( frontend->GetFE( ), pat );
+      //dvb_table_pat_free( pat );
+    //}
 
     for( std::vector<int>::iterator it = fds.begin( ); IsActive( ) && it != fds.end( ); it++ )
     {
@@ -366,7 +366,7 @@ bool Activity_Stream::Perform( )
   free( data );
 
 exit:
-  frontend->CloseDemux( fd_pat );
+  //frontend->CloseDemux( fd_pat );
   for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
     frontend->CloseDemux( *it );
 
