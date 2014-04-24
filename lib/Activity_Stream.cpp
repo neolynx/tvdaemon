@@ -28,6 +28,7 @@
 #include "Frontend.h"
 #include "RingBuffer.h"
 #include "Frame.h"
+#include "CAMClient.h"
 
 #include <libdvbv5/pat.h>
 #include <libdvbv5/eit.h>
@@ -317,6 +318,39 @@ bool Activity_Stream::Perform( )
       int fd = *it;
       if( FD_ISSET( fd, &tmp_fdset ))
       {
+        if( ecm_fd != -1 && fd == ecm_fd )
+        {
+          len = read( fd, data, DMX_BUFSIZE );
+          if( len < 0 )
+          {
+            frontend->LogError( "Error receiving data... %d", errno );
+            continue;
+          }
+
+          if( len == 0 )
+          {
+            frontend->Log( "no data received" );
+            continue;
+          }
+
+          int remaining = len;
+          uint8_t *p = data;
+          while( IsActive( ) && remaining > 0 )
+          {
+            int chunk = 188;
+
+            if( remaining < chunk ) chunk = remaining;
+            remaining -= chunk;
+
+            if( client )
+              client->HandleECM( p, chunk );
+
+            p += chunk;
+          }
+
+          continue;
+        }
+
         idle = false;
         idle_since = 0;
         len = read( fd, data, DMX_BUFSIZE );
@@ -332,8 +366,23 @@ bool Activity_Stream::Perform( )
           continue;
         }
 
-        SendRTP( data, len );
+        int remaining = len;
+        uint8_t *p = data;
+        while( IsActive( ) && remaining > 0 )
+        {
+          int chunk = 188;
+          if( remaining < chunk ) chunk = remaining;
+          remaining -= chunk;
 
+          if( client )
+            client->Decrypt( p, chunk );
+
+
+          p += chunk;
+        }
+
+        Log( "RTP sending %d bytes", len );
+        SendRTP( data, len );
 
               //if( timestamp == 0 )
               //{
