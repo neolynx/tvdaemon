@@ -25,11 +25,6 @@
 #include "Log.h"
 #include "Activity_Stream.h"
 
-#ifdef	CCXX_NAMESPACES
-using namespace ost;
-//using namespace std;
-#endif
-
 StreamingHandler *StreamingHandler::instance = NULL;
 
 StreamingHandler *StreamingHandler::Instance( )
@@ -128,6 +123,50 @@ StreamingHandler::Client::~Client( )
     delete activity;
 }
 
+StreamingHandler::RTPSession::RTPSession( std::string server, std::string client, int port ) :
+  ost::RTPSession( ost::InetHostAddress( server.c_str( )), port )
+{
+  //ost::InetHostAddress local_ip = server.c_str( );
+  //if( !local_ip )
+  //{
+    //LogError( "RTP: invalid local ip '%s'", server.c_str( ));
+    //return false;
+  //}
+
+  ost::InetHostAddress remote_ip = client.c_str( );
+  if( !remote_ip )
+  {
+    LogError( "RTP: invalid remote ip '%s'", client.c_str( ));
+    //return false;
+  }
+
+  setSchedulingTimeout( 10000 );
+  if( !addDestination( remote_ip, port ) )
+  {
+    LogError( "RTP: connection failed" );
+    //return false;
+  }
+
+  setPayloadFormat( ost::StaticPayloadFormat( ost::sptMP2T ));
+
+  startRunning();
+  if( !isActive() )
+  {
+    LogError( "RTP: unable to start" );
+    //return false;
+  }
+
+}
+
+StreamingHandler::RTPSession::~RTPSession( )
+{
+}
+
+void StreamingHandler::RTPSession::onGotGoodbye( const ost::SyncSource &source, const std::string &reason )
+{
+  LogError( "RTP: got goodbye" );
+}
+
 bool StreamingHandler::Client::Play( )
 {
   if( !channel )
@@ -142,37 +181,7 @@ bool StreamingHandler::Client::Play( )
     return false;
   }
 
-  InetHostAddress local_ip = server.c_str( );
-  if( !local_ip )
-  {
-    LogError( "RTP: invalid local ip '%s'", server.c_str( ));
-    return false;
-  }
-
-  socket = new RTPSession( local_ip, 7766 );
-
-  InetHostAddress remote_ip = client.c_str( );
-  if( !local_ip )
-  {
-    LogError( "RTP: invalid remote ip '%s'", client.c_str( ));
-    return false;
-  }
-
-  socket->setSchedulingTimeout( 10000 );
-  if( !socket->addDestination( remote_ip, port ) )
-  {
-    LogError( "RTP: connection failed" );
-    return false;
-  }
-
-  socket->setPayloadFormat( StaticPayloadFormat( sptMP2T ));
-
-  socket->startRunning();
-  if( !socket->isActive() )
-  {
-    LogError( "RTP: unable to start" );
-    return false;
-  }
+  socket = new RTPSession( server, client, port );
 
   activity = new Activity_Stream( *channel, socket );
 
@@ -191,6 +200,9 @@ bool StreamingHandler::Client::Stop( )
 
   delete activity;
   activity = NULL;
+
+  //delete socket;
+  //socket = NULL;
 
   return true;
 }

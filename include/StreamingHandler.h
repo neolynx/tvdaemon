@@ -46,6 +46,16 @@ class StreamingHandler
   private:
     StreamingHandler( );
 
+    class RTPSession : public ost::RTPSession
+    {
+      public:
+        RTPSession( std::string server, std::string client, int port );
+        virtual ~RTPSession( );
+
+      private:
+        void onGotGoodbye( const ost::SyncSource &source, const std::string &reason );
+    };
+
     class Client
     {
       public:
@@ -62,7 +72,7 @@ class StreamingHandler
         int         port;
 
         Activity_Stream *activity;
-        ost::RTPSession *socket;
+        RTPSession *socket;
     };
 
     static StreamingHandler *instance;
