@@ -22,6 +22,8 @@
 #ifndef _StreamingHandler_
 #define _StreamingHandler_
 
+#include "Thread.h"
+
 #include <string>
 #include <map>
 #include <list>
@@ -31,7 +33,7 @@
 class Channel;
 class Activity_Stream;
 
-class StreamingHandler
+class StreamingHandler : public Thread
 {
   public:
     static StreamingHandler *Instance( );
@@ -39,17 +41,23 @@ class StreamingHandler
 
     int GetFreeRTPPort( );
 
-    int Setup( Channel *channel, std::string server, std::string client, int port );
-    bool Play( int session );
-    bool Stop( int session );
+    void Setup( Channel *channel, std::string client, int port, int &session_id, int &ssrc );
+    bool Play( int session_id );
+    bool Stop( int session_id );
+
+    bool KeepAlive( int session_id );
 
   private:
     StreamingHandler( );
 
+    bool up;
+    virtual void Run( );
+
+
     class RTPSession : public ost::RTPSession
     {
       public:
-        RTPSession( std::string server, std::string client, int port );
+        RTPSession( std::string client, int port );
         virtual ~RTPSession( );
 
       private:
@@ -59,21 +67,26 @@ class StreamingHandler
     class Client
     {
       public:
-        Client( Channel *channel, std::string server, std::string client, int port );
+        Client( Channel *channel, std::string client, int port );
         ~Client( );
 
         bool Play( );
         bool Stop( );
+        void KeepAlive( );
+        int GetSSRC( );
 
         Channel *channel;
 
-        std::string server;
         std::string client;
         int         port;
 
         Activity_Stream *activity;
-        RTPSession *socket;
+        RTPSession *session;
+
+        time_t ts;
     };
+
+    void RemoveClient( std::map<int, Client *>::iterator it );
 
     static StreamingHandler *instance;
     std::map<int, Client *> clients;

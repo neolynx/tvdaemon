@@ -88,7 +88,7 @@ int main( int argc, char *argv[] )
     }
   }
 
-  Log( "TVDaemon starting ..." );
+  LogInfo( "TVDaemon starting ..." );
   TVDaemon *tvd = TVDaemon::Instance( );
   if( !tvd->Create( "~/.tvdaemon" ))
   {
@@ -107,7 +107,7 @@ int main( int argc, char *argv[] )
     sleep( 1 );
   }
   delete tvd;
-  Log( "TVDaemon terminated" );
+  LogInfo( "TVDaemon terminated" );
   delete logger;
   return 0;
 }

@@ -209,6 +209,8 @@ bool Activity_Stream::Perform( )
   frontend->Log( "Streaming ..." );
 
   {
+    UpdateRTPTimestamp( );
+
     /* SDT */
     uint8_t *data;
     ssize_t size = dvb_table_sdt_store( frontend->GetFE( ), sdt, &data );
@@ -381,8 +383,17 @@ bool Activity_Stream::Perform( )
           p += chunk;
         }
 
-        Log( "RTP sending %d bytes", len );
+        UpdateRTPTimestamp( );
         SendRTP( data, len );
+        //p = data;
+        //while( len > 0 )
+        //{
+          //int chunk = 12032;
+          //if( len < chunk ) chunk = len;
+          //len -= chunk;
+
+          //SendRTP( p, chunk );
+        //}
 
               //if( timestamp == 0 )
               //{
@@ -422,9 +433,12 @@ exit:
   return ret;
 }
 
+void Activity_Stream::UpdateRTPTimestamp( )
+{
+  timestamp = session->getCurrentTimestamp( );
+}
 
 void Activity_Stream::SendRTP( const uint8_t *data, int length )
 {
-  uint64_t timestamp = session->getCurrentTimestamp( );
   session->putData( timestamp, data, length );
 }

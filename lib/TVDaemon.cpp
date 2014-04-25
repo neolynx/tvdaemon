@@ -96,7 +96,7 @@ TVDaemon::~TVDaemon( )
   LogInfo( "TVDaemon terminating" );
   if( httpd )
   {
-    Log( "Stopping HTTPServer" );
+    LogInfo( "Stopping HTTPServer" );
     httpd->Stop( );
     delete httpd;
   }

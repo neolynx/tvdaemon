@@ -136,6 +136,8 @@ class HTTPServer : public SocketHandler
 
     std::map<std::string, Method> methods;
 
+    int session_timeout;
+
     bool HandleRequest( HTTPRequest &request );
 
     // Handle HTTP methods
@@ -202,6 +204,7 @@ class HTTPRequest
     std::map<std::string, std::string> parameters;
     bool keep_alive;
     struct sockaddr_in client_addr;
+
   friend class HTTPServer;
 };
 

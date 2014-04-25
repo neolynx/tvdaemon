@@ -58,6 +58,8 @@ HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root), rtsp
   methods["SETUP"] = &HTTPServer::SETUP;
   methods["PLAY"] = &HTTPServer::PLAY;
   methods["TEARDOWN"] = &HTTPServer::TEARDOWN;
+
+  session_timeout = 60;
 }
 
 HTTPServer::~HTTPServer( )
@@ -474,12 +476,28 @@ a=control:";
 
 bool HTTPServer::GET_PARAMETER( HTTPRequest &request )
 {
+  if( !rtsp_handler )
+  {
+    LogError( "RTSP: no handler defined" );
+    return false;
+  }
+
+  std::vector<std::string> tokens;
+  std::string session;
+  if( !request.GetHeader( "Session", session ))
+  {
+    LogError( "RTSP:TEARDOWN no session parameter found" );
+    return false;
+  }
+  int session_id = atoi( session.c_str( ));
+
+  StreamingHandler::Instance( )->KeepAlive( session_id );
+
   return HTTPServer::OPTIONS( request );
 }
 
 bool HTTPServer::SETUP( HTTPRequest &request )
 {
-  Log( "HTTPServer::SETUP" );
   if( !rtsp_handler )
   {
     LogError( "RTSP: no handler defined" );
@@ -540,17 +558,18 @@ bool HTTPServer::SETUP( HTTPRequest &request )
   in_addr addr = request.GetClientIP( );
   inet_ntop( AF_INET, &addr, str, sizeof( str ));
 
-  int session_id = StreamingHandler::Instance( )->Setup( channel, hostname, str, rtp_port );
+  int session_id, ssrc;
+  StreamingHandler::Instance( )->Setup( channel, str, rtp_port, session_id, ssrc );
 
   Response response;
   response.AddStatus( RTSP_OK );
   response.AddTimeStamp( );
   response.AddHeader( "Cseq", "%d", seq );
   response.AddHeader( "Server", "TVDaemon" );
-  transport += ";source=exciton;server_port=7066-7067;ssrc=02E34D2C";
-  response.AddHeader( "Transport", "%s", transport.c_str( ));
+  //transport += ";server_port=7066-7067;ssrc=02E34D2C";
+  response.AddHeader( "Transport", "%s;server_port=%d-%d;ssrc=%08x;mode=play", transport.c_str( ), rtp_port, rtp_port + 1, ssrc);
   char session[256];
-  snprintf( session, sizeof( session ), "%d;timeout=60", session_id );
+  snprintf( session, sizeof( session ), "%d;timeout=%d", session_id, session_timeout );
   response.AddHeader( "Session", "%s", session );
   // FIXME: Expires
   response.AddHeader( "Cache-Control", "no-cache" );
@@ -562,7 +581,6 @@ bool HTTPServer::SETUP( HTTPRequest &request )
 
 bool HTTPServer::PLAY( HTTPRequest &request )
 {
-  Log( "HTTPServer::PLAY" );
   if( !rtsp_handler )
   {
     LogError( "RTSP: no handler defined" );
@@ -590,7 +608,6 @@ bool HTTPServer::PLAY( HTTPRequest &request )
 
 bool HTTPServer::TEARDOWN( HTTPRequest &request )
 {
-  Log( "HTTPServer::TEARDOWN" );
   if( !rtsp_handler )
   {
     LogError( "RTSP: no handler defined" );

@@ -40,10 +40,12 @@ class Activity_Stream : public Activity
     virtual bool Perform( );
     virtual void Failed( ) { }
 
+    void UpdateRTPTimestamp( );
     void SendRTP( const uint8_t *data, int length );
 
     Channel &channel;
     ost::RTPSession *session;
+    uint64_t timestamp;
 };
 
 
