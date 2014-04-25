@@ -1,4 +1,4 @@
-From 82f0cf87422e033e871eeb52ac37d8f408c38e9d Mon Sep 17 00:00:00 2001
+From 1122ec623d5f6c9406de5b8a4babf0285da5af57 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:25:37 +0200
 Subject: [PATCH 4/5] libdvbv5: generators for SDT, desc_service and mpeg_ts
@@ -31,16 +31,16 @@ Example usage:
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_service.h     |   2 +
- lib/include/libdvbv5/descriptors.h      |   8 +++
- lib/include/libdvbv5/mpeg_ts.h          |   6 +-
- lib/include/libdvbv5/sdt.h              |   4 ++
- lib/libdvbv5/descriptors.c              |  59 ++++++++++++++---
- lib/libdvbv5/descriptors/desc_service.c |  52 +++++++++++++++
- lib/libdvbv5/parse_string.c             |   7 +-
- lib/libdvbv5/parse_string.h             |   2 +-
- lib/libdvbv5/tables/mpeg_ts.c           | 112 +++++++++++++++++++++++++++-----
- lib/libdvbv5/tables/sdt.c               |  85 +++++++++++++++++++++++-
+ lib/include/libdvbv5/desc_service.h     |    2 +
+ lib/include/libdvbv5/descriptors.h      |    8 +++
+ lib/include/libdvbv5/mpeg_ts.h          |    6 +-
+ lib/include/libdvbv5/sdt.h              |    4 ++
+ lib/libdvbv5/descriptors.c              |   59 +++++++++++++---
+ lib/libdvbv5/descriptors/desc_service.c |   52 ++++++++++++++
+ lib/libdvbv5/parse_string.c             |    7 +-
+ lib/libdvbv5/parse_string.h             |    2 +-
+ lib/libdvbv5/tables/mpeg_ts.c           |  112 ++++++++++++++++++++++++++-----
+ lib/libdvbv5/tables/sdt.c               |   85 ++++++++++++++++++++++-
  10 files changed, 303 insertions(+), 34 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
@@ -329,7 +329,7 @@ index 61d0ed4..4d838d0 100644
  		      size_t destlen,
  		      const unsigned char *src,
 diff --git a/lib/libdvbv5/tables/mpeg_ts.c b/lib/libdvbv5/tables/mpeg_ts.c
-index df32484..96b3226 100644
+index 98864fd..58581a4 100644
 --- a/lib/libdvbv5/tables/mpeg_ts.c
 +++ b/lib/libdvbv5/tables/mpeg_ts.c
 @@ -56,24 +56,100 @@ void dvb_mpeg_ts_free(struct dvb_mpeg_ts *ts)
@@ -352,8 +352,8 @@ index df32484..96b3226 100644
 +	dvb_loginfo("| scrambling         %d", ts->scrambling);
 +	dvb_loginfo("| adaptation_field   %d", ts->adaptation_field);
 +	dvb_loginfo("| continuity_counter %d", ts->continuity_counter);
- 	if (ts->adaptation_field & 0x2) {
--		dvb_loginfo(" Adaption Field");
+ 	if (ts->adaptation_field) {
+-		dvb_loginfo(" Adaptation Field");
 -                dvb_loginfo("   - length         %d", ts->adaption->length);
 -                dvb_loginfo("   - discontinued   %d", ts->adaption->discontinued);
 -                dvb_loginfo("   - random_access  %d", ts->adaption->random_access);
@@ -363,7 +363,7 @@ index df32484..96b3226 100644
 -                dvb_loginfo("   - splicing_point %d", ts->adaption->splicing_point);
 -                dvb_loginfo("   - private_data   %d", ts->adaption->private_data);
 -                dvb_loginfo("   - extension      %d", ts->adaption->extension);
-+		dvb_loginfo("|- Adaption Field");
++		dvb_loginfo("|- Adaptation Field");
 +                dvb_loginfo("|   length         %d", ts->adaption->length);
 +                dvb_loginfo("|   discontinued   %d", ts->adaption->discontinued);
 +                dvb_loginfo("|   random_access  %d", ts->adaption->random_access);
@@ -566,5 +566,5 @@ index d27cec8..a3741c1 100644
 +	return size_total;
 +}
 -- 
-1.9.1
+1.7.10.4
 

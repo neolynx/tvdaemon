@@ -1,4 +1,4 @@
-From b8fef5cb9089699df34b5e52b012211585769d22 Mon Sep 17 00:00:00 2001
+From 1e47c9ae9e8af99112c3749a447f58beb2e0c013 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:41:32 +0200
 Subject: [PATCH 5/5] libdvbv5: generators for PAT and PMT
@@ -37,14 +37,14 @@ Example usage:
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/pat.h    |  3 ++
- lib/include/libdvbv5/pmt.h    |  9 +++--
- lib/include/libdvbv5/sdt.h    |  1 -
- lib/libdvbv5/tables/mpeg_ts.c |  3 +-
- lib/libdvbv5/tables/pat.c     | 77 +++++++++++++++++++++++++++++++++++-
- lib/libdvbv5/tables/pmt.c     | 92 ++++++++++++++++++++++++++++++++++++++++---
- lib/libdvbv5/tables/sdt.c     | 17 ++++----
- 7 files changed, 179 insertions(+), 23 deletions(-)
+ lib/include/libdvbv5/pat.h    |    3 ++
+ lib/include/libdvbv5/pmt.h    |    9 ++--
+ lib/include/libdvbv5/sdt.h    |    1 -
+ lib/libdvbv5/tables/mpeg_ts.c |    1 +
+ lib/libdvbv5/tables/pat.c     |   77 +++++++++++++++++++++++++++++++++-
+ lib/libdvbv5/tables/pmt.c     |   92 ++++++++++++++++++++++++++++++++++++++---
+ lib/libdvbv5/tables/sdt.c     |   17 ++++----
+ 7 files changed, 178 insertions(+), 22 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
 index a2180d5..f63b611 100644
@@ -107,20 +107,17 @@ index 993c5f3..0a5732f 100644
  
  #ifdef __cplusplus
 diff --git a/lib/libdvbv5/tables/mpeg_ts.c b/lib/libdvbv5/tables/mpeg_ts.c
-index 96b3226..22d2c8d 100644
+index 58581a4..73496b2 100644
 --- a/lib/libdvbv5/tables/mpeg_ts.c
 +++ b/lib/libdvbv5/tables/mpeg_ts.c
-@@ -63,8 +63,9 @@ void dvb_mpeg_ts_print(struct dvb_v5_fe_parms *parms, struct dvb_mpeg_ts *ts)
+@@ -63,6 +63,7 @@ void dvb_mpeg_ts_print(struct dvb_v5_fe_parms *parms, struct dvb_mpeg_ts *ts)
  	dvb_loginfo("| pid           0x%04x", ts->pid);
  	dvb_loginfo("| scrambling         %d", ts->scrambling);
  	dvb_loginfo("| adaptation_field   %d", ts->adaptation_field);
 +	dvb_loginfo("| payload            %d", ts->payload);
  	dvb_loginfo("| continuity_counter %d", ts->continuity_counter);
--	if (ts->adaptation_field & 0x2) {
-+	if (ts->adaptation_field) {
- 		dvb_loginfo("|- Adaption Field");
-                 dvb_loginfo("|   length         %d", ts->adaption->length);
-                 dvb_loginfo("|   discontinued   %d", ts->adaption->discontinued);
+ 	if (ts->adaptation_field) {
+ 		dvb_loginfo("|- Adaptation Field");
 diff --git a/lib/libdvbv5/tables/pat.c b/lib/libdvbv5/tables/pat.c
 index 03b75b0..1a5abdd 100644
 --- a/lib/libdvbv5/tables/pat.c
@@ -395,5 +392,5 @@ index a3741c1..8e8feaa 100644
  	ssize_t size, size_total;
  
 -- 
-1.9.1
+1.7.10.4
 
