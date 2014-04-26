@@ -273,7 +273,6 @@ bool Activity_Stream::Perform( )
   //RingBuffer *buffer = new RingBuffer( 64 * 1024 );
   //Frame *frame = new Frame( *frontend->GetFE( ));
 
-  uint8_t *data = (uint8_t *) malloc( DMX_BUFSIZE );
   int ac, vc;
   ac = vc = 0;
   uint64_t startpts = 0;
@@ -315,6 +314,8 @@ bool Activity_Stream::Perform( )
       //dvb_table_pat_free( pat );
     //}
 
+
+    uint8_t *data = (uint8_t *) malloc( DMX_BUFSIZE );
     for( std::vector<int>::iterator it = fds.begin( ); IsActive( ) && it != fds.end( ); it++ )
     {
       int fd = *it;
@@ -384,16 +385,17 @@ bool Activity_Stream::Perform( )
         }
 
         UpdateRTPTimestamp( );
-        SendRTP( data, len );
-        //p = data;
-        //while( len > 0 )
-        //{
-          //int chunk = 12032;
-          //if( len < chunk ) chunk = len;
-          //len -= chunk;
+        //SendRTP( data, len );
+        p = data;
+        while( len > 0 )
+        {
+          int chunk = 7 * 188;
+          if( len < chunk ) chunk = len;
+          len -= chunk;
 
-          //SendRTP( p, chunk );
-        //}
+          SendRTP( p, chunk );
+          p += chunk;
+        }
 
               //if( timestamp == 0 )
               //{
@@ -422,8 +424,8 @@ bool Activity_Stream::Perform( )
         break;
       }
     }
+    free( data );
   }
-  free( data );
 
 exit:
   //frontend->CloseDemux( fd_pat );
