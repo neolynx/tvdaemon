@@ -134,7 +134,6 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     std::deque<uint16_t> pno_list;
     uint16_t curPid;
 
-    Thread *idle_thread;
     virtual void Run( );
 
     bool Open( );

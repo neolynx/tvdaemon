@@ -22,6 +22,8 @@
 #ifndef _TVDaemon_
 #define _TVDaemon_
 
+#include "config.h"
+
 #include "ConfigObject.h"
 #include "HTTPServer.h"
 #include "Thread.h"
@@ -42,6 +44,7 @@ class Channel;
 class Recorder;
 class Event;
 class Avahi_Client;
+class HDHomerun_Client;
 
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHandler, public Thread
 {
@@ -86,11 +89,13 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     void UpdateEPG( );
     int GetEPGUpdateInterval( ) const { return epg_update_interval; }
 
+    void ProcessAdapters( );
+    void AddFrontendToList( const std::string& adapter_name, const std::string& frontend_name, const std::string& uid, const int adapter_id, const int frontend_id);
+    void RemoveFrontend( const std::string& uid );
 
   private:
     TVDaemon( );
     void FindAdapters( );
-    void ProcessAdapters( );
     void MonitorAdapters( );
 
     static TVDaemon *instance;
@@ -123,8 +128,14 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     Mutex channels_mutex;
 
     Avahi_Client *avahi_client;
+#ifdef HAVE_LIBHDHOMERUN
+    HDHomerun_Client *hdhr_client;
+#endif /* HAVE_LIBHDHOMERUN */
 
+    Mutex device_list_mutex;
     struct device_t {
+      device_t( const std::string& an, const std::string& fn, const std::string& ui, const int aid, const int fid ) :
+        adapter_name(an), frontend_name(fn), uid(ui), adapter_id(aid), frontend_id(fid) { }
       std::string adapter_name;
       std::string frontend_name;
       std::string uid;

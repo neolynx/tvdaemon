@@ -24,7 +24,6 @@
 
 #include "ConfigObject.h"
 #include "RPCObject.h"
-#include "Thread.h"
 #include "Transponder.h"
 
 #include <string>
@@ -45,6 +44,7 @@ class Source : public ConfigObject, public RPCObject, public Mutex
       Type_DVBC,
       Type_DVBT,
       Type_ATSC,
+      Type_HDHR,
       Type_Last,
     };
 

@@ -155,6 +155,7 @@ class HTTPServer : public SocketHandler
 class HTTPDynamicHandler
 {
   public:
+    virtual ~HTTPDynamicHandler() { }
     virtual bool HandleDynamicHTTP( const HTTPRequest &request ) = 0;
 };
 

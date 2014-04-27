@@ -44,6 +44,7 @@
 #include "Log.h"
 #include "StreamingHandler.h"
 #include "Avahi_Client.h"
+#include "HDHomerun_Client.h"
 
 TVDaemon *TVDaemon::instance = NULL;
 
@@ -86,12 +87,18 @@ TVDaemon::TVDaemon( ) :
   up(true),
   recorder(NULL),
   avahi_client(new Avahi_Client())
+#ifdef HAVE_LIBHDHOMERUN
+  , hdhr_client( new HDHomerun_Client() )
+#endif /* HAVE_LIBHDHOMERUN */
 {
 }
 
 TVDaemon::~TVDaemon( )
 {
   delete avahi_client;
+#ifdef HAVE_LIBHDHOMERUN
+  delete hdhr_client;
+#endif /* HAVE_LIBHDHOMERUN */
 
   LogInfo( "TVDaemon terminating" );
   if( httpd )
@@ -119,7 +126,7 @@ TVDaemon::~TVDaemon( )
   LogInfo( "Cleanup" );
   delete recorder;
 
-  if( up ) up = false;
+  up = false;
   JoinThread( );
 
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
@@ -181,6 +188,14 @@ bool TVDaemon::Start( const char* httpRoot )
     LogError( "unable to start avahi client" );
   }
   Log( "Avahi client started" );
+
+#ifdef HAVE_LIBHDHOMERUN
+  if ( !hdhr_client->Start( ))
+  {
+    LogError( "unable to start hdhomerun client" );
+  }
+  Log( "HDHomerun discovery client started" );
+#endif /* HAVE_LIBHDHOMERUN */
 
   return true;
 }
@@ -302,6 +317,7 @@ void TVDaemon::FindAdapters( )
 
 void TVDaemon::ProcessAdapters( )
 {
+  ScopeLock Lock( device_list_mutex );
   bool found;
   std::list<device_t>::iterator dev_it = device_list.begin( );
   while( dev_it != device_list.end( ))
@@ -316,7 +332,6 @@ void TVDaemon::ProcessAdapters( )
       // prevent double adding of non-udev adapters
       if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
-        dev_it = device_list.erase( dev_it );
         found = true;
         break;
       }
@@ -325,12 +340,13 @@ void TVDaemon::ProcessAdapters( )
           a->GetUID( ) == dev_it->uid )
       {
         a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
-        dev_it = device_list.erase( dev_it );
         found = true;
         break;
       }
     }
-    if( !found )
+    if( found )
+      dev_it = device_list.erase( dev_it );
+    else
       dev_it++;
   }
 
@@ -347,7 +363,6 @@ void TVDaemon::ProcessAdapters( )
       // prevent double adding of non-udev adapters
       if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
-        dev_it = device_list.erase( dev_it );
         found = true;
         break;
       }
@@ -356,7 +371,6 @@ void TVDaemon::ProcessAdapters( )
           a->GetUID( ) == dev_it->uid )
       {
         a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
-        dev_it = device_list.erase( dev_it );
         found = true;
         break;
       }
@@ -366,13 +380,15 @@ void TVDaemon::ProcessAdapters( )
       {
         a->SetUID( dev_it->uid );
         a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
-        dev_it = device_list.erase( dev_it );
         found = true;
         break;
       }
     }
     if( found )
+    {
+      dev_it = device_list.erase( dev_it );
       continue;
+    }
 
     //
     // Adapter not found, create new
@@ -435,49 +451,51 @@ std::string TVDaemon::GetAdapterName( struct udev_device *dev )
 
 void TVDaemon::AddFrontendToList( struct udev_device *dev, const char *path, const int adapter_id, const int frontend_id )
 {
-  struct device_t device;
-
-  device.uid  = Utils::DirName( path );
-  if( device.uid.empty() )
+  std::string uid  = Utils::DirName( path );
+  if( uid.empty() )
   {
     LogError( "adapter without a uid, '%s'", path );
     return;
   }
 
+  int new_adapter_id = adapter_id;
   if( adapter_id == -1)
   {
     const char *temp = udev_device_get_property_value( dev, "DVB_ADAPTER_NUM" );
     if( temp )
-      device.adapter_id  = strtol( temp, NULL, 10);
+      new_adapter_id  = strtol( temp, NULL, 10);
   }
-  else
-    device.adapter_id = adapter_id;
 
+  int new_frontend_id = frontend_id;
   if( frontend_id == -1)
   {
     const char *temp = udev_device_get_property_value( dev, "DVB_DEVICE_NUM" );
     if( temp )
-      device.frontend_id = strtol( temp, NULL, 10);
+      new_frontend_id = strtol( temp, NULL, 10);
   }
-  else
-    device.frontend_id = frontend_id;
 
-  if( device.adapter_id == -1 || device.frontend_id == -1)
+  if( new_adapter_id == -1 || new_frontend_id == -1)
   {
     LogError( "discovered not correctly initialized adapter, '%s'", path );
     return;
   }
 
-  device.adapter_name = GetAdapterName( dev );
-  if( !Frontend::GetInfo( device.adapter_id, device.frontend_id, NULL, &device.frontend_name ))
+  std::string adapter_name = GetAdapterName( dev );
+  std::string frontend_name;
+  if( !Frontend::GetInfo( new_adapter_id, new_frontend_id, NULL, &frontend_name ))
     return;
 
-  device_list.push_back( device );
+  AddFrontendToList( adapter_name, frontend_name, uid, new_adapter_id, new_frontend_id );
 }
 
-void TVDaemon::UdevRemove( const char *path )
+void TVDaemon::AddFrontendToList( const std::string& adapter_name, const std::string& frontend_name, const std::string& uid, const int adapter_id, const int frontend_id)
 {
-  std::string uid = Utils::DirName( path );
+  ScopeLock Lock( device_list_mutex );
+  device_list.push_back( device_t(adapter_name, frontend_name, uid, adapter_id, frontend_id ));
+}
+
+void TVDaemon::RemoveFrontend( const std::string& uid )
+{
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
   {
     if( (*it)->GetUID( ) == uid )
@@ -485,7 +503,11 @@ void TVDaemon::UdevRemove( const char *path )
       (*it)->ResetPresence( );
     }
   }
-  return;
+}
+
+void TVDaemon::UdevRemove( const char *path )
+{
+  RemoveFrontend( Utils::DirName( path ));
 }
 
 void TVDaemon::MonitorAdapters( )
