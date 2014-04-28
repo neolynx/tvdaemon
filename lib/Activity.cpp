@@ -50,7 +50,7 @@ void Activity::Run( )
   std::string name = GetName( );
   state = State_Running;
   state_changed = time( NULL );
-  Log( "Activity starting: %s", name.c_str( ));
+  LogInfo( "Activity starting: %s", name.c_str( ));
   TVDaemon::Instance( )->LockFrontends( );
   if( channel )
   {
@@ -76,12 +76,16 @@ void Activity::Run( )
 
   TVDaemon::Instance( )->UnlockFrontends( );
   ret = Perform( );
+
+  if( frontend )
+    frontend->Release( );
+
   if( state == State_Running )
   {
     if( ret )
     {
       state = State_Done;
-      Log( "Activity done: %s", name.c_str( ));
+      LogInfo( "Activity done: %s", name.c_str( ));
     }
     else
     {
@@ -90,9 +94,6 @@ void Activity::Run( )
     }
     state_changed = time( NULL );
   }
-
-  if( frontend )
-    frontend->Release( );
 
   return;
 

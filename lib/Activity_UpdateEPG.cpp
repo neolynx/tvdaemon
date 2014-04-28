@@ -114,7 +114,6 @@ bool Activity_UpdateEPG::Perform( )
     eit_filter.ts_id = -1;
     eit_filter.table = (void **) &eit;
     eit_filter.allow_section_gaps = 1;
-    frontend->GetFE( )->verbose = 1;
     dvb_read_sections( frontend->GetFE( ), fd_demux, &eit_filter, timeout );
     if( eit )
     {
