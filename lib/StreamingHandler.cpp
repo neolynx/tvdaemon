@@ -25,13 +25,10 @@
 #include "Log.h"
 #include "Activity_Stream.h"
 
-StreamingHandler *StreamingHandler::instance = NULL;
-
 StreamingHandler *StreamingHandler::Instance( )
 {
-  if( !instance )
-    instance = new StreamingHandler( );
-  return instance;
+  static StreamingHandler streaminghandler;
+  return &streaminghandler;
 }
 
 StreamingHandler::StreamingHandler( ) : Thread( ), up(true)
@@ -41,12 +38,7 @@ StreamingHandler::StreamingHandler( ) : Thread( ), up(true)
 
 StreamingHandler::~StreamingHandler( )
 {
-  up = false;
-  JoinThread( );
-  Lock( );
-  for( std::map<int, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
-    delete it->second;
-  Unlock( );
+  Shutdown( );
 }
 
 void StreamingHandler::Setup( Channel *channel, std::string client, int port, int &session_id, int &ssrc )
@@ -133,6 +125,16 @@ int StreamingHandler::GetFreeRTPPort( )
   rtpports.push_back( port );
   Unlock( );
   return port;
+}
+
+void StreamingHandler::Shutdown( )
+{
+  up = false;
+  JoinThread( );
+  Lock( );
+  for( std::map<int, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
+    delete it->second;
+  Unlock( );
 }
 
 void StreamingHandler::RemoveClient( std::map<int, Client *>::iterator it )

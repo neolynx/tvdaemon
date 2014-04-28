@@ -45,6 +45,8 @@ class StreamingHandler : public Thread
     bool Play( int session_id );
     bool Stop( int session_id );
 
+    void Shutdown( );
+
     bool KeepAlive( int session_id );
 
   private:
@@ -88,7 +90,6 @@ class StreamingHandler : public Thread
 
     void RemoveClient( std::map<int, Client *>::iterator it );
 
-    static StreamingHandler *instance;
     std::map<int, Client *> clients;
 
     std::list<int> rtpports;

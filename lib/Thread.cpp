@@ -92,6 +92,7 @@ Thread::Thread( ) : Mutex( ), started(false)
 
 Thread::~Thread( )
 {
+  JoinThread( );
 }
 
 void Thread::JoinThread( )

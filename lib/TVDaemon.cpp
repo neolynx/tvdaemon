@@ -115,7 +115,7 @@ TVDaemon::~TVDaemon( )
   recorder->Stop( );
 
   LogInfo( "Stopping StreamingHandler" );
-  delete StreamingHandler::Instance( );
+  StreamingHandler::Instance( )->Shutdown( );
 
   LogInfo( "Stopping CAMClientHandler" );
   delete CAMClientHandler::Instance( );
