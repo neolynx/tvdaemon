@@ -28,7 +28,7 @@
 #include "Daemon.h"
 #include "Log.h"
 
-bool up    = true;
+bool up    = false;
 bool debug = false;
 
 void termination_handler( int signum )
@@ -102,6 +102,7 @@ int main( int argc, char *argv[] )
     return -1;
   }
 
+  up = true;
   while( up )
   {
     sleep( 1 );
