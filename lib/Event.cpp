@@ -26,48 +26,31 @@
 #include "RPCObject.h"
 
 #include <sys/time.h>
+#include <string.h>
 #include <libdvbv5/eit.h>
 #include <libdvbv5/desc_event_short.h>
 
 Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : channel(channel)
 {
   if( !event )
+  {
+    LogError( "Event::Event event is NULL" ); //FIXME: load stuff in separate method
     return;
+  }
 
   id = event->event_id;
-
-  /* Summer:
-   * utc  :  0 0 Sun Mar 30 15:01:10 2014
-   * local: 7200 1 Sun Mar 30 17:01:10 2014
-   * event utc  : Tue Apr  1 19:50:00 2014
-   * event local: Tue Apr  1 21:50:00 2014
-   * name: 10vor10
-   */
-
   struct tm t;
-
   time_t now;
+
   time( &now );
-  gmtime_r( &now, &t );
-  printf( "utc  :  %ld %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
-  //t.tm_isdst = 1; // dst in effect, do not adjust
-  //time_t utc = mktime( &t );
-
-  //time( &now );
   localtime_r( &now, &t );
-  printf( "local: %ld %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
-  //t.tm_isdst = 1; // dst in effect, do not adjust
-  //time_t local = mktime( &t );
-
-  double diff = t.tm_gmtoff; // + 3600; //difftime( utc, local );
-  //printf( "diff: %f\n", diff );
+  int gmt_offset = t.tm_gmtoff;
 
   t = event->start;
-  mktime( &t );
-  printf( "event utc  : %s", asctime( &t ));
-  t.tm_hour  += (int)( diff / 3600.0 );
+  //t.tm_isdst = 0;
+  t.tm_hour += gmt_offset / 3600;
+
   start = mktime( &t );
-  printf( "event local: %s", asctime( &t ));
 
   duration = event->duration;
 
@@ -96,8 +79,9 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
     }
     desc = desc->next;
   }
-  printf( "name: %s\n\n", name.c_str( ));
-
+  //LogWarn( "Event %s: %d.%d.%d %d:%d", name.c_str( ), t.tm_mday, t.tm_mon, t.tm_year, t.tm_hour, t.tm_min );
+  //localtime_r( &start, &t );
+  //LogError( "Check: %s", asctime( &t ));
 }
 
 Event::~Event( )
@@ -107,6 +91,27 @@ Event::~Event( )
 bool operator<( const Event &a, const Event &b )
 {
   return difftime( a.start, b.start ) < 0.0;
+}
+
+time_t Event::GetStart( ) const
+{
+  return start;
+
+  /* Summer:
+   * utc  :  0 0 Sun Mar 30 15:01:10 2014
+   * local: 7200 1 Sun Mar 30 17:01:10 2014
+   * event utc  : Tue Apr  1 19:50:00 2014
+   * event local: Tue Apr  1 21:50:00 2014
+   * name: 10vor10
+   */
+}
+
+time_t Event::GetEnd( ) const
+{
+  struct tm t;
+  localtime_r( &start, &t );
+  t.tm_sec += duration;
+  return mktime( &t );
 }
 
 bool Event::SaveConfig( ConfigBase &config )

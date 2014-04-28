@@ -937,7 +937,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       {
         //Log( "time : %d", time( NULL ));
         //Log( "start: %d", (*it2)->GetStart( ));
-        if( (*it2)->GetStart( ) + (*it2)->GetDuration( ) < time( NULL )) // FIXME: stop
+        if( difftime((*it2)->GetEnd( ), time( NULL )) <= 0.0 ) // FIXME: stop
           continue;
         const Name &name = (*it2)->GetName( );
         const Name &description = (*it2)->GetDescription( );

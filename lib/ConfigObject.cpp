@@ -23,6 +23,7 @@
 
 #include <string>
 #include <stdlib.h>
+#include <string.h> // memset
 
 #include "Utils.h"
 #include "Log.h"
@@ -115,8 +116,10 @@ void ConfigBase::ReadConfig( const char *key, time_t &t )
     return;
   }
 
-  struct tm tm = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  struct tm tm;
+  memset( &tm, 0x00, sizeof( struct tm ));
   strptime( tstr.c_str( ), "%Y-%m-%d %H:%M:%S", &tm );
+  tm.tm_isdst = 1;
   t = mktime( &tm );
 }
 

@@ -46,8 +46,8 @@ class Event : public RPCObject
     const Name &GetName( ) const  { return name; }
     const Name &GetDescription( ) const { return description; }
     Channel &GetChannel( )        { return channel; }
-    time_t GetStart( )            { return start; }
-    time_t GetEnd( )              { return start + duration; }
+    time_t GetStart( ) const;
+    time_t GetEnd( ) const;
     uint32_t GetDuration( )       { return duration; }
 
     // RPC
@@ -59,7 +59,7 @@ class Event : public RPCObject
     Channel &channel;
     int id;
     time_t start;
-    uint32_t duration;
+    uint32_t duration; // seconds
     Name name;
     Name description;
     std::string language;
