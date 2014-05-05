@@ -47,9 +47,8 @@ Recorder::~Recorder( )
   JoinThread( );
   Lock( );
   for( std::map<int, Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
-  {
     delete it->second;
-  }
+  recordings.clear( );
   Unlock( );
 }
 

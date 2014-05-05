@@ -30,6 +30,10 @@
 #include <libdvbv5/eit.h>
 #include <libdvbv5/desc_event_short.h>
 
+Event::Event( Channel &channel ) : channel(channel)
+{
+}
+
 Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : channel(channel)
 {
   if( !event )

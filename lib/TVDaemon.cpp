@@ -118,7 +118,7 @@ TVDaemon::~TVDaemon( )
   StreamingHandler::Instance( )->Shutdown( );
 
   LogInfo( "Stopping CAMClientHandler" );
-  delete CAMClientHandler::Instance( );
+  CAMClientHandler::Instance( )->Shutdown( );
 
   LogInfo( "Saving Config" );
   SaveConfig( );
@@ -131,12 +131,15 @@ TVDaemon::~TVDaemon( )
 
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     delete *it;
+  adapters.clear( );
 
   for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
     delete it->second;
+  sources.clear( );
 
   for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     delete it->second;
+  channels.clear( );
 
   instance = NULL;
 }
@@ -151,8 +154,7 @@ bool TVDaemon::Start( const char* httpRoot )
   }
 
   LogInfo( "Creating CAM clients" );
-  CAMClientHandler *camclienthandler = CAMClientHandler::Instance( );
-  camclienthandler->LoadConfig( );
+  CAMClientHandler::Instance( )->LoadConfig( );
 
   LogInfo( "Setting up udev" );
   // Setup udev
@@ -209,17 +211,13 @@ bool TVDaemon::SaveConfig( )
   WriteConfigFile( );
 
   for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
-  {
     it->second->SaveConfig( );
-  }
 
   for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     it->second->SaveConfig( );
 
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-  {
     (*it)->SaveConfig( );
-  }
 
   if( recorder )
     recorder->SaveConfig( );

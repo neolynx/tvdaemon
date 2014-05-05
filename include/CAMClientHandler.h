@@ -38,12 +38,12 @@ class CAMClientHandler : public ConfigObject
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
+    void Shutdown( );
+
     CAMClient *GetCAMClient( uint16_t caid );
 
   private:
     CAMClientHandler( );
-
-    static CAMClientHandler *instance;
 
     std::vector<CAMClient *> clients;
 };

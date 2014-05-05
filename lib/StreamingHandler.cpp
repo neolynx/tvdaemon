@@ -27,8 +27,8 @@
 
 StreamingHandler *StreamingHandler::Instance( )
 {
-  static StreamingHandler streaminghandler;
-  return &streaminghandler;
+  static StreamingHandler instance;
+  return &instance;
 }
 
 StreamingHandler::StreamingHandler( ) : Thread( ), up(true)
@@ -134,6 +134,7 @@ void StreamingHandler::Shutdown( )
   Lock( );
   for( std::map<int, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
     delete it->second;
+  clients.clear( );
   Unlock( );
 }
 

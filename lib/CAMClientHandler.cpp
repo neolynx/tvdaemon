@@ -25,13 +25,10 @@
 #include "TVDaemon.h"
 #include "CAMClient.h"
 
-CAMClientHandler *CAMClientHandler::instance = NULL;
-
 CAMClientHandler *CAMClientHandler::Instance( )
 {
-  if( !instance )
-    instance = new CAMClientHandler( );
-  return instance;
+  static CAMClientHandler instance;
+  return &instance;
 }
 
 CAMClientHandler::CAMClientHandler( ) :
@@ -44,7 +41,11 @@ CAMClientHandler::CAMClientHandler( ) :
 
 CAMClientHandler::~CAMClientHandler( )
 {
-  SaveConfig( );
+  //SaveConfig( );
+}
+
+void CAMClientHandler::Shutdown( )
+{
 }
 
 bool CAMClientHandler::SaveConfig( )
