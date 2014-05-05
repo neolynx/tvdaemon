@@ -40,7 +40,7 @@ function print_remove( row )
 function print_channel( row )
 {
   name = encodeURIComponent( row["name"] );
-  return "<a href=\"rtsp://" + window.location.host + "/" + name + "\">" + row["name"] + "</a>";
+  return "<a href=\"rtsp://" + window.location.host + "/channel/" + name + "\"><b>" + row["name"] + "</b></a>";
 }
 
 function update_epg( channel_id )

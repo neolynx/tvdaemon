@@ -8,7 +8,7 @@ function ready( )
   t["columns"] = {
     "start"    : [ "Start", print_time ],
     "channel"  :   "Channel",
-    "name"     : [ "Name", function ( row ) { return "<b>" + row["name"] + "</b>"; } ],
+    "name"     : [ "Name", print_name ],
     "state"    : [ "State", recording_state ],
     ""         : [ "", print_remove ],
   };
@@ -21,6 +21,14 @@ function duration( row )
 {
   d = row["duration"] / 60;
   return Math.floor( d ) + "'";
+}
+
+function print_name( row )
+{
+  if( row["state"] == 4 || row["state"] == 3 ) // done or recording
+    return "<a href=\"rtsp://" + window.location.host + "/play/" + row["id"] + "\"><b>" + row["name"] + "</b></a>";
+  else
+    return "<b>" + row["name"] + "</b>";
 }
 
 function print_remove( row )

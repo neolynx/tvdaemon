@@ -107,6 +107,7 @@ TVDaemon::~TVDaemon( )
     httpd->Stop( );
     delete httpd;
   }
+
   LogInfo( "Closing Tuners" );
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     (*it)->Shutdown( );
@@ -858,6 +859,36 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       result.push_back( it->second );
     }
     ServerSideTable( request, result );
+    return true;
+  }
+
+  if( action == "get_playlist" )
+  {
+    std::string xspf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\n\
+  <trackList>\n";
+    for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    {
+      std::string name;
+      HTTPServer::URLEncode( it->second->GetName( ), name );
+      xspf += "    <track>\n";
+      xspf += "      <title>" + it->second->GetName( );
+      xspf += "</title>\n";
+      xspf += "      <location>";
+      xspf += "rtsp://exciton:7777/channel/" + name;
+      xspf += "</location>\n";
+      xspf += "    </track>\n";
+    }
+    xspf += "  </trackList>\n</playlist>\n";
+
+    HTTPServer::Response response;
+    response.AddStatus( HTTP_OK );
+    response.AddTimeStamp( );
+    response.AddMime( "xspf" );
+    response.AddHeader( "Content-Disposition", "inline; filename=\"tvdaemon.xspf\"" );
+    response.AddContent( xspf );
+
+    request.Reply( response );
     return true;
   }
 
