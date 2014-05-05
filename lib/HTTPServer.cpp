@@ -46,6 +46,7 @@ static const struct mime_type mime_types[] = {
   { "png",  "image/png",        true },
   { "json", "application/json", false },
   { "ico",  "image/x-icon",     true },
+  { "xspf", "application/xspf+xml", false },
 };
 
 HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root), rtsp_handler(NULL)
@@ -534,15 +535,23 @@ bool HTTPServer::SETUP( HTTPRequest &request )
     return false;
   }
 
-  Utils::Tokenize( request.url, "/", tokens, 3 );
-  if( tokens.size( ) != 3 ) // rtsp://server:port/channel
+  Utils::Tokenize( request.url, "/", tokens, 4 );
+  if( tokens.size( ) != 4 ) // rtsp://server:port/channel/Channel name
+                            // or rtsp://server:port/play/recording_id
   {
     LogError( "RTSP: invalid setup url (/): %s", request.url.c_str( ));
     return false;
   }
+  std::string type = tokens[2];
   std::string server = tokens[1];
   std::string channel_name;
-  HTTPServer::URLDecode( tokens[2], channel_name );
+  HTTPServer::URLDecode( tokens[3], channel_name );
+
+  if( type == "play" )
+  {
+    LogWarn( "RTSP play recordings not supported" );
+    return false;
+  }
 
   Channel *channel = TVDaemon::Instance( )->GetChannel( channel_name );
 
@@ -889,9 +898,27 @@ inline void urlhex( char x, char y, std::string &append )
   append += ( x << 4 ) + y;
 }
 
+void HTTPServer::URLEncode( const std::string &string, std::string &encoded )
+{
+  int len = string.length( );
+  encoded = "";
+  for( int j = 0; j < len; j++ )
+  {
+    if( string[j] < '\'' or string[j] > '~' or string[j] == '+' )
+    {
+      char tmp[4];
+      snprintf( tmp, sizeof( tmp ), "%%%02x", (unsigned) string[j] );
+      encoded += tmp;
+    }
+    else
+      encoded += string[j];
+  }
+}
+
 void HTTPServer::URLDecode( const std::string &string, std::string &decoded )
 {
   int len = string.length( );
+  decoded = "";
   for( int j = 0; j < len; j++ )
   {
     if( string[j] == '%' )

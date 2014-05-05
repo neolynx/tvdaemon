@@ -81,6 +81,7 @@ class HTTPServer : public SocketHandler
 
     std::string GetRoot( ) { return _root; }
 
+    static void URLEncode( const std::string &string, std::string &encoded );
     static void URLDecode( const std::string &string, std::string &decoded );
 
     class Response
