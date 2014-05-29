@@ -93,6 +93,8 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     void AddFrontendToList( const std::string& adapter_name, const std::string& frontend_name, const std::string& uid, const int adapter_id, const int frontend_id);
     void RemoveFrontend( const std::string& uid );
 
+    bool RemoveChannel( int id );
+
   private:
     TVDaemon( );
     void FindAdapters( );

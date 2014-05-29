@@ -64,6 +64,7 @@ class Service : public RPCObject
     void        SetProvider( std::string provider ) { this->provider = provider; }
     bool        IsScrambled( ) const { return !caids.empty(); }
     Channel    *GetChannel( ) { return channel; }
+    void        SetChannel( Channel *channel );
 
     void SetCA( uint16_t ca_id, uint16_t ca_pid );
     bool GetECMPID( uint16_t &ca_pid, CAMClient **client );

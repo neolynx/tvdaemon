@@ -269,6 +269,14 @@ bool Source::RemovePort( Port *port )
     ports.erase( it );
 }
 
+void Source::RemoveChannel( Channel *channel )
+{
+  Lock( );
+  for( std::map<int, Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+    it->second->RemoveChannel( channel );
+  Unlock( );
+}
+
 int Source::CountServices( ) const
 {
   int count = 0;

@@ -862,6 +862,16 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
+  if( action == "remove_channel" )
+  {
+    std::string t;
+    if( !request.GetParam( "id", t ))
+      return false;
+
+    int i = atoi( t.c_str( ));
+    return RemoveChannel( i );
+  }
+
   if( action == "get_playlist" )
   {
     std::string referer;
@@ -1082,9 +1092,11 @@ bool TVDaemon::RPC_Channel( const HTTPRequest &request, const std::string &cat, 
     return false;
 
   int i = atoi( t.c_str( ));
-  if( i >= 0 && i < channels.size( ))
+
+  std::map<int, Channel *>::iterator it = channels.find( i );
+  if( it != channels.end( ))
   {
-    return channels[i]->RPC( request, cat, action );
+    return it->second->RPC( request, cat, action );
   }
 
   request.NotFound( "RPC unknown channel: %d", i );
@@ -1175,4 +1187,29 @@ Channel *TVDaemon::GetChannel( std::string &channel_name )
 
   UnlockChannels( );
   return channel;
+}
+
+bool TVDaemon::RemoveChannel( int id )
+{
+  std::map<int, Channel *>::iterator it = channels.find( id );
+  if( it == channels.end( ))
+    return false;
+
+  LockChannels( );
+  Channel *c = it->second;
+  Log( "Removing channel '%s'", c->GetName( ).c_str( ));
+  // FIXME:
+  // stop recordings
+  // delete recordings
+  // deleve events
+  //
+
+  for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
+    it->second->RemoveChannel( c );
+
+  channels.erase( it );
+  c->RemoveConfigFile( );
+  delete c;
+  UnlockChannels( );
+  return true;
 }

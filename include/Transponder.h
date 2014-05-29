@@ -121,6 +121,7 @@ class Transponder : public ConfigObject, public RPCObject
     static const char *GetStateName( State state );
     bool HasChannels( ) const { return has_channels; }
     void HasChannels( bool b ) { has_channels = b; }
+    void RemoveChannel( Channel *channel );
 
     // RPC
     void json( json_object *entry ) const;

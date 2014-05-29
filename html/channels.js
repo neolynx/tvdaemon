@@ -1,6 +1,6 @@
 $(document).ready( ready );
 
-var t;
+var channel_table;
 
 function ready( )
 {
@@ -18,6 +18,7 @@ function ready( )
     //location.href = 'rtsp://' + window.location.host + '/tvd?c=channel&a=stream&channel_id=' + this["id"];
   //};
   t.load( );
+  channel_table = t;
 }
 
 function handle_message( data, errmsg )
@@ -54,10 +55,10 @@ function update_epg( channel_id )
 function remove( id, name )
 {
   if( confirm( "Are you sure to remove channel '" + name + "' ?" ))
-    getJSON( 'tvd?c=channel&a=remove&id=' + id, rethandler );
+    getJSON( 'tvd?c=tvdaemon&a=remove_channel&id=' + id, rethandler );
 }
 
 function rethandler( data, errmsg )
 {
-  t.load( );
+  channel_table.load( );
 }

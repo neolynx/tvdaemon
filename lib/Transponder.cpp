@@ -504,3 +504,16 @@ void Transponder::SetCA( uint16_t service_id, uint16_t ca_id, uint16_t ca_pid )
     return;
   it->second->SetCA( ca_id, ca_pid );
 }
+
+void Transponder::RemoveChannel( Channel *channel )
+{
+  // FIXME: Lock( );
+  for( std::map<uint16_t, Service *>::iterator it = services.begin( ); it != services.end( ); it++ )
+    if( it->second->GetChannel( ) == channel )
+    {
+      it->second->SetChannel( NULL );
+      SaveConfig( );
+    }
+
+  //Unlock( );
+}

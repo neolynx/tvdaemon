@@ -265,6 +265,11 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
   return false;
 }
 
+void Service::SetChannel( Channel *c )
+{
+  channel = c;
+}
+
 bool Service::Tune( Activity &act )
 {
   act.SetService( this );

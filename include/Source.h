@@ -30,6 +30,7 @@
 #include <vector>
 
 class Port;
+class Channel;
 class HTTPServer;
 class TVDaemon;
 class Activity;
@@ -77,6 +78,7 @@ class Source : public ConfigObject, public RPCObject, public Mutex
 
     bool AddPort( Port *port );
     bool RemovePort( Port *port );
+    void RemoveChannel( Channel *channel );
     bool AddTransponder( Transponder *t );
 
     // RPC
