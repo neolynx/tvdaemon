@@ -295,14 +295,18 @@ void Utils::Tokenize( const std::string &string, const char delims[], std::vecto
       i++;
     }
 
+    if( count )
+      if( --count == 0 )
+      {
+        tokens.push_back( std::string( string.c_str( ) + j,  len - j ));
+        break;
+      }
+
     tokens.push_back( std::string( string.c_str( ) + j,  i - j ));
 
     if( i == len )
       break;
 
-    if( count )
-      if( --count == 0 )
-        break;
   }
 }
 

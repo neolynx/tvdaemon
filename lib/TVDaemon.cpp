@@ -864,6 +864,23 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "get_playlist" )
   {
+    std::string referer;
+    if( !request.GetHeader( "Referer", referer ))
+    {
+      LogError( "GetPlaylist: no referer found" );
+      return false;
+    }
+
+    std::vector<std::string> tokens;
+    Utils::Tokenize( referer, "/", tokens, 3 );
+    if( tokens.size( ) < 3 )
+    {
+      LogError( "GetPlaylist: error parsing url (%s)", referer.c_str( ));
+      return false;
+    }
+
+    std::string server = tokens[1];
+
     std::string xspf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\n\
   <trackList>\n";
@@ -875,7 +892,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       xspf += "      <title>" + it->second->GetName( );
       xspf += "</title>\n";
       xspf += "      <location>";
-      xspf += "rtsp://exciton:7777/channel/" + name;
+      xspf += "rtsp://" + server + "/channel/" + name;
       xspf += "</location>\n";
       xspf += "    </track>\n";
     }
