@@ -554,6 +554,11 @@ bool HTTPServer::SETUP( HTTPRequest &request )
   }
 
   Channel *channel = TVDaemon::Instance( )->GetChannel( channel_name );
+  if( !channel )
+  {
+    LogError( "RTSP: unknown channel: '%s'", channel_name.c_str( ));
+    return false;
+  }
 
   Utils::Tokenize( server, ":", tokens, 2 );
   if( tokens.size( ) < 1 ) // server:port

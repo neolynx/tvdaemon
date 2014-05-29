@@ -89,14 +89,17 @@ Activity_Record::~Activity_Record( )
 std::string Activity_Record::GetName( ) const
 {
   std::string t = "Record";
-  t += " - " + channel->GetName( ) + " \"" + name + "\"";
+  t += " - ";
+  if( channel )
+    t += channel->GetName( ) + " ";
+  t += "\"" + name + "\"";
   return t;
 }
 
 bool Activity_Record::SaveConfig( )
 {
   WriteConfig( "Name",     name );
-  WriteConfig( "Channel",  channel->GetKey( ));
+  WriteConfig( "Channel",  channel ? channel->GetKey( ) : -1 );
   WriteConfig( "Start",    start );
   WriteConfig( "End",      end );
   WriteConfig( "State",    GetState( ));
@@ -130,10 +133,11 @@ bool Activity_Record::LoadConfig( )
   {
     channel = TVDaemon::Instance( )->GetChannel( channel_id );
     if( !channel )
-      LogError( "Activity_Record: unknown channel" );
+    {
+      LogError( "Activity_Record: unknown channel %d", channel_id );
+      channel_id == -1;
+    }
   }
-  else
-    LogError( "Activity_Record: unknown channel" );
   return true;
 }
 
@@ -581,7 +585,7 @@ void Activity_Record::json( json_object *j ) const
 {
   json_object_object_add( j, "id",      json_object_new_int( GetKey( )));
   json_object_object_add( j, "name",    json_object_new_string( name.c_str( )));
-  json_object_object_add( j, "channel", json_object_new_int( channel->GetKey( )));
+  json_object_object_add( j, "channel", json_object_new_int( channel ? channel->GetKey( ) : -1 ));
   json_object_time_add  ( j, "start",   start );
   json_object_object_add( j, "end",     json_object_new_int( end ));
   json_object_object_add( j, "state",   json_object_new_int( GetState( )));

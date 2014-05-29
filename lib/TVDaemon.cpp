@@ -646,14 +646,14 @@ Channel *TVDaemon::CreateChannel( Service *service )
   SCOPELOCK( );
   for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
   {
-    if( it->second->HasService( service ))
+    if( it->second->HasService( service ) or it->second->GetName( ) == service->GetName( ))
     {
       LogError( "Channel '%s' already exists", service->GetName( ).c_str( ));
       return NULL;
     }
   }
-  Channel *c = new Channel( *this, service, channels.size( ));
   int next_id = GetAvailableKey<Channel, int>( channels );
+  Channel *c = new Channel( *this, service, next_id );
   channels[next_id] = c;
   return c;
 }
@@ -670,12 +670,10 @@ std::vector<std::string> TVDaemon::GetChannelList( )
 Channel *TVDaemon::GetChannel( int id )
 {
   SCOPELOCK( );
-  if( id < 0 or id >= channels.size( ))
-  {
-    LogError( "Channel not found: %d", id );
+  std::map<int, Channel *>::iterator it = channels.find( id );
+  if( it == channels.end( ))
     return NULL;
-  }
-  return channels[id];
+  return it->second;
 }
 
 void TVDaemon::UpdateEPG( )

@@ -116,6 +116,11 @@ bool Service::LoadConfig( ConfigBase &config )
       channel->AddService( this );
       transponder.HasChannels( true );
     }
+    else
+    {
+      LogError( "Service '%s': channel %d not found", name.c_str( ), channel_id );
+      channel_id == -1;
+    }
   }
 
   Setting &n = config.ConfigList( "Streams" );
@@ -254,6 +259,11 @@ bool Service::RPC( const HTTPRequest &request, const std::string &cat, const std
         return false;
       }
       channel = TVDaemon::Instance( )->CreateChannel( this );
+      if( !channel )
+      {
+        request.NotFound( "Channel already exists" );
+        return false;
+      }
       request.Reply( HTTP_OK );
       transponder.HasChannels( true );
       transponder.SaveConfig( );
