@@ -9,7 +9,6 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Frontend_DVBC.cpp \
 			  Frontend_DVBT.cpp \
 			  Frontend_ATSC.cpp \
-			  Frontend_HDHR.cpp \
 			  Transponder.cpp \
 			  Transponder_DVBS.cpp \
 			  Transponder_DVBC.cpp \
@@ -38,8 +37,7 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  CAMClient.cpp \
 			  CAMClientHandler.cpp \
 			  Daemon.cpp \
-			  Avahi_Client.cpp \
-			  HDHomerun_Client.cpp
+			  Avahi_Client.cpp
 
 libtvdaemon_la_LDFLAGS = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} ../v4l-utils/lib/libdvbv5/.libs/libdvbv5.la \
 			-lmatroska ${LIBCCRTP_LIBS} ${LIBAVFORMAT_LIBS} ${LIBAVCODEC_LIBS} \

@@ -22,8 +22,6 @@
 #ifndef _TVDaemon_
 #define _TVDaemon_
 
-#include "config.h"
-
 #include "ConfigObject.h"
 #include "HTTPServer.h"
 #include "Thread.h"
@@ -44,7 +42,6 @@ class Channel;
 class Recorder;
 class Event;
 class Avahi_Client;
-class HDHomerun_Client;
 
 class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHandler, public Thread
 {
@@ -130,9 +127,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     Mutex channels_mutex;
 
     Avahi_Client *avahi_client;
-#ifdef HAVE_LIBHDHOMERUN
-    HDHomerun_Client *hdhr_client;
-#endif /* HAVE_LIBHDHOMERUN */
 
     Mutex device_list_mutex;
     struct device_t {

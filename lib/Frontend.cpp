@@ -27,7 +27,6 @@
 #include "Frontend_DVBC.h"
 #include "Frontend_DVBT.h"
 #include "Frontend_ATSC.h"
-#include "Frontend_HDHR.h"
 #include "Port.h"
 #include "Transponder.h"
 #include "Source.h"
@@ -121,8 +120,6 @@ Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
       return new Frontend_DVBT( adapter, configfile );
     case Source::Type_ATSC:
       return new Frontend_ATSC( adapter, configfile );
-    case Source::Type_HDHR:
-      return new Frontend_HDHR( adapter, configfile );
     case Source::Type_Any:
       return NULL;
   }
@@ -131,14 +128,6 @@ Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
 
 Frontend *Frontend::Create( Adapter &adapter, int adapter_id, int frontend_id, int config_id )
 {
-  /// special treatment for HDHR tuner
-  if (adapter.GetName().find("HDHR") == 0)
-  {
-    char name[32];
-    sprintf(name, "Tuner %d", frontend_id );
-    return new Frontend_HDHR( adapter, name, adapter_id, frontend_id, config_id );
-  }
-
   std::string name;
   fe_delivery_system_t delsys;
   if( !GetInfo( adapter_id, frontend_id, &delsys, &name ))

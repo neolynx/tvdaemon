@@ -10,9 +10,6 @@ sudo apt-get install autoconf libtool automake autopoint pkg-config g++ \
                     libccrtp-dev libdvbcsa-dev dvb-apps libavahi-client-dev \
                     libssl-dev
 
-Optional install:
-
-sudo apt-get install libhdhomerun-dev
 
 Checkout TVDaemon
 ==================

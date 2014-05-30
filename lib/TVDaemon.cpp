@@ -44,7 +44,6 @@
 #include "Log.h"
 #include "StreamingHandler.h"
 #include "Avahi_Client.h"
-#include "HDHomerun_Client.h"
 
 TVDaemon *TVDaemon::instance = NULL;
 
@@ -87,18 +86,12 @@ TVDaemon::TVDaemon( ) :
   up(true),
   recorder(NULL),
   avahi_client(new Avahi_Client())
-#ifdef HAVE_LIBHDHOMERUN
-  , hdhr_client( new HDHomerun_Client() )
-#endif /* HAVE_LIBHDHOMERUN */
 {
 }
 
 TVDaemon::~TVDaemon( )
 {
   delete avahi_client;
-#ifdef HAVE_LIBHDHOMERUN
-  delete hdhr_client;
-#endif /* HAVE_LIBHDHOMERUN */
 
   LogInfo( "TVDaemon terminating" );
   if( httpd )
@@ -191,14 +184,6 @@ bool TVDaemon::Start( const char* httpRoot )
     LogError( "unable to start avahi client" );
   }
   Log( "Avahi client started" );
-
-#ifdef HAVE_LIBHDHOMERUN
-  if ( !hdhr_client->Start( ))
-  {
-    LogError( "unable to start hdhomerun client" );
-  }
-  Log( "HDHomerun discovery client started" );
-#endif /* HAVE_LIBHDHOMERUN */
 
   return true;
 }

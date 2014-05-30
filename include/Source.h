@@ -45,7 +45,6 @@ class Source : public ConfigObject, public RPCObject, public Mutex
       Type_DVBC,
       Type_DVBT,
       Type_ATSC,
-      Type_HDHR,
       Type_Last,
     };
 
