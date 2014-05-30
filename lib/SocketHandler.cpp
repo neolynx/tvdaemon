@@ -626,3 +626,10 @@ bool SocketHandler::GetClientAddress( int client, struct sockaddr_in &addr ) con
   Unlock( );
   return ret;
 }
+
+bool SocketHandler::GetServerAddress( int client, struct sockaddr_in &addr ) const
+{
+  socklen_t len = sizeof( struct sockaddr_in );
+  return getsockname( client, (struct sockaddr *) &addr, &len ) == 0;
+}
+

@@ -77,6 +77,7 @@ class SocketHandler
     virtual bool Send( const char *buffer, int len );
     virtual bool SendToClient( int client, const char *buffer, int len );
     bool GetClientAddress( int client, struct sockaddr_in &addr ) const;
+    bool GetServerAddress( int client, struct sockaddr_in &addr ) const;
 
     bool isUp( ) { return up; }
     bool isConnected( ) { return connected; }

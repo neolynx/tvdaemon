@@ -857,22 +857,29 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "get_playlist" )
   {
-    std::string referer;
-    if( !request.GetHeader( "Referer", referer ))
+    std::string referer, server;
+    if( request.GetHeader( "Referer", referer ))
     {
-      LogError( "GetPlaylist: no referer found" );
-      return false;
-    }
+      std::vector<std::string> tokens;
+      Utils::Tokenize( referer, "/", tokens, 3 );
+      if( tokens.size( ) < 3 )
+      {
+        LogError( "GetPlaylist: error parsing url (%s)", referer.c_str( ));
+        return false;
+      }
 
-    std::vector<std::string> tokens;
-    Utils::Tokenize( referer, "/", tokens, 3 );
-    if( tokens.size( ) < 3 )
+      server = tokens[1];
+    }
+    else
     {
-      LogError( "GetPlaylist: error parsing url (%s)", referer.c_str( ));
-      return false;
-    }
+      in_addr addr = request.GetServerIP( );
+      uint16_t port = request.GetServerPort( );
 
-    std::string server = tokens[1];
+      char t[32];
+      snprintf( t, sizeof( t ), "%s:%d", inet_ntoa( addr ), port );
+      server = t;
+      Log( "server: %s", t );
+    }
 
     std::string xspf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\n\

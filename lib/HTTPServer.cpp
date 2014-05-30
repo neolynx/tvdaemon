@@ -955,3 +955,17 @@ in_addr HTTPRequest::GetClientIP( ) const
   return client_addr.sin_addr;
 }
 
+in_addr HTTPRequest::GetServerIP( ) const
+{
+  struct sockaddr_in addr;
+  server.GetServerAddress( client, addr );
+  return addr.sin_addr;
+}
+
+uint16_t HTTPRequest::GetServerPort( ) const
+{
+  struct sockaddr_in addr;
+  server.GetServerAddress( client, addr );
+  return ntohs( addr.sin_port );
+}
+
