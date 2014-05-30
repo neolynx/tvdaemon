@@ -7,7 +7,7 @@ function ready( )
   t = ServerSideTable( 'recorder', 'tvd?c=tvdaemon&a=get_recordings', 10 );
   t["columns"] = {
     "start"    : [ "Start", print_time ],
-    "channel"  :   "Channel",
+    "channel"  : [ "Channel", print_channel ],
     "name"     : [ "Name", print_name ],
     "state"    : [ "State", recording_state ],
     ""         : [ "", print_remove ],
@@ -21,6 +21,13 @@ function duration( row )
 {
   d = row["duration"] / 60;
   return Math.floor( d ) + "'";
+}
+
+function print_channel( row )
+{
+  if( "channel" in row )
+    return row["channel"];
+  return "<i>unknown</i>";
 }
 
 function print_name( row )

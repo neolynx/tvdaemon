@@ -585,7 +585,7 @@ void Activity_Record::json( json_object *j ) const
 {
   json_object_object_add( j, "id",      json_object_new_int( GetKey( )));
   json_object_object_add( j, "name",    json_object_new_string( name.c_str( )));
-  json_object_object_add( j, "channel", json_object_new_int( channel ? channel->GetKey( ) : -1 ));
+  json_object_object_add( j, "channel_id", json_object_new_int( channel ? channel->GetKey( ) : -1 ));
   json_object_time_add  ( j, "start",   start );
   json_object_object_add( j, "end",     json_object_new_int( end ));
   json_object_object_add( j, "state",   json_object_new_int( GetState( )));
