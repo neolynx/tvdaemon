@@ -23,29 +23,43 @@
 #define _Activity_Stream_
 
 #include "Activity.h"
+#include "Thread.h"
 
 #include <ccrtp/rtp.h>
 
 class Channel;
+class Activity_Record;
 
 class Activity_Stream : public Activity
 {
   public:
-    Activity_Stream( Channel &channel, ost::RTPSession *session );
+    Activity_Stream( Channel *channel, ost::RTPSession *session );
+    Activity_Stream( Activity_Record *recording, ost::RTPSession *session );
     virtual ~Activity_Stream( );
 
-    virtual std::string GetName( ) const;
+    virtual std::string GetTitle( ) const;
+
+    virtual void Stop( );
 
   private:
     virtual bool Perform( );
     virtual void Failed( ) { }
 
+    bool StreamChannel( );
+    bool StreamRecording( );
+
+    bool GetTimestamp( const uint8_t *buf, double &ts );
+
     void UpdateRTPTimestamp( );
     void SendRTP( const uint8_t *data, int length );
 
-    Channel &channel;
+    Activity_Record *recording;
     ost::RTPSession *session;
-    uint64_t timestamp;
+    uint64_t rtp_timestamp;
+    double bigbang;
+    struct timespec start_time;
+
+    Condition cond;
 };
 
 

@@ -23,7 +23,6 @@
 #include <arpa/inet.h> // inet_ntop
 
 #include "StreamingHandler.h" // FIXME: mm.. needed?
-#include "TVDaemon.h" // FIXME: mm.. needed?
 
 static const struct http_status response_status[] = {
   { HTTP_OK, "OK" },
@@ -544,36 +543,33 @@ bool HTTPServer::SETUP( HTTPRequest &request )
   }
   std::string type = tokens[2];
   std::string server = tokens[1];
-  std::string channel_name;
-  HTTPServer::URLDecode( tokens[3], channel_name );
+
+  int session_id, ssrc;
+  char ipaddr[INET_ADDRSTRLEN];
+  in_addr ip = request.GetClientIP( );
+  inet_ntop( AF_INET, &ip, ipaddr, sizeof( ipaddr ));
 
   if( type == "play" )
   {
-    LogWarn( "RTSP play recordings not supported" );
-    return false;
+    int recording_id = atoi( tokens[3].c_str( ));
+    if( !StreamingHandler::Instance( )->SetupPlayback( recording_id, ipaddr, rtp_port, session_id, ssrc ))
+      return false;
   }
-
-  Channel *channel = TVDaemon::Instance( )->GetChannel( channel_name );
-  if( !channel )
+  else if( type == "channel" )
   {
-    LogError( "RTSP: unknown channel: '%s'", channel_name.c_str( ));
-    return false;
+    std::string channel_name;
+    HTTPServer::URLDecode( tokens[3], channel_name );
+    if( !StreamingHandler::Instance( )->SetupChannel( channel_name, ipaddr, rtp_port, session_id, ssrc ))
+      return false;
   }
 
-  Utils::Tokenize( server, ":", tokens, 2 );
-  if( tokens.size( ) < 1 ) // server:port
-  {
-    LogError( "RTSP: invalid setup url (:): %s", request.url.c_str( ));
-    return false;
-  }
-  std::string hostname = tokens[0];
-
-  char str[INET_ADDRSTRLEN];
-  in_addr addr = request.GetClientIP( );
-  inet_ntop( AF_INET, &addr, str, sizeof( str ));
-
-  int session_id, ssrc;
-  StreamingHandler::Instance( )->Setup( channel, str, rtp_port, session_id, ssrc );
+  //Utils::Tokenize( server, ":", tokens, 2 );
+  //if( tokens.size( ) < 1 ) // server:port
+  //{
+    //LogError( "RTSP: invalid setup url (:): %s", request.url.c_str( ));
+    //return false;
+  //}
+  //std::string hostname = tokens[0];
 
   Response response;
   response.AddStatus( RTSP_OK );

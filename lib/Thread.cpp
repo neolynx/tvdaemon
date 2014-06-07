@@ -85,6 +85,24 @@ bool Condition::Wait( int seconds ) const
   return false;
 }
 
+bool Condition::WaitUntil( struct timespec ts ) const
+{
+  while( true )
+  {
+    int r = pthread_cond_timedwait( &cond, &mutex, &ts );
+    switch( r )
+    {
+      case ETIMEDOUT:
+        return true;
+      case 0:
+        Unlock( );
+        return true;
+      default:
+	return false;
+    }
+  }
+  return false;
+}
 
 Thread::Thread( ) : Mutex( ), started(false)
 {

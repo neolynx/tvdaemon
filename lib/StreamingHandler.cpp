@@ -24,6 +24,9 @@
 #include "Channel.h"
 #include "Log.h"
 #include "Activity_Stream.h"
+#include "Activity_Record.h"
+#include "TVDaemon.h"
+#include "Recorder.h"
 
 StreamingHandler *StreamingHandler::Instance( )
 {
@@ -41,8 +44,15 @@ StreamingHandler::~StreamingHandler( )
   Shutdown( );
 }
 
-void StreamingHandler::Setup( Channel *channel, std::string client, int port, int &session_id, int &ssrc )
+bool StreamingHandler::SetupChannel( const std::string &channel_name, const std::string &client, int port, int &session_id, int &ssrc )
 {
+  Channel *channel = TVDaemon::Instance( )->GetChannel( channel_name );
+  if( !channel )
+  {
+    LogError( "RTSP: unknown channel: '%s'", channel_name.c_str( ));
+    return false;
+  }
+
   Lock( );
   std::map<int, Client *>::iterator it;
   do
@@ -59,8 +69,37 @@ void StreamingHandler::Setup( Channel *channel, std::string client, int port, in
   ssrc = c->GetSSRC( );
 
   Unlock( );
+  return true;
 }
 
+
+bool StreamingHandler::SetupPlayback( int recording_id, const std::string &client, int port, int &session_id, int &ssrc )
+{
+  Activity_Record *recording = Recorder::Instance( )->GetRecording( recording_id );
+  if( !recording )
+  {
+    LogError( "RTSP: unknown recording: %d", recording_id );
+    return false;
+  }
+
+  Lock( );
+  std::map<int, Client *>::iterator it;
+  do
+  {
+    session_id = rand( );
+    it = clients.find( session_id );
+  } while( it != clients.end( ));
+
+  Client *c = new Client( recording, client, port );
+  clients[session_id] = c;
+
+  Log( "StreamingHandler::Setup %s:%d session %04x", client.c_str( ), port, session_id );
+
+  ssrc = c->GetSSRC( );
+
+  Unlock( );
+  return true;
+}
 
 bool StreamingHandler::Play( int session_id )
 {
@@ -170,8 +209,9 @@ void StreamingHandler::Run( )
 
 
 
-StreamingHandler::Client::Client( Channel *channel, std::string client, int port ) :
+StreamingHandler::Client::Client( Channel *channel, const std::string &client, int port ) :
   channel(channel),
+  recording(NULL),
   client(client),
   port(port),
   activity(NULL),
@@ -179,7 +219,18 @@ StreamingHandler::Client::Client( Channel *channel, std::string client, int port
 {
   ts = time( NULL );
   session = new RTPSession( client, port );
+}
 
+StreamingHandler::Client::Client( Activity_Record *recording, const std::string &client, int port ) :
+  channel(NULL),
+  recording(recording),
+  client(client),
+  port(port),
+  activity(NULL),
+  session(NULL)
+{
+  ts = time( NULL );
+  session = new RTPSession( client, port );
 }
 
 StreamingHandler::Client::~Client( )
@@ -191,9 +242,9 @@ StreamingHandler::Client::~Client( )
 
 bool StreamingHandler::Client::Play( )
 {
-  if( !channel )
+  if( !channel and !recording )
   {
-    LogError( "StreamingHandler::Client::Play no channel defined" );
+    LogError( "StreamingHandler::Client::Play no channel or recording defined" );
     return false;
   }
 
@@ -203,7 +254,10 @@ bool StreamingHandler::Client::Play( )
     return false;
   }
 
-  activity = new Activity_Stream( *channel, session );
+  if( channel )
+    activity = new Activity_Stream( channel, session );
+  else
+    activity = new Activity_Stream( recording, session );
 
   activity->Start( );
 
@@ -260,7 +314,8 @@ StreamingHandler::RTPSession::RTPSession( std::string client, int port ) :
     //return false;
   }
 
-  setSchedulingTimeout( 10000 );
+  setSchedulingTimeout( 20000 );
+  setExpireTimeout( 3000000 );
   if( !addDestination( remote_ip, port ) )
   {
     LogError( "RTP: connection failed" );

@@ -32,6 +32,7 @@
 
 class Channel;
 class Activity_Stream;
+class Activity_Record;
 
 class StreamingHandler : public Thread
 {
@@ -41,7 +42,9 @@ class StreamingHandler : public Thread
 
     int GetFreeRTPPort( );
 
-    void Setup( Channel *channel, std::string client, int port, int &session_id, int &ssrc );
+    bool SetupChannel( const std::string &channel_name, const std::string &client, int port, int &session_id, int &ssrc );
+    bool SetupPlayback( int recording_id, const std::string &client, int port, int &session_id, int &ssrc );
+
     bool Play( int session_id );
     bool Stop( int session_id );
 
@@ -69,7 +72,8 @@ class StreamingHandler : public Thread
     class Client
     {
       public:
-        Client( Channel *channel, std::string client, int port );
+        Client( Channel *channel, const std::string &client, int port );
+        Client( Activity_Record *recording, const std::string &client, int port );
         ~Client( );
 
         bool Play( );
@@ -78,6 +82,7 @@ class StreamingHandler : public Thread
         int GetSSRC( );
 
         Channel *channel;
+        Activity_Record *recording;
 
         std::string client;
         int         port;

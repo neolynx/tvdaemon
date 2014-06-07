@@ -47,34 +47,31 @@ bool Activity::Start( )
 void Activity::Run( )
 {
   bool ret;
-  std::string name = GetName( );
+  std::string name = GetTitle( );
   state = State_Running;
   state_changed = time( NULL );
   LogInfo( "Activity starting: %s", name.c_str( ));
-  TVDaemon::Instance( )->LockFrontends( );
   if( channel )
   {
+    TVDaemon::Instance( )->LockFrontends( );
     if( !channel->Tune( *this ))
     {
       LogError( "Activity %s unable to start: tuning failed", name.c_str( ));
       goto fail;
     }
+    TVDaemon::Instance( )->UnlockFrontends( );
   }
   else if( frontend and port and transponder )
   {
+    TVDaemon::Instance( )->LockFrontends( );
     if( !frontend->Tune( *this ))
     {
       frontend->LogError( "Activity %s unable to start: tuning failed", name.c_str( ));
       goto fail;
     }
-  }
-  else
-  {
-    LogError( "Activity %s unable to start: no channel or no frontend, port and transponder found", name.c_str( ));
-    goto fail;
+    TVDaemon::Instance( )->UnlockFrontends( );
   }
 
-  TVDaemon::Instance( )->UnlockFrontends( );
   ret = Perform( );
 
   if( frontend )

@@ -84,7 +84,6 @@ TVDaemon::TVDaemon( ) :
   udev_fd(0),
   httpd(NULL),
   up(true),
-  recorder(NULL),
   avahi_client(new Avahi_Client())
 {
 }
@@ -106,7 +105,7 @@ TVDaemon::~TVDaemon( )
     (*it)->Shutdown( );
 
   LogInfo( "Stopping Recorder" );
-  recorder->Stop( );
+  Recorder::Instance( )->Stop( );
 
   LogInfo( "Stopping StreamingHandler" );
   StreamingHandler::Instance( )->Shutdown( );
@@ -118,7 +117,6 @@ TVDaemon::~TVDaemon( )
   SaveConfig( );
 
   LogInfo( "Cleanup" );
-  delete recorder;
 
   up = false;
   JoinThread( );
@@ -160,8 +158,7 @@ bool TVDaemon::Start( const char* httpRoot )
   ProcessAdapters( );
 
   LogInfo( "Creating Recorder" );
-  recorder = new Recorder( *this );
-  recorder->LoadConfig( );
+  Recorder::Instance( )->LoadConfig( );
 
   MonitorAdapters( );
 
@@ -205,8 +202,7 @@ bool TVDaemon::SaveConfig( )
   for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     (*it)->SaveConfig( );
 
-  if( recorder )
-    recorder->SaveConfig( );
+  Recorder::Instance( )->SaveConfig( );
 
   return true;
 }
@@ -698,7 +694,7 @@ bool TVDaemon::HandleDynamicHTTP( const HTTPRequest &request )
     return RPC_Channel( request, cat, action );
 
   if( cat == "recorder" )
-    return recorder->RPC( request, cat, action );
+    return Recorder::Instance( )->RPC( request, cat, action );
 
   request.NotFound( "RPC unknown category: %s", cat.c_str( ));
   return false;
@@ -1009,7 +1005,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       //Utils::ToLower( t, search );
     //}
     std::vector<const JSONObject *> result;
-    recorder->GetRecordings( result );
+    Recorder::Instance( )->GetRecordings( result );
     ServerSideTable( request, result );
     return true;
   }
@@ -1128,12 +1124,12 @@ bool TVDaemon::RPC_Adapter( const HTTPRequest &request, const std::string &cat, 
 
 bool TVDaemon::Schedule( Event &event )
 {
-  return recorder->Schedule( event );
+  return Recorder::Instance( )->Schedule( event );
 }
 
 void TVDaemon::Record( Channel &channel )
 {
-  recorder->Record( channel );
+  Recorder::Instance( )->Record( channel );
 }
 
 void TVDaemon::LockFrontends( )
@@ -1156,7 +1152,7 @@ void TVDaemon::UnlockChannels( )
   channels_mutex.Unlock( );
 }
 
-Channel *TVDaemon::GetChannel( std::string &channel_name )
+Channel *TVDaemon::GetChannel( const std::string &channel_name )
 {
   LockChannels( );
   Channel *channel = NULL;

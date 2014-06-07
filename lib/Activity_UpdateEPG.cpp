@@ -40,7 +40,7 @@ Activity_UpdateEPG::~Activity_UpdateEPG( )
 {
 }
 
-std::string Activity_UpdateEPG::GetName( ) const
+std::string Activity_UpdateEPG::GetTitle( ) const
 {
   std::string t = "Update EPG";
   if( transponder )

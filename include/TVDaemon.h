@@ -64,7 +64,7 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
 
     std::vector<std::string> GetChannelList( );
     Channel *GetChannel( int id );
-    Channel *GetChannel( std::string &channel_name );
+    Channel *GetChannel( const std::string &channel_name );
     Channel *CreateChannel( Service *service );
 
     void LockFrontends( );
@@ -118,8 +118,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
 
     virtual void Run( );
     void HandleUdev( );
-
-    Recorder *recorder;
 
     std::vector<Transponder *> epg_transponders;
 

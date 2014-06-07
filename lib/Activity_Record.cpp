@@ -86,7 +86,7 @@ Activity_Record::~Activity_Record( )
 {
 }
 
-std::string Activity_Record::GetName( ) const
+std::string Activity_Record::GetTitle( ) const
 {
   std::string t = "Record";
   t += " - ";
@@ -94,6 +94,16 @@ std::string Activity_Record::GetName( ) const
     t += channel->GetName( ) + " ";
   t += "\"" + name + "\"";
   return t;
+}
+
+std::string Activity_Record::GetName( ) const
+{
+  return name;
+}
+
+void Activity_Record::GetFilenames( std::vector<std::string> &filenames) const
+{
+  filenames = this->filenames;
 }
 
 bool Activity_Record::SaveConfig( )
@@ -105,6 +115,14 @@ bool Activity_Record::SaveConfig( )
   WriteConfig( "State",    GetState( ));
   WriteConfig( "Duration", duration );
   WriteConfig( "EventID",  event_id );
+
+  DeleteConfig( "Filenames" );
+  Setting &n = ConfigArray( "Filenames" );
+  for( std::vector<std::string>::iterator it = filenames.begin( ); it != filenames.end( ); it++ )
+  {
+    Setting &n2 = n.add( Setting::TypeString );
+    n2 = *it;
+  }
 
   return WriteConfigFile( );
 }
@@ -123,6 +141,10 @@ bool Activity_Record::LoadConfig( )
   SetState( (Activity::State) state );
   ReadConfig( "Duration", duration );
   ReadConfig( "EventID",  event_id );
+
+  Setting &n = ConfigArray( "Filenames" );
+  for( int i = 0; i < n.getLength( ); i++ )
+    filenames.push_back( n[i] );
 
   if( end > time( NULL ))
     SetState( State_Scheduled );
@@ -337,6 +359,8 @@ bool Activity_Record::Perform( )
       ret = false;
       goto exit;
     }
+
+    filenames.push_back( filename );
 
     frontend->Log( "Recording '%s' ...", filename.c_str( ));
 

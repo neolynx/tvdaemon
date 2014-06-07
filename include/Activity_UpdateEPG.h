@@ -30,7 +30,7 @@ class Activity_UpdateEPG : public Activity
     Activity_UpdateEPG( );
     virtual ~Activity_UpdateEPG( );
 
-    virtual std::string GetName( ) const;
+    virtual std::string GetTitle( ) const;
 
   private:
     virtual bool Perform( );

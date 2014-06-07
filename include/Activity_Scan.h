@@ -30,7 +30,7 @@ class Activity_Scan : public Activity
     Activity_Scan( );
     virtual ~Activity_Scan( );
 
-    virtual std::string GetName( ) const;
+    virtual std::string GetTitle( ) const;
 
   private:
     virtual bool Perform( );

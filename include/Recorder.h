@@ -44,7 +44,7 @@ class JSONObject;
 class Recorder : public Thread, public ConfigObject, public RPCHandler
 {
   public:
-    Recorder( TVDaemon &tvd );
+    static Recorder *Instance( );
     ~Recorder( );
 
     virtual bool SaveConfig( );
@@ -61,11 +61,12 @@ class Recorder : public Thread, public ConfigObject, public RPCHandler
     //void record( uint8_t *data, int size );
 
     void GetRecordings( std::vector<const JSONObject *> &result ) const;
+    Activity_Record *GetRecording( int id );
 
     bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
 
   private:
-    TVDaemon &tvd;
+    Recorder( );
     //struct dvb_v5_fe_parms &fe;
     //Matroska *mkv;
 

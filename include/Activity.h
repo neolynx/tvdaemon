@@ -72,11 +72,11 @@ class Activity : public Thread
     time_t GetStateChanged( ) const { return state_changed; }
 
     bool Start( );
-    void Stop( ) { up = false; }
+    virtual void Stop( ) { up = false; }
     void Abort( );
     bool IsActive( ) { return up; }
 
-    virtual std::string GetName( ) const = 0;
+    virtual std::string GetTitle( ) const = 0;
     virtual bool Perform( ) = 0;
     virtual void Failed( ) = 0;
 

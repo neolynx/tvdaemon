@@ -29,13 +29,18 @@
 #include <unistd.h> // sleep
 #include <algorithm> // sort
 
-Recorder::Recorder( TVDaemon &tvd ) :
+Recorder *Recorder::Instance( )
+{
+  static Recorder instance;
+  return &instance;
+}
+
+Recorder::Recorder( ) :
   Thread( ),
   ConfigObject( ),
-  tvd(tvd),
   up(true)
 {
-  std::string d = tvd.GetConfigDir( );
+  std::string d = TVDaemon::Instance( )->GetConfigDir( );
   d += "recorder/";
   SetConfigFile( d + "config" );
   StartThread( );
@@ -198,4 +203,16 @@ bool Recorder::Remove( int id )
   recordings.erase( it );
   Log( "Recorder: recording %d removed", id );
   return true;
+}
+
+Activity_Record *Recorder::GetRecording( int id )
+{
+  SCOPELOCK( );
+  std::map<int, Activity_Record *>::iterator it = recordings.find( id );
+  if( it == recordings.end( ))
+  {
+    LogError( "RTSP: recording %d not found", id );
+    return NULL;
+  }
+  return it->second;
 }

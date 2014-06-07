@@ -52,7 +52,7 @@ Activity_Scan::~Activity_Scan( )
 {
 }
 
-std::string Activity_Scan::GetName( ) const
+std::string Activity_Scan::GetTitle( ) const
 {
   std::string t = "Scan";
   if( transponder )

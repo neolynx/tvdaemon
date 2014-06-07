@@ -53,6 +53,7 @@ class Condition : public Mutex
     Condition( );
     virtual ~Condition( );
     bool Wait( int seconds = 3 ) const;
+    bool WaitUntil( struct timespec ts ) const;
     void Signal( ) const;
 
   private:
