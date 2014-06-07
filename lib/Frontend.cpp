@@ -189,7 +189,7 @@ bool Frontend::Open()
     LogWarn( "device not present '%s'", name.c_str( ));
     return false;
   }
-  Log( "Opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+  //Log( "Opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
   fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
   if( !fe )
   {
@@ -204,7 +204,7 @@ void Frontend::Close()
 {
   if( fe )
   {
-    Log( "Closing /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
+    //Log( "Closing /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
     dvb_fe_close( fe );
     transponder = NULL;
     fe = NULL;
@@ -350,7 +350,7 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
       snr *= 100;
       snr /= 0xffff;
 
-      Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
+      //Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
 
       signal = sig;
       noise  = snr;
@@ -383,7 +383,6 @@ bool Frontend::Tune( Transponder &t )
     if( transponder == &t )
     {
       usecount++;
-      Log( "increasing usecount to %d", usecount );
       Unlock( );
       return true;
     }
@@ -401,7 +400,6 @@ bool Frontend::Tune( Transponder &t )
   state = State_Tuning;
   transponder = &t;
   usecount++;
-  Log( "increasing usecount to %d", usecount );
   Unlock( );
 
   t.SetState( Transponder::State_Tuning );
@@ -453,7 +451,6 @@ void Frontend::Release( )
   }
   if( --usecount == 0 )
   {
-    Log( "Use count 0, closing frontend" );
     Close( );
   }
   Unlock( );
