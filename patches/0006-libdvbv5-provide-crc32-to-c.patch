@@ -1,0 +1,59 @@
+From 9a39836bddcc1337e320568dd7166deaaca22b50 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sat, 7 Jun 2014 21:43:32 +0200
+Subject: [PATCH 6/6] libdvbv5: provide crc32 to c++
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+allow C++ apps to use crc32. cleanup spacing.
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/include/libdvbv5/crc32.h   | 10 +++++++++-
+ lib/include/libdvbv5/mpeg_ts.h |  1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/lib/include/libdvbv5/crc32.h b/lib/include/libdvbv5/crc32.h
+index d1968e8..4261bda 100644
+--- a/lib/include/libdvbv5/crc32.h
++++ b/lib/include/libdvbv5/crc32.h
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2011-2012 - Mauro Carvalho Chehab
+- * Copyright (c) 2012 - Andre Roth <neolynx@gmail.com>
++ * Copyright (c) 2012-2014 - Andre Roth <neolynx@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -25,7 +25,15 @@
+ #include <stdint.h>
+ #include <unistd.h> /* size_t */
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ uint32_t crc32(uint8_t *data, size_t datalen, uint32_t crc);
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
+ 
+diff --git a/lib/include/libdvbv5/mpeg_ts.h b/lib/include/libdvbv5/mpeg_ts.h
+index d17793d..e4e550d 100644
+--- a/lib/include/libdvbv5/mpeg_ts.h
++++ b/lib/include/libdvbv5/mpeg_ts.h
+@@ -74,6 +74,7 @@ void dvb_mpeg_ts_free(struct dvb_mpeg_ts *ts);
+ void dvb_mpeg_ts_print(struct dvb_v5_fe_parms *parms, struct dvb_mpeg_ts *ts);
+ ssize_t dvb_mpeg_ts_create(struct dvb_v5_fe_parms *parms, uint8_t *buf, ssize_t buflen,
+ 		uint8_t **data, uint16_t pid, int padding);
++
+ #ifdef __cplusplus
+ }
+ #endif
+-- 
+1.9.1
+

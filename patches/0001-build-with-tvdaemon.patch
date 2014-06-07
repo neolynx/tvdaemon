@@ -1,10 +1,10 @@
-From 42f83e59084248ad93f326a3086e49dd04070e9c Mon Sep 17 00:00:00 2001
+From 8d6f6c145914dd3e7bb07e1636a021255868c9d4 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:53:01 +0200
-Subject: [PATCH 1/5] build with tvdaemon
+Subject: [PATCH 1/6] build with tvdaemon
 
 ---
- lib/libdvbv5/Makefile.am |    4 +++-
+ lib/libdvbv5/Makefile.am | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
@@ -26,5 +26,5 @@ index 515adc3..4190d06 100644
  
  sync-with-kernel:
 -- 
-1.7.10.4
+1.9.1
 
