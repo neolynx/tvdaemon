@@ -3,7 +3,7 @@
  *
  *  DVB Frame class
  *
- *  Copyright (C) 2012 André Roth
+ *  Copyright (C) 2014 André Roth
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,43 +23,38 @@
 #define _Frame_
 
 #include <stdint.h> // uint8_t
-#include <unistd.h> // size_t
-#include <libdvbv5/mpeg_pes.h>
-#include <libdvbv5/mpeg_es.h>
-
-//class Matroska;
-#include <ccrtp/rtp.h>
+#include <libdvbv5/mpeg_ts.h>
 
 class Frame
 {
-  public:
-    Frame( struct dvb_v5_fe_parms &fe );
-    ~Frame( );
+    public:
+      Frame( );
+      virtual ~Frame( );
 
-    bool ReadFrame( uint8_t *data, size_t size, ost::RTPSession *session );
+      uint8_t *GetBuffer( );
 
-  private:
-    struct dvb_v5_fe_parms &fe;
-    //Matroska &mkv;
+      uint64_t GetSequence( ) const;
+      void     SetSequence( uint64_t seq );
 
-    uint8_t *buffer;
-    size_t   buffer_size;
-    size_t   buffer_length;
+      uint64_t GetTimestamp( ) const;
+      void     SetTimestamp( uint64_t ts );
 
-    bool started;
-    bool slices;
-    struct dvb_mpeg_pes pes;
-    struct dvb_mpeg_es_seq_start seq_start;
-    struct dvb_mpeg_es_pic_start pic_start;
+      uint16_t GetPID( ) const;
 
-    uint64_t pts_start;
-    uint64_t pts;
-    uint64_t last_pts;
+      bool ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_mpeg_ts *ts );
 
-    dvb_mpeg_es_frame_t frame_type;
-    dvb_mpeg_es_frame_t last_frame_type;
+      class Comp
+      {
+        public:
+          bool operator()( Frame *a, Frame *b );
+      };
 
-    uint32_t timestamp;
+    private:
+      uint16_t pid;
+      uint64_t ts;
+      uint64_t seq;
+      uint8_t  data[DVB_MPEG_TS_PACKET_SIZE];
+
 };
 
 #endif

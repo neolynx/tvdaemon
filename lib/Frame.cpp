@@ -22,120 +22,137 @@
 #include "Frame.h"
 
 #include "Log.h"
-//#include "Matroska.h"
 
-#include <stdlib.h> // malloc
-#include <string.h> // memcpy
+#include <libdvbv5/dvb-fe.h>
+#include <libdvbv5/crc32.h>
+#include <libdvbv5/mpeg_pes.h>
 
-#ifdef	CCXX_NAMESPACES
-using namespace ost;
-#endif
-
-Frame::Frame( struct dvb_v5_fe_parms &fe ) : fe(fe)//, mkv(mkv)
+Frame::Frame( ) : pid(0), ts(0), seq(0)
 {
-  buffer_size = 1024;
-  buffer = (uint8_t *) malloc( buffer_size );
-  buffer_length = 0;
-
-  started = false;
-  slices = false;
-  pts_start = 0;
-  pts = 0;
-  frame_type = DVB_MPEG_ES_FRAME_UNKNOWN;
-
-  timestamp = 0;
 }
 
 Frame::~Frame( )
 {
-  free( buffer );
 }
 
-bool Frame::ReadFrame( uint8_t *data, size_t length, RTPSession *session )
+void Frame::SetSequence( uint64_t seq )
 {
-  bool got_slice = false;
-  bool payload = false;
-  last_pts = pts;
-  last_frame_type = frame_type;
-  uint8_t type = data[3];
-  switch( type )
+  this->seq = seq;
+}
+
+uint64_t Frame::GetSequence( ) const
+{
+  return seq;
+}
+
+void Frame::SetTimestamp( uint64_t ts )
+{
+  this->ts = ts;
+}
+
+uint64_t Frame::GetTimestamp( ) const
+{
+  return ts;
+}
+
+uint8_t *Frame::GetBuffer( )
+{
+  return data;
+}
+
+uint16_t Frame::GetPID( ) const
+{
+  return pid;
+}
+
+bool Frame::ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_mpeg_ts *ts )
+{
+  ssize_t size;
+  int pos = 0;
+  struct dvb_v5_fe_parms *fe = dvb_fe_dummy();
+
+  got_timestamp = false;
+
+  // TS
+  ssize_t dummy = 0;
+  size = dvb_mpeg_ts_init( fe, data + pos, DVB_MPEG_TS_PACKET_SIZE - pos, (uint8_t *) ts, &dummy );
+  if( size < 0 )
+    return false;
+
+  if( pos + size > DVB_MPEG_TS_PACKET_SIZE)
   {
-    case DVB_MPEG_ES_PIC_START:
-      if( dvb_mpeg_es_pic_start_init( data, length, &pic_start ) == 0 )
-      {
-        //dvb_mpeg_es_pic_start_print( &fe, &pic_start );
-        frame_type = (dvb_mpeg_es_frame_t) pic_start.coding_type;
-      }
-      payload = true;
-      break;
-    case DVB_MPEG_ES_USER_DATA:
-      break;
-    case DVB_MPEG_ES_SEQ_START:
-      if( dvb_mpeg_es_seq_start_init( data, length, &seq_start ) == 0 )
-        dvb_mpeg_es_seq_start_print( &fe, &seq_start );
-      started = true;
-      payload = true;
-      break;
-    case DVB_MPEG_ES_SEQ_EXT:
-      payload = true;
-      break;
-    case DVB_MPEG_ES_GOP:
-      payload = true;
-      break;
-    case DVB_MPEG_ES_SLICES:
-      got_slice = true;
-      payload = true;
-      break;
-    case DVB_MPEG_PES_VIDEO:
-      {
-        uint8_t buf2[184];
-        ssize_t size2 = dvb_mpeg_pes_init( &fe, data, length, buf2 );
-        dvb_mpeg_pes *pes = (dvb_mpeg_pes *) buf2;
-        //dvb_mpeg_pes_print( &fe, pes );
-        if( pes->optional->PTS_DTS & 0x02 )
-        {
-          //Log( "pts: %ld", pes->optional->pts );
-          if( pts_start == 0 )
-            pts_start = pes->optional->pts;
-          pts = (pes->optional->pts - pts_start) / 90;
-          //Log( "pts set to %ld", pts );
-        }
-      }
-      break;
+    LogError( "buffer overrun" );
+    return false;
+  }
+  pos += size;
+
+  pid = ts->pid;
+
+  if( !ts->payload_start )
+    return false;
+
+  if( !(( ts->pid >= 0x0020 and ts->pid <= 0x1FFA ) or
+        ( ts->pid >= 0x1FFC and ts->pid <= 0x1FFE )))
+    return false;
+
+  if(( *((uint32_t *)( data + pos )) & 0x00FFFFFF ) != 0x00010000 ) // PES marker
+    return false;
+
+  uint8_t buf[DVB_MPEG_TS_PACKET_SIZE];
+  size = dvb_mpeg_pes_init( fe, data + pos, sizeof( data ) - pos, buf );
+  if( size < 0 )
+  {
+    LogError( "cannot parse pes packet" );
+    return false;
+  }
+
+  struct dvb_mpeg_pes *pes = (struct dvb_mpeg_pes *) buf;
+  switch( pes->stream_id )
+  {
+    case DVB_MPEG_STREAM_PADDING:
+    case DVB_MPEG_STREAM_MAP:
+    case DVB_MPEG_STREAM_PRIVATE_2:
+    case DVB_MPEG_STREAM_ECM:
+    case DVB_MPEG_STREAM_EMM:
+    case DVB_MPEG_STREAM_DIRECTORY:
+    case DVB_MPEG_STREAM_DSMCC:
+    case DVB_MPEG_STREAM_H222E:
+      return false;
     default:
-      LogWarn( "MPEG ES unknown packet: %02x", type );
+      if( pes->optional->PTS_DTS & 1 )
+      {
+        *timestamp = pes->optional->dts;
+        got_timestamp = true;
+        //Log( "%d: Got DTS: %ld", ts->pid, pes->optional->dts );
+      }
+      else if( pes->optional->PTS_DTS & 2 )
+      {
+        *timestamp = pes->optional->pts;
+        got_timestamp = true;
+        //Log( "%d: Got PTS: %ld", ts->pid, pes->optional->pts );
+      }
       break;
   }
 
-  if( got_slice && !slices )
-    slices = true;
-  else if( !got_slice && slices )
-  {
-    slices = false;
-    if( started )
-    {
-      // mkv.AddFrame( last_pts, last_frame_type, buffer, buffer_length );
-      Log( "RTP: Sending %zd bytes @", buffer_length );
-      if( timestamp == 0 )
-        timestamp = session->getCurrentTimestamp( );
-      else
-        timestamp += session->getCurrentRTPClockRate();
-      session->putData( timestamp, buffer, buffer_length );
+  if( !got_timestamp )
+    return false;
 
-      buffer_length = 0;
-    }
-  }
+  this->ts = *timestamp;
 
-  if( started && payload )
-  {
-    if( buffer_length + length > buffer_size )
-    {
-      buffer_size = buffer_length + length;
-      buffer = (uint8_t *) realloc( buffer, buffer_size );
-    }
-    memcpy( buffer + buffer_length, data, length );
-    buffer_length += length;
-  }
+  //{
+  //struct timespec now;
+  //clock_gettime( CLOCK_REALTIME, &now );
+  //double seconds = *timestamp - bigbang;
+  //double t = now.tv_sec + now.tv_nsec / 1000000000.0 - start_time.tv_sec + start_time.tv_nsec / 1000000000.0;
+  //Log( "%04x: now %fs, play %fs, diff %fs", ts->pid, t, seconds, t - seconds );
+  //}
+  return true;
+}
 
+bool Frame::Comp::operator( )( Frame *a, Frame *b )
+{
+  //if( a->ts == b->ts )
+    return a->seq < b->seq;
+  //return a->ts < b->ts;
 }
 
