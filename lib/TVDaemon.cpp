@@ -868,13 +868,15 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     }
     else
     {
-      in_addr addr = request.GetServerIP( );
+      in_addr ip = request.GetServerIP( );
       uint16_t port = request.GetServerPort( );
 
+      char ipaddr[INET_ADDRSTRLEN];
+      inet_ntop( AF_INET, &ip, ipaddr, sizeof( ipaddr ));
+
       char t[32];
-      snprintf( t, sizeof( t ), "%s:%d", inet_ntoa( addr ), port );
+      snprintf( t, sizeof( t ), "%s:%d", ipaddr, port );
       server = t;
-      Log( "server: %s", t );
     }
 
     std::string xspf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
