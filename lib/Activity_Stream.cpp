@@ -30,48 +30,42 @@
 #include "Frame.h"
 #include "CAMClient.h"
 #include "Activity_Record.h"
+#include "MPEGTS.h"
 
 #include <libdvbv5/pat.h>
 #include <libdvbv5/eit.h>
 #include <libdvbv5/desc_event_short.h>
 #include <libdvbv5/dvb-scan.h>
-#include <libdvbv5/mpeg_ts.h>
 #include <libdvbv5/dvb-demux.h>
 #include <libdvbv5/sdt.h>
 #include <libdvbv5/desc_service.h>
 #include <libdvbv5/pat.h>
 #include <libdvbv5/pmt.h>
-#include <libdvbv5/dvb-fe.h>
-#include <libdvbv5/crc32.h>
 
-#include <fcntl.h>
 #include <math.h>
 
 #ifdef	CCXX_NAMESPACES
 using namespace ost;
 #endif
 
-Activity_Stream::Activity_Stream( Channel *channel, ost::RTPSession *session ) :
+Activity_Stream::Activity_Stream( Channel *channel, ost::RTPSession &session ) :
   Activity( ),
   recording(NULL),
-  session(session),
-  bigbang(NAN)
+  session(session)
 {
   SetChannel( channel );
 }
 
-Activity_Stream::Activity_Stream( Activity_Record *recording, ost::RTPSession *session ) :
+Activity_Stream::Activity_Stream( Activity_Record *recording, ost::RTPSession &session ) :
   Activity( ),
   recording(recording),
-  session(session),
-  bigbang(NAN)
+  session(session)
 {
 }
 
 Activity_Stream::~Activity_Stream( )
 {
-  cond.Signal( );
-  delete session;
+  Stop( );
 }
 
 std::string Activity_Stream::GetTitle( ) const
@@ -236,8 +230,6 @@ bool Activity_Stream::StreamChannel( )
   frontend->Log( "Streaming ..." );
 
   {
-    UpdateRTPTimestamp( );
-
     /* SDT */
     uint8_t *data;
     ssize_t size = dvb_table_sdt_store( frontend->GetFE( ), sdt, &data );
@@ -282,8 +274,6 @@ bool Activity_Stream::StreamChannel( )
     SendRTP( mpegts, size );
     free( mpegts );
   }
-
-  int stage = 0;
 
   fd_set tmp_fdset;
   fd_set fdset;
@@ -411,7 +401,6 @@ bool Activity_Stream::StreamChannel( )
           p += chunk;
         }
 
-        UpdateRTPTimestamp( );
         p = data;
         while( len > 0 )
         {
@@ -461,12 +450,35 @@ exit:
   return ret;
 }
 
+double Activity_Stream::GetDuration( )
+{
+  if( !recording )
+    return NAN;
+
+  double duration = 0;
+  std::vector<std::string> filenames;
+  recording->GetFilenames( filenames );
+  for( std::vector<std::string>::iterator it = filenames.begin( ); it != filenames.end( ) && IsActive( ); it++ )
+  {
+    MPEGTS reader( *it );
+
+    if( !reader.Open( ))
+      continue;
+
+    Log( "Streaming %s duration: %fs", (*it).c_str( ), reader.GetDuration( ));
+    duration += reader.GetDuration( );
+  }
+
+  Log( "Streaming total duration: %fs", duration );
+  return duration;
+}
+
 bool Activity_Stream::StreamRecording( )
 {
   bool ret = true;
-  bool got_timestamp = false;
-  double file_timestamp = NAN;
-  double last_timestamp = NAN;
+  bool started = false;
+  uint64_t file_timestamp = 0;
+  double seconds, nseconds;
 
   uint8_t rtpbuf[DVB_MPEG_TS_PACKET_SIZE * 7];
   int rtpbufidx = 0;
@@ -475,176 +487,172 @@ bool Activity_Stream::StreamRecording( )
   recording->GetFilenames( filenames );
   for( std::vector<std::string>::iterator it = filenames.begin( ); it != filenames.end( ) && IsActive( ); it++ )
   {
-    std::string filename = *it;
+    MPEGTS reader( *it );
 
-    int fd = open( filename.c_str( ), O_RDONLY );
-    if( fd < 0 )
-    {
-      LogError( "Error: cannot open '%s'", filename.c_str( ));
+    if( !reader.Open( ))
       continue;
-    }
 
-    Log( "Streaming: %s", filename.c_str( ));
+    Log( "Streaming %s duration: %fs", (*it).c_str( ), reader.GetDuration( ));
+
+    int count = 0;
 
     while( IsActive( ))
     {
-      uint8_t data[DVB_MPEG_TS_PACKET_SIZE];
-      int len = read( fd, data, DVB_MPEG_TS_PACKET_SIZE );
-      if( len != DVB_MPEG_TS_PACKET_SIZE )
+      while( count < 500  && IsActive( ))
       {
-        LogWarn( "Streaming: error reading 188 bytes" );
-        ret = false;
-        break;
+        Frame *f = reader.ReadFrame( );
+        if( !f )
+        {
+          LogWarn( "Streaming: error reading 188 bytes" );
+          ret = false;
+          break;
+        }
+
+        struct dvb_mpeg_ts ts;
+        bool got_timestamp;
+        if( f->ParseHeaders( &file_timestamp, got_timestamp, &ts ) and got_timestamp )
+        {
+          std::map<uint16_t, uint64_t>::iterator it = bigbang_map.find( ts.pid );
+          if( it == bigbang_map.end( ))
+          {
+            bigbang_map[ts.pid] = file_timestamp;
+            file_timestamp = 0;
+          }
+          else
+            file_timestamp -= it->second;
+
+          ts_map[ts.pid] = file_timestamp;
+          f->SetTimestamp( file_timestamp );
+        }
+        else
+        {
+          std::map<uint16_t, uint64_t>::iterator it = ts_map.find( ts.pid );
+          if( it == ts_map.end( ))
+          {
+            ts_map[ts.pid] = file_timestamp = 0;
+            f->SetTimestamp( 0 );
+          }
+          else
+            f->SetTimestamp( it->second );
+        }
+
+        //LogWarn( "Frame pid %d ts %ld", f->GetPID( ), f->GetTimestamp( ));
+        frames[ts.pid].push_back( f );
+        count++;
       }
 
-      GetTimestamp( data, file_timestamp );
-      //if(( !isnan( file_timestamp )) and ( !isnan( last_timestamp )))
-        //Log( "time: %fs  last: %fs diff: %.10f", file_timestamp, last_timestamp, file_timestamp - last_timestamp );
-      //if( !isnan( file_timestamp ))
-        //last_timestamp = file_timestamp;
+      //ts.Log( "pid %d: %ld", ts.pid, seq_map[ts.pid] );
 
-      memcpy( rtpbuf + rtpbufidx * DVB_MPEG_TS_PACKET_SIZE, data, DVB_MPEG_TS_PACKET_SIZE );
-      if( rtpbufidx++ == 6 )
+      if( !IsActive( ))
+        break;
+
+      Frame *f = NULL;
+      std::list<Frame *> *list = NULL;
+      uint16_t min_ts;
+      int min_seq = -1;
+
+      for( std::map<uint16_t, std::list<Frame *> >::iterator it = frames.begin( ); it != frames.end( ) and IsActive( ); it++ )
+      {
+        if( it->second.size( ) == 0 )
+          continue;
+
+        f = it->second.front( );
+        if( min_seq == -1 )
+        {
+          min_seq = f->GetSequence( );
+          min_ts = f->GetTimestamp( );
+          list = &it->second;
+        }
+        else
+        {
+          if( f->GetTimestamp( ) < min_ts )
+          {
+            min_seq = f->GetSequence( );
+            min_ts = f->GetTimestamp( );
+            list = &it->second;
+          }
+          else if( f->GetTimestamp( ) == min_ts and f->GetSequence( ) < min_seq )
+          {
+            min_seq = f->GetSequence( );
+            min_ts = f->GetTimestamp( );
+            list = &it->second;
+          }
+        }
+      }
+
+      if( !list )
+        continue;
+
+      f = list->front( );
+      list->pop_front( );
+      count--;
+
+      memcpy( rtpbuf + ( rtpbufidx * DVB_MPEG_TS_PACKET_SIZE ), f->GetBuffer( ), DVB_MPEG_TS_PACKET_SIZE );
+      rtpbufidx++;
+      if( rtpbufidx == 1 )
+      {
+        seconds = f->GetTimestamp( ) / 90000.0;
+        nseconds = ( seconds - floor( seconds )) * 1000000000.0;
+      }
+      if( rtpbufidx == 7 )
       {
         rtpbufidx = 0;
 
-        if( !isnan( file_timestamp ))
+        seconds -= 3.0;
+
+        if( !started )
         {
-          double seconds = file_timestamp - bigbang;
-          double nseconds = ( seconds - floor( seconds )) * 1000000000.0;
-
-          seconds -= 5.0;
-
-          struct timespec ts = start_time;
-          ts.tv_sec += seconds;
-          ts.tv_nsec += nseconds;
-
-          if( ts.tv_nsec > 1000000000 )
-          {
-            ts.tv_nsec -= 1000000000;
-            ts.tv_sec++;
-          }
-
-          //Log( "Waiting %f - %fs: %lds%ld - %lds%ld", bigbang, seconds, start_time.tv_sec, start_time.tv_nsec, ts.tv_sec, ts.tv_nsec );
-          cond.WaitUntil( ts );
-
-          file_timestamp = NAN;
+          clock_gettime( CLOCK_REALTIME, &start_time );
+          started = true;
         }
-        else
-          usleep( 100 );
-        UpdateRTPTimestamp( );
+
+        struct timespec ts = start_time;
+        ts.tv_sec += seconds;
+        ts.tv_nsec += nseconds;
+
+        if( ts.tv_nsec > 1000000000 )
+        {
+          ts.tv_nsec -= 1000000000;
+          ts.tv_sec++;
+        }
+
+
+
+        //struct timespec now;
+        //clock_gettime( CLOCK_REALTIME, &now );
+        //seconds += 3.0;
+        //double t = now.tv_sec + now.tv_nsec / 1000000000.0 - start_time.tv_sec + start_time.tv_nsec / 1000000000.0;
+        //Log( "Streaming %fs now %fs diff %fs", seconds, t, t - seconds );
+
+        cond.WaitUntil( ts );
+
         SendRTP( rtpbuf, 7 * DVB_MPEG_TS_PACKET_SIZE );
       }
+      delete f;
+
+      if( !ret )
+        break;
     }
 
-    close( fd );
+    if( !ret )
+      break;
   }
   return ret;
 }
 
-bool Activity_Stream::GetTimestamp( const uint8_t *data, double &timestamp )
-{
-  ssize_t size;
-  int pos = 0;
-  struct dvb_v5_fe_parms *fe = dvb_fe_dummy();
-  uint8_t buf[DVB_MPEG_TS_PACKET_SIZE];
-
-  // TS
-  ssize_t dummy = 0;
-  size = dvb_mpeg_ts_init( fe, data + pos, DVB_MPEG_TS_PACKET_SIZE - pos, buf, &dummy );
-  if( size < 0 )
-    return false;
-
-  struct dvb_mpeg_ts *ts = (struct dvb_mpeg_ts *) buf;
-
-  if( pos + size > DVB_MPEG_TS_PACKET_SIZE)
-  {
-    LogError( "buffer overrun" );
-    return false;
-  }
-  pos += size;
-
-  if( !ts->payload_start )
-    return false;
-
-  if( !(( ts->pid >= 0x0020 and ts->pid <= 0x1FFA ) or
-     ( ts->pid >= 0x1FFC and ts->pid <= 0x1FFE )))
-    return false;
-
-  if(( *((uint32_t *)( data + pos )) & 0x00FFFFFF ) != 0x00010000 ) // PES marker
-    return false;
-
-  {
-    uint8_t buf[DVB_MPEG_TS_PACKET_SIZE];
-    size = dvb_mpeg_pes_init( fe, data + pos, sizeof( data ) - pos, buf );
-    if( size < 0 )
-    {
-      LogError( "cannot parse pes packet" );
-      return false;
-    }
-
-    struct dvb_mpeg_pes *pes = (struct dvb_mpeg_pes *) buf;
-    switch( pes->stream_id )
-    {
-      case DVB_MPEG_STREAM_PADDING:
-      case DVB_MPEG_STREAM_MAP:
-      case DVB_MPEG_STREAM_PRIVATE_2:
-      case DVB_MPEG_STREAM_ECM:
-      case DVB_MPEG_STREAM_EMM:
-      case DVB_MPEG_STREAM_DIRECTORY:
-      case DVB_MPEG_STREAM_DSMCC:
-      case DVB_MPEG_STREAM_H222E:
-        return false;
-      default:
-        if( pes->optional->PTS_DTS & 1 )
-        {
-          timestamp = (double) pes->optional->dts / 90000.0;
-          //Log( "Got DTS: %f", timestamp );
-        }
-        //if( pes->optional->PTS_DTS & 2 )
-        //{
-          //timestamp = (double) pes->optional->pts / 90000.0;
-          ////Log( "Got PTS: %f", file_timestamp );
-        //}
-        break;
-    }
-
-    if( !isnan( timestamp ))
-    {
-      if( isnan( bigbang ))
-      {
-        bigbang = timestamp;
-        clock_gettime( CLOCK_REALTIME, &start_time );
-      }
-      else
-      {
-        if( bigbang > timestamp )
-        {
-          bigbang = timestamp; // FIXME: reset start_time ?
-          timestamp = NAN;
-          Log( "resetting file_timestamp" );
-        }
-        //else
-        //{
-          //struct timespec now;
-          //clock_gettime( CLOCK_REALTIME, &now );
-          //double seconds = timestamp - bigbang;
-          //double t = now.tv_sec + now.tv_nsec / 1000000000.0 - start_time.tv_sec + start_time.tv_nsec / 1000000000.0;
-          //Log( "%04x: now %fs, play %fs, diff %fs", ts->pid, t, seconds, t - seconds );
-        //}
-      }
-    }
-  }
-  return true;
-}
-
-void Activity_Stream::UpdateRTPTimestamp( )
-{
-  rtp_timestamp = session->getCurrentTimestamp( );
-}
-
 void Activity_Stream::SendRTP( const uint8_t *data, int length )
 {
-  session->putData( rtp_timestamp, data, length );
+  session.putData( session.getCurrentTimestamp( ), data, length );
 }
+
+Activity_Stream::Packet::Packet( )
+{
+  data = (uint8_t *) malloc( DVB_MPEG_TS_PACKET_SIZE );
+}
+
+Activity_Stream::Packet::~Packet( )
+{
+  free( data );
+}
+
 

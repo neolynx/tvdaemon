@@ -44,7 +44,7 @@ StreamingHandler::~StreamingHandler( )
   Shutdown( );
 }
 
-bool StreamingHandler::SetupChannel( const std::string &channel_name, const std::string &client, int port, int &session_id, int &ssrc )
+bool StreamingHandler::Init( const std::string &session, in_addr client, const std::string &channel_name, double &duration )
 {
   Channel *channel = TVDaemon::Instance( )->GetChannel( channel_name );
   if( !channel )
@@ -52,28 +52,15 @@ bool StreamingHandler::SetupChannel( const std::string &channel_name, const std:
     LogError( "RTSP: unknown channel: '%s'", channel_name.c_str( ));
     return false;
   }
-
+  Client *c = new Client( channel, client );
+  c->Init( ); // FIXME: check outcome
+  duration = c->GetDuration( );
   Lock( );
-  std::map<int, Client *>::iterator it;
-  do
-  {
-    session_id = rand( );
-    it = clients.find( session_id );
-  } while( it != clients.end( ));
-
-  Client *c = new Client( channel, client, port );
-  clients[session_id] = c;
-
-  Log( "StreamingHandler::Setup %s:%d session %04x", client.c_str( ), port, session_id );
-
-  ssrc = c->GetSSRC( );
-
+  clients[session] = c;
   Unlock( );
-  return true;
 }
 
-
-bool StreamingHandler::SetupPlayback( int recording_id, const std::string &client, int port, int &session_id, int &ssrc )
+bool StreamingHandler::Init( const std::string &session, const in_addr &client, int recording_id, double &duration )
 {
   Activity_Record *recording = Recorder::Instance( )->GetRecording( recording_id );
   if( !recording )
@@ -81,53 +68,79 @@ bool StreamingHandler::SetupPlayback( int recording_id, const std::string &clien
     LogError( "RTSP: unknown recording: %d", recording_id );
     return false;
   }
-
+  Client *c = new Client( recording, client );
+  c->Init( ); // FIXME: check outcome
+  duration = c->GetDuration( );
   Lock( );
-  std::map<int, Client *>::iterator it;
-  do
-  {
-    session_id = rand( );
-    it = clients.find( session_id );
-  } while( it != clients.end( ));
-
-  Client *c = new Client( recording, client, port );
-  clients[session_id] = c;
-
-  Log( "StreamingHandler::Setup %s:%d session %04x", client.c_str( ), port, session_id );
-
-  ssrc = c->GetSSRC( );
-
+  clients[session] = c;
   Unlock( );
+}
+
+bool StreamingHandler::SetupChannel( const std::string &session, const std::string &channel_name, int port, int &ssrc )
+{
+  Lock( );
+  std::map<std::string, Client *>::iterator it = clients.find( session );
+  if( it == clients.end( ))
+  {
+    LogError( "StreamingHandler::Setup session not found '%s'", session.c_str( ));
+    Unlock( );
+    return false;
+  }
+  // FIXME: verify channel_name matches
+  it->second->Connect( port );
+  ssrc = it->second->GetSSRC( );
+  Unlock( );
+
+  Log( "StreamingHandler::Setup session %s, rtp port %d, ssrc %04x", session.c_str( ), port, ssrc );
   return true;
 }
 
-bool StreamingHandler::Play( int session_id )
+
+bool StreamingHandler::SetupPlayback( const std::string &session, int recording_id, int port, int &ssrc )
 {
   Lock( );
-  Log( "StreamingHandler::Play session %04x", session_id );
-
-  std::map<int, Client *>::iterator it = clients.find( session_id );
+  std::map<std::string, Client *>::iterator it = clients.find( session );
   if( it == clients.end( ))
   {
-    LogError( "StreamingHandler::Play session not found %04x", session_id );
+    LogError( "StreamingHandler::Setup session not found '%s'", session.c_str( ) );
+    Unlock( );
+    return false;
+  }
+  // FIXME: verify recording_id matches
+  it->second->Connect( port );
+  ssrc = it->second->GetSSRC( );
+  Unlock( );
+
+  Log( "StreamingHandler::Setup session %s, rtp port %d, ssrc %04x", session.c_str( ), port, ssrc );
+  return true;
+}
+
+bool StreamingHandler::Play( const std::string &session, double &from, double &to, int &seq, int &rtptime )
+{
+  Lock( );
+  std::map<std::string, Client *>::iterator it = clients.find( session );
+  if( it == clients.end( ))
+  {
+    LogError( "StreamingHandler::Play session not found %s", session.c_str( ));
     Unlock( );
     return false;
   }
 
-  bool ret = it->second->Play( );
+  Log( "StreamingHandler::Play session %s", session.c_str( ));
+  bool ret = it->second->Play( from, to, seq, rtptime );
   Unlock( );
   return ret;
 }
 
-bool StreamingHandler::Stop( int session_id )
+bool StreamingHandler::Stop( const std::string &session )
 {
   Lock( );
-  Log( "StreamingHandler::Stop session %04x", session_id );
+  Log( "StreamingHandler::Stop session %s", session.c_str( ));
 
-  std::map<int, Client *>::iterator it = clients.find( session_id );
+  std::map<std::string, Client *>::iterator it = clients.find( session );
   if( it == clients.end( ))
   {
-    LogError( "StreamingHandler::Stop session not found %04x", session_id );
+    LogError( "StreamingHandler::Stop session not found %s", session.c_str( ));
     Unlock( );
     return false;
   }
@@ -138,14 +151,14 @@ bool StreamingHandler::Stop( int session_id )
   return true;
 }
 
-bool StreamingHandler::KeepAlive( int session_id )
+bool StreamingHandler::KeepAlive( const std::string &session )
 {
   Lock( );
-  Log( "StreamingHandler::KeepAlive session %04x", session_id );
-  std::map<int, Client *>::iterator it = clients.find( session_id );
+  Log( "StreamingHandler::KeepAlive session %s", session.c_str( ));
+  std::map<std::string, Client *>::iterator it = clients.find( session );
   if( it == clients.end( ))
   {
-    LogError( "StreamingHandler::KeepAlive session not found %04x", session_id );
+    LogError( "StreamingHandler::KeepAlive session not found %s", session.c_str( ));
     Unlock( );
     return false;
   }
@@ -171,13 +184,13 @@ void StreamingHandler::Shutdown( )
   up = false;
   JoinThread( );
   Lock( );
-  for( std::map<int, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
+  for( std::map<std::string, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
     delete it->second;
   clients.clear( );
   Unlock( );
 }
 
-void StreamingHandler::RemoveClient( std::map<int, Client *>::iterator it )
+void StreamingHandler::RemoveClient( std::map<std::string, Client *>::iterator it )
 {
   it->second->Stop( );
   std::list<int>::iterator it2 = std::find( rtpports.begin( ), rtpports.end( ), it->second->port );
@@ -191,12 +204,12 @@ void StreamingHandler::Run( )
 {
   while( up )
   {
-    Lock( );
+    Lock( ); // FIXME: this can deadlock ! use timed lock...
     time_t now = time( NULL );
-    for( std::map<int, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
+    for( std::map<std::string, Client *>::iterator it = clients.begin( ); it != clients.end( ); it++ )
       if( difftime( now, it->second->ts ) > 60.0 )
       {
-        LogWarn( "StreamingHandler RTSP session %d timeouted", it->first );
+        LogWarn( "StreamingHandler RTSP session %s timeouted", it->first.c_str( ));
         RemoveClient( it );
       }
     Unlock( );
@@ -209,28 +222,26 @@ void StreamingHandler::Run( )
 
 
 
-StreamingHandler::Client::Client( Channel *channel, const std::string &client, int port ) :
+StreamingHandler::Client::Client( Channel *channel, const in_addr &client ) :
   channel(channel),
   recording(NULL),
   client(client),
-  port(port),
+  port(0),
   activity(NULL),
-  session(NULL)
+  duration(NAN)
 {
   ts = time( NULL );
-  session = new RTPSession( client, port );
 }
 
-StreamingHandler::Client::Client( Activity_Record *recording, const std::string &client, int port ) :
+StreamingHandler::Client::Client( Activity_Record *recording, const in_addr &client ) :
   channel(NULL),
   recording(recording),
   client(client),
-  port(port),
+  port(0),
   activity(NULL),
-  session(NULL)
+  duration(NAN)
 {
   ts = time( NULL );
-  session = new RTPSession( client, port );
 }
 
 StreamingHandler::Client::~Client( )
@@ -239,8 +250,31 @@ StreamingHandler::Client::~Client( )
     delete activity;
 }
 
+bool StreamingHandler::Client::Init( )
+{
+  if( !channel and !recording )
+  {
+    LogError( "StreamingHandler::Client::Init no channel or recording defined" );
+    return false;
+  }
+  if( channel )
+    activity = new Activity_Stream( channel, session );
+  else
+    activity = new Activity_Stream( recording, session );
 
-bool StreamingHandler::Client::Play( )
+  this->duration = activity->GetDuration( );
+
+  Log( "StreamingHandler::Client::Init duration %fs", duration );
+
+  return true;
+}
+
+bool StreamingHandler::Client::Connect( uint16_t port )
+{
+  return session.Connect( client, port );
+}
+
+bool StreamingHandler::Client::Play( double &from, double &to, int &seq, int &rtptime )
 {
   if( !channel and !recording )
   {
@@ -248,16 +282,19 @@ bool StreamingHandler::Client::Play( )
     return false;
   }
 
-  if( activity )
+  if( !activity )
   {
-    LogError( "StreamingHandler::Client::Play activita already started" );
+    LogError( "StreamingHandler::Client not initialized" );
     return false;
   }
 
-  if( channel )
-    activity = new Activity_Stream( channel, session );
-  else
-    activity = new Activity_Stream( recording, session );
+  from = 0.0;
+  to = duration;
+
+  seq = session.GetSequence( );
+  rtptime = session.GetInitialTimestamp( );
+
+  Log( "StreamingHandler::Client::Play rtptime %u", rtptime );
 
   activity->Start( );
 
@@ -289,37 +326,46 @@ void StreamingHandler::Client::KeepAlive( )
 
 int StreamingHandler::Client::GetSSRC( )
 {
-  return session->getLocalSSRC( );
+  return session.getLocalSSRC( );
 }
 
-StreamingHandler::RTPSession::RTPSession( std::string client, int port ) :
+double StreamingHandler::Client::GetDuration( ) const
+{
+  return duration;
+}
+
+StreamingHandler::RTPSession::RTPSession( ) :
   ost::RTPSession( ost::InetHostAddress( "0.0.0.0" ))
 {
-  //ost::InetHostAddress local_ip = server.c_str( );
-  //if( !local_ip )
-  //{
-    //LogError( "RTP: invalid local ip '%s'", server.c_str( ));
-    //return false;
-  //}
+}
 
+int StreamingHandler::RTPSession::GetSequence( ) const
+{
+  //return sendInfo.sendSeq;
+  return 0;
+}
 
-  //ost::InetHostAddress local_ip = ost::RTPSession::getDataSender(  );
-  //server = local_ip;
-  //LogWarn( "local port %s", server.c_str( ));
+int StreamingHandler::RTPSession::GetInitialTimestamp( )
+{
+  return getInitialTimestamp( );
+}
 
-  ost::InetHostAddress remote_ip = client.c_str( );
+bool StreamingHandler::RTPSession::Connect( const in_addr &client, uint16_t port )
+{
+  ost::InetHostAddress remote_ip = client;
   if( !remote_ip )
   {
-    LogError( "RTP: invalid remote ip '%s'", client.c_str( ));
-    //return false;
+    LogError( "RTP: invalid remote ip" ); // FIXME: log IP
+    return false;
   }
 
-  setSchedulingTimeout( 20000 );
+  //setSchedulingTimeout( 20000 );
+  setSchedulingTimeout( 200000 );
   setExpireTimeout( 3000000 );
   if( !addDestination( remote_ip, port ) )
   {
     LogError( "RTP: connection failed" );
-    //return false;
+    return false;
   }
 
   setPayloadFormat( ost::StaticPayloadFormat( ost::sptMP2T ));
@@ -328,9 +374,10 @@ StreamingHandler::RTPSession::RTPSession( std::string client, int port ) :
   if( !isActive() )
   {
     LogError( "RTP: unable to start" );
-    //return false;
+    return false;
   }
 
+  return true;
 }
 
 StreamingHandler::RTPSession::~RTPSession( )

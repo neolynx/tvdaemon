@@ -26,18 +26,23 @@
 #include "Thread.h"
 
 #include <ccrtp/rtp.h>
+#include <list>
+#include <map>
 
 class Channel;
 class Activity_Record;
+class Frame;
 
 class Activity_Stream : public Activity
 {
   public:
-    Activity_Stream( Channel *channel, ost::RTPSession *session );
-    Activity_Stream( Activity_Record *recording, ost::RTPSession *session );
+    Activity_Stream( Channel *channel, ost::RTPSession &session );
+    Activity_Stream( Activity_Record *recording, ost::RTPSession &session );
     virtual ~Activity_Stream( );
 
     virtual std::string GetTitle( ) const;
+
+    double GetDuration( );
 
     virtual void Stop( );
 
@@ -48,19 +53,36 @@ class Activity_Stream : public Activity
     bool StreamChannel( );
     bool StreamRecording( );
 
-    bool GetTimestamp( const uint8_t *buf, double &ts );
-
-    void UpdateRTPTimestamp( );
     void SendRTP( const uint8_t *data, int length );
 
     Activity_Record *recording;
-    ost::RTPSession *session;
-    uint64_t rtp_timestamp;
-    double bigbang;
+    ost::RTPSession &session;
     struct timespec start_time;
 
     Condition cond;
+
+
+    class Packet
+    {
+      public:
+        Packet( );
+        ~Packet( );
+        uint16_t pid;
+        uint64_t ts;
+        uint64_t seq;
+        uint8_t *data;
+    };
+
+    class PacketComp
+    {
+      public:
+        bool operator()( Packet *a, Packet *b );
+    };
+
+    std::map<uint16_t, uint64_t> bigbang_map;
+    std::map<uint16_t, uint64_t> ts_map;
+    std::map<uint16_t, std::list<Frame *> > frames;
 };
 
-
 #endif
+

@@ -151,6 +151,7 @@ class HTTPServer : public SocketHandler
     bool PLAY( HTTPRequest &request );
     bool TEARDOWN( HTTPRequest &request );
 
+    bool GetStreamingInfo( HTTPRequest &request, std::string &session, std::string &type, std::string &channel_name, int &recording_id );
 };
 
 class HTTPDynamicHandler

@@ -42,15 +42,18 @@ class StreamingHandler : public Thread
 
     int GetFreeRTPPort( );
 
-    bool SetupChannel( const std::string &channel_name, const std::string &client, int port, int &session_id, int &ssrc );
-    bool SetupPlayback( int recording_id, const std::string &client, int port, int &session_id, int &ssrc );
+    bool Init( const std::string &session, in_addr client, const std::string &channel_name, double &duration );
+    bool Init( const std::string &session, const in_addr &client, int recording_id, double &duration  );
 
-    bool Play( int session_id );
-    bool Stop( int session_id );
+    bool SetupChannel ( const std::string &session, const std::string &channel_name, int port, int &ssrc );
+    bool SetupPlayback( const std::string &session, int recording_id, int port, int &ssrc );
+
+    bool Play( const std::string &session, double &from, double &to, int &seq, int &rtptime );
+    bool Stop( const std::string &session );
 
     void Shutdown( );
 
-    bool KeepAlive( int session_id );
+    bool KeepAlive( const std::string &session );
 
   private:
     StreamingHandler( );
@@ -62,8 +65,12 @@ class StreamingHandler : public Thread
     class RTPSession : public ost::RTPSession
     {
       public:
-        RTPSession( std::string client, int port );
+        RTPSession( );
         virtual ~RTPSession( );
+
+        bool Connect( const in_addr &client, uint16_t port );
+        int GetSequence( ) const;
+        int GetInitialTimestamp( );
 
       private:
         void onGotGoodbye( const ost::SyncSource &source, const std::string &reason );
@@ -72,30 +79,35 @@ class StreamingHandler : public Thread
     class Client
     {
       public:
-        Client( Channel *channel, const std::string &client, int port );
-        Client( Activity_Record *recording, const std::string &client, int port );
+        Client( Channel *channel,           const in_addr &client );
+        Client( Activity_Record *recording, const in_addr &client );
         ~Client( );
 
-        bool Play( );
+        bool Init( );
+        bool Connect( uint16_t port );
+        bool Play( double &from, double &to, int &seq, int &rtptime );
         bool Stop( );
         void KeepAlive( );
+
         int GetSSRC( );
+        double GetDuration( ) const;
 
         Channel *channel;
         Activity_Record *recording;
 
-        std::string client;
-        int         port;
+        in_addr client;
+        uint16_t    port;
 
         Activity_Stream *activity;
-        RTPSession *session;
+        RTPSession session;
 
         time_t ts;
+        double duration;
     };
 
-    void RemoveClient( std::map<int, Client *>::iterator it );
+    void RemoveClient( std::map<std::string, Client *>::iterator it );
 
-    std::map<int, Client *> clients;
+    std::map<std::string, Client *> clients;
 
     std::list<int> rtpports;
 };
