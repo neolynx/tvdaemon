@@ -214,7 +214,11 @@ bool HTTPServer::HandleRequest( HTTPRequest &request )
   std::map<std::string, Method>::iterator it = methods.find( request.http_method );
   if( it != methods.end( ))
   {
-    Log( "HTTP request %s %s %s", inet_ntoa( request.GetClientIP( )), request.http_method.c_str( ), request.url.c_str( ));
+    char ipaddr[INET_ADDRSTRLEN];
+    in_addr addr = request.GetClientIP( );
+    inet_ntop( AF_INET, &addr, ipaddr, sizeof( ipaddr ));
+
+    Log( "HTTP request %s %s %s", ipaddr, request.http_method.c_str( ), request.url.c_str( ));
     return (this->*it->second)( request );
   }
 
@@ -949,6 +953,11 @@ HTTPRequest::HTTPRequest( HTTPServer &server, int client ) : server(server), cli
 in_addr HTTPRequest::GetClientIP( ) const
 {
   return client_addr.sin_addr;
+}
+
+uint16_t HTTPRequest::GetClientPort( ) const
+{
+  return client_addr.sin_port;
 }
 
 in_addr HTTPRequest::GetServerIP( ) const

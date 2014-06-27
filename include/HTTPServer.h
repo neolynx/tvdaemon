@@ -191,6 +191,7 @@ class HTTPRequest
     std::string GetDocRoot( ) const { return server.GetRoot( ); }
 
     in_addr GetClientIP( ) const;
+    uint16_t GetClientPort( ) const;
     in_addr GetServerIP( ) const;
     uint16_t GetServerPort( ) const;
 
