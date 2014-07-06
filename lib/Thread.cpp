@@ -22,7 +22,8 @@
 #include "Thread.h"
 
 #include <sys/time.h>
-#include <errno.h> // ETIMEDOUT
+#include <errno.h>  // ETIMEDOUT
+#include <limits.h> // PTHREAD_STACK_MIN
 
 #include "Log.h"
 
@@ -122,11 +123,19 @@ void Thread::JoinThread( )
 bool Thread::StartThread( )
 {
   int ret;
-  if(( ret = pthread_create( &thread, NULL, run, (void *) this )) != 0 )
+  pthread_attr_t attr;
+  pthread_attr_init( &attr );
+  if(( ret = pthread_attr_setstacksize( &attr, PTHREAD_STACK_MIN * 2 )) != 0 )
+  {
+    LogError( "Thread: error setting stack size: %d", ret );
+    return false;
+  }
+  if(( ret = pthread_create( &thread, &attr, run, (void *) this )) != 0 )
   {
     LogError( "error creating thread: %d", ret );
     return false;
   }
+  pthread_attr_destroy( &attr );
   return true;
 }
 
