@@ -1,9 +1,10 @@
 tvdaemon (0.2) UNRELEASED; urgency=low
 
-  * valid mpeg ts files
+  * write valid mpeg ts files
   * v4l updates
+  * RTSP/RTP/MPEGTS streaming for channels and recordings
 
- -- André Roth <neolynx@gmail.com>  Thu, 17 Apr 2014 03:21:36 +0200
+ -- André Roth <neolynx@gmail.com>  Sun, 06 Jul 2014 18:31:04 +0200
 
 tvdaemon (0.1) raring; urgency=low
 
