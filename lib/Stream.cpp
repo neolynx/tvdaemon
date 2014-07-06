@@ -206,40 +206,40 @@ bool Stream::Init( ost::RTPSession *session )
   this->session = session;
   ringbuffer = new RingBuffer( 2 * 1024 * 1024 );
 
-  buffer  = (uint8_t *) av_malloc( bsize );
-  buffer2 = (uint8_t *) av_malloc( bsize );
+  //buffer  = (uint8_t *) av_malloc( bsize );
+  //buffer2 = (uint8_t *) av_malloc( bsize );
 
-  av_register_all( );
-  av_log_set_level( AV_LOG_DEBUG );
-
-
+  //av_register_all( );
+  //av_log_set_level( AV_LOG_DEBUG );
 
 
-  ifc = avformat_alloc_context( );
-  ictx = avio_alloc_context( buffer, bsize, 0, this, read_packet, NULL, NULL );
-  ictx->seekable = 0;
-  ictx->write_flag = 0;
-  iformat = av_find_input_format( "mpegts" );
-  if( !iformat )
-  {
-    LogError( "mpegts format not found" );
-    return false;
-  }
-  ifc->iformat = iformat;
-  ifc->pb = ictx;
 
 
-  ofc = avformat_alloc_context( );
-  octx = avio_alloc_context( buffer2, bsize, 1, this, NULL, write_packet, NULL );
-  octx->max_packet_size = 1450; // ?? ehter frame ?
-  oformat = av_guess_format( "rtp", NULL, NULL );
-  if( !oformat )
-  {
-    LogError( "rtp format not found" );
-    return false;
-  }
-  ofc->oformat = oformat;
-  ofc->pb = octx;
+  //ifc = avformat_alloc_context( );
+  //ictx = avio_alloc_context( buffer, bsize, 0, this, read_packet, NULL, NULL );
+  //ictx->seekable = 0;
+  //ictx->write_flag = 0;
+  //iformat = av_find_input_format( "mpegts" );
+  //if( !iformat )
+  //{
+    //LogError( "mpegts format not found" );
+    //return false;
+  //}
+  //ifc->iformat = iformat;
+  //ifc->pb = ictx;
+
+
+  //ofc = avformat_alloc_context( );
+  //octx = avio_alloc_context( buffer2, bsize, 1, this, NULL, write_packet, NULL );
+  //octx->max_packet_size = 1450; // ?? ehter frame ?
+  //oformat = av_guess_format( "rtp", NULL, NULL );
+  //if( !oformat )
+  //{
+    //LogError( "rtp format not found" );
+    //return false;
+  //}
+  //ofc->oformat = oformat;
+  //ofc->pb = octx;
 
   up = true;
   StartThread( );
@@ -250,183 +250,183 @@ void Stream::Run( )
 {
   Log( "Stream::Run av_open_input_stream" );
 
-  if( avformat_open_input( &ifc, NULL, iformat, NULL ) < 0 )
-  {
-    LogError( "Stream::Run error opening input" );
-    return;
-  }
-  Log( "Stream::Run input opened" );
+  //if( avformat_open_input( &ifc, NULL, iformat, NULL ) < 0 )
+  //{
+    //LogError( "Stream::Run error opening input" );
+    //return;
+  //}
+  //Log( "Stream::Run input opened" );
 
 
-  AVCodec *codec;
-  AVCodecContext *c;
-
-  codec = avcodec_find_decoder( CODEC_ID_MPEG2VIDEO );
-  // int avcodec_get_context_defaults3(AVCodecContext *s, AVCodec *codec);
-  c = avcodec_alloc_context3( codec );
-
-
-  if( avcodec_open2( c, codec, NULL ) < 0 )
-  {
-    LogError( "Stream::Run avcodec_open2 failed" );
-    return;
-  }
-  ///// from avserverc.c
-        if (c->bit_rate == 0)
-            c->bit_rate = 64000;
-        if (c->time_base.num == 0){
-            c->time_base.den = 5;
-            c->time_base.num = 1;
-        }
-        if (c->width == 0 || c->height == 0) {
-            c->width = 160;
-            c->height = 128;
-        }
-         //Bitrate tolerance is less for streaming
-        if (c->bit_rate_tolerance == 0)
-            c->bit_rate_tolerance = FFMAX(c->bit_rate / 4,
-                      (int64_t)c->bit_rate*c->time_base.num/c->time_base.den);
-        if (c->qmin == 0)
-            c->qmin = 3;
-        if (c->qmax == 0)
-            c->qmax = 31;
-        if (c->max_qdiff == 0)
-            c->max_qdiff = 3;
-        c->qcompress = 0.5;
-        c->qblur = 0.5;
-
-        if (!c->nsse_weight)
-            c->nsse_weight = 8;
-
-        c->frame_skip_cmp = FF_CMP_DCTMAX;
-        if (!c->me_method)
-            c->me_method = ME_EPZS;
-        c->rc_buffer_aggressivity = 1.0;
-
-        if (!c->rc_eq)
-            c->rc_eq = "tex^qComp";
-        if (!c->i_quant_factor)
-            c->i_quant_factor = -0.8;
-        if (!c->b_quant_factor)
-            c->b_quant_factor = 1.25;
-        if (!c->b_quant_offset)
-            c->b_quant_offset = 1.25;
-        if (!c->rc_max_rate)
-            c->rc_max_rate = c->bit_rate * 2;
-
-        if (c->rc_max_rate && !c->rc_buffer_size) {
-            c->rc_buffer_size = c->rc_max_rate;
-        }
-  /////
-
-  //st = avformat_new_stream( ifc, codec );
-
-  //ifc->streams = (AVStream **) av_malloc( sizeof( AVStream * ));
-  //ifc->streams[0] = st;
-
-  //ifc->priv_data = c->priv_data;
-
-  //ifc->priv_data = calloc( 1, iformat->priv_data_size ); // FIXME: free
-  //ifc->priv_data = av_mallocz( iformat->priv_data_size );
-
-  Log( "Stream::Run ifc             %p", ifc );
-  Log( "Stream::Run ifc->iformat    %p", ifc->iformat );
-  Log( "Stream::Run ifc->priv_data  %p", ifc->priv_data );
-  Log( "Stream::Run ifc->pb         %p", ifc->pb );
-  Log( "Stream::Run ifc->streams    %p", ifc->streams );
-  if( ifc->streams )
-    Log( "Stream::Run ifc->streams[0] %p", ifc->streams[0] );
-
-  if( avformat_find_stream_info( ifc, NULL ) < 0 )
-  {
-    LogError( "getting stream info failed" );
-  }
-
-  av_dump_format( ifc, 0, "", 0 );
-  if( ifc->nb_streams != 1 )
-  {
-    LogError( "stream count %d instead of 1", ifc->nb_streams );
-    //goto exit;
-  }
-
-  //Log( "Stream::Run avformat_find_stream_info" );
-  //Log( "Stream::Run done" );
+  //AVCodec *codec;
+  //AVCodecContext *c;
 
   //codec = avcodec_find_decoder( CODEC_ID_MPEG2VIDEO );
+  //// int avcodec_get_context_defaults3(AVCodecContext *s, AVCodec *codec);
   //c = avcodec_alloc_context3( codec );
-  //c->bits_per_raw_sample = 32;
-  //Log( "time base: %d/%d", c->time_base.num, c->time_base.den );
-  //Log( "bit rate : %d", c->bit_rate );
-  //Log( "bit rate tol: %d", c->bit_rate_tolerance );
 
 
-    //Duration: N/A, start: 59033.638156, bitrate: 15000 kb/s
-     //Stream #0.0[0xd2], 131, 1/90000: Video: mpeg2video (Main), yuv420p, 720x576 [PAR 64:45 DAR 16:9], 1/50, 15000 kb/s, 25.80 fps, 25 tbr, 90k tbn, 50 tbc
-     //
+  //if( avcodec_open2( c, codec, NULL ) < 0 )
+  //{
+    //LogError( "Stream::Run avcodec_open2 failed" );
+    //return;
+  //}
+  /////// from avserverc.c
+        //if (c->bit_rate == 0)
+            //c->bit_rate = 64000;
+        //if (c->time_base.num == 0){
+            //c->time_base.den = 5;
+            //c->time_base.num = 1;
+        //}
+        //if (c->width == 0 || c->height == 0) {
+            //c->width = 160;
+            //c->height = 128;
+        //}
+         ////Bitrate tolerance is less for streaming
+        //if (c->bit_rate_tolerance == 0)
+            //c->bit_rate_tolerance = FFMAX(c->bit_rate / 4,
+                      //(int64_t)c->bit_rate*c->time_base.num/c->time_base.den);
+        //if (c->qmin == 0)
+            //c->qmin = 3;
+        //if (c->qmax == 0)
+            //c->qmax = 31;
+        //if (c->max_qdiff == 0)
+            //c->max_qdiff = 3;
+        //c->qcompress = 0.5;
+        //c->qblur = 0.5;
+
+        //if (!c->nsse_weight)
+            //c->nsse_weight = 8;
+
+        //c->frame_skip_cmp = FF_CMP_DCTMAX;
+        //if (!c->me_method)
+            //c->me_method = ME_EPZS;
+        //c->rc_buffer_aggressivity = 1.0;
+
+        //if (!c->rc_eq)
+            //c->rc_eq = "tex^qComp";
+        //if (!c->i_quant_factor)
+            //c->i_quant_factor = -0.8;
+        //if (!c->b_quant_factor)
+            //c->b_quant_factor = 1.25;
+        //if (!c->b_quant_offset)
+            //c->b_quant_offset = 1.25;
+        //if (!c->rc_max_rate)
+            //c->rc_max_rate = c->bit_rate * 2;
+
+        //if (c->rc_max_rate && !c->rc_buffer_size) {
+            //c->rc_buffer_size = c->rc_max_rate;
+        //}
+  ///////
+
+  ////st = avformat_new_stream( ifc, codec );
+
+  ////ifc->streams = (AVStream **) av_malloc( sizeof( AVStream * ));
+  ////ifc->streams[0] = st;
+
+  ////ifc->priv_data = c->priv_data;
+
+  ////ifc->priv_data = calloc( 1, iformat->priv_data_size ); // FIXME: free
+  ////ifc->priv_data = av_mallocz( iformat->priv_data_size );
+
+  //Log( "Stream::Run ifc             %p", ifc );
+  //Log( "Stream::Run ifc->iformat    %p", ifc->iformat );
+  //Log( "Stream::Run ifc->priv_data  %p", ifc->priv_data );
+  //Log( "Stream::Run ifc->pb         %p", ifc->pb );
+  //Log( "Stream::Run ifc->streams    %p", ifc->streams );
+  //if( ifc->streams )
+    //Log( "Stream::Run ifc->streams[0] %p", ifc->streams[0] );
+
+  //if( avformat_find_stream_info( ifc, NULL ) < 0 )
+  //{
+    //LogError( "getting stream info failed" );
+  //}
+
+  //av_dump_format( ifc, 0, "", 0 );
+  //if( ifc->nb_streams != 1 )
+  //{
+    //LogError( "stream count %d instead of 1", ifc->nb_streams );
+    ////goto exit;
+  //}
+
+  ////Log( "Stream::Run avformat_find_stream_info" );
+  ////Log( "Stream::Run done" );
+
+  ////codec = avcodec_find_decoder( CODEC_ID_MPEG2VIDEO );
+  ////c = avcodec_alloc_context3( codec );
+  ////c->bits_per_raw_sample = 32;
+  ////Log( "time base: %d/%d", c->time_base.num, c->time_base.den );
+  ////Log( "bit rate : %d", c->bit_rate );
+  ////Log( "bit rate tol: %d", c->bit_rate_tolerance );
 
 
-  ofc->oformat = oformat;
-  ofc->pb = octx;
-  ofc->streams = (AVStream **) av_malloc( sizeof( AVStream * ));
+    ////Duration: N/A, start: 59033.638156, bitrate: 15000 kb/s
+     ////Stream #0.0[0xd2], 131, 1/90000: Video: mpeg2video (Main), yuv420p, 720x576 [PAR 64:45 DAR 16:9], 1/50, 15000 kb/s, 25.80 fps, 25 tbr, 90k tbn, 50 tbc
+     ////
 
-  codec = avcodec_find_encoder( CODEC_ID_MPEG2VIDEO );
-  c = avcodec_alloc_context3( codec );
-  c->pix_fmt = PIX_FMT_YUV420P;
-  c->time_base.num = 1;
-  c->time_base.den = 50;
-  c->width = 720;
-  c->height = 576;
-  c->bit_rate = 200000;
-  c->bit_rate_tolerance = 4000000;
 
-  //c->bit_rate
-  //c->sample_fmt
-  //c->sample_rate = select_sample_rate(codec);
-  //c->channel_layout = select_channel_layout(codec);
-  //c->channels = av_get_channel_layout_nb_channels(c->channel_layout);
-  if( avcodec_open2( c, codec, NULL ) < 0 )
-  {
-    LogError( "Stream::Run avcodec_open2 failed" );
-    return;
-  }
+  //ofc->oformat = oformat;
+  //ofc->pb = octx;
+  //ofc->streams = (AVStream **) av_malloc( sizeof( AVStream * ));
 
-  st = avformat_new_stream( ofc, codec );
-  st->codec->codec_id = codec->id;
-  st->codec->time_base.num = 1;
-  st->codec->time_base.den = 5;
-  st->codec->width = 720;
-  st->codec->height = 576;
-  ofc->priv_data = malloc( oformat->priv_data_size ); // FIXME: free
+  //codec = avcodec_find_encoder( CODEC_ID_MPEG2VIDEO );
+  //c = avcodec_alloc_context3( codec );
+  //c->pix_fmt = PIX_FMT_YUV420P;
+  //c->time_base.num = 1;
+  //c->time_base.den = 50;
+  //c->width = 720;
+  //c->height = 576;
+  //c->bit_rate = 200000;
+  //c->bit_rate_tolerance = 4000000;
 
-  Log( "output privdata: %p %d bytes", ofc->priv_data, oformat->priv_data_size );
+  ////c->bit_rate
+  ////c->sample_fmt
+  ////c->sample_rate = select_sample_rate(codec);
+  ////c->channel_layout = select_channel_layout(codec);
+  ////c->channels = av_get_channel_layout_nb_channels(c->channel_layout);
+  //if( avcodec_open2( c, codec, NULL ) < 0 )
+  //{
+    //LogError( "Stream::Run avcodec_open2 failed" );
+    //return;
+  //}
 
-  Log( "Stream::Run avformat_write_header" );
-  if( avformat_write_header( ofc, NULL ) != 0 )
-  {
-    LogError( "Stream::Run error writing header" );
-    return;
-  }
-  Log( "Stream::Run avformat_write_header done" );
+  //st = avformat_new_stream( ofc, codec );
+  //st->codec->codec_id = codec->id;
+  //st->codec->time_base.num = 1;
+  //st->codec->time_base.den = 5;
+  //st->codec->width = 720;
+  //st->codec->height = 576;
+  //ofc->priv_data = malloc( oformat->priv_data_size ); // FIXME: free
 
-  for(;;)
-  {
-    AVPacket pkt;
-    if( av_read_frame( ifc, &pkt ) < 0 )
-    {
-      printf( "av_read_frame returned non zero\n" );
-      break;
-    }
+  //Log( "output privdata: %p %d bytes", ofc->priv_data, oformat->priv_data_size );
 
-    printf( "got packet size=%d\n", pkt.size );
-    //dump( pkt.data, pkt.size );
+  //Log( "Stream::Run avformat_write_header" );
+  //if( avformat_write_header( ofc, NULL ) != 0 )
+  //{
+    //LogError( "Stream::Run error writing header" );
+    //return;
+  //}
+  //Log( "Stream::Run avformat_write_header done" );
 
-    pkt.stream_index = 0; // FIXME: needed ? write video stream to our single stream
+  //for(;;)
+  //{
+    //AVPacket pkt;
+    //if( av_read_frame( ifc, &pkt ) < 0 )
+    //{
+      //printf( "av_read_frame returned non zero\n" );
+      //break;
+    //}
 
-    if( av_interleaved_write_frame( ofc, &pkt ) < 0 )
-    {
-      printf( "error writing frame\n" );
-    }
-  }
+    //printf( "got packet size=%d\n", pkt.size );
+    ////dump( pkt.data, pkt.size );
+
+    //pkt.stream_index = 0; // FIXME: needed ? write video stream to our single stream
+
+    //if( av_interleaved_write_frame( ofc, &pkt ) < 0 )
+    //{
+      //printf( "error writing frame\n" );
+    //}
+  //}
 exit:
   return;
 }

@@ -28,6 +28,8 @@
 #include "TVDaemon.h"
 #include "Recorder.h"
 
+#include <math.h> // NAN
+
 StreamingHandler *StreamingHandler::Instance( )
 {
   static StreamingHandler instance;

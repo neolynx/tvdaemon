@@ -25,10 +25,10 @@
 #include <stdint.h>
 
 // libav
-extern "C" {
-#include "libavformat/avformat.h"
-#include "libavcodec/avcodec.h"
-}
+//extern "C" {
+//#include "libavformat/avformat.h"
+//#include "libavcodec/avcodec.h"
+//}
 
 #include <ccrtp/rtp.h> // FIXME: make interfase/impl
 
@@ -91,15 +91,15 @@ class Stream : public Thread
     uint16_t id;
     Type type;
 
-    AVFormatContext *ifc;
-    AVIOContext *ictx;
-    AVInputFormat *iformat;
+    //AVFormatContext *ifc;
+    //AVIOContext *ictx;
+    //AVInputFormat *iformat;
 
-    AVFormatContext *ofc;
-    AVIOContext *octx;
-    AVOutputFormat *oformat;
+    //AVFormatContext *ofc;
+    //AVIOContext *octx;
+    //AVOutputFormat *oformat;
 
-    AVStream *st;
+    //AVStream *st;
     uint8_t *buffer;
     uint8_t *buffer2;
     RingBuffer *ringbuffer;
