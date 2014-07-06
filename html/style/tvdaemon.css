@@ -1,3 +1,6 @@
+@import url(mobile.css)  all and (max-device-width: 1024px);
+@import url(desktop.css) all and (min-device-width: 1024px);
+
 /* Layout */
 
 html, body, div.container
