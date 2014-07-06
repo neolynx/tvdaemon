@@ -5,25 +5,14 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/ico" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="style/tvdaemon.css">
-<link rel="stylesheet" type="text/css" href="style/jquery-ui.css">
 <script type="text/javascript" src="scripts/lib/jquery.js"></script>
-<script type="text/javascript" src="scripts/lib/jquery-ui.min.js"></script>
-<script type="text/javascript" src="scripts/lib/jquery.ui-contextmenu.min.js"></script>
 <script type="text/javascript" src="scripts/tvdaemon.js"></script>
-
+<script src="contextMenu.js/contextMenu.js"></script>
+<link rel="stylesheet" href="contextMenu.js/contextMenu.css" />
 <script type="text/javascript" src="index.js"></script>
 <link rel="stylesheet" type="text/css" href="index.css">
 
 </script>
-<style>
-.ui-menu { width: 150px; }
-.hasmenu {
-  border: 1px solid #008;
-  margin: 3px;
-  padding: 5px;
-  width: 30px;
-}
-</style>
 
 </head>
 <body>
@@ -33,20 +22,10 @@
     <div id="menu"></div>
   </div>
   <div class="content">
-    <div id="menu1" class="hasmenu">menu1</div>
     <div id="setup"></div>
   </div>
 </div>
 <div class="footer"></div>
-
-<div id="popup" style="display: none;">
-
-  <ul id="test">
-    <li><a href="#">Edit</a></li>
-    <li><a href="#">Remove</a></li>
-  </ul>
-
-</div>
 
 <div id="port_popup" style="display: none; overflow: hidden;">
   <div>Port</div>

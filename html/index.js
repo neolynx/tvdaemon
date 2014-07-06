@@ -1,13 +1,50 @@
 $(document).ready( ready );
 
-window.setInterval( function( ) { update( ); }, 2000 );
+//window.setInterval( function( ) { update( ); }, 2000 );
 
 var sources = [];
 var adapters = [];
 var no_update = false;
 
-//$(function(){
-//});
+var adapter_menu = [
+    {
+        name: 'delete',
+//        img: 'images/delete.png',
+        title: 'delete adapter',
+        fun: function () {
+          console.log( "delete", this );
+        }
+    }];
+
+var frontend_menu = [
+    {
+        name: 'add Port',
+//        img: 'images/delete.png',
+        title: 'add a Port to this frontend',
+        fun: function () {
+          console.log( "add port", this );
+        }
+    }];
+
+var port_menu = [
+    {
+        name: 'delete',
+//        img: 'images/delete.png',
+        title: 'delete this port',
+        fun: function () {
+          console.log( "delete port", this );
+        }
+    }];
+
+var source_menu = [
+    {
+        name: 'delete',
+//        img: 'images/delete.png',
+        title: 'delete this source',
+        fun: function () {
+          console.log( "delete source", this );
+        }
+    }];
 
 function ready( )
 {
@@ -22,8 +59,6 @@ function ready( )
   //$('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
 
   $('#setup').attr( 'class', 'setup' );
-
-  $( "#test" ).menu();
 
   //$("document").contextmenu({
     //delegate: ".hasmenu",
@@ -90,7 +125,8 @@ function readDevices( data, errmsg )
     adapter = data[a];
     row = $('<tr>');
     cell = $('<td>');
-    cell.html( getAdapter( adapter ));
+    cell.append( getAdapter( adapter ));
+    cell.append( "<br/>" + adapter["name"] );
     if( a != adapters.length - 1 )
       cell.attr( "class", "adapter" );
     else
@@ -106,7 +142,7 @@ function readDevices( data, errmsg )
         frontend["adapter_id"] = adapter["id"];
 
         cell2 = $('<td>');
-        cell2.html( getFrontend( frontend ));
+        cell2.append( getFrontend( frontend ));
         if( f != frontends.length - 1 || a != adapters.length - 1 )
           cell2.attr( "class", "frontend" );
         else
@@ -126,7 +162,7 @@ function readDevices( data, errmsg )
           port["adapter_id"] = adapter["id"];
 
           cell3 = $('<td>');
-          cell3.html( getPort( port ));
+          cell3.append( getPort( port ));
           if( p != ports.length - 1 || a != adapters.length - 1 || f != frontends.length -1 )
             cell3.attr( "class", "port" );
           else
@@ -172,54 +208,86 @@ function readDevices( data, errmsg )
 
 function getAdapter( adapter )
 {
-  imgstyle = "";
-  if( adapter["present"] != 1 )
-    imgstyle = "alt=\"not present\" class=\"icon_gray\";";
-  else
-    imgstyle = "class=\"icon\";";
+  icon = "images/pci-icon.png"; // FIXME: used unknown icon
   if( adapter["path"].indexOf( "/usb" ) != -1 )
-    icon = adapter["name"] + " <img src=\"images/usb-icon.png\" " + imgstyle + "/>";
+    icon = "images/usb-icon.png";
   else if ( adapter["path"].indexOf( "/pci" ) != -1 )
-    icon = adapter["name"] + " <img src=\"images/pci-icon.png\" " + imgstyle + "/>";
+    icon = "images/pci-icon.png";
+
+  img = $('<img />', {
+    id:  "adapter" + adapter["id"],
+    src: icon,
+    alt: adapter["name"],
+  });
+  img.css( 'cursor', 'pointer' );
+  if( adapter["present"] == 1 )
+    img.attr('class', "icon");
   else
-    icon = adapter["name"] + " <img src=\"images/pci-icon.png\" " + imgstyle + "/>";
-  return icon;
+    img.attr('class', "icon_gray");
+
+  img.contextMenu(adapter_menu, { userData: adapter["id"] });
+  return img;
 }
 
 function getFrontend( frontend )
 {
   adapter = adapters[frontend["adapter_id"]];
-  return "<a href=\"javascript: click_frontend( " + frontend["adapter_id"] + ", " + frontend["id"] + " );\">" + frontend["name"] + "</a>";
+  span = $('<span />');
+  span.css( 'cursor', 'pointer' );
+  span.append( frontend["name"] );
+  span.contextMenu(frontend_menu, { userData: { adapter: adapter["id"], frontend: frontend["id"] }});
+  return span;
 }
 
 function getPort( port )
 {
+  icon = "images/antenna-oldstyle.png"; // FIXME: used unknown icon
+  if( frontend["type"] == 0 )
+    icon = "images/antenna-icon.png";
+  else if( frontend["type"] == 1 )
+    icon = "images/antenna-cable.smal.png";
+
   adapter = adapters[port["adapter_id"]];
   frontend = adapter["frontends"][port["frontend_id"]];
-  imgstyle = "";
-  if( adapter["present"] != 1 )
-    imgstyle = "alt=\"not present\" class=\"icon_gray\";";
+
+  img = $('<img />', {
+    src: icon,
+    alt: adapter["name"],
+  });
+  img.css( 'cursor', 'pointer' );
+
+  if( adapter["present"] == 1 )
+    img.attr('class', "icon");
   else
-    imgstyle = "class=\"icon\";";
-  if( frontend["type"] == 0 )
-    icon = "<img src=\"images/antenna-icon.png\" " + imgstyle + "/>";
-  else if( frontend["type"] == 1 )
-    icon = "<img src=\"images/antenna-cable.smal.png\" " + imgstyle + "/>";
-  else
-    icon = "<img src=\"images/antenna-oldstyle.png\" " + imgstyle + "/>";
-  return "<a href=\"javascript: editPort( " + port["adapter_id"] + ", " + port["frontend_id"] + ",  " + port["id"] + " );\">" + icon + "</a>";
+    img.attr('class', "icon_gray");
+
+  img.contextMenu(port_menu, { userData: { adapter: adapter["id"], frontend: frontend["id"], port: port["id"] }});
+  return img;
 }
 
 function getSource( port )
 {
   source_id = port["source_id"];
+  span = $('<span />');
   if( source_id >= 0 )
-    //return "<a href=\"tvd?c=source&a=show&source_id=" + source_id + "\"><b>" + sources[source_id]["name"] + "</b></a>"
-    return "<b>" + sources[source_id]["name"] + "</b>"
-      + "<br/>Transponders: " + sources[source_id]["transponders"]
-      + "<br/>Services: " + sources[source_id]["services"];
+  {
+    source = $('<b/>');
+    source.css( 'cursor', 'pointer' );
+    source.html( sources[source_id]["name"] );
+    source.contextMenu(source_menu, { userData: { adapter: adapter["id"], frontend: frontend["id"], port: port["id"], source: source_id }});
+    span.append( source );
+    span.append( "<br/>Transponders: " + sources[source_id]["transponders"] +
+                 "<br/>Services: " + sources[source_id]["services"] );
+    adapter = adapters[port["adapter_id"]];
+    frontend = adapter["frontends"][port["frontend_id"]];
+  }
   else
-    return "Undefined";
+  {
+    span.css( 'cursor', 'pointer' );
+    span.html( "Undefined" );
+    span.contextMenu(source_menu, { userData: { adapter: adapter["id"], frontend: frontend["id"], port: port["id"] }});
+  }
+  return span;
 }
 
 function editPort( adapter_id, frontend_id, port_id )
