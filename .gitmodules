@@ -1,7 +1,9 @@
 [submodule "v4l-utils"]
 	path = v4l-utils
 	url = git://git.linuxtv.org/v4l-utils.git
-
 [submodule "tsdecrypt"]
 	path = tsdecrypt
 	url = https://github.com/neolynx/tsdecrypt.git
+[submodule "html/contextMenu.js"]
+	path = html/contextMenu.js
+	url = https://github.com/s-yadav/contextMenu.js.git
