@@ -42,7 +42,7 @@ class Activity_Record : public Activity, public ConfigObject, public JSONObject
 
     virtual std::string GetTitle( ) const;
     std::string GetName( ) const;
-    void GetFilenames( std::vector<std::string> &filenames ) const;
+    const std::string &GetFilename( ) const;
 
     time_t GetStart( )   const { return start; }
     time_t GetEnd( )     const { return end; }
@@ -60,7 +60,7 @@ class Activity_Record : public Activity, public ConfigObject, public JSONObject
     int duration;
     int event_id;
     std::string name;
-     std::vector<std::string> filenames;
+    std::string filename;
 
     virtual bool Perform( );
     virtual void Failed( ) { }

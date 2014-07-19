@@ -101,9 +101,9 @@ std::string Activity_Record::GetName( ) const
   return name;
 }
 
-void Activity_Record::GetFilenames( std::vector<std::string> &filenames) const
+const std::string &Activity_Record::GetFilename( ) const
 {
-  filenames = this->filenames;
+  return filename;
 }
 
 bool Activity_Record::SaveConfig( )
@@ -115,14 +115,7 @@ bool Activity_Record::SaveConfig( )
   WriteConfig( "State",    GetState( ));
   WriteConfig( "Duration", duration );
   WriteConfig( "EventID",  event_id );
-
-  DeleteConfig( "Filenames" );
-  Setting &n = ConfigArray( "Filenames" );
-  for( std::vector<std::string>::iterator it = filenames.begin( ); it != filenames.end( ); it++ )
-  {
-    Setting &n2 = n.add( Setting::TypeString );
-    n2 = *it;
-  }
+  WriteConfig( "Filename", filename );
 
   return WriteConfigFile( );
 }
@@ -141,10 +134,7 @@ bool Activity_Record::LoadConfig( )
   SetState( (Activity::State) state );
   ReadConfig( "Duration", duration );
   ReadConfig( "EventID",  event_id );
-
-  Setting &n = ConfigArray( "Filenames" );
-  for( int i = 0; i < n.getLength( ); i++ )
-    filenames.push_back( n[i] );
+  ReadConfig( "Filename", filename );
 
   if( end > time( NULL ))
     SetState( State_Scheduled );
@@ -282,8 +272,15 @@ bool Activity_Record::Perform( )
     return false;
   }
 
-  std::string dumpfile;
   std::string upcoming;
+
+  bool started = false;
+  int fdmax = 0;
+  uint8_t *data;
+  int len;
+  int ac, vc;
+  uint64_t startpts = 0;
+  time_t idle_since = 0;
 
   //int fd = frontend->OpenDemux( );
   //Log( "Reading EIT" );
@@ -318,196 +315,153 @@ bool Activity_Record::Perform( )
   //dumpfile = upcoming;
   //}
 
-  if( dumpfile.empty( ))
-    dumpfile = name;
-
-  std::replace( dumpfile.begin(), dumpfile.end(), '/', '_');
-  std::replace( dumpfile.begin(), dumpfile.end(), '`', '_');
-  std::replace( dumpfile.begin(), dumpfile.end(), '$', '_');
-
+  if( filename.empty( ))
   {
+    std::string t = dir;
+    Utils::EnsureSlash( t );
+    std::string t2 = name;
+
+    std::replace( t2.begin(), t2.end(), '/', '_');
+    std::replace( t2.begin(), t2.end(), '`', '_');
+    std::replace( t2.begin(), t2.end(), '$', '_');
+
+    t += t2;
+
     char file[256];
 
-
-    Utils::EnsureSlash( dir );
-    std::string filename = dir + dumpfile + ".ts";
+    t2 = t + ".ts";
 
     int i = 0;
-    while( Utils::IsFile( filename ))
+    while( Utils::IsFile( t2 )) // FIXME: race cond
     {
       char num[16];
-      if( ++i == 65535 )
-      {
-        frontend->LogError( "Too many files with same name: %s", filename.c_str( ));
-        ret = false;
-        goto exit;
-      }
-      snprintf( num, sizeof( num ), "_%d", i );
-      filename = dir + dumpfile + num + ".ts";
+      snprintf( num, sizeof( num ), " - %d", i );
+      t2 = t + num + ".ts";
     }
+    filename = t2;
+  }
 
-    int file_fd = open( filename.c_str( ),
+  int file_fd = open( filename.c_str( ),
 #ifdef O_LARGEFILE
-        O_LARGEFILE |
+      O_LARGEFILE |
 #endif
-        O_WRONLY | O_CREAT | O_TRUNC, 0664 );
+      O_WRONLY | O_CREAT | O_APPEND, 0664 );
 
-    if( file_fd < 0 )
+  if( file_fd < 0 )
+  {
+    frontend->LogError( "Cannot open file '%s'", filename.c_str( ));
+    // FIXME: cleanup
+    ret = false;
+    goto exit;
+  }
+
+  frontend->Log( "Recording '%s' ...", filename.c_str( ));
+
+  {
+    /* SDT */
+    uint8_t *data;
+    ssize_t size = dvb_table_sdt_store( frontend->GetFE( ), sdt, &data );
+    dvb_table_sdt_free( sdt );
+    if( !data )
     {
-      frontend->LogError( "Cannot open file '%s'", filename.c_str( ));
-      // FIXME: cleanup
+      frontend->LogError( "cannot store" );
+      return -2;
+    }
+
+    uint8_t *mpegts;
+    size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_SDT_PID, 0 );
+    free( data );
+    int r = write( file_fd, mpegts, size );
+    free( mpegts );
+
+    /* PAT */
+    size = dvb_table_pat_store( frontend->GetFE( ), pat, &data );
+    dvb_table_pat_free( pat );
+    if( !data )
+    {
+      frontend->LogError( "cannot store" );
+      return -2;
+    }
+
+    size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_PAT_PID, 0 );
+    free( data );
+    r = write( file_fd, mpegts, size );
+    free( mpegts );
+
+    /* PMT */
+    size = dvb_table_pmt_store( frontend->GetFE( ), pmt, &data );
+    dvb_table_pmt_free( pmt );
+    if( !data )
+    {
+      frontend->LogError( "cannot store" );
+      return -2;
+    }
+
+    size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, 0x1000, 0 );
+    free( data );
+    r = write( file_fd, mpegts, size );
+    free( mpegts );
+  }
+
+
+  fd_set tmp_fdset;
+  fd_set fdset;
+  FD_ZERO( &fdset );
+  //FD_SET ( fd_pat, &fdset );
+  for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
+  {
+    FD_SET ( *it, &fdset );
+    if( *it > fdmax )
+      fdmax = *it;
+  }
+
+  data = (uint8_t *) malloc( DMX_BUFSIZE );
+  ac = vc = 0;
+  while( IsActive( ))
+  {
+    tmp_fdset = fdset;
+    bool idle = true;
+
+    struct timeval timeout = { 1, 0 }; // 1 sec
+    if( select( FD_SETSIZE, &tmp_fdset, NULL, NULL, &timeout ) == -1 )
+    {
+      frontend->LogError( "select error" );
       ret = false;
-      goto exit;
+      break;
     }
 
-    filenames.push_back( filename );
+    if( !IsActive( ))
+      break;
 
-    frontend->Log( "Recording '%s' ...", filename.c_str( ));
-
-    {
-      /* SDT */
-      uint8_t *data;
-      ssize_t size = dvb_table_sdt_store( frontend->GetFE( ), sdt, &data );
-      dvb_table_sdt_free( sdt );
-      if( !data )
-      {
-        frontend->LogError( "cannot store" );
-        return -2;
-      }
-
-      uint8_t *mpegts;
-      size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_SDT_PID, 0 );
-      free( data );
-      int r = write( file_fd, mpegts, size );
-      free( mpegts );
-
-      /* PAT */
-      size = dvb_table_pat_store( frontend->GetFE( ), pat, &data );
-      dvb_table_pat_free( pat );
-      if( !data )
-      {
-        frontend->LogError( "cannot store" );
-        return -2;
-      }
-
-      size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, DVB_TABLE_PAT_PID, 0 );
-      free( data );
-      r = write( file_fd, mpegts, size );
-      free( mpegts );
-
-      /* PMT */
-      size = dvb_table_pmt_store( frontend->GetFE( ), pmt, &data );
-      dvb_table_pmt_free( pmt );
-      if( !data )
-      {
-        frontend->LogError( "cannot store" );
-        return -2;
-      }
-
-      size = dvb_mpeg_ts_create( frontend->GetFE( ), data, size, &mpegts, 0x1000, 0 );
-      free( data );
-      r = write( file_fd, mpegts, size );
-      free( mpegts );
-    }
-
-    bool started = false;
-
-    fd_set tmp_fdset;
-    fd_set fdset;
-    FD_ZERO( &fdset );
-    int fdmax = 0;
-    //FD_SET ( fd_pat, &fdset );
-    for( std::vector<int>::iterator it = fds.begin( ); it != fds.end( ); it++ )
-    {
-      FD_SET ( *it, &fdset );
-      if( *it > fdmax )
-        fdmax = *it;
-    }
-
-    uint8_t *data = (uint8_t *) malloc( DMX_BUFSIZE );
-    int len;
-    int ac, vc;
-    ac = vc = 0;
-    uint64_t startpts = 0;
-    time_t idle_since = 0;
-    while( IsActive( ))
-    {
-      tmp_fdset = fdset;
-      bool idle = true;
-
-      struct timeval timeout = { 1, 0 }; // 1 sec
-      if( select( FD_SETSIZE, &tmp_fdset, NULL, NULL, &timeout ) == -1 )
-      {
-        frontend->LogError( "select error" );
-        ret = false;
-        break;
-      }
-
-      if( !IsActive( ))
-        break;
-
-      //if( FD_ISSET( fd_pat, &tmp_fdset ))
+    //if( FD_ISSET( fd_pat, &tmp_fdset ))
+    //{
+      //len = read( fd_pat, data, DMX_BUFSIZE );
+      //if( len < 0 )
       //{
-        //len = read( fd_pat, data, DMX_BUFSIZE );
-        //if( len < 0 )
-        //{
-          //frontend->LogError( "Error receiving data... %d", errno );
-          //continue;
-        //}
-
-        //if( len == 0 )
-        //{
-          //frontend->Log( "no data received" );
-          //continue;
-        //}
-
-        //struct dvb_table_pat *pat = NULL;
-        //ssize_t pat_len = 0;
-        //dvb_table_pat_init ( frontend->GetFE( ), data, len, &pat );
-        ////dvb_table_pat_print( frontend->GetFE( ), pat );
-        //dvb_table_pat_free( pat );
+        //frontend->LogError( "Error receiving data... %d", errno );
+        //continue;
       //}
 
-      for( std::vector<int>::iterator it = fds.begin( ); IsActive( ) && it != fds.end( ); it++ )
+      //if( len == 0 )
+      //{
+        //frontend->Log( "no data received" );
+        //continue;
+      //}
+
+      //struct dvb_table_pat *pat = NULL;
+      //ssize_t pat_len = 0;
+      //dvb_table_pat_init ( frontend->GetFE( ), data, len, &pat );
+      ////dvb_table_pat_print( frontend->GetFE( ), pat );
+      //dvb_table_pat_free( pat );
+    //}
+
+    for( std::vector<int>::iterator it = fds.begin( ); IsActive( ) && it != fds.end( ); it++ )
+    {
+      int fd = *it;
+      if( FD_ISSET( fd, &tmp_fdset ))
       {
-        int fd = *it;
-        if( FD_ISSET( fd, &tmp_fdset ))
+        if( ecm_fd != -1 && fd == ecm_fd )
         {
-          if( ecm_fd != -1 && fd == ecm_fd )
-          {
-            len = read( fd, data, DMX_BUFSIZE );
-            if( len < 0 )
-            {
-              frontend->LogError( "Error receiving data... %d", errno );
-              continue;
-            }
-
-            if( len == 0 )
-            {
-              frontend->Log( "no data received" );
-              continue;
-            }
-
-            int remaining = len;
-            uint8_t *p = data;
-            while( IsActive( ) && remaining > 0 )
-            {
-              int chunk = 188;
-
-              if( remaining < chunk ) chunk = remaining;
-              remaining -= chunk;
-
-              if( client )
-                client->HandleECM( p, chunk );
-
-              p += chunk;
-            }
-
-            continue;
-          }
-
-          idle = false;
-          idle_since = 0;
           len = read( fd, data, DMX_BUFSIZE );
           if( len < 0 )
           {
@@ -526,76 +480,108 @@ bool Activity_Record::Perform( )
           while( IsActive( ) && remaining > 0 )
           {
             int chunk = 188;
+
             if( remaining < chunk ) chunk = remaining;
             remaining -= chunk;
 
             if( client )
-              client->Decrypt( p, chunk );
-
-            int ret = write( file_fd, p, chunk );
-            if( ret != chunk )
-            {
-              LogError( "Error writing to %s", filename.c_str( ));
-              Stop( );
-              break;
-            }
+              client->HandleECM( p, chunk );
 
             p += chunk;
           }
 
-
-          //if( fd == videofd )
-          //{
-          ////Log( "Video Packet: %d bytes", len );
-          //int packets = 0;
-          //ssize_t size = 0;
-          //ssize_t size2 = 0;
-          //uint8_t buf[188];
-          //int remaining = len;
-          //int pos = 0;
-          //uint8_t *p = data;
-          //while( IsActive( ) && remaining > 0 )
-          //{
-          //int chunk = 188;
-          //if( remaining < chunk ) chunk = remaining;
-          //remaining -= chunk;
-          //dvb_mpeg_ts_init( frontend->GetFE( ), p, chunk, buf, &size );
-          //if( size == 0 )
-          //{
-          //break;
-          //}
-          //p += size;
-          //chunk -= size;
-
-
-          //dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
-          //if( ts->payload_start )
-          //started = true;
-
-          ////if( started )
-          ////rec.record( p, chunk );
-
-          //p += chunk;
-          //}
-          //}
+          continue;
         }
-      }
 
-      if( idle )
-      {
-        if( idle_since == 0 )
-          idle_since = time( NULL );
-        else if( difftime( time( NULL ), idle_since ) > 10.0 )
+        idle = false;
+        idle_since = 0;
+        len = read( fd, data, DMX_BUFSIZE );
+        if( len < 0 )
         {
-          frontend->LogError( "No data received" );
-          ret = false;
-          break;
+          frontend->LogError( "Error receiving data... %d", errno );
+          continue;
         }
+
+        if( len == 0 )
+        {
+          frontend->Log( "no data received" );
+          continue;
+        }
+
+        int remaining = len;
+        uint8_t *p = data;
+        while( IsActive( ) && remaining > 0 )
+        {
+          int chunk = 188;
+          if( remaining < chunk ) chunk = remaining;
+          remaining -= chunk;
+
+          if( client )
+            client->Decrypt( p, chunk );
+
+          int ret = write( file_fd, p, chunk );
+          if( ret != chunk )
+          {
+            LogError( "Error writing to %s", filename.c_str( ));
+            Stop( );
+            break;
+          }
+
+          p += chunk;
+        }
+
+
+        //if( fd == videofd )
+        //{
+        ////Log( "Video Packet: %d bytes", len );
+        //int packets = 0;
+        //ssize_t size = 0;
+        //ssize_t size2 = 0;
+        //uint8_t buf[188];
+        //int remaining = len;
+        //int pos = 0;
+        //uint8_t *p = data;
+        //while( IsActive( ) && remaining > 0 )
+        //{
+        //int chunk = 188;
+        //if( remaining < chunk ) chunk = remaining;
+        //remaining -= chunk;
+        //dvb_mpeg_ts_init( frontend->GetFE( ), p, chunk, buf, &size );
+        //if( size == 0 )
+        //{
+        //break;
+        //}
+        //p += size;
+        //chunk -= size;
+
+
+        //dvb_mpeg_ts *ts = (dvb_mpeg_ts *) buf;
+        //if( ts->payload_start )
+        //started = true;
+
+        ////if( started )
+        ////rec.record( p, chunk );
+
+        //p += chunk;
+        //}
+        //}
       }
     }
-    close( file_fd );
-    free( data );
+
+    if( idle )
+    {
+      if( idle_since == 0 )
+        idle_since = time( NULL );
+      else if( difftime( time( NULL ), idle_since ) > 10.0 )
+      {
+        frontend->LogError( "No data received" );
+        ret = false;
+        break;
+      }
+    }
   }
+  close( file_fd );
+  free( data );
 
 exit:
   //frontend->CloseDemux( fd_pat );

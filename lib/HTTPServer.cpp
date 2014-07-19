@@ -58,6 +58,7 @@ HTTPServer::HTTPServer( const char *root ) : SocketHandler( ), _root(root), rtsp
   methods["GET_PARAMETER"] = &HTTPServer::GET_PARAMETER;
   methods["SETUP"] = &HTTPServer::SETUP;
   methods["PLAY"] = &HTTPServer::PLAY;
+  methods["PAUSE"] = &HTTPServer::PAUSE;
   methods["TEARDOWN"] = &HTTPServer::TEARDOWN;
 
   session_timeout = 60;
@@ -662,6 +663,24 @@ bool HTTPServer::PLAY( HTTPRequest &request )
   }
 
   double from = 0.0, to = NAN;
+  std::string range;
+  if( request.HasHeader( "Range" ) and request.GetHeader( "Range", range ))
+  {
+    std::string prefix = "npt=";
+    if( range.substr( 0, prefix.size( )) == prefix )
+    {
+      range = range.substr( prefix.size( ));
+      Utils::Tokenize( range, "-", tokens, 2 );
+      if( tokens.size( ) < 1 ) // server:port
+        LogError( "RTSP: invalid range: %s", range.c_str( ));
+      else
+      {
+        from = atof( tokens[0].c_str( ));
+        if( tokens.size( ) > 2 )
+          to = atof( tokens[1].c_str( ));
+      }
+    }
+  }
   int seq, rtptime;
   StreamingHandler::Instance( )->Play( session, from, to, seq, rtptime );
   // FIXME: verify valid session
@@ -678,6 +697,30 @@ bool HTTPServer::PLAY( HTTPRequest &request )
   return true;
 }
 
+bool HTTPServer::PAUSE( HTTPRequest &request )
+{
+  if( !rtsp_handler )
+  {
+    LogError( "RTSP: no handler defined" );
+    return false;
+  }
+
+  std::string session;
+  if( !request.GetHeader( "Session", session ))
+  {
+    LogError( "RTSP:PAUSE no session parameter found" );
+    return false;
+  }
+
+  StreamingHandler::Instance( )->Pause( session );
+
+  Response response;
+  response.AddStatus( RTSP_OK );
+  request.KeepAlive( true );
+  request.Reply( response );
+  return true;
+}
+
 bool HTTPServer::TEARDOWN( HTTPRequest &request )
 {
   if( !rtsp_handler )
@@ -686,7 +729,6 @@ bool HTTPServer::TEARDOWN( HTTPRequest &request )
     return false;
   }
 
-  std::vector<std::string> tokens;
   std::string session;
   if( !request.GetHeader( "Session", session ))
   {

@@ -128,7 +128,7 @@ bool StreamingHandler::Play( const std::string &session, double &from, double &t
     return false;
   }
 
-  Log( "StreamingHandler::Play session %s", session.c_str( ));
+  Log( "StreamingHandler::Play session %s ( %f - %f )", session.c_str( ), from, to );
   bool ret = it->second->Play( from, to, seq, rtptime );
   Unlock( );
   return ret;
@@ -137,7 +137,6 @@ bool StreamingHandler::Play( const std::string &session, double &from, double &t
 bool StreamingHandler::Stop( const std::string &session )
 {
   Lock( );
-  Log( "StreamingHandler::Stop session %s", session.c_str( ));
 
   std::map<std::string, Client *>::iterator it = clients.find( session );
   if( it == clients.end( ))
@@ -147,11 +146,29 @@ bool StreamingHandler::Stop( const std::string &session )
     return false;
   }
 
+  Log( "StreamingHandler::Stop session %s", session.c_str( ));
   RemoveClient( it );
-
   Unlock( );
   return true;
 }
+
+bool StreamingHandler::Pause( const std::string &session )
+{
+  Lock( );
+  std::map<std::string, Client *>::iterator it = clients.find( session );
+  if( it == clients.end( ))
+  {
+    LogError( "StreamingHandler::Pause session not found %s", session.c_str( ));
+    Unlock( );
+    return false;
+  }
+
+  Log( "StreamingHandler::Pause session %s", session.c_str( ));
+  bool ret = it->second->Pause( );
+  Unlock( );
+  return ret;
+}
+
 
 bool StreamingHandler::KeepAlive( const std::string &session )
 {
@@ -267,6 +284,7 @@ bool StreamingHandler::Client::Init( )
   this->duration = activity->GetDuration( );
 
   Log( "StreamingHandler::Client::Init duration %fs", duration );
+  activity->Start( );
 
   return true;
 }
@@ -298,7 +316,20 @@ bool StreamingHandler::Client::Play( double &from, double &to, int &seq, int &rt
 
   Log( "StreamingHandler::Client::Play rtptime %u", rtptime );
 
-  activity->Start( );
+  activity->Play( );
+
+  return true;
+}
+
+bool StreamingHandler::Client::Pause( )
+{
+  if( !activity )
+  {
+    LogError( "StreamingHandler::Client::Stop activity not started" );
+    return false;
+  }
+
+  activity->Pause( );
 
   return true;
 }

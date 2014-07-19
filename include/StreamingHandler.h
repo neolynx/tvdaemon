@@ -50,6 +50,7 @@ class StreamingHandler : public Thread
 
     bool Play( const std::string &session, double &from, double &to, int &seq, int &rtptime );
     bool Stop( const std::string &session );
+    bool Pause( const std::string &session );
 
     void Shutdown( );
 
@@ -86,6 +87,7 @@ class StreamingHandler : public Thread
         bool Init( );
         bool Connect( uint16_t port );
         bool Play( double &from, double &to, int &seq, int &rtptime );
+        bool Pause( );
         bool Stop( );
         void KeepAlive( );
 

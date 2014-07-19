@@ -149,6 +149,7 @@ class HTTPServer : public SocketHandler
     bool GET_PARAMETER( HTTPRequest &request );
     bool SETUP( HTTPRequest &request );
     bool PLAY( HTTPRequest &request );
+    bool PAUSE( HTTPRequest &request );
     bool TEARDOWN( HTTPRequest &request );
 
     bool GetStreamingInfo( HTTPRequest &request, std::string &session, std::string &type, std::string &channel_name, int &recording_id );

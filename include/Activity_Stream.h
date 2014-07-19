@@ -41,10 +41,11 @@ class Activity_Stream : public Activity
     virtual ~Activity_Stream( );
 
     virtual std::string GetTitle( ) const;
+    virtual void Stop( );
 
     double GetDuration( );
-
-    virtual void Stop( );
+    void Play( );
+    void Pause( );
 
   private:
     virtual bool Perform( );
@@ -60,7 +61,12 @@ class Activity_Stream : public Activity
     struct timespec start_time;
 
     Condition cond;
-
+    enum
+    {
+      State_Idle,
+      State_Playing,
+      State_Paused,
+    } state;
 
     class Packet
     {
