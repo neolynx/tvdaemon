@@ -52,14 +52,21 @@ Adapter::Adapter( TVDaemon &tvd, const std::string &configfile ) :
 
 Adapter::~Adapter( )
 {
-  for( FrontendList::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
     delete *it;
 }
 
 void Adapter::Shutdown( )
 {
-  for( FrontendList::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
     (*it)->Shutdown( );
+}
+
+void Adapter::Delete( )
+{
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+    (*it)->Delete( );
+  RemoveConfigFile( );
 }
 
 bool Adapter::SaveConfig( )
@@ -69,7 +76,7 @@ bool Adapter::SaveConfig( )
 
   WriteConfigFile( );
 
-  for( FrontendList::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
   {
     (*it)->SaveConfig( );
   }
@@ -92,7 +99,7 @@ bool Adapter::LoadConfig( )
 
 void Adapter::ResetPresence( )
 {
-  for( FrontendList::iterator it = frontends.begin( ); it != frontends.end( ); ++it)
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); ++it)
   {
     (*it)->SetAdapterId( -1 );
     (*it)->SetFrontendId( -1 );
@@ -101,7 +108,7 @@ void Adapter::ResetPresence( )
 
 bool Adapter::IsPresent( ) const
 {
-  for( FrontendList::const_iterator it = frontends.begin( ); it != frontends.end( ); ++it)
+  for( std::vector<Frontend *>::const_iterator it = frontends.begin( ); it != frontends.end( ); ++it)
   {
     if( (*it)->IsPresent( ))
       return true;
@@ -111,7 +118,7 @@ bool Adapter::IsPresent( ) const
 
 bool Adapter::HasFrontend( int adapter_id, int frontend_id )
 {
-  for( FrontendList::iterator it = frontends.begin( ); it != frontends.end( ); ++it)
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); ++it)
   {
     if( adapter_id == (*it)->GetAdapterId( ) && frontend_id == (*it)->GetFrontendId( ))
       return true;
@@ -124,7 +131,7 @@ void Adapter::SetFrontend( const std::string &name, const int adapter_id, const 
   // we have to be sure we are at the right adapter at this point
 
   // search for a not-present frontend
-  for( FrontendList::const_iterator it = frontends.begin( ); it != frontends.end( ); ++it)
+  for( std::vector<Frontend *>::const_iterator it = frontends.begin( ); it != frontends.end( ); ++it)
   {
     Frontend *f = *it;
     if( f->GetName( ) == name && false == f->IsPresent( ))
@@ -164,7 +171,7 @@ void Adapter::json( json_object *entry ) const
   json_object_object_add( entry, "present", json_object_new_int( IsPresent( )));
   json_object *a = json_object_new_array();
 
-  for( FrontendList::const_iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+  for( std::vector<Frontend *>::const_iterator it = frontends.begin( ); it != frontends.end( ); it++ )
   {
     json_object *entry = json_object_new_object( );
     (*it)->json( entry );

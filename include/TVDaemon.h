@@ -55,7 +55,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
-    std::vector<std::string> GetAdapterList( ) const;
     Adapter *GetAdapter( const int id ) const;
 
     Source *CreateSource( const std::string &name, Source::Type type, std::string scanfile = "" );
@@ -67,10 +66,14 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     Channel *GetChannel( const std::string &channel_name );
     Channel *CreateChannel( Service *service );
 
-    void LockFrontends( );
-    void UnlockFrontends( );
-    void LockChannels( );
-    void UnlockChannels( );
+    void LockAdapters( ) const;
+    void UnlockAdapters( ) const;
+    void LockFrontends( ) const;
+    void UnlockFrontends( ) const;
+    void LockChannels( ) const;
+    void UnlockChannels( ) const;
+    void LockSources( ) const;
+    void UnlockSources( ) const;
 
     // RPC
     virtual bool HandleDynamicHTTP( const HTTPRequest &request );
@@ -100,8 +103,13 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     static TVDaemon *instance;
     int epg_update_interval;
 
-    std::vector<Adapter *> adapters;
+    Mutex mutex_frontends;
+
+    Mutex mutex_adapters;
+    std::map<int, Adapter *> adapters;
+    Mutex mutex_sources;
     std::map<int, Source *>  sources;
+    Mutex mutex_channels;
     std::map<int, Channel *> channels;
 
     bool up;
@@ -120,9 +128,6 @@ class TVDaemon : public ConfigObject, public HTTPDynamicHandler, public RTSPHand
     void HandleUdev( );
 
     std::vector<Transponder *> epg_transponders;
-
-    Mutex frontends_mutex;
-    Mutex channels_mutex;
 
     Avahi_Client *avahi_client;
 

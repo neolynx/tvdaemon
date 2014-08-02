@@ -21,6 +21,8 @@
 
 #include <RPCObject.h>
 
+#include <stdio.h> // snprintf
+
 void json_object_time_add( json_object *j, std::string name, time_t tt )
 {
   struct tm t, tnow;
@@ -45,3 +47,9 @@ void json_object_time_add( json_object *j, std::string name, time_t tt )
                                                                                   t.tm_year == tnow.tm_year ));
 }
 
+void json_object_object_add( json_object *j, int key, json_object *k )
+{
+  char t[255];
+  snprintf( t, sizeof( t ), "%d", key );
+  json_object_object_add( j, t, k );
+}

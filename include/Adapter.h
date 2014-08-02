@@ -39,6 +39,7 @@ class Adapter : public ConfigObject, public RPCObject
     Adapter( TVDaemon &tvd, const std::string &configfile );
     virtual ~Adapter( );
     void Shutdown( );
+    void Delete( );
 
     void SetFrontend( const std::string &name, const int adapter_id, const int frontend_id );
 
@@ -63,8 +64,7 @@ class Adapter : public ConfigObject, public RPCObject
     TVDaemon &tvd;
     std::string uid;
 
-    typedef std::vector<Frontend *> FrontendList;
-    FrontendList frontends;
+    std::vector<Frontend *> frontends;
     std::string name;
 };
 

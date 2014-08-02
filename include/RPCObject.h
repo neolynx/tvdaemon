@@ -37,6 +37,7 @@ class JSONObject
 };
 
 void json_object_time_add( json_object *j, std::string name, time_t tt );
+void json_object_object_add( json_object *j, int key, json_object *k );
 
 class RPCHandler
 {

@@ -83,6 +83,13 @@ bool Port::LoadConfig( )
   return true;
 }
 
+void Port::Delete( )
+{
+  if( source )
+    source->RemovePort( this );
+  RemoveConfigFile( );
+}
+
 bool Port::Scan( Activity &act )
 {
   if( !source )

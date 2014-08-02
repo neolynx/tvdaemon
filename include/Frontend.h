@@ -47,6 +47,7 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     static Frontend *Create( Adapter &adapter, std::string configfile );
     virtual ~Frontend( );
     void Shutdown( );
+    void Delete( );
 
     Port *AddPort( std::string name, int port_num );
 

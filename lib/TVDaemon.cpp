@@ -101,8 +101,10 @@ TVDaemon::~TVDaemon( )
   }
 
   LogInfo( "Closing Tuners" );
-  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-    (*it)->Shutdown( );
+  LockAdapters( );
+  for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    it->second->Shutdown( );
+  UnlockAdapters( );
 
   LogInfo( "Stopping Recorder" );
   Recorder::Instance( )->Stop( );
@@ -121,9 +123,10 @@ TVDaemon::~TVDaemon( )
   up = false;
   JoinThread( );
 
-  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-    delete *it;
-  adapters.clear( );
+  LockAdapters( );
+  for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    delete it->second;
+  UnlockAdapters( );
 
   for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
     delete it->second;
@@ -199,8 +202,10 @@ bool TVDaemon::SaveConfig( )
   for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
     it->second->SaveConfig( );
 
-  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-    (*it)->SaveConfig( );
+  LockAdapters( );
+  for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    it->second->SaveConfig( );
+  UnlockAdapters( );
 
   Recorder::Instance( )->SaveConfig( );
 
@@ -227,11 +232,14 @@ bool TVDaemon::LoadConfig( )
   LogInfo( "Loading Sources" );
   if( !CreateFromConfig<Source, int, TVDaemon>( *this, "source", sources ))
     return false;
-  LogInfo( "Loading Adapters" );
-  if( !CreateFromConfig<Adapter, TVDaemon>( *this, "adapter", adapters ))
-    return false;
 
-  return true;
+  LogInfo( "Loading Adapters" );
+  int ret;
+  LockAdapters( );
+  ret = CreateFromConfig<Adapter, int, TVDaemon>( *this, "adapter", adapters );
+  UnlockAdapters( );
+
+  return ret;
 }
 
 void TVDaemon::FindAdapters( )
@@ -306,9 +314,10 @@ void TVDaemon::ProcessAdapters( )
     //
     // first round - try to match name and udev uid
     //
-    for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    LockAdapters( );
+    for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
-      Adapter *a = *it;
+      Adapter *a = it->second;
       // prevent double adding of non-udev adapters
       if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
@@ -324,6 +333,7 @@ void TVDaemon::ProcessAdapters( )
         break;
       }
     }
+    UnlockAdapters( );
     if( found )
       dev_it = device_list.erase( dev_it );
     else
@@ -337,9 +347,10 @@ void TVDaemon::ProcessAdapters( )
     //
     // second round - try to match only the name
     //
-    for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    LockAdapters( );
+    for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
-      Adapter *a = *it;
+      Adapter *a = it->second;
       // prevent double adding of non-udev adapters
       if( a->HasFrontend( dev_it->adapter_id, dev_it->frontend_id ))
       {
@@ -364,6 +375,7 @@ void TVDaemon::ProcessAdapters( )
         break;
       }
     }
+    UnlockAdapters( );
     if( found )
     {
       dev_it = device_list.erase( dev_it );
@@ -374,8 +386,13 @@ void TVDaemon::ProcessAdapters( )
     // Adapter not found, create new
     //
     Adapter *a = new Adapter( *this, dev_it->adapter_name, dev_it->uid, adapters.size( ));
-    adapters.push_back( a );
     a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
+
+    LockAdapters( );
+    int next_id = GetAvailableKey<Adapter, int>( adapters );
+    adapters[next_id] = a;
+    UnlockAdapters( );
+
     dev_it = device_list.erase( dev_it );
   }
 }
@@ -474,15 +491,12 @@ void TVDaemon::AddFrontendToList( const std::string& adapter_name, const std::st
   device_list.push_back( device_t(adapter_name, frontend_name, uid, adapter_id, frontend_id ));
 }
 
-void TVDaemon::RemoveFrontend( const std::string& uid )
+void TVDaemon::RemoveFrontend( const std::string &uid )
 {
-  for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-  {
-    if( (*it)->GetUID( ) == uid )
-    {
-      (*it)->ResetPresence( );
-    }
-  }
+  ScopeLock _l( mutex_adapters );
+  for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    if( it->second->GetUID( ) == uid )
+      it->second->ResetPresence( );
 }
 
 void TVDaemon::UdevRemove( const char *path )
@@ -587,21 +601,13 @@ Source *TVDaemon::CreateSource( const std::string &name, Source::Type type, std:
   return s;
 }
 
-std::vector<std::string> TVDaemon::GetAdapterList( ) const
+Adapter *TVDaemon::GetAdapter( const int id ) const // FIXME: returns unmutexed adapter
 {
-  std::vector<std::string> result;
-  for( std::vector<Adapter *>::const_iterator it = adapters.begin( ); it != adapters.end( ); it++ )
-  {
-    result.push_back( (*it)->GetName( ));
-  }
-  return result;
-}
-
-Adapter *TVDaemon::GetAdapter( const int id ) const
-{
-  if( id >= adapters.size( ))
+  ScopeLock _l( mutex_adapters );
+  std::map<int, Adapter *>::const_iterator it = adapters.find( id );
+  if( it == adapters.end( ))
     return NULL;
-  return adapters[id];
+  return it->second;
 }
 
 std::vector<std::string> TVDaemon::GetSourceList( )
@@ -807,14 +813,16 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
 
   if( action == "get_devices" )
   {
-    json_object *a = json_object_new_array();
+    json_object *a = json_object_new_object();
 
-    for( std::vector<Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    LockAdapters( );
+    for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     {
       json_object *entry = json_object_new_object( );
-      (*it)->json( entry );
-      json_object_array_add( a, entry );
+      it->second->json( entry );
+      json_object_object_add( a, it->first, entry );
     }
+    UnlockAdapters( );
 
     request.Reply( a );
     return true;
@@ -1027,6 +1035,47 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
+  if( action == "delete_adapter" )
+  {
+    int adapter_id;
+    if( !request.GetParam( "id", adapter_id ))
+    {
+      request.NotFound( "id missing" );
+      return false;
+    }
+    LockAdapters( );
+    std::map<int, Adapter *>::iterator it = adapters.find( adapter_id );
+    if( it == adapters.end( ))
+    {
+      request.NotFound( "id not found: %d", adapter_id );
+      UnlockAdapters( );
+      return false;
+    }
+    it->second->Delete( );
+    delete it->second;
+    adapters.erase( it );
+    UnlockAdapters( );
+
+    return true;
+  }
+
+  if( action == "delete_source" )
+  {
+    int source_id;
+    if( !request.GetParam( "id", source_id ))
+    {
+      request.NotFound( "id missing" );
+      return false;
+    }
+    std::map<int, Source *>::iterator it = sources.find( source_id );
+    if( it == sources.end( ))
+    {
+      request.NotFound( "id not found: %d", source_id );
+      return false;
+    }
+
+    return true;
+  }
   request.NotFound( "RPC unknown action: %s", action.c_str( ));
   return false;
 }
@@ -1110,18 +1159,18 @@ bool TVDaemon::RPC_Source( const HTTPRequest &request, const std::string &cat, c
 
 bool TVDaemon::RPC_Adapter( const HTTPRequest &request, const std::string &cat, const std::string &action )
 {
-  std::string t;
-  if( !request.GetParam( "adapter_id", t ))
+  ScopeLock _l( mutex_adapters );
+  int adapter_id;
+  if( !request.GetParam( "adapter_id", adapter_id ))
     return false;
 
-  int i = atoi( t.c_str( ));
-  if( i >= 0 && i < adapters.size( ))
+  std::map<int, Adapter *>::iterator it = adapters.find( adapter_id );
+  if( it == adapters.end( ))
   {
-    return adapters[i]->RPC( request, cat, action );
+    request.NotFound( "RPC unknown adapter: %d", adapter_id );
+    return false;
   }
-
-  request.NotFound( "RPC unknown adapter: %d", i );
-  return false;
+  return it->second->RPC( request, cat, action );
 }
 
 bool TVDaemon::Schedule( Event &event )
@@ -1134,24 +1183,44 @@ void TVDaemon::Record( Channel &channel )
   Recorder::Instance( )->Record( channel );
 }
 
-void TVDaemon::LockFrontends( )
+void TVDaemon::LockAdapters( ) const
 {
-  frontends_mutex.Lock( );
+  mutex_adapters.Lock( );
 }
 
-void TVDaemon::UnlockFrontends( )
+void TVDaemon::UnlockAdapters( ) const
 {
-  frontends_mutex.Unlock( );
+  mutex_adapters.Unlock( );
 }
 
-void TVDaemon::LockChannels( )
+void TVDaemon::LockFrontends( ) const
 {
-  channels_mutex.Lock( );
+  mutex_frontends.Lock( );
 }
 
-void TVDaemon::UnlockChannels( )
+void TVDaemon::UnlockFrontends( ) const
 {
-  channels_mutex.Unlock( );
+  mutex_frontends.Unlock( );
+}
+
+void TVDaemon::LockChannels( ) const
+{
+  mutex_channels.Lock( );
+}
+
+void TVDaemon::UnlockChannels( ) const
+{
+  mutex_channels.Unlock( );
+}
+
+void TVDaemon::LockSources( ) const
+{
+  mutex_sources.Lock( );
+}
+
+void TVDaemon::UnlockSources( ) const
+{
+  mutex_sources.Unlock( );
 }
 
 Channel *TVDaemon::GetChannel( const std::string &channel_name )

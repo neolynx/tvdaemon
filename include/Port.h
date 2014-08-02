@@ -42,6 +42,7 @@ class Port : public ConfigObject, public RPCObject
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
 
+    void Delete( );
     int GetPortNum( ) { return port_num; }
     void SetSource( Source *source ) { this->source = source; }
     Source *GetSource( ) { return source; }

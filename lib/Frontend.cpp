@@ -98,9 +98,7 @@ Frontend::~Frontend( )
   Close( );
 
   for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-  {
     delete *it;
-  }
 }
 
 Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
@@ -650,4 +648,17 @@ void Frontend::Shutdown( )
 {
   up = false;
   JoinThread( );
+  Close( );
 }
+
+void Frontend::Delete( )
+{
+  Shutdown( );
+  Close( );
+
+  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+    (*it)->Delete( );
+
+  RemoveConfigFile( );
+}
+
