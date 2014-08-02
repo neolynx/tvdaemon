@@ -6,4 +6,4 @@
 	url = https://github.com/neolynx/tsdecrypt.git
 [submodule "html/contextMenu.js"]
 	path = html/contextMenu.js
-	url = https://github.com/s-yadav/contextMenu.js.git
+	url = https://github.com/neolynx/contextMenu.js.git

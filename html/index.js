@@ -2,92 +2,93 @@ $(document).ready( ready );
 
 //window.setInterval( function( ) { update( ); }, 2000 );
 
-var sources = [];
-var adapters = [];
+var sources = {};
+var adapters = {};
 var no_update = false;
+var dialog;
 
 var adapter_menu = [
-    {
-        name: 'delete',
-//        img: 'images/delete.png',
-        title: 'delete adapter',
-        fun: function () {
-          console.log( "delete", this );
-        }
-    }];
+{
+  name: 'delete Adapter',
+    //        img: 'images/delete.png',
+    title: 'delete adapter',
+    fun: function () {
+      delete_adapter( this );
+    }
+}];
 
 var frontend_menu = [
-    {
-        name: 'add Port',
-//        img: 'images/delete.png',
-        title: 'add a Port to this frontend',
-        fun: function () {
-          console.log( "add port", this );
-        }
-    }];
+{
+  name: 'add Port',
+    //        img: 'images/delete.png',
+    title: 'add a Port to this frontend',
+    fun: function () {
+      console.log( "add port", this );
+      dialog = $( "#port-form" ).dialog( {
+        title: "Add Port",
+        autoOpen: false,
+        height: 300,
+        width: 350,
+        modal: true,
+        buttons: {
+          "Add": editPort,
+          Cancel: function() { dialog.dialog( "close" ); }
+        },
+      });
+      adapter = adapters[this.adapter];
+      frontend = adapter.frontends[this.frontend];
+      port_form( adapter, frontend );
+      dialog.dialog( "open" );
+    }
+}];
 
 var port_menu = [
-    {
-        name: 'delete',
-//        img: 'images/delete.png',
-        title: 'delete this port',
-        fun: function () {
-          console.log( "delete port", this );
-        }
-    }];
+  { name: 'edit Port',
+    //        img: 'images/delete.png',
+    title: 'edit this port',
+    fun: function () {
+      console.log( "edit port", this );
+      dialog = $( "#port-form" ).dialog( {
+        title: "Edit Port",
+        autoOpen: false,
+        height: 300,
+        width: 350,
+        modal: true,
+        buttons: {
+          "Edit": editPort,
+          Cancel: function() { dialog.dialog( "close" ); }
+        },
+      });
+      adapter = adapters[this.adapter];
+      frontend = adapter.frontends[this.frontend];
+      port = frontend.ports[this.port];
+      port_form( adapter, frontend, port );
+      dialog.dialog( "open" );
+    }
+  },
+  { name: 'delete Port',
+    //        img: 'images/delete.png',
+    title: 'delete this port',
+    fun: function () {
+      console.log( "delete port", this );
+    }
+  },
+];
 
 var source_menu = [
-    {
-        name: 'delete',
-//        img: 'images/delete.png',
-        title: 'delete this source',
-        fun: function () {
-          console.log( "delete source", this );
-        }
-    }];
+{
+  name: 'delete',
+    //        img: 'images/delete.png',
+    title: 'delete this source',
+    fun: function () {
+      delete_source( this );
+    }
+}];
 
 function ready( )
 {
   theme = "";
-  //$('#port_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#port_cancel"), modalOpacity: 0.30 });
-  //$('#port_popup').bind( 'closed', function ( event ) { no_update = false; } );
-  //$('#port_ok').bind( 'click', function ( event ) { savePort( ); } );
-  //$('#port_source').bind( 'change', function ( event ) { if( $(this).val( ) == -2 ) editSource( ); } );
-
-  //$('#source_popup').jqxWindow({ width: "200px", resizable: false, theme: theme, isModal: true, autoOpen: false, cancelButton: $("#source_cancel"), modalOpacity: 0.30 });
-  //$('#source_popup').bind( 'closed', function ( event ) { no_update = false; } );
-  //$('#source_ok').bind( 'click', function ( event ) { saveSource( ); } );
-
   $('#setup').attr( 'class', 'setup' );
-
-  //$("document").contextmenu({
-    //delegate: ".hasmenu",
-    //menu: "#test",
-    //// position: {my: "left top", at: "left bottom"},
-    //position: function(event, ui){
-      //return {my: "left top", at: "left bottom", of: ui.target};
-    //},
-    //preventSelect: true,
-    //focus: function(event, ui) {
-      //var menuId = ui.item.find(">a").attr("href");
-      //$("#info").text("focus " + menuId);
-      //console.log("focus", ui.item);
-    //},
-    //blur: function(event, ui) {
-      //$("#info").text("");
-      //console.log("blur", ui.item);
-    //},
-    //beforeOpen: function(event, ui) {
-      //// $("#container").contextmenu("replaceMenu", "#options2");
-      //// $("#container").contextmenu("replaceMenu", [{title: "aaa"}, {title: "bbb"}]);
-    //},
-    //open: function(event, ui) {
-      //// alert("open on " + ui.target.text());
-    //},
-    //select: function(event, ui) {
-      //alert("select " + ui.cmd + " on " + ui.target.text());
-    //}
-  //});
 
   Menu( "Setup" );
   update( );
@@ -216,8 +217,8 @@ function getAdapter( adapter )
 
   img = $('<img />', {
     id:  "adapter" + adapter["id"],
-    src: icon,
-    alt: adapter["name"],
+      src: icon,
+      alt: adapter["name"],
   });
   img.css( 'cursor', 'pointer' );
   if( adapter["present"] == 1 )
@@ -248,11 +249,16 @@ function getPort( port )
     icon = "images/antenna-cable.smal.png";
 
   adapter = adapters[port["adapter_id"]];
+  if( !adapter )
+  {
+    console.log( "adapter " + port["adapter_id"] + " not found for port " + port["name"] + "("+ port["id"] + ")" );
+    return;
+  }
   frontend = adapter["frontends"][port["frontend_id"]];
 
   img = $('<img />', {
     src: icon,
-    alt: adapter["name"],
+      alt: adapter["name"],
   });
   img.css( 'cursor', 'pointer' );
 
@@ -277,7 +283,7 @@ function getSource( port )
     source.contextMenu(source_menu, { userData: { adapter: adapter["id"], frontend: frontend["id"], port: port["id"], source: source_id }});
     span.append( source );
     span.append( "<br/>Transponders: " + sources[source_id]["transponders"] +
-                 "<br/>Services: " + sources[source_id]["services"] );
+        "<br/>Services: " + sources[source_id]["services"] );
     adapter = adapters[port["adapter_id"]];
     frontend = adapter["frontends"][port["frontend_id"]];
   }
@@ -290,10 +296,26 @@ function getSource( port )
   return span;
 }
 
+function delete_adapter( adapter_id )
+{
+  if( confirm( "Delete adapter ?" ))
+    getJSON('tvd?c=tvdaemon&a=delete_adapter&id=' + adapter_id, reload );
+}
+
+function delete_source( source_id )
+{
+  if( confirm( "Delete source ?" ))
+    getJSON('tvd?c=tvdaemon&a=delete_source&id=' + source_id, reload );
+}
+
+function reload( data, errmsg )
+{
+  update( );
+}
+
 function editPort( adapter_id, frontend_id, port_id )
 {
   no_update = true;
-  //$("#port_popup").jqxWindow('show');
   frontend = adapters[adapter_id]["frontends"][frontend_id];
   port = frontend["ports"][port_id];
   $("#port_name").focus( );
@@ -393,36 +415,38 @@ function scan( )
   } );
 }
 
-function click_frontend( adapter_id, frontend_id )
+function port_form( adapter, frontend, port )
 {
-  no_update = true;
-  //$("#port_popup").jqxWindow('show');
-  //frontend = adapters[adapter_id]["frontends"][frontend_id];
-  //$("#port_name").focus( );
-  //$("#port_name").val( "" );
-  //$("#port_num").val( frontend["ports"].length );
-  //$("#port_adapter_id").val( adapter_id );
-  //$("#port_frontend_id").val( frontend_id );
-  //$("#port_port_id").val( null );
-  //$("#port_type").val( frontend["type"] );
+  $("#port_adapter_id").val( adapter.id );
+  $("#port_frontend_id").val( frontend.id );
 
-  $("#popup").css( "position", "absolute" );
-  $("#popup").css( "top", "0" );
-  $("#popup").css( "bottom", "0" );
-  $("#popup").css( "background", "#eee" );
-  $("#popup").css( "width", "100%" );
-  $("#popup").css( "height", "100%" );
-  $("#popup").css( "opacity", "0.1" );
+  $("#port_source").empty( );
+  $("#port_source").append( new Option( "Undefined", "-1" ));
+  for( s in sources )
+  {
+    source = sources[s];
+    if( source["type"] == frontend.type )
+      $("#port_source").append( new Option( source["name"], source["id"] ));
+  }
+  $("#port_source").append( new Option( "create new ...", "-2" ));
 
-  $("#test").css( "margin", "auto" );
-  $("#test").css( "position", "absolute" );
-  $("#test").css( "top", "50%" );
-  $("#test").css( "left", "50%" );
-  $("#test").css( "background", "#eee" );
-  $("#popup").show();
-  //getJSON('tvd?c=tvdaemon&a=get_sources', editPortGetSources );
+  if( port )
+  {
+    $("#port_port_id").val( port.id );
+    $("#port_name").val( port["name"] );
+    $("#port_num").val( port["port_num"] );
+    $("#port_source").val( port["source_id"] ).attr( 'selected', true );
+  }
+  else
+  {
+    $("#port_port_id").val( -1 );
+    $("#port_name").val( "New LNB" );
+    port_num = 0;
+    for( p in frontend.ports )
+      if( frontend.ports[p].id > port_num )
+        port_num = frontend.ports[p].id;
+    $("#port_num").val( ++port_num );
+  }
 
-  //$("#menu2").contextmenu("open", $(".hasmenu:first"), {foo: "bar"});
-
+  $("#port_name").focus( );
 }
-
