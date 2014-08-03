@@ -335,7 +335,7 @@ bool Activity_Record::Perform( )
     while( Utils::IsFile( t2 )) // FIXME: race cond
     {
       char num[16];
-      snprintf( num, sizeof( num ), " - %d", i );
+      snprintf( num, sizeof( num ), " - %d", i++ );
       t2 = t + num + ".ts";
     }
     filename = t2;
@@ -614,42 +614,3 @@ bool Activity_Record::compare( const JSONObject &other, const int &p ) const
   return false;
 }
 
-//Recorder::Recorder( struct dvb_v5_fe_parms &fe ): fe(fe), mkv(NULL)
-//{
-//mkv = new Matroska( "test" );
-//mkv->WriteHeader( );
-
-//buffer = new RingBuffer( 64 * 1024 );
-//frame = new Frame( fe, *mkv );
-//}
-
-//Recorder::~Recorder( )
-//{
-//delete mkv;
-//delete buffer;
-//delete frame;
-//}
-
-//void Recorder::AddTrack( )
-//{
-//mkv->AddTrack( );
-//}
-
-//void Recorder::record( uint8_t *data, int size )
-//{
-////Utils::dump( data, size );
-//buffer->append( data, size );
-
-//uint8_t *p;
-//size_t framelen;
-//if( buffer->GetFrame( p, framelen ))
-//{
-//frame->ReadFrame( p, framelen );
-
-////Utils::dump( frame, framelen );
-////mkv->AddFrame( frame, framelen );
-//delete[] p;
-////buffer->FreeFrame( frame );
-//}
-//return;
-//}
