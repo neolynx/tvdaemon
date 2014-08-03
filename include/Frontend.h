@@ -90,6 +90,9 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
     bool Tune( Activity &act );
     void Release( );
 
+    void LockPorts( ) const;
+    void UnlockPorts( ) const;
+
     virtual bool HandleNIT( struct dvb_table_nit *nit ) = 0;
 
     void Log( const char *fmt, ... ) __attribute__ (( format( printf, 2, 3 )));
@@ -113,7 +116,8 @@ class Frontend : public ConfigObject, public RPCObject, public Thread
 
     int current_port;
 
-    std::vector<Port *> ports;
+    Mutex mutex_ports;
+    std::map<int, Port *> ports;
 
     Transponder *transponder; // current tuned transponder
 

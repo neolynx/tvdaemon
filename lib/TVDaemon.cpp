@@ -37,6 +37,7 @@
 #include "Channel.h"
 #include "Adapter.h"
 #include "Frontend.h"
+#include "Port.h"
 #include "Recorder.h"
 #include "CAMClientHandler.h"
 
@@ -579,6 +580,7 @@ void TVDaemon::Run( )
 
 Source *TVDaemon::CreateSource( const std::string &name, Source::Type type, std::string scanfile )
 {
+  // FIXME lock sources
   for( std::map<int, Source *>::iterator it = sources.begin( ); it != sources.end( ); it++ )
   {
     if( it->second->GetName( ) == name )
@@ -606,7 +608,10 @@ Adapter *TVDaemon::GetAdapter( const int id ) const // FIXME: returns unmutexed 
   ScopeLock _l( mutex_adapters );
   std::map<int, Adapter *>::const_iterator it = adapters.find( id );
   if( it == adapters.end( ))
+  {
+    LogError( "Adapter %d not found", id );
     return NULL;
+  }
   return it->second;
 }
 
@@ -777,7 +782,7 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     if( !request.GetParam( "type", (int &) type ))
       return false;
 
-    Log( "Creating Source '%s' type %d initialized from '%s'", name.c_str( ), type, scanfile.c_str( ));
+    Log( "Creating Source '%s' type %d", name.c_str( ), type );
 
     Source *s = CreateSource( name, type, scanfile );
     if( !s )
@@ -786,6 +791,26 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       return false;
     }
 
+    int adapter_id, frontend_id, port_id;
+    adapter_id = frontend_id = port_id = -1;
+    if( request.HasParam( "adapter_id" ))
+      request.GetParam( "adapter_id", adapter_id );
+    if( request.HasParam( "frontend_id" ))
+      request.GetParam( "frontend_id", frontend_id );
+    if( request.HasParam( "port_id" ))
+      request.GetParam( "port_id", port_id );
+
+    Adapter *a = GetAdapter( adapter_id );
+    if( a )
+    {
+      Frontend *f = a->GetFrontend( frontend_id );
+      if( f )
+      {
+        Port *p = f->GetPort( port_id );
+        p->SetSource( s );
+        s->AddPort( p );
+      }
+    }
     request.Reply( HTTP_OK, s->GetKey( ));
     return true;
   }
@@ -1067,13 +1092,19 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
       request.NotFound( "id missing" );
       return false;
     }
+    LockSources( );
     std::map<int, Source *>::iterator it = sources.find( source_id );
     if( it == sources.end( ))
     {
       request.NotFound( "id not found: %d", source_id );
+      UnlockSources( );
       return false;
     }
 
+    it->second->Delete( );
+    delete it->second;
+    sources.erase( it );
+    UnlockSources( );
     return true;
   }
   request.NotFound( "RPC unknown action: %s", action.c_str( ));

@@ -517,3 +517,17 @@ void Transponder::RemoveChannel( Channel *channel )
 
   //Unlock( );
 }
+
+void Transponder::Delete( )
+{
+  // FIXME: Lock( );
+  for( std::map<uint16_t, Service *>::iterator it = services.begin( ); it != services.end( ); it++ )
+  {
+    it->second->Delete( );
+    delete it->second;
+  }
+  services.clear( );
+
+  RemoveConfigFile( );
+}
+

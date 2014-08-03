@@ -34,7 +34,6 @@
       <input type="hidden" name="adapter_id" id="port_adapter_id"/>
       <input type="hidden" name="frontend_id" id="port_frontend_id"/>
       <input type="hidden" name="port_id" id="port_port_id"/>
-      <input type="hidden" id="port_type"/>
       <fieldset>
         <label>Name  </label><input type="text" name="name" id="port_name" class="text ui-widget-content ui-corner-all"/>
         <label>LNB ID</label><input type="text" name="port_num" id="port_num"/ class="text ui-widget-content ui-corner-all">
@@ -43,24 +42,20 @@
     </form>
   </div>
 
-  <div id="source_popup" style="display: none; overflow: hidden;">
-    <div>Create Source</div>
-    <div style="overflow: hidden;">
-      <form id="source_form" method="POST">
-        <input type="hidden" name="type" id="source_type"/>
-        <div class="right"><label>Name  </label><input type="text" name="name" id="source_name"/></div>
-        <div class="right">
-          <label>Load Transponders</label>
-          <select name="scanfile" id="source_scanfile">
-            <option>loading...</option>
-          </select>
-        </div>
-        <div class="right">
-          <input style="margin-right: 5px;" type="button" id="source_ok" value="Ok"/><input id="source_cancel" type="button" value="Cancel"/>
-        </div>
-      </form>
-    </div>
+  <div id="source-form" title="Port">
+    <form>
+      <input type="hidden" name="adapter_id" id="source_adapter_id"/>
+      <input type="hidden" name="frontend_id" id="source_frontend_id"/>
+      <input type="hidden" name="port_id" id="source_port_id"/>
+      <input type="hidden" name="source_id" id="source_source_id"/>
+      <input type="hidden" name="type" id="source_type"/>
+      <fieldset>
+        <label>Name  </label><input type="text" name="name" id="source_name" class="text ui-widget-content ui-corner-all"/><br />
+        <label>Initialize from</label><select name="scanfile" id="source_scanfile"><option>loading...</option></select>
+      </fieldset>
+    </form>
   </div>
+
 </body>
 </html>
 

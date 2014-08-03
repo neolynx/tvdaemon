@@ -52,6 +52,8 @@ class Source : public ConfigObject, public RPCObject, public Mutex
     Source( TVDaemon &tvd, std::string configfile );
     virtual ~Source( );
 
+    void Delete( );
+
     std::string GetName( ) { return name; }
 
     virtual bool SaveConfig( );

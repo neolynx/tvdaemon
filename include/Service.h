@@ -43,6 +43,7 @@ class Service : public RPCObject
     Service( Transponder &transponder, uint16_t service_id, uint16_t pid, int config_id );
     Service( Transponder &transponder );
     virtual ~Service( );
+    void Delete( );
 
     enum Type
     {

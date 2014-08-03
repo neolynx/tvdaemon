@@ -484,3 +484,16 @@ bool Source::compare( const JSONObject &other, const int &p ) const
   return name < b.name;
 }
 
+void Source::Delete( )
+{
+  SCOPELOCK( );
+  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+    (*it)->SetSource( NULL );
+
+  for( std::map<int, Transponder *>::iterator it = transponders.begin( ); it != transponders.end( ); it++ )
+    it->second->Delete( );
+  transponders.clear( );
+
+  RemoveConfigFile( );
+}
+

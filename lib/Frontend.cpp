@@ -65,7 +65,8 @@ Frontend::Frontend( Adapter &adapter, std::string name, int adapter_id, int fron
   , tune_timeout(5000)
   , up(true)
 {
-  ports.push_back( new Port( *this, 0 ));
+  int next_id = GetAvailableKey<Port, int>( ports );
+  ports[next_id] = new Port( *this, 0 );
   state = State_Ready;
   StartThread( );
 }
@@ -97,8 +98,10 @@ Frontend::~Frontend( )
 
   Close( );
 
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-    delete *it;
+  LockPorts( );
+  for( std::map<int, Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+    delete it->second;
+  UnlockPorts( );
 }
 
 Frontend *Frontend::Create( Adapter &adapter, std::string configfile )
@@ -163,21 +166,6 @@ Frontend *Frontend::Create( Adapter &adapter, int adapter_id, int frontend_id, i
   return NULL;
 }
 
-Port *Frontend::AddPort( std::string name, int port_num )
-{
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-  {
-    if( (*it)->GetPortNum( ) == port_num )
-    {
-      LogError( "Port %d already exists", port_num );
-      return NULL;
-    }
-  }
-  Port *port = new Port( *this, ports.size( ), name, port_num );
-  ports.push_back( port );
-  return port;
-}
-
 bool Frontend::Open()
 {
   if( fe )
@@ -238,10 +226,10 @@ bool Frontend::SaveConfig( )
 
   WriteConfigFile( );
 
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-  {
-    (*it)->SaveConfig( );
-  }
+  LockPorts( );
+  for( std::map<int, Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+    it->second->SaveConfig( );
+  UnlockPorts( );
   return true;
 }
 
@@ -256,8 +244,13 @@ bool Frontend::LoadConfig( )
   if( tune_timeout == 0 )
     tune_timeout = 2500;
 
-  if( !CreateFromConfig<Port, Frontend>( *this, "port", ports ))
+  LockPorts( );
+  if( !CreateFromConfig<Port, int, Frontend>( *this, "port", ports ))
+  {
+    UnlockPorts( );
     return false;
+  }
+  UnlockPorts( );
   state = State_Ready;
   return true;
 }
@@ -273,11 +266,28 @@ int Frontend::GetFrontendId( ) const
   return frontend_id;
 }
 
+Port *Frontend::AddPort( std::string name, int port_num )
+{
+  ScopeLock _l( mutex_ports );
+  for( std::map<int, Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+    if( it->second->GetPortNum( ) == port_num )
+    {
+      LogError( "Port %d already exists", port_num );
+      return NULL;
+    }
+  int next_id = GetAvailableKey<Port, int>( ports );
+  Port *port = new Port( *this, next_id, name, port_num );
+  ports[next_id] = port;;
+  return port;
+}
+
 bool Frontend::SetPort( int id )
 {
+  ScopeLock _l( mutex_ports );
   if( current_port == id )
     return true;
-  if( id < 0 or id >= ports.size( ))
+  std::map<int, Port *>::iterator it = ports.find( id );
+  if( it == ports.end( ))
   {
     LogError( "Frontend::SetPort unknown port %d", id );
     return false;
@@ -288,15 +298,17 @@ bool Frontend::SetPort( int id )
 
 Port *Frontend::GetPort( int id )
 {
-  if( id >= ports.size( ))
+  ScopeLock _l( mutex_ports );
+  std::map<int, Port *>::iterator it = ports.find( id );
+  if( it == ports.end( ))
   {
-    LogError( "port %d not found", id );
+    LogError( "Port %d not found", id );
     return NULL;
   }
-  return ports[id];
+  return it->second;
 }
 
-Port *Frontend::GetCurrentPort( )
+Port *Frontend::GetCurrentPort( ) // FIXME: returns unmutexed
 {
   return ports[current_port];
 }
@@ -461,15 +473,16 @@ bool Frontend::SetTuneParams( Transponder & )
 
 void Frontend::json( json_object *entry ) const
 {
+  ScopeLock _l( mutex_ports );
   json_object_object_add( entry, "name", json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "id",   json_object_new_int( GetKey( )));
   json_object_object_add( entry, "type", json_object_new_int( type ));
 
   json_object *a = json_object_new_array();
-  for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+  for( std::map<int, Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
   {
     json_object *entry = json_object_new_object( );
-    (*it)->json( entry );
+    it->second->json( entry );
     json_object_array_add( a, entry );
   }
   json_object_object_add( entry, "ports", a );
@@ -483,11 +496,16 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
     if( !request.GetParam( "port_id", port_id ))
       return false;
 
-    if( port_id >= 0 && port_id < ports.size( ))
+    LockPorts( );
+    std::map<int, Port *>::iterator it = ports.find( port_id );
+    if( it == ports.end( ))
     {
-      return ports[port_id]->RPC( request, cat, action );
+      LogError( "Port %d not found", port_id );
+      return false;
     }
-    return false;
+    bool ret = it->second->RPC( request, cat, action );
+    UnlockPorts( );
+    return ret;
   }
 
   if( action == "create_port" )
@@ -501,23 +519,44 @@ bool Frontend::RPC( const HTTPRequest &request, const std::string &cat, const st
     int source_id;
     if( !request.GetParam( "source_id", source_id ))
       return false;
-    if( source_id < 0 )
-    {
-      LogError( "Invalid source: %d", source_id );
-      return false;
-    }
 
     Port *port = AddPort( name, port_num );
     if( port == NULL )
+    {
+      request.NotFound( "Port with number %d already exists", port_num );
       return false;
+    }
 
     Source *source = TVDaemon::Instance( )->GetSource( source_id );
     if( !source )
-      return false;
-
-    source->AddPort( port );
-    port->SetSource( source );
+      LogError( "Source not found: %d", source_id );
+    else
+    {
+      source->AddPort( port );
+      port->SetSource( source );
+    }
     request.Reply( HTTP_OK, port->GetKey( ));
+    return true;
+  }
+
+  if( action == "delete_port" )
+  {
+    int port_id;
+    if( !request.GetParam( "port_id", port_id ))
+      return false;
+    LockPorts( );
+    std::map<int, Port *>::iterator it = ports.find( port_id );
+    if( it == ports.end( ))
+    {
+      LogError( "Port not found: %d", port_id );
+      UnlockPorts( );
+      return false;
+    }
+    it->second->Delete( );
+    delete it->second;
+    ports.erase( it );
+    UnlockPorts( );
+
     return true;
   }
 
@@ -536,6 +575,7 @@ void Frontend::Run( )
       continue;
     }
 
+    // FIXME: combine activity lock with frontend, port and other mutexes
     bool idle = true;
     switch( state )
     {
@@ -544,9 +584,9 @@ void Frontend::Run( )
           activity_lock.Lock( );
           Activity_Scan *act = new Activity_Scan( );
           act->SetFrontend( this );
-          for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+          for( std::map<int, Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
           {
-            if( (*it)->Scan( *act ))
+            if( it->second->Scan( *act ))
             {
               activity_lock.Unlock( );
               act->Run( );
@@ -568,9 +608,9 @@ void Frontend::Run( )
           activity_lock.Lock( );
           Activity_UpdateEPG *act = new Activity_UpdateEPG( );
           act->SetFrontend( this );
-          for( std::vector<Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
+          for( std::map<int, Port *>::const_iterator it = ports.begin( ); it != ports.end( ); it++ )
           {
-            if( (*it)->ScanEPG( *act ))
+            if( it->second->ScanEPG( *act ))
             {
               activity_lock.Unlock( );
               act->Run( );
@@ -656,9 +696,24 @@ void Frontend::Delete( )
   Shutdown( );
   Close( );
 
-  for( std::vector<Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
-    (*it)->Delete( );
+  LockPorts( );
+  for( std::map<int, Port *>::iterator it = ports.begin( ); it != ports.end( ); it++ )
+  {
+    it->second->Delete( );
+    delete it->second;
+  }
+  ports.clear( );
+  UnlockPorts( );
 
   RemoveConfigFile( );
 }
 
+void Frontend::LockPorts( ) const
+{
+  mutex_ports.Lock( );
+}
+
+void Frontend::UnlockPorts( ) const
+{
+  mutex_ports.Unlock( );
+}

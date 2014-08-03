@@ -158,8 +158,11 @@ void Adapter::SetFrontend( const std::string &name, const int adapter_id, const 
 
 Frontend *Adapter::GetFrontend( const int id ) const
 {
-  if( id >= frontends.size( ))
+  if( id < 0 or id >= frontends.size( ))
+  {
+    LogError( "Frontend %d not found", id );
     return NULL;
+  }
   return frontends[id];
 }
 

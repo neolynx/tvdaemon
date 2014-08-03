@@ -349,3 +349,11 @@ int Service::Open( Frontend &frontend, int pid )
   }
   return fd;
 }
+
+void Service::Delete( )
+{
+  // FIXME: lock
+  for( std::map<uint16_t, Stream *>::iterator it = streams.begin( ); it != streams.end( ); it++ )
+    delete it->second;
+  streams.clear( );
+}

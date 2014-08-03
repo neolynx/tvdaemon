@@ -41,6 +41,7 @@ class Transponder : public ConfigObject, public RPCObject
     Transponder( Source &src, const fe_delivery_system_t delsys, int config_id );
     Transponder( Source &src, std::string configfile );
     virtual ~Transponder( );
+    void Delete( );
 
     virtual bool SaveConfig( );
     virtual bool LoadConfig( );
