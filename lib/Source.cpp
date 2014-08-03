@@ -329,7 +329,8 @@ bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std:
       request.Reply( response );
       return true;
     }
-    else if( action == "get_transponders" )
+
+    if( action == "get_transponders" )
     {
       json_object *h = json_object_new_object();
       json_object_object_add( h, "iTotalRecords", json_object_new_int( transponders.size( )));
@@ -347,8 +348,17 @@ bool Source::RPC( const HTTPRequest &request, const std::string &cat, const std:
       request.Reply( h );
       return true;
     }
+
+    if( action == "set" )
+    {
+      if( !request.GetParam( "name", name ))
+        return false;
+
+      return true;
+    }
   }
-  else if( cat == "transponder" || cat == "service" )
+
+  if( cat == "transponder" || cat == "service" )
   {
     std::string t;
     if( !request.GetParam( "transponder_id", t ))

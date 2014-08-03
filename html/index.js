@@ -9,9 +9,8 @@ var dialog;
 
 var adapter_menu = [
 {
-  name: 'delete Adapter',
+  name: 'Delete Adapter',
     //        img: 'images/delete.png',
-    title: 'delete adapter',
     fun: function () {
       delete_adapter( this );
     }
@@ -19,9 +18,8 @@ var adapter_menu = [
 
 var frontend_menu = [
 {
-  name: 'add Port',
+  name: 'Add Port',
     //        img: 'images/delete.png',
-    title: 'add a Port to this frontend',
     fun: function () {
       no_update = true;
       dialog = $( "#port-form" ).dialog( {
@@ -43,9 +41,8 @@ var frontend_menu = [
 }];
 
 var port_menu = [
-  { name: 'edit Port',
+  { name: 'Edit Port',
     //        img: 'images/delete.png',
-    title: 'edit this port',
     fun: function () {
       no_update = true;
       dialog = $( "#port-form" ).dialog( {
@@ -66,9 +63,8 @@ var port_menu = [
       dialog.dialog( "open" );
     }
   },
-  { name: 'delete Port',
+  { name: 'Delete Port',
     //        img: 'images/delete.png',
-    title: 'delete this port',
     fun: function () {
       delete_port( this );
     }
@@ -95,6 +91,28 @@ var source_menu = [
       frontend = adapter.frontends[this.frontend];
       port = frontend.ports[this.port]
       source_form( adapter, frontend, port );
+    }
+  },
+  { name: 'Edit Source',
+    //        img: 'images/delete.png',
+    fun: function () {
+      no_update = true;
+      dialog = $( "#source-form" ).dialog( {
+        title: "Edit Source",
+        autoOpen: false,
+        //height: 300,
+        //width: 350,
+        modal: true,
+        buttons: {
+          "Edit": source_submit,
+          Cancel: function() { dialog.dialog( "close" ); }
+        },
+      });
+      adapter = adapters[this.adapter];
+      frontend = adapter.frontends[this.frontend];
+      port = frontend.ports[this.port];
+      source = sources[this.source];
+      source_form( adapter, frontend, port, source );
     }
   },
   { name: 'Delete Source',
@@ -340,22 +358,6 @@ function delete_port( obj )
     getJSON('tvd?c=frontend&a=delete_port&adapter_id=' + obj.adapter + "&frontend_id=" + obj.frontend + "&port_id=" + obj.port, reload );
 }
 
-function loadScanfiles( scanfiles, errmsg )
-{
-  if( !scanfiles )
-  {
-    alert( errmsg );
-    return;
-  }
-
-  $("#source_scanfile").empty( );
-  $("#source_scanfile").append( new Option( "select ...", "" ));
-  for( i in scanfiles )
-    $("#source_scanfile").append( new Option( scanfiles[i], scanfiles[i] ));
-
-  dialog.dialog( "open" );
-}
-
 function scan( )
 {
   $.ajax( {
@@ -423,19 +425,38 @@ function port_submit( )
   dialog.dialog( "close" );
 }
 
-function source_form( adapter, frontend, port )
+function source_form( adapter, frontend, port, source )
 {
   $("#source_adapter_id").val( adapter.id );
   $("#source_frontend_id").val( frontend.id );
   $("#source_port_id").val( port.id );
   $("#source_source_id").val( port.source_id );
   $("#source_type").val( frontend.type );
-  if( port.source_id != -1 )
+  if( source.id != -1 )
     $("#source_name").val( sources[port.source_id].name );
   else
     $("#source_name").val( "" );
 
-  getJSON( 'tvd?c=tvdaemon&a=get_scanfiles&type=' + frontend["type"], loadScanfiles );
+  if( source.id == -1 )
+    getJSON( 'tvd?c=tvdaemon&a=get_scanfiles&type=' + frontend["type"], loadScanfiles );
+  else
+    dialog.dialog( "open" );
+}
+
+function loadScanfiles( scanfiles, errmsg )
+{
+  if( !scanfiles )
+  {
+    alert( errmsg );
+    return;
+  }
+
+  $("#source_scanfile").empty( );
+  $("#source_scanfile").append( new Option( "select ...", "" ));
+  for( i in scanfiles )
+    $("#source_scanfile").append( new Option( scanfiles[i], scanfiles[i] ));
+
+  dialog.dialog( "open" );
 }
 
 function source_submit( )
@@ -455,3 +476,4 @@ function source_submit( )
   no_update = false;
   dialog.dialog( "close" );
 }
+
