@@ -1,7 +1,7 @@
-From 9864787f87a412d3f7ed4e11aaebcfe03f63dc08 Mon Sep 17 00:00:00 2001
+From 290791bb209f3b1e9a666666ba8e7cfd02ede136 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:25:37 +0200
-Subject: [PATCH 4/6] libdvbv5: generators for SDT, desc_service and mpeg_ts
+Subject: [PATCH 4/7] libdvbv5: generators for SDT, desc_service and mpeg_ts
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -452,7 +452,7 @@ index 98864fd..58581a4 100644
 +}
 +
 diff --git a/lib/libdvbv5/tables/sdt.c b/lib/libdvbv5/tables/sdt.c
-index d27cec8..a3741c1 100644
+index d27cec8..d8f3883 100644
 --- a/lib/libdvbv5/tables/sdt.c
 +++ b/lib/libdvbv5/tables/sdt.c
 @@ -22,6 +22,8 @@
@@ -559,7 +559,7 @@ index d27cec8..a3741c1 100644
 +	sdt_dump->header.section_length = size_total - offsetof(struct dvb_table_header, id);
 +	bswap16(sdt_dump->header.bitfield);
 +
-+	uint32_t crc = crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
++	uint32_t crc = dvb_crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
 +	bswap32(crc);
 +	*(uint32_t *) p = crc;
 +

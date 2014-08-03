@@ -1,7 +1,7 @@
-From c9c2979f4883620f1ed86867e3585dd92c6bef02 Mon Sep 17 00:00:00 2001
+From a442d54bae7dbb32d9b0df4796a21d07a2d664d6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:41:32 +0200
-Subject: [PATCH 5/6] libdvbv5: generators for PAT and PMT
+Subject: [PATCH 5/7] libdvbv5: generators for PAT and PMT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -119,7 +119,7 @@ index 58581a4..73496b2 100644
  	if (ts->adaptation_field) {
  		dvb_loginfo("|- Adaptation Field");
 diff --git a/lib/libdvbv5/tables/pat.c b/lib/libdvbv5/tables/pat.c
-index 03b75b0..1a5abdd 100644
+index 03b75b0..63c7c39 100644
 --- a/lib/libdvbv5/tables/pat.c
 +++ b/lib/libdvbv5/tables/pat.c
 @@ -22,6 +22,8 @@
@@ -209,7 +209,7 @@ index 03b75b0..1a5abdd 100644
 +	pat_dump->header.section_length = size_total - offsetof(struct dvb_table_header, id);
 +	bswap16(pat_dump->header.bitfield);
 +
-+	uint32_t crc = crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
++	uint32_t crc = dvb_crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
 +	bswap32(crc);
 +	*(uint32_t *) p = crc;
 +
@@ -217,7 +217,7 @@ index 03b75b0..1a5abdd 100644
  }
  
 diff --git a/lib/libdvbv5/tables/pmt.c b/lib/libdvbv5/tables/pmt.c
-index d2e2693..a16fe9c 100644
+index d2e2693..946bfcc 100644
 --- a/lib/libdvbv5/tables/pmt.c
 +++ b/lib/libdvbv5/tables/pmt.c
 @@ -22,6 +22,8 @@
@@ -331,14 +331,14 @@ index d2e2693..a16fe9c 100644
 +	pmt_dump->header.section_length = size_total - offsetof(struct dvb_table_header, id);
 +	bswap16(pmt_dump->header.bitfield);
 +
-+	uint32_t crc = crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
++	uint32_t crc = dvb_crc32(*data, size_total - DVB_CRC_SIZE, 0xFFFFFFFF);
 +	bswap32(crc);
 +	*(uint32_t *) p = crc;
 +
 +	return size_total;
 +}
 diff --git a/lib/libdvbv5/tables/sdt.c b/lib/libdvbv5/tables/sdt.c
-index a3741c1..8e8feaa 100644
+index d8f3883..ddca97d 100644
 --- a/lib/libdvbv5/tables/sdt.c
 +++ b/lib/libdvbv5/tables/sdt.c
 @@ -149,26 +149,23 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
