@@ -1,0 +1,66 @@
+From cc8b678c7cd9fba7a290ee4b48cc45ff5289574b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Sun, 3 Aug 2014 14:18:29 +0200
+Subject: [PATCH 6/6] libdvbv5: fix asprintf include
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+prevent compile warning
+
+Signed-off-by: André Roth <neolynx@gmail.com>
+---
+ lib/libdvbv5/dvb-demux.c |  4 +++-
+ lib/libdvbv5/dvb-fe.c    | 13 ++++++++-----
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/lib/libdvbv5/dvb-demux.c b/lib/libdvbv5/dvb-demux.c
+index 0bb3d48..117b338 100644
+--- a/lib/libdvbv5/dvb-demux.c
++++ b/lib/libdvbv5/dvb-demux.c
+@@ -27,9 +27,11 @@
+  *
+  */
+ 
++/* for asprintf */
++#define _GNU_SOURCE
++#include <stdio.h>
+ #include <string.h>
+ #include <unistd.h>
+-#include <stdio.h>
+ #include <errno.h>
+ 
+ #include <sys/ioctl.h>
+diff --git a/lib/libdvbv5/dvb-fe.c b/lib/libdvbv5/dvb-fe.c
+index 013edd6..882d2ee 100644
+--- a/lib/libdvbv5/dvb-fe.c
++++ b/lib/libdvbv5/dvb-fe.c
+@@ -16,17 +16,20 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  * Or, point your browser to http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+  */
+-#include <sys/types.h>
+-
+-#include "dvb-v5.h"
+-#include <libdvbv5/dvb-v5-std.h>
+-#include <libdvbv5/dvb-fe.h>
+ 
++// for asprintf:
++#define _GNU_SOURCE
++#include <stdio.h>
++#include <sys/types.h>
+ #include <inttypes.h>
+ #include <math.h>
+ #include <stddef.h>
+ #include <unistd.h>
+ 
++#include "dvb-v5.h"
++#include <libdvbv5/dvb-v5-std.h>
++#include <libdvbv5/dvb-fe.h>
++
+ static void dvb_v5_free(struct dvb_v5_fe_parms *parms)
+ {
+ 	if (parms->fname)
+-- 
+1.9.1
+

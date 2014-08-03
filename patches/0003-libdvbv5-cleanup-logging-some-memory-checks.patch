@@ -1,4 +1,4 @@
-From 8fdfdc5b2b57c18c509237e370642ed96b2307dd Mon Sep 17 00:00:00 2001
+From 17d52c607f5b9824160a59f78cbafbe04d5246e3 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:12:49 +0200
 Subject: [PATCH 3/6] libdvbv5: cleanup logging, some memory checks
@@ -33,10 +33,10 @@ index e71e321..7b8f575 100644
  
  struct dvb_v5_fe_parms;
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index bfbf529..1b51962 100644
+index 5f61332..e5791b2 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -1364,7 +1364,7 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
+@@ -1364,7 +1364,7 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsign
  			strncat(hex, " ", sizeof(hex) - 1);
  		if (j == 16) {
  			ascii[j] = '\0';
@@ -46,7 +46,7 @@ index bfbf529..1b51962 100644
  			hex[0] = '\0';
  		}
 diff --git a/lib/libdvbv5/descriptors/desc_sat.c b/lib/libdvbv5/descriptors/desc_sat.c
-index f7fb8f1..cbaba4c 100644
+index 326f534..7268239 100644
 --- a/lib/libdvbv5/descriptors/desc_sat.c
 +++ b/lib/libdvbv5/descriptors/desc_sat.c
 @@ -25,10 +25,14 @@

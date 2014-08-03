@@ -1,4 +1,4 @@
-From c9a5821056ec1c12bf0767e596540a181f8a90a1 Mon Sep 17 00:00:00 2001
+From 9864787f87a412d3f7ed4e11aaebcfe03f63dc08 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:25:37 +0200
 Subject: [PATCH 4/6] libdvbv5: generators for SDT, desc_service and mpeg_ts
@@ -57,7 +57,7 @@ index da4423c..60ddc90 100644
  
  #ifdef __cplusplus
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 94d85a9..54a2918 100644
+index 88b8ad2..c7b8bb4 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -49,6 +49,8 @@ extern char *output_charset;
@@ -69,7 +69,7 @@ index 94d85a9..54a2918 100644
  #define DVB_DESC_HEADER() \
  	uint8_t type; \
  	uint8_t length; \
-@@ -79,6 +81,8 @@ void hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsigned c
+@@ -79,6 +81,8 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsign
  int  dvb_desc_parse(struct dvb_v5_fe_parms *parms, const uint8_t *buf, uint16_t section_length, struct dvb_desc **head_desc);
  void dvb_desc_free (struct dvb_desc **list);
  void dvb_desc_print(struct dvb_v5_fe_parms *parms, struct dvb_desc *desc);
@@ -130,7 +130,7 @@ index 8455080..993c5f3 100644
  #ifdef __cplusplus
  }
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 1b51962..423f3eb 100644
+index e5791b2..3df8f12 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -59,6 +59,27 @@
@@ -316,10 +316,10 @@ index 0e94cf2..0fd2a54 100644
  
  void parse_string(struct dvb_v5_fe_parms *parms, char **dest, char **emph,
 diff --git a/lib/libdvbv5/parse_string.h b/lib/libdvbv5/parse_string.h
-index 61d0ed4..4d838d0 100644
+index 39f7dc4..f8cc2db 100644
 --- a/lib/libdvbv5/parse_string.h
 +++ b/lib/libdvbv5/parse_string.h
-@@ -19,7 +19,7 @@
+@@ -23,7 +23,7 @@
  
  struct dvb_v5_fe_parms;
  
