@@ -462,7 +462,7 @@ double Activity_Stream::GetDuration( )
 
   if( !reader.Open( ))
   {
-    LogError( "" );
+    LogError( "Error opening '%s'", filename.c_str( ));
     return NAN;
   }
 
