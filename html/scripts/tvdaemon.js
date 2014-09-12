@@ -201,15 +201,16 @@ function Menu( selected )
            CAMClients: "camclients.html",
          };
 
-  ul = $('<ul>');
+  ul = $('#menu');
   for( m in menu )
   {
     li = $('<li>');
-    li.html( m );
     if( m == selected )
-      li.attr( 'class', 'selected' );
-    click = function( ) { window.location = this; }
-    li.bind( 'click', click.bind( menu[m] ));
+      li.attr( 'class', 'active' );
+    a = $('<a>');
+    a.html( m );
+    a.attr( 'href', menu[m] );
+    li.append( a );
     ul.append( li );
   }
   div = $('#menu');

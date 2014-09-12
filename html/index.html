@@ -3,6 +3,10 @@
   <head>
     <title>TVDaemon</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="style/bootstrap.min.css" rel="stylesheet">
+    <link href="style/dashboard.css" rel="stylesheet">
+
     <link rel="icon" type="image/ico" href="favicon.ico">
     <link rel="stylesheet" type="text/css" href="style/tvdaemon.css">
     <script type="text/javascript" src="scripts/lib/jquery.js"></script>
@@ -13,49 +17,60 @@
     <link rel="stylesheet" href="contextMenu.js/contextMenu.css" />
     <script type="text/javascript" src="index.js"></script>
     <link rel="stylesheet" type="text/css" href="index.css">
-
-  </script>
-
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">TVDaemon</div>
-      <div id="menu"></div>
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">TVDaemon</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul id="menu" class="nav navbar-nav">
+          </ul>
+        </div>
+      </div>
     </div>
-    <div class="content">
+
+
+    <div class="container-fluid">
       <div id="setup"></div>
     </div>
-  </div>
-  <div class="footer"></div>
 
-  <div id="port-form" title="Port" style="display: none;">
-    <form>
-      <input type="hidden" name="adapter_id" id="port_adapter_id"/>
-      <input type="hidden" name="frontend_id" id="port_frontend_id"/>
-      <input type="hidden" name="port_id" id="port_port_id"/>
-      <fieldset>
-        <label>Name  </label><input type="text" name="name" id="port_name" class="text ui-widget-content ui-corner-all"/>
-        <label>LNB ID</label><input type="text" name="port_num" id="port_num"/ class="text ui-widget-content ui-corner-all">
-        <label>Source</label><select name="source_id" id="port_source" class="text ui-widget-content ui-corner-all"></select>
-      </fieldset>
-    </form>
-  </div>
+    <div id="port-form" title="Port" style="display: none;">
+      <form>
+        <input type="hidden" name="adapter_id" id="port_adapter_id"/>
+        <input type="hidden" name="frontend_id" id="port_frontend_id"/>
+        <input type="hidden" name="port_id" id="port_port_id"/>
+        <fieldset>
+          <label>Name  </label><input type="text" name="name" id="port_name" class="text ui-widget-content ui-corner-all"/>
+          <label>LNB ID</label><input type="text" name="port_num" id="port_num"/ class="text ui-widget-content ui-corner-all">
+          <label>Source</label><select name="source_id" id="port_source" class="text ui-widget-content ui-corner-all"></select>
+        </fieldset>
+      </form>
+    </div>
 
-  <div id="source-form" title="Port" style="display: none;">
-    <form>
-      <input type="hidden" name="adapter_id" id="source_adapter_id"/>
-      <input type="hidden" name="frontend_id" id="source_frontend_id"/>
-      <input type="hidden" name="port_id" id="source_port_id"/>
-      <input type="hidden" name="source_id" id="source_source_id"/>
-      <input type="hidden" name="type" id="source_type"/>
-      <fieldset>
-        <label>Name  </label><input type="text" name="name" id="source_name" class="text ui-widget-content ui-corner-all"/><br />
-        <label>Initialize from</label><select name="scanfile" id="source_scanfile"><option>loading...</option></select>
-      </fieldset>
-    </form>
-  </div>
+    <div id="source-form" title="Port" style="display: none;">
+      <form>
+        <input type="hidden" name="adapter_id" id="source_adapter_id"/>
+        <input type="hidden" name="frontend_id" id="source_frontend_id"/>
+        <input type="hidden" name="port_id" id="source_port_id"/>
+        <input type="hidden" name="source_id" id="source_source_id"/>
+        <input type="hidden" name="type" id="source_type"/>
+        <fieldset>
+          <label>Name  </label><input type="text" name="name" id="source_name" class="text ui-widget-content ui-corner-all"/><br />
+          <label>Initialize from</label><select name="scanfile" id="source_scanfile"><option>loading...</option></select>
+        </fieldset>
+      </form>
+    </div>
 
-</body>
+    <script src="scripts/lib/bootstrap.min.js"></script>
+
+  </body>
 </html>
 
