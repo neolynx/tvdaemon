@@ -6,6 +6,8 @@
     <link rel="icon" type="image/ico" href="favicon.ico">
     <link rel="stylesheet" type="text/css" href="style/tvdaemon.css">
     <script type="text/javascript" src="scripts/lib/jquery.js"></script>
+    <script type="text/javascript" src="scripts/lib/jquery-ui.js"></script>
+    <link rel="stylesheet" href="style/jquery-ui.css" />
     <script type="text/javascript" src="scripts/tvdaemon.js"></script>
     <link rel="stylesheet" type="text/css" href="camclients.css">
     <script type="text/javascript" src="camclients.js"></script>
@@ -18,13 +20,26 @@
       </div>
       <div class="content">
         <div class="camclients" id="camclients">
-        loading ...
+          loading ...
         </div>
       </div>
     </div>
     <div class="footer"></div>
     <div id="search_camclients">
       <input id="search"/>
+    </div>
+
+    <div id="camclient-form" style="display: none;">
+      <form>
+        <input type="hidden" name="camclient_id" id="camclient_id"/>
+        <fieldset>
+          <label>Hostname</label><input type="text" name="hostname" id="hostname" class="text ui-widget-content ui-corner-all"/>
+          <label>Service </label><input type="text" name="service" id="service" class="text ui-widget-content ui-corner-all"/>
+          <label>Username</label><input type="text" name="username" id="username" class="text ui-widget-content ui-corner-all"/>
+          <label>Password</label><input type="password" name="password" id="password" class="text ui-widget-content ui-corner-all"/>
+          <label>Key     </label><input type="text" name="key" id="key" class="text ui-widget-content ui-corner-all"/>
+        </fieldset>
+      </form>
     </div>
   </body>
 </html>

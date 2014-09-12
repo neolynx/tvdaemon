@@ -67,6 +67,11 @@ function ServerSideTable( name, url, page_size )
   };
   context['filters'] = filters.bind( context );
 
+  entry = function ( idx ) {
+    return this["data"].data[idx];
+  };
+  context['entry'] = entry.bind( context );
+
   paginator = $('<div>');
   paginator.prop( "id", "sst_paginator_" + context['name'] );
   paginator.prop( "class", "sst_paginator" );
@@ -127,6 +132,7 @@ function renderTable( data, errmsg )
     return true;
   }
 
+  context['data'] = data;
   context['count'] = data["count"];
   $( '#sst_info_' + context['name'] ).html( context['func_info']( context, data ));
   row = $('<tr>');
@@ -169,7 +175,7 @@ function renderTable( data, errmsg )
       if( render instanceof Function )
       {
         cell.attr( "class", "sst_" + key );
-        cell.html( render( entry, key ));
+        cell.html( render( entry, key, i ));
       }
       else
         cell.html( entry[key] );

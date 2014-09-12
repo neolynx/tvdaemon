@@ -74,7 +74,7 @@ bool CAMClientHandler::LoadConfig( )
   for( int i = 0; i < n.getLength( ); i++ )
   {
     ConfigBase c( n[i] );
-    CAMClient *client = new CAMClient( );
+    CAMClient *client = new CAMClient( i );
     client->LoadConfig( c );
     clients.push_back( client );
     client->Connect();
@@ -92,4 +92,11 @@ CAMClient *CAMClientHandler::GetCAMClient( uint16_t caid )
   return NULL;
 }
 
-
+bool CAMClientHandler::json( std::vector<const JSONObject *> &result ) const
+{
+  for( std::vector<CAMClient *>::const_iterator it = clients.begin( ); it != clients.end( ); it++ )
+  {
+    result.push_back( *it );
+  }
+  return true;
+}

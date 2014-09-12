@@ -45,7 +45,33 @@ static void notify_card( void *ctx, uint16_t ca_id )
   client->NotifyCard( ca_id );
 }
 
-CAMClient::CAMClient( )
+CAMClient::CAMClient( int id ) :
+  id( id )
+{
+  Init( );
+}
+
+CAMClient::CAMClient( int id, std::string &hostname, std::string &service, std::string &username, std::string &password, std::string &key ) :
+  id( id ),
+  hostname(hostname),
+  service(service),
+  username(username),
+  password(password),
+  key(key)
+{
+  Init( );
+}
+
+CAMClient::~CAMClient( )
+{
+  //if( ts->camd.hostname );
+    //free( ts->camd.hostname );
+  data_free( ts );
+  free( ts );
+}
+
+
+void CAMClient::Init( )
 {
   ts_set_log_func( log_tsdecrypt );
 
@@ -55,22 +81,9 @@ CAMClient::CAMClient( )
   data_init( ts );
 }
 
-CAMClient::CAMClient( std::string &hostname, std::string &service, std::string &username, std::string &password, std::string &key ) :
-  hostname(hostname),
-  service(service),
-  username(username),
-  password(password),
-  key(key)
+void CAMClient::SetID( int id )
 {
-  CAMClient( );
-}
-
-CAMClient::~CAMClient( )
-{
-  //if( ts->camd.hostname );
-    //free( ts->camd.hostname );
-  data_free( ts );
-  free( ts );
+  this->id = id;
 }
 
 bool CAMClient::SaveConfig( ConfigBase &config )
@@ -148,5 +161,25 @@ bool CAMClient::HasCAID( uint16_t caid )
 {
   // FIXME: lock
   return std::find( caids.begin( ), caids.end( ), caid ) != caids.end( );
+}
+
+bool CAMClient::compare( const JSONObject &other, const int &p ) const
+{
+  const CAMClient &b = (const CAMClient &) other;
+  return hostname < b.hostname;
+}
+
+void CAMClient::json( json_object *entry ) const
+{
+  //ScopeLock _l( mutex_ports );
+  json_object_object_add( entry, "id", json_object_new_int( id ));
+  json_object_object_add( entry, "hostname", json_object_new_string( hostname.c_str( )));
+  json_object_object_add( entry, "service",  json_object_new_string( service.c_str( )));
+  json_object_object_add( entry, "username", json_object_new_string( username.c_str( )));
+  json_object_object_add( entry, "key", json_object_new_string( key.c_str( )));
+}
+
+bool CAMClient::RPC( const HTTPRequest &request, const std::string &cat, const std::string &action )
+{
 }
 

@@ -27,14 +27,16 @@
 #include <string>
 #include <vector>
 
+#include "RPCObject.h"
+
 class ConfigBase;
 struct ts;
 
-class CAMClient
+class CAMClient : public RPCObject
 {
   public:
-    CAMClient( );
-    CAMClient( std::string &hostname, std::string &service, std::string &username, std::string &password, std::string &key );
+    CAMClient( int id );
+    CAMClient( int id, std::string &hostname, std::string &service, std::string &username, std::string &password, std::string &key );
     ~CAMClient( );
 
     bool SaveConfig( ConfigBase &config );
@@ -47,7 +49,16 @@ class CAMClient
     bool HasCAID( uint16_t caid );
 
     void NotifyCard( uint16_t caid ); // FIXME private & friend
+
+    void SetID( int id );
+
+    // RPC
+    void json( json_object *entry ) const;
+    bool RPC( const HTTPRequest &request, const std::string &cat, const std::string &action );
+    bool compare( const JSONObject &other, const int &p ) const;
+
   private:
+    int id;
     struct ts *ts;
 
     std::string hostname;
@@ -58,6 +69,7 @@ class CAMClient
 
     std::vector<uint16_t> caids;
 
+    void Init( );
 };
 
 #endif

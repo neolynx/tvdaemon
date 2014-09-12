@@ -28,6 +28,7 @@
 
 class TVDaemon;
 class CAMClient;
+class JSONObject;
 
 class CAMClientHandler : public ConfigObject
 {
@@ -39,6 +40,8 @@ class CAMClientHandler : public ConfigObject
     virtual bool LoadConfig( );
 
     void Shutdown( );
+
+    bool json( std::vector<const JSONObject *> &result ) const;
 
     CAMClient *GetCAMClient( uint16_t caid );
 

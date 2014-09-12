@@ -874,6 +874,21 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
     return true;
   }
 
+  if( action == "get_camclients" )
+  {
+    std::vector<const JSONObject *> result;
+    CAMClientHandler *camd = CAMClientHandler::Instance( );
+    camd->json( result );
+    //for( std::map<int, Channel *>::iterator it = channels.begin( ); it != channels.end( ); it++ )
+    //{
+      //if( !search.empty( ) && it->second->GetName( ).find( search.c_str( ), 0, search.length( )) != 0 )
+        //continue;
+      //result.push_back( it->second );
+    //}
+    ServerSideTable( request, result );
+    return true;
+  }
+
   if( action == "remove_channel" )
   {
     std::string t;
