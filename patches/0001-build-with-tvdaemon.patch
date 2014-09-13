@@ -1,17 +1,17 @@
-From fb68c8411e00fc4b0c0d1eae28f5fbbe80f8e2a4 Mon Sep 17 00:00:00 2001
+From d81b3a324d9b855f50c26e5ed8e220d706744f43 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:53:01 +0200
-Subject: [PATCH 1/7] build with tvdaemon
+Subject: [PATCH 1/4] build with tvdaemon
 
 ---
- lib/libdvbv5/Makefile.am | 4 +++-
+ lib/libdvbv5/Makefile.am |    4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 969e766..3a1d715 100644
+index fd21236..e1f7104 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
-@@ -106,10 +106,12 @@ libdvbv5_la_SOURCES = \
+@@ -108,10 +108,12 @@ libdvbv5_la_SOURCES = \
  	descriptors/desc_ca.c			\
  	descriptors/desc_ca_identifier.c
  
@@ -26,5 +26,5 @@ index 969e766..3a1d715 100644
  
  sync-with-kernel:
 -- 
-1.9.1
+1.7.10.4
 
