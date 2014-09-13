@@ -21,7 +21,6 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  SocketHandler.cpp \
 			  HTTPServer.cpp \
 			  Recorder.cpp \
-			  Matroska.cpp \
 			  MPEGTS.cpp \
 			  RingBuffer.cpp \
 			  Frame.cpp \
