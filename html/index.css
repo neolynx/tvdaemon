@@ -16,17 +16,13 @@ img.icon_gray
 
 div.setup
 {
-  background: #fff;
-  border: 1px solid;
-  border-radius: 15px;
-  padding: 10px;
   display: inline-block;
 }
 
 table.setup
 {
   padding: 10px;
-  left:10%;
+  font-size: 80%;
   border-collapse: collapse;
 }
 
@@ -40,7 +36,6 @@ table.setup td.adapter
   vertical-align: middle;
   text-align: right;
   border-bottom: 1px solid LightGray;
-  width: 50px;
 }
 
 td.adapter_last
@@ -52,14 +47,10 @@ td.adapter_last
 td.frontend
 {
   border-bottom: 1px solid LightGray;
-  font-size: 8pt;
-  width: 30px;
 }
 
 td.frontend_last
 {
-  font-size: 8pt;
-  width: 30px;
 }
 
 

@@ -9,51 +9,17 @@ a
 }
 
 
-.button
+div.search
 {
-  border-top: 1px solid #96d1f8;
-  background: #65a9d7;
-  background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));
-  background: -webkit-linear-gradient(top, #3e779d, #65a9d7);
-  background: -moz-linear-gradient(top, #3e779d, #65a9d7);
-  background: -ms-linear-gradient(top, #3e779d, #65a9d7);
-  background: -o-linear-gradient(top, #3e779d, #65a9d7);
-  padding: 5px 10px;
-  -webkit-border-radius: 8px;
-  -moz-border-radius: 8px;
-  border-radius: 8px;
-  -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
-  -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
-  box-shadow: rgba(0,0,0,1) 0 1px 0;
-  text-shadow: rgba(0,0,0,.4) 0 1px 0;
-  color: white;
-  font-size: 14px;
-  font-family: Georgia, serif;
-  text-decoration: none;
-  vertical-align: bottom;
-  white-space:nowrap;
+  float: right;
+  padding-left: 5px;
 }
-
-.button:hover
-{
-  border-top-color: #28597a;
-  background: #28597a;
-  color: #ccc;
-}
-
-.button:active
-{
-  border-top-color: #1b435e;
-  background: #1b435e;
-}
-
 
 /* Server Side Table */
 
 .sst_paginator
 {
   text-align: right;
-  width: 400px;
   padding-bottom: 5px;
 }
 
@@ -64,10 +30,7 @@ a
 
 div.sst
 {
-  background: #fff;
-  border: 1px solid;
-  border-radius: 15px;
-  padding: 10px;
+  padding-top: 10px;
   display: inline-block;
 }
 
@@ -82,6 +45,8 @@ div.sst table
 div.sst th
 {
   border-bottom: 1px solid;
+  padding-left: 4px;
+  padding-right: 4px;
   text-align: left;
 }
 
@@ -89,6 +54,7 @@ div.sst td
 {
   vertical-align: top;
   padding-left: 4px;
+  padding-right: 4px;
 }
 
 div.sst table tr:not(:last-child) td

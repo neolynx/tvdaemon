@@ -227,11 +227,6 @@ function readDevices( data, errmsg )
   }
 
   // end row
-  row = $('<tr>');
-  cell = $('<td>');
-  cell.html( "<div id=\"button1\"> <a href=\"javascript: scan( );\" class=\"button\">Scan</a></div>" );
-  row.append( cell );
-
   cell2 = $('<td>');
   row.append( cell2 );
 
