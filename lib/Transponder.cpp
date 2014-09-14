@@ -173,13 +173,14 @@ void Transponder::AddProperty( const struct dtv_property &prop )
 
 bool Transponder::SaveConfig( )
 {
-  WriteConfig( "DelSys",    delsys );
-  WriteConfig( "Frequency", (int) frequency );
-  WriteConfig( "TSID",      TSID );
-  WriteConfig( "Enabled",   enabled );
-  WriteConfig( "State",     state );
-  WriteConfig( "Signal",    signal );
-  WriteConfig( "Noise",     noise );
+  WriteConfig( "DelSys",        delsys );
+  WriteConfig( "Frequency",     (int) frequency );
+  WriteConfig( "TSID",          TSID );
+  WriteConfig( "Enabled",       enabled );
+  WriteConfig( "State",         state );
+  WriteConfig( "Signal",        signal );
+  WriteConfig( "Noise",         noise );
+  WriteConfig( "EPGState",      epg_state );
   WriteConfig( "LastEPGUpdate", last_epg_update );
 
   DeleteConfig( "Services" );
@@ -210,14 +211,15 @@ bool Transponder::LoadConfig( )
   if( !ReadConfigFile( ))
     return false;
 
-  ReadConfig( "DelSys", (int &) delsys );
-  ReadConfig( "Frequency",      frequency );
-  ReadConfig( "TSID",           TSID );
-  ReadConfig( "Enabled",        enabled );
-  ReadConfig( "State",  (int &) state );
-  ReadConfig( "Signal",         signal );
-  ReadConfig( "Noise",          noise );
-  ReadConfig( "LastEPGUpdate",  last_epg_update );
+  ReadConfig( "DelSys",   (int &) delsys );
+  ReadConfig( "Frequency",        frequency );
+  ReadConfig( "TSID",             TSID );
+  ReadConfig( "Enabled",          enabled );
+  ReadConfig( "State",    (int &) state );
+  ReadConfig( "Signal",           signal );
+  ReadConfig( "Noise",            noise );
+  ReadConfig( "EPGState", (int &) epg_state );
+  ReadConfig( "LastEPGUpdate",    last_epg_update );
 
   Setting &n = ConfigList( "Services" );
   for( int i = 0; i < n.getLength( ); i++ )

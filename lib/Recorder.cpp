@@ -132,12 +132,18 @@ void Recorder::Run( )
         case Activity::State_Scheduled:
           if( difftime( start, now ) <= before &&
               difftime( now, end ) < -5.0 + after )
+          {
             it->second->Start( );
+            it->second->SaveConfig( );
+          }
           break;
 
         case Activity::State_Running:
           if( difftime( now, end ) >= after )
+          {
             it->second->Stop( );
+            it->second->SaveConfig( );
+          }
           break;
 
         case Activity::State_Failed:
@@ -145,7 +151,10 @@ void Recorder::Run( )
               difftime( now, end ) < -5.0 + after )
           {
             if( difftime( now, it->second->GetStateChanged( )) >= retry_interval )
+            {
               it->second->Start( );
+              it->second->SaveConfig( );
+            }
           }
           break;
       }
@@ -160,7 +169,10 @@ void Recorder::Stop( )
   SCOPELOCK( );
   up = false;
   for( std::map<int, Activity_Record *>::iterator it = recordings.begin( ); it != recordings.end( ); it++ )
+  {
     it->second->Abort( );
+    it->second->SaveConfig( );
+  }
 }
 
 void Recorder::GetRecordings( std::vector<const JSONObject *> &data ) const
