@@ -136,7 +136,9 @@ bool Activity_Record::LoadConfig( )
   ReadConfig( "EventID",  event_id );
   ReadConfig( "Filename", filename );
 
-  if( end > time( NULL ))
+  if( HasState( State_Running ))
+    SetState( State_Missed );
+  if( end > time( NULL )) // FIXME: use difftime
     SetState( State_Scheduled );
   else if( HasState( State_Scheduled ))
     SetState( State_Missed );
