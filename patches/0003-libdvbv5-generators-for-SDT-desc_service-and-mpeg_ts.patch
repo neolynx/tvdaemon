@@ -1,4 +1,4 @@
-From a9af3579bfa29ef36f0876abd3f652f14f2e0dd4 Mon Sep 17 00:00:00 2001
+From 959fd1a8d9c77398745176b9420ec4e2e64e79f5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:25:37 +0200
 Subject: [PATCH 3/4] libdvbv5: generators for SDT, desc_service and mpeg_ts
@@ -31,33 +31,34 @@ Example usage:
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_service.h     |    2 +
- lib/include/libdvbv5/descriptors.h      |    8 +++
- lib/include/libdvbv5/mpeg_ts.h          |    6 +-
- lib/include/libdvbv5/sdt.h              |    5 ++
- lib/libdvbv5/descriptors.c              |   59 +++++++++++++---
- lib/libdvbv5/descriptors/desc_service.c |   56 ++++++++++++++++
- lib/libdvbv5/parse_string.c             |    5 +-
- lib/libdvbv5/parse_string.h             |    2 +-
- lib/libdvbv5/tables/mpeg_ts.c           |  112 ++++++++++++++++++++++++++-----
- lib/libdvbv5/tables/sdt.c               |   85 ++++++++++++++++++++++-
- 10 files changed, 307 insertions(+), 33 deletions(-)
+ lib/include/libdvbv5/desc_service.h     |   3 +
+ lib/include/libdvbv5/descriptors.h      |   8 +++
+ lib/include/libdvbv5/mpeg_ts.h          |   3 +
+ lib/include/libdvbv5/sdt.h              |   5 ++
+ lib/libdvbv5/descriptors.c              |  59 ++++++++++++++---
+ lib/libdvbv5/descriptors/desc_service.c |  56 ++++++++++++++++
+ lib/libdvbv5/parse_string.c             |   5 +-
+ lib/libdvbv5/parse_string.h             |   2 +-
+ lib/libdvbv5/tables/mpeg_ts.c           | 112 +++++++++++++++++++++++++++-----
+ lib/libdvbv5/tables/sdt.c               |  85 +++++++++++++++++++++++-
+ 10 files changed, 307 insertions(+), 31 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
-index e370429..298ee43 100644
+index 5e0cdfb..cf26bc8 100644
 --- a/lib/include/libdvbv5/desc_service.h
 +++ b/lib/include/libdvbv5/desc_service.h
-@@ -44,6 +44,8 @@ extern "C" {
+@@ -112,6 +112,9 @@ void dvb_desc_service_print(struct dvb_v5_fe_parms *parms,
+  */
+ void dvb_desc_service_free(struct dvb_desc *desc);
  
- int dvb_desc_service_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, struct dvb_desc *desc);
- void dvb_desc_service_print(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc);
 +struct dvb_desc *dvb_desc_service_create();
 +ssize_t dvb_desc_service_store(struct dvb_v5_fe_parms *parms, const struct dvb_desc *desc, uint8_t *data);
- void dvb_desc_service_free (struct dvb_desc *desc);
- 
++
  #ifdef __cplusplus
+ }
+ #endif
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 3419160..2ea597c 100644
+index c12ffc7..765cc2d 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -96,6 +96,8 @@ extern const dvb_table_init_func dvb_table_initializers[256];
@@ -97,21 +98,16 @@ index 3419160..2ea597c 100644
  };
  
 diff --git a/lib/include/libdvbv5/mpeg_ts.h b/lib/include/libdvbv5/mpeg_ts.h
-index 3eab029..d17793d 100644
+index c31bd1d..fbd46d6 100644
 --- a/lib/include/libdvbv5/mpeg_ts.h
 +++ b/lib/include/libdvbv5/mpeg_ts.h
-@@ -68,10 +68,12 @@ struct dvb_v5_fe_parms;
- extern "C" {
- #endif
- 
--ssize_t dvb_mpeg_ts_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length);
-+ssize_t dvb_mpeg_ts_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen,
-+		uint8_t *table, ssize_t *table_length);
- void dvb_mpeg_ts_free(struct dvb_mpeg_ts *ts);
+@@ -166,6 +166,9 @@ void dvb_mpeg_ts_free(struct dvb_mpeg_ts *ts);
+  */
  void dvb_mpeg_ts_print(struct dvb_v5_fe_parms *parms, struct dvb_mpeg_ts *ts);
--
+ 
 +ssize_t dvb_mpeg_ts_create(struct dvb_v5_fe_parms *parms, uint8_t *buf, ssize_t buflen,
 +		uint8_t **data, uint16_t pid, int padding);
++
  #ifdef __cplusplus
  }
  #endif
@@ -569,5 +565,5 @@ index d27cec8..d8f3883 100644
 +	return size_total;
 +}
 -- 
-1.7.10.4
+1.9.1
 
