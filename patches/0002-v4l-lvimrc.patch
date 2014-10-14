@@ -1,4 +1,4 @@
-From db63e6578c7d93e0431549853ae830af69db82ca Mon Sep 17 00:00:00 2001
+From 9752987cd348f29098bfe92f1b043c7b7db152ee Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 5 Oct 2013 14:09:47 +0200
 Subject: [PATCH 2/4] v4l: lvimrc
@@ -19,5 +19,5 @@ index 0000000..b8658a7
 +set softtabstop=8
 +
 -- 
-1.9.1
+2.1.0
 

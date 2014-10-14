@@ -1,4 +1,4 @@
-From 959fd1a8d9c77398745176b9420ec4e2e64e79f5 Mon Sep 17 00:00:00 2001
+From 624a5989276f3fc01a7e036fdf658e49b7fe032c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:25:37 +0200
 Subject: [PATCH 3/4] libdvbv5: generators for SDT, desc_service and mpeg_ts
@@ -128,10 +128,10 @@ index e54683a..a4132ff 100644
  }
  #endif
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 63ce939..205f42e 100644
+index c5d05f0..0dce958 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -58,6 +58,27 @@
+@@ -57,6 +57,27 @@
  #include <libdvbv5/desc_ca_identifier.h>
  #include <libdvbv5/desc_extension.h>
  
@@ -159,7 +159,7 @@ index 63ce939..205f42e 100644
  static void dvb_desc_init(uint8_t type, uint8_t length, struct dvb_desc *desc)
  {
  	desc->type   = type;
-@@ -198,13 +219,29 @@ void dvb_desc_free(struct dvb_desc **list)
+@@ -197,13 +218,29 @@ void dvb_desc_free(struct dvb_desc **list)
  	*list = NULL;
  }
  
@@ -194,7 +194,7 @@ index 63ce939..205f42e 100644
  	},
  	[video_stream_descriptor] = {
  		.name  = "video_stream_descriptor",
-@@ -508,11 +545,13 @@ const struct dvb_descriptor dvb_descriptors[] = {
+@@ -500,11 +537,13 @@ const struct dvb_descriptor dvb_descriptors[] = {
  		.size  = 0,
  	},
  	[service_descriptor] = {
@@ -278,7 +278,7 @@ index 8db681a..87ad18d 100644
 +}
 +
 diff --git a/lib/libdvbv5/parse_string.c b/lib/libdvbv5/parse_string.c
-index 3750d04..543f683 100644
+index 52390c9..9eae1fc 100644
 --- a/lib/libdvbv5/parse_string.c
 +++ b/lib/libdvbv5/parse_string.c
 @@ -300,7 +300,7 @@ static struct charset_conv en300468_latin_00_to_utf8[256] = {
@@ -565,5 +565,5 @@ index d27cec8..d8f3883 100644
 +	return size_total;
 +}
 -- 
-1.9.1
+2.1.0
 
