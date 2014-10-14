@@ -41,6 +41,7 @@
 #include <libdvbv5/desc_service.h>
 #include <libdvbv5/pat.h>
 #include <libdvbv5/pmt.h>
+#include <libdvbv5/mpeg_ts.h>
 
 #include <math.h>
 
@@ -515,28 +516,28 @@ bool Activity_Stream::StreamRecording( )
         break;
       }
 
-      struct dvb_mpeg_ts ts;
+      struct dvb_mpeg_ts *ts = NULL;
       bool got_timestamp;
       if( f->ParseHeaders( &file_timestamp, got_timestamp, &ts ) and got_timestamp )
       {
-        std::map<uint16_t, uint64_t>::iterator it = bigbang_map.find( ts.pid );
+        std::map<uint16_t, uint64_t>::iterator it = bigbang_map.find( ts->pid );
         if( it == bigbang_map.end( ))
         {
-          bigbang_map[ts.pid] = file_timestamp;
+          bigbang_map[ts->pid] = file_timestamp;
           file_timestamp = 0;
         }
         else
           file_timestamp -= it->second;
 
-        ts_map[ts.pid] = file_timestamp;
+        ts_map[ts->pid] = file_timestamp;
         f->SetTimestamp( file_timestamp );
       }
       else
       {
-        std::map<uint16_t, uint64_t>::iterator it = ts_map.find( ts.pid );
+        std::map<uint16_t, uint64_t>::iterator it = ts_map.find( ts->pid );
         if( it == ts_map.end( ))
         {
-          ts_map[ts.pid] = file_timestamp = 0;
+          ts_map[ts->pid] = file_timestamp = 0;
           f->SetTimestamp( 0 );
         }
         else
@@ -544,11 +545,13 @@ bool Activity_Stream::StreamRecording( )
       }
 
       //LogWarn( "Frame pid %d ts %ld", f->GetPID( ), f->GetTimestamp( ));
-      frames[ts.pid].push_back( f );
+      frames[ts->pid].push_back( f );
       count++;
-    }
 
-    //ts.Log( "pid %d: %ld", ts.pid, seq_map[ts.pid] );
+      //ts.Log( "pid %d: %ld", ts.pid, seq_map[ts.pid] );
+      dvb_mpeg_ts_free( ts );
+
+    }
 
     if( !IsActive( ))
       break;

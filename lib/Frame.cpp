@@ -65,48 +65,47 @@ uint16_t Frame::GetPID( ) const
   return pid;
 }
 
-bool Frame::ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_mpeg_ts *ts )
+bool Frame::ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_mpeg_ts **table )
 {
   ssize_t size;
   int pos = 0;
   struct dvb_v5_fe_parms *fe = dvb_fe_dummy();
+  struct dvb_mpeg_pes *pes = NULL;
+  struct dvb_mpeg_ts *ts = NULL;
 
   got_timestamp = false;
 
   // TS
-  ssize_t dummy = 0;
-  size = dvb_mpeg_ts_init( fe, data + pos, DVB_MPEG_TS_PACKET_SIZE - pos, (uint8_t *) ts, &dummy );
+  size = dvb_mpeg_ts_init( fe, data + pos, DVB_MPEG_TS_PACKET_SIZE - pos, &ts );
   if( size < 0 )
     return false;
 
   if( pos + size > DVB_MPEG_TS_PACKET_SIZE)
   {
     LogError( "buffer overrun" );
-    return false;
+    goto errorexit;
   }
   pos += size;
 
   pid = ts->pid;
 
   if( !ts->payload_start )
-    return false;
+    goto errorexit;
 
   if( !(( ts->pid >= 0x0020 and ts->pid <= 0x1FFA ) or
         ( ts->pid >= 0x1FFC and ts->pid <= 0x1FFE )))
-    return false;
+    goto errorexit;
 
   if(( *((uint32_t *)( data + pos )) & 0x00FFFFFF ) != 0x00010000 ) // PES marker
-    return false;
+    goto errorexit;
 
-  uint8_t buf[DVB_MPEG_TS_PACKET_SIZE];
-  size = dvb_mpeg_pes_init( fe, data + pos, sizeof( data ) - pos, buf );
+  size = dvb_mpeg_pes_init( fe, data + pos, sizeof( data ) - pos, &pes );
   if( size < 0 )
   {
     LogError( "cannot parse pes packet" );
-    return false;
+    goto errorexit;
   }
 
-  struct dvb_mpeg_pes *pes = (struct dvb_mpeg_pes *) buf;
   switch( pes->stream_id )
   {
     case DVB_MPEG_STREAM_PADDING:
@@ -117,7 +116,7 @@ bool Frame::ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_m
     case DVB_MPEG_STREAM_DIRECTORY:
     case DVB_MPEG_STREAM_DSMCC:
     case DVB_MPEG_STREAM_H222E:
-      return false;
+      goto errorexit;
     default:
       if( pes->optional->PTS_DTS & 1 )
       {
@@ -135,7 +134,7 @@ bool Frame::ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_m
   }
 
   if( !got_timestamp )
-    return false;
+    goto errorexit;
 
   this->ts = *timestamp;
 
@@ -146,7 +145,19 @@ bool Frame::ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_m
   //double t = now.tv_sec + now.tv_nsec / 1000000000.0 - start_time.tv_sec + start_time.tv_nsec / 1000000000.0;
   //Log( "%04x: now %fs, play %fs, diff %fs", ts->pid, t, seconds, t - seconds );
   //}
+
+  if( table )
+    *table = ts;
+
   return true;
+
+errorexit:
+  if( pes )
+    dvb_mpeg_pes_free( pes );
+  if( ts )
+    dvb_mpeg_ts_free( ts );
+
+  return false;
 }
 
 bool Frame::Comp::operator( )( Frame *a, Frame *b )

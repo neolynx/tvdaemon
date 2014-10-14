@@ -77,7 +77,6 @@ double MPEGTS::GetDuration( )
   bool got_last  = false;
   uint64_t first_timestamp, last_timestamp;
   off_t end;
-  struct dvb_mpeg_ts ts;
 
   lseek( fd, 0, SEEK_SET );
   for( int i = 0; i < 200; i++ )
@@ -89,7 +88,7 @@ double MPEGTS::GetDuration( )
       goto exit;
     }
 
-    if( f->ParseHeaders( &first_timestamp, got_first, &ts ) and got_first )
+    if( f->ParseHeaders( &first_timestamp, got_first, NULL ) and got_first )
       break;
   }
 
@@ -124,7 +123,7 @@ double MPEGTS::GetDuration( )
       goto exit;
     }
 
-    if( f->ParseHeaders( &last_timestamp, got_last, &ts ) and got_last )
+    if( f->ParseHeaders( &last_timestamp, got_last, NULL ) and got_last )
       break;
   }
 

@@ -41,7 +41,7 @@ class Frame
 
       uint16_t GetPID( ) const;
 
-      bool ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_mpeg_ts *ts );
+      bool ParseHeaders( uint64_t *timestamp, bool &got_timestamp, struct dvb_mpeg_ts **ts );
 
       class Comp
       {
