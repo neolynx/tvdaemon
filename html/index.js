@@ -427,15 +427,16 @@ function source_form( adapter, frontend, port, source )
   $("#source_port_id").val( port.id );
   $("#source_source_id").val( port.source_id );
   $("#source_type").val( frontend.type );
-  if( source.id != -1 )
-    $("#source_name").val( sources[port.source_id].name );
-  else
+  if( source === undefined || source.id == -1 )
+  {
     $("#source_name").val( "" );
-
-  if( source.id == -1 )
     getJSON( 'tvd?c=tvdaemon&a=get_scanfiles&type=' + frontend["type"], loadScanfiles );
-  else
     dialog.dialog( "open" );
+  }
+  else
+  {
+    $("#source_name").val( sources[port.source_id].name );
+  }
 }
 
 function loadScanfiles( scanfiles, errmsg )
