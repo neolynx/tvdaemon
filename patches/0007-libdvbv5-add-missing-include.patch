@@ -1,0 +1,25 @@
+From 38f08b141e8489112bef3c7553e237602d463e0b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Tue, 14 Oct 2014 17:33:40 +0200
+Subject: [PATCH 7/7] libdvbv5: add missing include
+
+---
+ lib/libdvbv5/tables/sdt.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/libdvbv5/tables/sdt.c b/lib/libdvbv5/tables/sdt.c
+index ddca97d..6eaf7bd 100644
+--- a/lib/libdvbv5/tables/sdt.c
++++ b/lib/libdvbv5/tables/sdt.c
+@@ -25,6 +25,8 @@
+ #include <libdvbv5/mpeg_ts.h>
+ #include <libdvbv5/crc32.h>
+ 
++#include <string.h> /* memcpy */
++
+ ssize_t dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+ 			ssize_t buflen, struct dvb_table_sdt **table)
+ {
+-- 
+2.1.0
+

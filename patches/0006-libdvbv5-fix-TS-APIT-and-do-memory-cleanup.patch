@@ -1,0 +1,89 @@
+From 3182bd53a37c989da3356833d9b318504f30b330 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Tue, 14 Oct 2014 17:33:20 +0200
+Subject: [PATCH 6/7] libdvbv5: fix TS APIT and do memory cleanup
+
+---
+ lib/include/libdvbv5/mpeg_ts.h |  4 ++--
+ lib/libdvbv5/tables/mpeg_ts.c  | 20 +++++++++++++++-----
+ 2 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/lib/include/libdvbv5/mpeg_ts.h b/lib/include/libdvbv5/mpeg_ts.h
+index fbd46d6..f3a646c 100644
+--- a/lib/include/libdvbv5/mpeg_ts.h
++++ b/lib/include/libdvbv5/mpeg_ts.h
+@@ -116,7 +116,7 @@ struct dvb_mpeg_ts {
+ 		uint8_t adaptation_field:1;
+ 		uint8_t scrambling:2;
+ 	} __attribute__((packed));
+-	struct dvb_mpeg_ts_adaption adaption[];
++	struct dvb_mpeg_ts_adaption *adaption;
+ } __attribute__((packed));
+ 
+ struct dvb_v5_fe_parms;
+@@ -142,7 +142,7 @@ extern "C" {
+  * on stack or dynamically.
+  */
+ ssize_t dvb_mpeg_ts_init (struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen,
+-		uint8_t *table, ssize_t *table_length);
++		struct dvb_mpeg_ts **table);
+ 
+ /**
+  * @brief Deallocate memory associated with a struct dvb_mpeg_ts
+diff --git a/lib/libdvbv5/tables/mpeg_ts.c b/lib/libdvbv5/tables/mpeg_ts.c
+index 73496b2..e30d41c 100644
+--- a/lib/libdvbv5/tables/mpeg_ts.c
++++ b/lib/libdvbv5/tables/mpeg_ts.c
+@@ -22,34 +22,44 @@
+ #include <libdvbv5/descriptors.h>
+ #include <libdvbv5/dvb-fe.h>
+ 
+-ssize_t dvb_mpeg_ts_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, uint8_t *table, ssize_t *table_length)
++ssize_t dvb_mpeg_ts_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen, struct dvb_mpeg_ts **table)
+ {
+-	struct dvb_mpeg_ts *ts = (struct dvb_mpeg_ts *) table;
+ 	const uint8_t *p = buf;
++	struct dvb_mpeg_ts *ts;
+ 
+ 	if (buf[0] != DVB_MPEG_TS) {
+ 		dvb_logerr("mpeg ts invalid marker 0x%02x, sould be 0x%02x", buf[0], DVB_MPEG_TS);
+-		*table_length = 0;
+ 		return -1;
+ 	}
+ 
+-	memcpy(table, p, sizeof(struct dvb_mpeg_ts));
++	if (!*table) {
++		*table = calloc(sizeof(struct dvb_mpeg_ts), 1);
++		if (!*table) {
++			dvb_logerr("%s: out of memory", __func__);
++			return -2;
++		}
++	}
++
++	memcpy(ts, p, sizeof(struct dvb_mpeg_ts));
+ 	p += sizeof(struct dvb_mpeg_ts);
+ 
+ 	bswap16(ts->bitfield);
+ 
++	ts->adaption = NULL;
+ 	if (ts->adaptation_field) {
++		ts->adaption = calloc(sizeof(struct dvb_mpeg_ts_adaption), 1);
+ 		memcpy(ts->adaption, p, sizeof(struct dvb_mpeg_ts_adaption));
+ 		p += ts->adaption->length + 1;
+ 		/* FIXME: copy adaption->lenght bytes */
+ 	}
+ 
+-	*table_length = p - buf;
+ 	return p - buf;
+ }
+ 
+ void dvb_mpeg_ts_free(struct dvb_mpeg_ts *ts)
+ {
++	if (ts->adaption)
++		free(ts->adaption);
+ 	free(ts);
+ }
+ 
+-- 
+2.1.0
+
