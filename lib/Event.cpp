@@ -59,6 +59,9 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
   t = event->start;
   mktime( &t );
   printf( "event utc  : %s", asctime( &t ));
+  int gmt_offset = t.tm_gmtoff;
+
+  t = event->start;
   //t.tm_isdst = 0;
   t.tm_hour += gmt_offset / 3600;
 
