@@ -42,3 +42,6 @@ debian/autoreconf.before
 debian/files
 debian/tvdaemon.substvars
 debian/tvdaemon
+
+*.swp
+*.swo
