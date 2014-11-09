@@ -59,12 +59,12 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
   t = event->start;
   mktime( &t );
   printf( "event utc  : %s", asctime( &t ));
-  int gmt_offset = t.tm_gmtoff;
 
-  t = event->start;
   //t.tm_isdst = 0;
   t.tm_hour += gmt_offset / 3600;
 
+  // hmpf
+  t.tm_hour += 1;
   start = mktime( &t );
 
   duration = event->duration;
@@ -118,6 +118,12 @@ time_t Event::GetStart( ) const
    * local: 7200 1 Sun Mar 30 17:01:10 2014
    * event utc  : Tue Apr  1 19:50:00 2014
    * event local: Tue Apr  1 21:50:00 2014
+   * name: 10vor10
+   */
+
+  /* Winter 19h36
+   * local: 3600 0 Mon Oct 27 19:36:48 2014
+   * event utc  : Thu Oct 30 19:50:00 2014
    * name: 10vor10
    */
 }
