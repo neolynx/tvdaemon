@@ -178,7 +178,7 @@ bool TVDaemon::Start( const char* httpRoot )
   }
 
   httpd->Start( );
-  LogInfo( "HTTP Server listening on port %d", HTTPDPORT );
+  LogInfo( "HTTP Server listening at http://0.0.0.0:%d", HTTPDPORT );
 
   if ( !avahi_client->Start( ))
   {
