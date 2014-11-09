@@ -1,7 +1,7 @@
 From 38f08b141e8489112bef3c7553e237602d463e0b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 14 Oct 2014 17:33:40 +0200
-Subject: [PATCH 7/7] libdvbv5: add missing include
+Subject: [PATCH 7/8] libdvbv5: add missing include
 
 ---
  lib/libdvbv5/tables/sdt.c | 2 ++

@@ -1,7 +1,7 @@
 From 9752987cd348f29098bfe92f1b043c7b7db152ee Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 5 Oct 2013 14:09:47 +0200
-Subject: [PATCH 2/7] v4l: lvimrc
+Subject: [PATCH 2/8] v4l: lvimrc
 
 ---
  .lvimrc | 4 ++++

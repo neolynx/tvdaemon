@@ -1,7 +1,7 @@
 From 3182bd53a37c989da3356833d9b318504f30b330 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 14 Oct 2014 17:33:20 +0200
-Subject: [PATCH 6/7] libdvbv5: fix TS APIT and do memory cleanup
+Subject: [PATCH 6/8] libdvbv5: fix TS APIT and do memory cleanup
 
 ---
  lib/include/libdvbv5/mpeg_ts.h |  4 ++--

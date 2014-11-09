@@ -1,7 +1,7 @@
 From 37b7410892c3bff3dfca9ff5763c90c600ff14d8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 14 Oct 2014 17:32:29 +0200
-Subject: [PATCH 5/7] libdvbv5: fix pes API and memory cleanup
+Subject: [PATCH 5/8] libdvbv5: fix pes API and memory cleanup
 
 ---
  lib/include/libdvbv5/mpeg_pes.h |  2 +-
