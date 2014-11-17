@@ -63,8 +63,6 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
   //t.tm_isdst = 0;
   t.tm_hour += gmt_offset / 3600;
 
-  // hmpf
-  t.tm_hour += 1;
   start = mktime( &t );
 
   duration = event->duration;

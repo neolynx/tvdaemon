@@ -119,7 +119,7 @@ void ConfigBase::ReadConfig( const char *key, time_t &t )
   struct tm tm;
   memset( &tm, 0x00, sizeof( struct tm ));
   strptime( tstr.c_str( ), "%Y-%m-%d %H:%M:%S", &tm );
-  tm.tm_isdst = 1;
+  tm.tm_isdst = -1; // do not adjust
   t = mktime( &tm );
 }
 
