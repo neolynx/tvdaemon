@@ -1,12 +1,12 @@
-From 3182bd53a37c989da3356833d9b318504f30b330 Mon Sep 17 00:00:00 2001
+From 717f193214513bea8d92b2d2f87fcf42f072d095 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 14 Oct 2014 17:33:20 +0200
-Subject: [PATCH 06/12] libdvbv5: fix TS APIT and do memory cleanup
+Subject: [PATCH 06/11] libdvbv5: fix TS API and do memory cleanup
 
 ---
- lib/include/libdvbv5/mpeg_ts.h |  4 ++--
- lib/libdvbv5/tables/mpeg_ts.c  | 20 +++++++++++++++-----
- 2 files changed, 17 insertions(+), 7 deletions(-)
+ lib/include/libdvbv5/mpeg_ts.h |    4 ++--
+ lib/libdvbv5/tables/mpeg_ts.c  |   29 +++++++++++++++++++----------
+ 2 files changed, 21 insertions(+), 12 deletions(-)
 
 diff --git a/lib/include/libdvbv5/mpeg_ts.h b/lib/include/libdvbv5/mpeg_ts.h
 index fbd46d6..f3a646c 100644
@@ -31,10 +31,10 @@ index fbd46d6..f3a646c 100644
  /**
   * @brief Deallocate memory associated with a struct dvb_mpeg_ts
 diff --git a/lib/libdvbv5/tables/mpeg_ts.c b/lib/libdvbv5/tables/mpeg_ts.c
-index 73496b2..e30d41c 100644
+index 73496b2..0d86cdb 100644
 --- a/lib/libdvbv5/tables/mpeg_ts.c
 +++ b/lib/libdvbv5/tables/mpeg_ts.c
-@@ -22,34 +22,44 @@
+@@ -22,34 +22,43 @@
  #include <libdvbv5/descriptors.h>
  #include <libdvbv5/dvb-fe.h>
  
@@ -43,7 +43,6 @@ index 73496b2..e30d41c 100644
  {
 -	struct dvb_mpeg_ts *ts = (struct dvb_mpeg_ts *) table;
  	const uint8_t *p = buf;
-+	struct dvb_mpeg_ts *ts;
  
  	if (buf[0] != DVB_MPEG_TS) {
  		dvb_logerr("mpeg ts invalid marker 0x%02x, sould be 0x%02x", buf[0], DVB_MPEG_TS);
@@ -60,16 +59,20 @@ index 73496b2..e30d41c 100644
 +		}
 +	}
 +
-+	memcpy(ts, p, sizeof(struct dvb_mpeg_ts));
++	memcpy(*table, p, sizeof(struct dvb_mpeg_ts));
  	p += sizeof(struct dvb_mpeg_ts);
  
- 	bswap16(ts->bitfield);
+-	bswap16(ts->bitfield);
++	bswap16((*table)->bitfield);
  
-+	ts->adaption = NULL;
- 	if (ts->adaptation_field) {
-+		ts->adaption = calloc(sizeof(struct dvb_mpeg_ts_adaption), 1);
- 		memcpy(ts->adaption, p, sizeof(struct dvb_mpeg_ts_adaption));
- 		p += ts->adaption->length + 1;
+-	if (ts->adaptation_field) {
+-		memcpy(ts->adaption, p, sizeof(struct dvb_mpeg_ts_adaption));
+-		p += ts->adaption->length + 1;
++	(*table)->adaption = NULL;
++	if ((*table)->adaptation_field) {
++		(*table)->adaption = calloc(sizeof(struct dvb_mpeg_ts_adaption), 1);
++		memcpy((*table)->adaption, p, sizeof(struct dvb_mpeg_ts_adaption));
++		p += (*table)->adaption->length + 1;
  		/* FIXME: copy adaption->lenght bytes */
  	}
  
@@ -84,6 +87,15 @@ index 73496b2..e30d41c 100644
  	free(ts);
  }
  
+@@ -102,7 +111,7 @@ ssize_t dvb_mpeg_ts_create(struct dvb_v5_fe_parms *parms, uint8_t *buf, ssize_t
+ 	*data = malloc(total_size);
+ 	uint8_t *q = *data;
+ 
+-	size = sizeof( struct dvb_mpeg_ts );
++	size = offsetof( struct dvb_mpeg_ts, adaption );
+ 	struct dvb_mpeg_ts ts, *ts_dump;
+ 	memset(&ts, 0x00, size);
+ 	ts.sync_byte = DVB_MPEG_TS;
 -- 
-2.1.0
+1.7.10.4
 

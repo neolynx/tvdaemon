@@ -1,7 +1,7 @@
-From 624a5989276f3fc01a7e036fdf658e49b7fe032c Mon Sep 17 00:00:00 2001
+From d979828ad7927426b2529416e53e2e42eb92381c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:25:37 +0200
-Subject: [PATCH 03/12] libdvbv5: generators for SDT, desc_service and mpeg_ts
+Subject: [PATCH 03/11] libdvbv5: generators for SDT, desc_service and mpeg_ts
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -31,17 +31,17 @@ Example usage:
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_service.h     |   3 +
- lib/include/libdvbv5/descriptors.h      |   8 +++
- lib/include/libdvbv5/mpeg_ts.h          |   3 +
- lib/include/libdvbv5/sdt.h              |   5 ++
- lib/libdvbv5/descriptors.c              |  59 ++++++++++++++---
- lib/libdvbv5/descriptors/desc_service.c |  56 ++++++++++++++++
- lib/libdvbv5/parse_string.c             |   5 +-
- lib/libdvbv5/parse_string.h             |   2 +-
- lib/libdvbv5/tables/mpeg_ts.c           | 112 +++++++++++++++++++++++++++-----
- lib/libdvbv5/tables/sdt.c               |  85 +++++++++++++++++++++++-
- 10 files changed, 307 insertions(+), 31 deletions(-)
+ lib/include/libdvbv5/desc_service.h     |    3 +
+ lib/include/libdvbv5/descriptors.h      |    8 +++
+ lib/include/libdvbv5/mpeg_ts.h          |    3 +
+ lib/include/libdvbv5/sdt.h              |    5 ++
+ lib/libdvbv5/descriptors.c              |   59 +++++++++++++---
+ lib/libdvbv5/descriptors/desc_service.c |   56 ++++++++++++++++
+ lib/libdvbv5/parse_string.c             |    5 +-
+ lib/libdvbv5/parse_string.h             |    2 +-
+ lib/libdvbv5/tables/mpeg_ts.c           |  112 ++++++++++++++++++++++++++-----
+ lib/libdvbv5/tables/sdt.c               |   87 +++++++++++++++++++++++-
+ 10 files changed, 309 insertions(+), 31 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
 index 5e0cdfb..cf26bc8 100644
@@ -278,7 +278,7 @@ index 8db681a..87ad18d 100644
 +}
 +
 diff --git a/lib/libdvbv5/parse_string.c b/lib/libdvbv5/parse_string.c
-index 52390c9..9eae1fc 100644
+index 8d07cac..6b5c5bd 100644
 --- a/lib/libdvbv5/parse_string.c
 +++ b/lib/libdvbv5/parse_string.c
 @@ -300,7 +300,7 @@ static struct charset_conv en300468_latin_00_to_utf8[256] = {
@@ -297,8 +297,8 @@ index 52390c9..9eae1fc 100644
 +		destlen = len;
  		dvb_logerr("Conversion from %s to %s not supported\n",
  				input_charset, output_charset);
- 	} else {
-@@ -324,6 +325,7 @@ void dvb_iconv_to_charset(struct dvb_v5_fe_parms *parms,
+ 		if (!strcasecmp(input_charset, "ARIB-STD-B24"))
+@@ -326,6 +327,7 @@ void dvb_iconv_to_charset(struct dvb_v5_fe_parms *parms,
  		iconv_close(cd);
  		*p = '\0';
  	}
@@ -306,7 +306,7 @@ index 52390c9..9eae1fc 100644
  }
  
  static void charset_conversion(struct dvb_v5_fe_parms *parms, char **dest, const unsigned char *s,
-@@ -364,6 +366,7 @@ static void charset_conversion(struct dvb_v5_fe_parms *parms, char **dest, const
+@@ -366,6 +368,7 @@ static void charset_conversion(struct dvb_v5_fe_parms *parms, char **dest, const
  		dvb_iconv_to_charset(parms, *dest, destlen, s, len,
  				     input_charset,
  				     parms->output_charset);
@@ -451,19 +451,21 @@ index 98864fd..58581a4 100644
 +}
 +
 diff --git a/lib/libdvbv5/tables/sdt.c b/lib/libdvbv5/tables/sdt.c
-index d27cec8..d8f3883 100644
+index d27cec8..f168d80 100644
 --- a/lib/libdvbv5/tables/sdt.c
 +++ b/lib/libdvbv5/tables/sdt.c
-@@ -22,6 +22,8 @@
+@@ -22,6 +22,10 @@
  #include <libdvbv5/sdt.h>
  #include <libdvbv5/descriptors.h>
  #include <libdvbv5/dvb-fe.h>
 +#include <libdvbv5/mpeg_ts.h>
 +#include <libdvbv5/crc32.h>
++
++#include <string.h> /* memcpy */
  
  ssize_t dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  			ssize_t buflen, struct dvb_table_sdt **table)
-@@ -117,7 +119,7 @@ ssize_t dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
+@@ -117,7 +121,7 @@ ssize_t dvb_table_sdt_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  void dvb_table_sdt_free(struct dvb_table_sdt *sdt)
  {
  	struct dvb_table_sdt_service *service = sdt->service;
@@ -472,7 +474,7 @@ index d27cec8..d8f3883 100644
  		dvb_desc_free((struct dvb_desc **) &service->descriptor);
  		struct dvb_table_sdt_service *tmp = service;
  		service = service->next;
-@@ -141,6 +143,7 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
+@@ -141,6 +145,7 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
  		dvb_loginfo("|   EIT present following %d", service->EIT_present_following);
  		dvb_loginfo("|   free CA mode          %d", service->free_CA_mode);
  		dvb_loginfo("|   running status        %d", service->running_status);
@@ -480,7 +482,7 @@ index d27cec8..d8f3883 100644
  		dvb_loginfo("|   descriptor length     %d", service->desc_length);
  		dvb_desc_print(parms, service->descriptor);
  		service = service->next;
-@@ -149,3 +152,83 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
+@@ -149,3 +154,83 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
  	dvb_loginfo("|_  %d services", services);
  }
  
@@ -565,5 +567,5 @@ index d27cec8..d8f3883 100644
 +	return size_total;
 +}
 -- 
-2.1.0
+1.7.10.4
 

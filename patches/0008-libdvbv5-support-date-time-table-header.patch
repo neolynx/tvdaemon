@@ -1,34 +1,54 @@
-From 0cf27c920f75721fbd96e22c09e1d9a6405fc851 Mon Sep 17 00:00:00 2001
+From 151647a634ba7577364bf9895cbda2b824572405 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 17 Nov 2014 20:44:52 +0100
-Subject: [PATCH 10/12] libdvbv5: support date/time table header
+Subject: [PATCH 08/11] libdvbv5: support date/time table header
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/descriptors.h |  4 +++
- lib/include/libdvbv5/header.h      | 57 ++++++++++++++++++++++++++++++++++++++
- lib/libdvbv5/descriptors.c         | 34 +++++++++++++++++++++++
- lib/libdvbv5/tables/header.c       | 15 ++++++++++
- 4 files changed, 110 insertions(+)
+ lib/include/libdvbv5/descriptors.h |   17 ++++++++++-
+ lib/include/libdvbv5/header.h      |   57 ++++++++++++++++++++++++++++++++++++
+ lib/libdvbv5/descriptors.c         |   34 +++++++++++++++++++++
+ lib/libdvbv5/tables/header.c       |   15 ++++++++++
+ 4 files changed, 122 insertions(+), 1 deletion(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 75f797e..7296b65 100644
+index e22ec96..05dc0ef 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
-@@ -169,6 +169,10 @@ int dvb_parse_section(struct dvb_v5_fe_parms_priv *priv,
- 			     struct dvb_table_filter *sect,
+@@ -164,7 +164,7 @@ typedef int (*dvb_table_parse_func)(struct dvb_v5_fe_parms_priv *priv,
  			     const uint8_t *buf, ssize_t buf_length);
  
+ /**
+- * @brief Parses a DVB table and descriptors
++ * @brief Parses a DVB table and descriptors with standard header
+  * @ingroup dvb_table
+  *
+  * @param priv		Private parser data
+@@ -192,6 +192,21 @@ struct dvb_initializer {
+ };
+ 
+ /**
++ * @brief Parses a DVB table and descriptors with date/time header
++ * @ingroup dvb_table
++ *
++ * @param priv		Private parser data
++ * @param sect		Pointer to filter data
++ * @param buf		Buffer with data to be parsed
++ * @param buflen	Size of the buffer to be parsed
++ *
++ * @return		Returns 0 on success, a negative value otherwise
++ */
 +int dvb_parse_section_datetime(struct dvb_v5_fe_parms_priv *priv,
 +			     struct dvb_table_filter *sect,
 +			     const uint8_t *buf, ssize_t buf_length);
 +
- /**
++/**
   * @brief Table with all possible descriptors
   * @ingroup dvb_table
+  */
 diff --git a/lib/include/libdvbv5/header.h b/lib/include/libdvbv5/header.h
 index cb528e6..5e42f5d 100644
 --- a/lib/include/libdvbv5/header.h
@@ -112,10 +132,10 @@ index cb528e6..5e42f5d 100644
  }
  #endif
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index b43e9e2..110d345 100644
+index 0a6e072..b3915f1 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -196,6 +196,40 @@ int dvb_parse_section(struct dvb_v5_fe_parms_priv *priv,
+@@ -222,6 +222,40 @@ int dvb_parse_section(struct dvb_v5_fe_parms_priv *priv,
  	return 1;
  }
  
@@ -180,5 +200,5 @@ index 14b2372..d85297a 100644
 +	dvb_loginfo("| desc_length         %d", t->desc_length);
 +}
 -- 
-2.1.0
+1.7.10.4
 

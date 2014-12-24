@@ -1,17 +1,17 @@
-From 8b9430047deb3bf5c5f1ac63347c7c4d38c216e1 Mon Sep 17 00:00:00 2001
+From 1e45f71c62ed9c6d3eab94912ffd44a58e1195cd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 17 Nov 2014 20:45:41 +0100
-Subject: [PATCH 11/12] libdvbv5: suport time offset table (TOT)
+Subject: [PATCH 09/11] libdvbv5: suport time offset table (TOT)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/tot.h | 107 +++++++++++++++++++++++++++++++++++++++++++++
- lib/libdvbv5/Makefile.am   |   2 +
- lib/libdvbv5/descriptors.c |   2 +
- lib/libdvbv5/tables/tot.c  | 100 ++++++++++++++++++++++++++++++++++++++++++
+ lib/include/libdvbv5/tot.h |  107 ++++++++++++++++++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am   |    2 +
+ lib/libdvbv5/descriptors.c |    2 +
+ lib/libdvbv5/tables/tot.c  |  100 +++++++++++++++++++++++++++++++++++++++++
  4 files changed, 211 insertions(+)
  create mode 100644 lib/include/libdvbv5/tot.h
  create mode 100644 lib/libdvbv5/tables/tot.c
@@ -130,10 +130,10 @@ index 0000000..e6701c7
 +
 +#endif
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index 2f67b20..8a28bbb 100644
+index 1f91cd5..56ba95b 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
-@@ -43,6 +43,7 @@ otherinclude_HEADERS = \
+@@ -44,6 +44,7 @@ otherinclude_HEADERS = \
  	../include/libdvbv5/eit.h \
  	../include/libdvbv5/cat.h \
  	../include/libdvbv5/atsc_eit.h \
@@ -141,7 +141,7 @@ index 2f67b20..8a28bbb 100644
  	../include/libdvbv5/mpeg_ts.h \
  	../include/libdvbv5/mpeg_pes.h \
  	../include/libdvbv5/mpeg_es.h
-@@ -82,6 +83,7 @@ libdvbv5_la_SOURCES = \
+@@ -84,6 +85,7 @@ libdvbv5_la_SOURCES = \
  	tables/eit.c		\
  	tables/cat.c		\
  	tables/atsc_eit.c	\
@@ -150,7 +150,7 @@ index 2f67b20..8a28bbb 100644
  	tables/mpeg_pes.c	\
  	tables/mpeg_es.c	\
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 110d345..390801d 100644
+index b3915f1..265b672 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -37,6 +37,7 @@
@@ -161,7 +161,7 @@ index 110d345..390801d 100644
  #include <libdvbv5/atsc_eit.h>
  #include <libdvbv5/desc_language.h>
  #include <libdvbv5/desc_network_name.h>
-@@ -116,6 +117,7 @@ struct dvb_initializer dvb_table_initializers[256] = {
+@@ -142,6 +143,7 @@ struct dvb_initializer dvb_table_initializers[256] = {
  	[DVB_TABLE_SDT]          = TABLE_INIT(dvb_table_sdt),
  	[DVB_TABLE_EIT]          = TABLE_INIT(dvb_table_eit),
  	[DVB_TABLE_EIT_SCHEDULE] = TABLE_INIT(dvb_table_eit),
@@ -276,5 +276,5 @@ index 0000000..8e85b00
 +}
 +
 -- 
-2.1.0
+1.7.10.4
 

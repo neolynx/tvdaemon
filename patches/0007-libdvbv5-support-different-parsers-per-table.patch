@@ -1,21 +1,25 @@
-From 9242926c3c5285ea3396040bcd3606c71d875147 Mon Sep 17 00:00:00 2001
+From 9a4009cdec7a4324e677cd3fc32d997b009ff9c1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
-Date: Mon, 17 Nov 2014 20:43:46 +0100
-Subject: [PATCH 09/12] libdvbv5: support different parsers per table
+Date: Sun, 23 Nov 2014 15:10:22 +0100
+Subject: [PATCH 07/11] libdvbv5: support different parsers per table
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
+Not all DVB tables use the same headers. This patch allows using a
+different parser for tables with a header other than struct
+dvb_table_header.
+
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/descriptors.h |  90 ++++++++++++++++++++++++++-
- lib/include/libdvbv5/dvb-scan.h    |  30 ---------
- lib/libdvbv5/descriptors.c         |  81 +++++++++++++++++++++++-
- lib/libdvbv5/dvb-scan.c            | 122 ++-----------------------------------
- 4 files changed, 174 insertions(+), 149 deletions(-)
+ lib/include/libdvbv5/descriptors.h |  112 +++++++++++++++++++++++++++++++++++-
+ lib/include/libdvbv5/dvb-scan.h    |   30 ----------
+ lib/libdvbv5/descriptors.c         |  109 ++++++++++++++++++++++++++++++++++-
+ lib/libdvbv5/dvb-scan.c            |   49 ++--------------
+ 4 files changed, 223 insertions(+), 77 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 765cc2d..75f797e 100644
+index 765cc2d..e22ec96 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -67,6 +67,37 @@ struct dvb_v5_fe_parms;
@@ -56,7 +60,7 @@ index 765cc2d..75f797e 100644
   * @brief Function prototype for a function that initializes the
   *	  descriptors parsing on a table
   * @ingroup dvb_table
-@@ -81,11 +112,68 @@ typedef void (*dvb_table_init_func)(struct dvb_v5_fe_parms *parms,
+@@ -81,11 +112,90 @@ typedef void (*dvb_table_init_func)(struct dvb_v5_fe_parms *parms,
  				    const uint8_t *buf, ssize_t buflen,
  				    void **table);
  
@@ -70,29 +74,17 @@ index 765cc2d..75f797e 100644
 +#define BIT_WORD(nr)		((nr) / BITS_PER_LONG)
 +#define BITS_TO_LONGS(nr)	((nr +BITS_PER_LONG - 1) / BITS_PER_LONG)
 +
-+static void set_bit(int nr, unsigned long *addr)
-+{
-+	unsigned long mask = BIT_MASK(nr);
-+	unsigned long *p = addr + BIT_WORD(nr);
-+
-+	*p  |= mask;
-+}
-+
-+static int test_bit(int nr, unsigned long *addr)
-+{
-+	unsigned long mask = BIT_MASK(nr);
-+	unsigned long *p = addr + BIT_WORD(nr);
-+
-+	return (*p & mask) ? -1 : 0;
-+}
-+
-+static int is_all_bits_set(int nr, unsigned long *addr)
-+{
-+	unsigned long mask = BIT_MASK(nr + 1) - 1;
-+
-+	return (*addr == mask);
-+}
-+
++/**
++ * @struct dvb_table_filter_priv
++ * @brief Internal table for filtering
++ * @ingroup dvb_table
++ *
++ * @param last_section   Internal
++ * @param is_read_bits   Internal
++ * @param first_ts_id	 Internal
++ * @param first_section  Internal
++ * @param done		 Parsing done
++ */
 +struct dvb_table_filter_priv {
 +	int last_section;
 +	unsigned long is_read_bits[BITS_TO_LONGS(256)];
@@ -103,19 +95,53 @@ index 765cc2d..75f797e 100644
 +	int done;
 +};
 +
++/* predeclaration of private data */
 +struct dvb_v5_fe_parms_priv;
++
++/**
++ * @brief Function prototype for a function that parses the
++ *	  table and descriptors
++ * @ingroup dvb_table
++ *
++ * @param priv		Private parser data
++ * @param sect		Pointer to filter data
++ * @param buf		Buffer with data to be parsed
++ * @param buflen	Size of the buffer to be parsed
++ *
++ * @return		Returns 0 on success, a negative value otherwise
++ *
++ */
 +typedef int (*dvb_table_parse_func)(struct dvb_v5_fe_parms_priv *priv,
 +			     struct dvb_table_filter *sect,
 +			     const uint8_t *buf, ssize_t buf_length);
 +
++/**
++ * @brief Parses a DVB table and descriptors
++ * @ingroup dvb_table
++ *
++ * @param priv		Private parser data
++ * @param sect		Pointer to filter data
++ * @param buf		Buffer with data to be parsed
++ * @param buflen	Size of the buffer to be parsed
++ *
++ * @return		Returns 0 on success, a negative value otherwise
++ */
++int dvb_parse_section(struct dvb_v5_fe_parms_priv *priv,
++			     struct dvb_table_filter *sect,
++			     const uint8_t *buf, ssize_t buf_length);
++
++/**
++ * @struct dvb_initializer
++ * @brief Function pointers to initialize and parse a DVB table
++ * @ingroup dvb_table
++ *
++ * @param init		Pointer to init function
++ * @param parse		Pointer to parse function
++ */
 +struct dvb_initializer {
 +	dvb_table_init_func init;
 +	dvb_table_parse_func parse;
 +};
-+
-+int dvb_parse_section(struct dvb_v5_fe_parms_priv *priv,
-+			     struct dvb_table_filter *sect,
-+			     const uint8_t *buf, ssize_t buf_length);
 +
  /**
   * @brief Table with all possible descriptors
@@ -127,7 +153,7 @@ index 765cc2d..75f797e 100644
  #ifndef _DOXYGEN
  #define bswap16(b) do {\
 diff --git a/lib/include/libdvbv5/dvb-scan.h b/lib/include/libdvbv5/dvb-scan.h
-index fe50687..c60d60a 100644
+index c480426..b0401bd 100644
 --- a/lib/include/libdvbv5/dvb-scan.h
 +++ b/lib/include/libdvbv5/dvb-scan.h
 @@ -91,36 +91,6 @@ struct dvb_v5_descriptors {
@@ -168,7 +194,7 @@ index fe50687..c60d60a 100644
   * @ingroup frontend_scan
   *
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 0dce958..b43e9e2 100644
+index 0dce958..0a6e072 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
 @@ -57,6 +57,8 @@
@@ -180,7 +206,40 @@ index 0dce958..b43e9e2 100644
  struct dvb_desc *dvb_desc_create(struct dvb_v5_fe_parms *parms, uint8_t type, struct dvb_desc **list)
  {
  	dvb_desc_create_func create = dvb_descriptors[type].create;
-@@ -102,9 +104,10 @@ static void dvb_desc_default_print(struct dvb_v5_fe_parms *parms, const struct d
+@@ -78,6 +80,32 @@ struct dvb_desc *dvb_desc_create(struct dvb_v5_fe_parms *parms, uint8_t type, st
+ 
+ }
+ 
++/*
++ * The code below was inspired on Linux Kernel's bitmask implementation
++ */
++static void set_bit(int nr, unsigned long *addr)
++{
++	unsigned long mask = BIT_MASK(nr);
++	unsigned long *p = addr + BIT_WORD(nr);
++
++	*p  |= mask;
++}
++
++static int test_bit(int nr, unsigned long *addr)
++{
++	unsigned long mask = BIT_MASK(nr);
++	unsigned long *p = addr + BIT_WORD(nr);
++
++	return (*p & mask) ? -1 : 0;
++}
++
++static int is_all_bits_set(int nr, unsigned long *addr)
++{
++	unsigned long mask = BIT_MASK(nr + 1) - 1;
++
++	return (*addr == mask);
++}
++
+ static void dvb_desc_init(uint8_t type, uint8_t length, struct dvb_desc *desc)
+ {
+ 	desc->type   = type;
+@@ -102,10 +130,11 @@ static void dvb_desc_default_print(struct dvb_v5_fe_parms *parms, const struct d
  	dvb_hexdump(parms, "|           ", desc->data, desc->length);
  }
  
@@ -189,11 +248,13 @@ index 0dce958..b43e9e2 100644
 +#define TABLE_INIT2(_x,_y) { (dvb_table_init_func) _x##_init, _y }
  
 -const dvb_table_init_func dvb_table_initializers[256] = {
+-	[0 ... 255]              = NULL,
 +struct dvb_initializer dvb_table_initializers[256] = {
- 	[0 ... 255]              = NULL,
++	[0 ... 255]              = { NULL, NULL },
  	[DVB_TABLE_PAT]          = TABLE_INIT(dvb_table_pat),
  	[DVB_TABLE_CAT]          = TABLE_INIT(dvb_table_cat),
-@@ -119,6 +122,80 @@ const dvb_table_init_func dvb_table_initializers[256] = {
+ 	[DVB_TABLE_PMT]          = TABLE_INIT(dvb_table_pmt),
+@@ -119,6 +148,80 @@ const dvb_table_init_func dvb_table_initializers[256] = {
  	[ATSC_TABLE_CVCT]        = TABLE_INIT(atsc_table_vct),
  };
  
@@ -275,10 +336,10 @@ index 0dce958..b43e9e2 100644
  			   uint16_t buflen, struct dvb_desc **head_desc)
  {
 diff --git a/lib/libdvbv5/dvb-scan.c b/lib/libdvbv5/dvb-scan.c
-index 4a8bd66..627b39b 100644
+index ba56934..140655d 100644
 --- a/lib/libdvbv5/dvb-scan.c
 +++ b/lib/libdvbv5/dvb-scan.c
-@@ -90,48 +90,6 @@ int dvb_read_section(struct dvb_v5_fe_parms *parms, int dmx_fd,
+@@ -103,48 +103,6 @@ int dvb_read_section(struct dvb_v5_fe_parms *parms, int dmx_fd,
  	return dvb_read_section_with_id(parms, dmx_fd, tid, pid, -1, table, timeout);
  }
  
@@ -327,87 +388,7 @@ index 4a8bd66..627b39b 100644
  
  static int dvb_parse_section_alloc(struct dvb_v5_fe_parms_priv *parms,
  				   struct dvb_table_filter *sect)
-@@ -165,79 +123,6 @@ void dvb_table_filter_free(struct dvb_table_filter *sect)
- 	}
- }
- 
--static int dvb_parse_section(struct dvb_v5_fe_parms_priv *parms,
--			     struct dvb_table_filter *sect,
--			     const uint8_t *buf, ssize_t buf_length)
--{
--	struct dvb_table_header h;
--	struct dvb_table_filter_priv *priv;
--	unsigned char tid;
--
--	memcpy(&h, buf, sizeof(struct dvb_table_header));
--	dvb_table_header_init(&h);
--
--	if (parms->p.verbose)
--		dvb_log("%s: received table 0x%02x, TS ID 0x%04x, section %d/%d",
--			__func__, h.table_id, h.id, h.section_id, h.last_section);
--
--	if (sect->tid != h.table_id) {
--		dvb_logdbg("%s: couldn't match ID %d at the active section filters",
--			   __func__, h.table_id);
--		return -1;
--	}
--	priv = sect->priv;
--	tid = h.table_id;
--
--	if (priv->first_ts_id < 0)
--		priv->first_ts_id = h.id;
--	if (priv->first_section < 0)
--		priv->first_section = h.section_id;
--	if (priv->last_section < 0)
--		priv->last_section = h.last_section;
--	else { /* Check if the table was already parsed, but not on first pass */
--		if (!sect->allow_section_gaps && sect->ts_id == -1) {
--			if (test_bit(h.section_id, priv->is_read_bits))
--				return 0;
--		} else if (priv->first_ts_id == h.id && priv->first_section == h.section_id) {
--			/* tables like EIT can increment sections by gaps > 1.
--			 * in this case, reading is done when a already read
--			 * table is reached. */
--			dvb_log("%s: section repeated, reading done", __func__);
--			priv->done = 1;
--			return 1;
--		}
--	}
--
--
--	/* search for an specific TS ID */
--	if (sect->ts_id != -1) {
--		if (h.id != sect->ts_id)
--			return 0;
--	}
--
--	/* handle the sections */
--	if (!sect->allow_section_gaps && sect->ts_id == -1)
--		set_bit(h.section_id, priv->is_read_bits);
--
--	if (dvb_table_initializers[tid])
--		dvb_table_initializers[tid](&parms->p, buf,
--					    buf_length - DVB_CRC_SIZE,
--					    sect->table);
--	else
--		dvb_logerr("%s: no initializer for table %d",
--			   __func__, tid);
--
--	if (!sect->allow_section_gaps && sect->ts_id == -1 &&
--			is_all_bits_set(priv->last_section, priv->is_read_bits))
--		priv->done = 1;
--
--	if (!priv->done)
--		return 0;
--
--	/* Section was fully parsed */
--	return 1;
--}
--
- int dvb_read_sections(struct dvb_v5_fe_parms *__p, int dmx_fd,
- 			     struct dvb_table_filter *sect,
- 			     unsigned timeout)
-@@ -308,7 +193,12 @@ int dvb_read_sections(struct dvb_v5_fe_parms *__p, int dmx_fd,
+@@ -321,7 +279,12 @@ int dvb_read_sections(struct dvb_v5_fe_parms *__p, int dmx_fd,
  			break;
  		}
  
@@ -422,5 +403,5 @@ index 4a8bd66..627b39b 100644
  	free(buf);
  	dvb_dmx_stop(dmx_fd);
 -- 
-2.1.0
+1.7.10.4
 

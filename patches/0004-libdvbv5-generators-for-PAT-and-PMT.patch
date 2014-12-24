@@ -1,7 +1,7 @@
-From ece298e28f78c28ec854c012221e9a013d72906b Mon Sep 17 00:00:00 2001
+From aa5a7ca66b4d2583f6b7a83c489d5d160bdb1dd3 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:41:32 +0200
-Subject: [PATCH 04/12] libdvbv5: generators for PAT and PMT
+Subject: [PATCH 04/11] libdvbv5: generators for PAT and PMT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -37,13 +37,13 @@ Example usage:
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/pat.h    |  4 ++
- lib/include/libdvbv5/pmt.h    | 10 +++--
- lib/include/libdvbv5/sdt.h    |  1 -
- lib/libdvbv5/tables/mpeg_ts.c |  1 +
- lib/libdvbv5/tables/pat.c     | 77 +++++++++++++++++++++++++++++++++++-
- lib/libdvbv5/tables/pmt.c     | 92 ++++++++++++++++++++++++++++++++++++++++---
- lib/libdvbv5/tables/sdt.c     | 17 ++++----
+ lib/include/libdvbv5/pat.h    |    4 ++
+ lib/include/libdvbv5/pmt.h    |   10 +++--
+ lib/include/libdvbv5/sdt.h    |    1 -
+ lib/libdvbv5/tables/mpeg_ts.c |    1 +
+ lib/libdvbv5/tables/pat.c     |   77 +++++++++++++++++++++++++++++++++-
+ lib/libdvbv5/tables/pmt.c     |   92 ++++++++++++++++++++++++++++++++++++++---
+ lib/libdvbv5/tables/sdt.c     |   17 ++++----
  7 files changed, 180 insertions(+), 22 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
@@ -340,10 +340,10 @@ index d2e2693..946bfcc 100644
 +	return size_total;
 +}
 diff --git a/lib/libdvbv5/tables/sdt.c b/lib/libdvbv5/tables/sdt.c
-index d8f3883..ddca97d 100644
+index f168d80..6eaf7bd 100644
 --- a/lib/libdvbv5/tables/sdt.c
 +++ b/lib/libdvbv5/tables/sdt.c
-@@ -149,26 +149,23 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
+@@ -151,26 +151,23 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
  		service = service->next;
  		services++;
  	}
@@ -375,7 +375,7 @@ index d8f3883..ddca97d 100644
  	return sdt;
  }
  
-@@ -179,7 +176,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
+@@ -181,7 +178,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
  	/* append to the list */
  	while (*head != NULL)
  		head = &(*head)->next;
@@ -384,7 +384,7 @@ index d8f3883..ddca97d 100644
  	(*head)->service_id = service_id;
  	(*head)->running_status = 4;
  	(*head)->reserved = 63;
-@@ -188,7 +185,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
+@@ -190,7 +187,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
  
  ssize_t dvb_table_sdt_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_sdt *sdt, uint8_t **data)
  {
@@ -394,5 +394,5 @@ index d8f3883..ddca97d 100644
  	ssize_t size, size_total;
  
 -- 
-2.1.0
+1.7.10.4
 

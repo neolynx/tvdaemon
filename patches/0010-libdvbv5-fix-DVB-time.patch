@@ -1,20 +1,20 @@
-From a32d3ee05bed2e2bccaa52e019c5108c3a7a4a88 Mon Sep 17 00:00:00 2001
+From e7a095c7e8e6f6c9a2b96dc35bf384d4743937a1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 17 Nov 2014 22:12:29 +0100
-Subject: [PATCH 12/12] libdvbv5: fix DVB time
+Subject: [PATCH 10/11] libdvbv5: fix DVB time
 
 ---
- lib/include/libdvbv5/descriptors.h | 11 +++++++++++
- lib/include/libdvbv5/eit.h         | 10 ----------
- lib/include/libdvbv5/header.h      |  2 +-
- lib/include/libdvbv5/tot.h         |  2 ++
- lib/libdvbv5/descriptors.c         | 29 +++++++++++++++++++++++++++++
- lib/libdvbv5/tables/eit.c          | 28 ----------------------------
- lib/libdvbv5/tables/tot.c          |  4 ++++
+ lib/include/libdvbv5/descriptors.h |   11 +++++++++++
+ lib/include/libdvbv5/eit.h         |   10 ----------
+ lib/include/libdvbv5/header.h      |    2 +-
+ lib/include/libdvbv5/tot.h         |    2 ++
+ lib/libdvbv5/descriptors.c         |   29 +++++++++++++++++++++++++++++
+ lib/libdvbv5/tables/eit.c          |   28 ----------------------------
+ lib/libdvbv5/tables/tot.c          |    4 ++++
  7 files changed, 47 insertions(+), 39 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 7296b65..2b0ff17 100644
+index 05dc0ef..25d924d 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
 @@ -48,6 +48,7 @@
@@ -25,7 +25,7 @@ index 7296b65..2b0ff17 100644
  
  /**
   * @brief Maximum size of a table session to be parsed
-@@ -253,6 +254,16 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix,
+@@ -286,6 +287,16 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix,
  		 const unsigned char *buf, int len);
  
  /**
@@ -97,10 +97,10 @@ index e6701c7..9ab271e 100644
  
  struct dvb_v5_fe_parms;
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 390801d..8529e72 100644
+index 265b672..21423e9 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -1503,3 +1503,32 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsign
+@@ -1529,3 +1529,32 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsign
  		dvb_loginfo("%s%s %s %s", prefix, hex, spaces, ascii);
  	}
  }
@@ -195,5 +195,5 @@ index 8e85b00..d975e1d 100644
  }
  
 -- 
-2.1.0
+1.7.10.4
 
