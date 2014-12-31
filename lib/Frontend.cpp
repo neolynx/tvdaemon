@@ -46,6 +46,7 @@
 
 #include <libdvbv5/dvb-demux.h>
 #include <libdvbv5/dvb-fe.h>
+#include <libdvbv5/dvb-scan.h>
 #include <errno.h> // ETIMEDOUT
 #include <sys/time.h>
 
@@ -345,20 +346,20 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
 
     uint32_t status = 0;
     dvb_fe_retrieve_stats( fe, DTV_STATUS, &status );
-    if( status & FE_HAS_LOCK )
-    {
-      dvb_fe_retrieve_stats( fe, DTV_BER, &ber );
-      dvb_fe_retrieve_stats( fe, DTV_SIGNAL_STRENGTH, &sig );
-      dvb_fe_retrieve_stats( fe, DTV_UNCORRECTED_BLOCKS, &unc );
-      dvb_fe_retrieve_stats( fe, DTV_SNR, &snr );
-
-      //if( i > 0 )
-      //printf( "\n" );
-      Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
+	dvb_fe_retrieve_stats( fe, DTV_BER, &ber );
+	dvb_fe_retrieve_stats( fe, DTV_SIGNAL_STRENGTH, &sig );
+	dvb_fe_retrieve_stats( fe, DTV_UNCORRECTED_BLOCKS, &unc );
+	dvb_fe_retrieve_stats( fe, DTV_SNR, &snr );
       sig *= 100;
       sig /= 0xffff;
       snr *= 100;
       snr /= 0xffff;
+    if( status & FE_HAS_LOCK )
+    {
+
+      //if( i > 0 )
+      //printf( "\n" );
+      Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
 
       //Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
 
@@ -366,13 +367,15 @@ bool Frontend::GetLockStatus( uint8_t &signal, uint8_t &noise, int timeout )
       noise  = snr;
       return true;
     }
+    else
+      Log( "Tuned: sig=%3u%% snr=%3u%% ber=%d unc=%d", (unsigned int) sig, (unsigned int) snr, ber, unc );
 
     struct timeval ts2;
     gettimeofday( &ts2, NULL );
 
     if(( ts2.tv_sec * 1000 + ts2.tv_usec / 1000 ) - start > timeout )
       break;
-    usleep( 10 );
+    usleep( 100000 );
     //printf( "." );
     //fflush( stdout );
   }
@@ -416,6 +419,7 @@ bool Frontend::Tune( Transponder &t )
   Log( "Tuning %s", t.toString( ).c_str( ));
 
   uint8_t signal, noise;
+  LogWarn( "dvb_set_compat_delivery_system %d", t.GetDelSys( ));
   int r = dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
   if( r != 0 )
   {
@@ -425,6 +429,9 @@ bool Frontend::Tune( Transponder &t )
 
   SetTuneParams( t );
   t.GetParams( fe );
+  LogWarn( "dvb_estimate_freq_shift");
+  dvb_estimate_freq_shift( fe );
+
   r = dvb_fe_set_parms( fe );
   if( r != 0 )
   {
@@ -432,6 +439,14 @@ bool Frontend::Tune( Transponder &t )
     dvb_fe_prt_parms( fe );
     goto fail;
   }
+  dvb_fe_prt_parms( fe );
+
+	/* As the DVB core emulates it, better to always use auto */
+	dvb_fe_store_parm(fe, DTV_INVERSION, INVERSION_AUTO);
+
+	uint32_t freq;
+	dvb_fe_retrieve_parm(fe, DTV_FREQUENCY, &freq);
+	dvb_fe_prt_parms(fe);
 
   if( !GetLockStatus( signal, noise, tune_timeout ))
   {
