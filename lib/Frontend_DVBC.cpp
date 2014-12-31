@@ -107,6 +107,18 @@ bool Frontend_DVBC::HandleNIT( struct dvb_table_nit *nit )
         case 5:
           fec = FEC_7_8;
           break;
+        case 6:
+          fec = FEC_8_9;
+          break;
+        case 7:
+          fec = FEC_3_5;
+          break;
+        case 8:
+          fec = FEC_4_5;
+          break;
+        case 9:
+          fec = FEC_9_10;
+          break;
         case 15:
           fec = FEC_NONE;
           break;

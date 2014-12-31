@@ -121,7 +121,8 @@ bool Transponder_DVBC::GetParams( struct dvb_v5_fe_parms* params ) const
 std::string Transponder_DVBC::toString( ) const
 {
   char tmp[256];
-  snprintf(tmp, sizeof(tmp), "%d", frequency );
+  snprintf(tmp, sizeof(tmp), "%.2f MHz %s %dK %s %d", frequency / 1000000.0, fe_modulation_name[modulation],
+		  symbol_rate / 1000, fe_code_rate_name[inner_fec], inversion );
   return tmp;
 }
 
