@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = tsdecrypt v4l-utils/lib/libdvbv5 lib src #po
+SUBDIRS = tsdecrypt lib src #po
 noinst_HEADERS = include
 
 tvdaemondir = $(datadir)/tvdaemon
@@ -8,6 +8,9 @@ nobase_dist_tvdaemon_DATA = \
   html/style/tvdaemon.css \
   html/style/desktop.css \
   html/style/mobile.css \
+  html/style/jquery-ui.css \
+  html/style/dashboard.css \
+  html/style/bootstrap.min.css \
   html/scripts/tvdaemon.js \
   html/images/antenna-cable.smal.png \
   html/images/antenna-icon.png \
@@ -21,6 +24,8 @@ nobase_dist_tvdaemon_DATA = \
   html/favicon.ico \
   html/scripts/lib/jquery.js \
   html/scripts/lib/jquery-1.11.0.min.js \
+  html/scripts/lib/bootstrap.min.js \
+  html/scripts/lib/jquery-ui.js \
   html/contextMenu.js/contextMenu.js \
   html/contextMenu.js/contextMenu.css \
   \

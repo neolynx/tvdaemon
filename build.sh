@@ -24,6 +24,10 @@ git checkout master                     || die "checkout v4l-utils failed"
 git reset --hard origin/master          || die "reset v4l-utils failed"
 git pull                                || die "pull v4l-utils failed"
 git am -3 $SCRIPT_DIR/patches/*         || die "patching v4l-utils failed"
+./bootstrap.sh
+./configure --prefix=/usr
+make
+sudo make install
 cd $SCRIPT_DIR                          || die "change to home failed"
 
 autoreconf -vfis                        || die "autoreconf tvdaeon failed"
