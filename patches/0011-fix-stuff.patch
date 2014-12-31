@@ -1,11 +1,11 @@
-From c9323e667f60b73dcdd4d992b8ae82e7053ce072 Mon Sep 17 00:00:00 2001
+From 8d4391c1050daa81183dbd6f9350a8f025887670 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Wed, 24 Dec 2014 22:24:33 +0100
-Subject: [PATCH 11/11] fix stuff
+Subject: [PATCH 11/12] fix stuff
 
 ---
- lib/libdvbv5/descriptors.c |   21 ++++++++++---
- lib/libdvbv5/dvb-scan.c    |   73 --------------------------------------------
+ lib/libdvbv5/descriptors.c | 21 +++++++++----
+ lib/libdvbv5/dvb-scan.c    | 73 ----------------------------------------------
  2 files changed, 16 insertions(+), 78 deletions(-)
 
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
@@ -152,5 +152,5 @@ index 140655d..607028d 100644
  			     struct dvb_table_filter *sect,
  			     unsigned timeout)
 -- 
-1.7.10.4
+1.8.3.2
 

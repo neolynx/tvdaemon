@@ -1,17 +1,17 @@
-From 1e45f71c62ed9c6d3eab94912ffd44a58e1195cd Mon Sep 17 00:00:00 2001
+From fec291eeee12920b2588853d959072e84215cf5b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 17 Nov 2014 20:45:41 +0100
-Subject: [PATCH 09/11] libdvbv5: suport time offset table (TOT)
+Subject: [PATCH 09/12] libdvbv5: suport time offset table (TOT)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/tot.h |  107 ++++++++++++++++++++++++++++++++++++++++++++
- lib/libdvbv5/Makefile.am   |    2 +
- lib/libdvbv5/descriptors.c |    2 +
- lib/libdvbv5/tables/tot.c  |  100 +++++++++++++++++++++++++++++++++++++++++
+ lib/include/libdvbv5/tot.h | 107 +++++++++++++++++++++++++++++++++++++++++++++
+ lib/libdvbv5/Makefile.am   |   2 +
+ lib/libdvbv5/descriptors.c |   2 +
+ lib/libdvbv5/tables/tot.c  | 100 ++++++++++++++++++++++++++++++++++++++++++
  4 files changed, 211 insertions(+)
  create mode 100644 lib/include/libdvbv5/tot.h
  create mode 100644 lib/libdvbv5/tables/tot.c
@@ -276,5 +276,5 @@ index 0000000..8e85b00
 +}
 +
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,16 +1,16 @@
-From e7a095c7e8e6f6c9a2b96dc35bf384d4743937a1 Mon Sep 17 00:00:00 2001
+From 4b00e3cd22c2f7877a7af7946b4868e8124d21c8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 17 Nov 2014 22:12:29 +0100
-Subject: [PATCH 10/11] libdvbv5: fix DVB time
+Subject: [PATCH 10/12] libdvbv5: fix DVB time
 
 ---
- lib/include/libdvbv5/descriptors.h |   11 +++++++++++
- lib/include/libdvbv5/eit.h         |   10 ----------
- lib/include/libdvbv5/header.h      |    2 +-
- lib/include/libdvbv5/tot.h         |    2 ++
- lib/libdvbv5/descriptors.c         |   29 +++++++++++++++++++++++++++++
- lib/libdvbv5/tables/eit.c          |   28 ----------------------------
- lib/libdvbv5/tables/tot.c          |    4 ++++
+ lib/include/libdvbv5/descriptors.h | 11 +++++++++++
+ lib/include/libdvbv5/eit.h         | 10 ----------
+ lib/include/libdvbv5/header.h      |  2 +-
+ lib/include/libdvbv5/tot.h         |  2 ++
+ lib/libdvbv5/descriptors.c         | 29 +++++++++++++++++++++++++++++
+ lib/libdvbv5/tables/eit.c          | 28 ----------------------------
+ lib/libdvbv5/tables/tot.c          |  4 ++++
  7 files changed, 47 insertions(+), 39 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
@@ -195,5 +195,5 @@ index 8e85b00..d975e1d 100644
  }
  
 -- 
-1.7.10.4
+1.8.3.2
 

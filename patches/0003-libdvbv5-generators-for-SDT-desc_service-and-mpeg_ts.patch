@@ -1,7 +1,7 @@
-From d979828ad7927426b2529416e53e2e42eb92381c Mon Sep 17 00:00:00 2001
+From 062a3acc3522a230cb964f845ee828f6784241ae Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Thu, 17 Apr 2014 16:25:37 +0200
-Subject: [PATCH 03/11] libdvbv5: generators for SDT, desc_service and mpeg_ts
+Subject: [PATCH 03/12] libdvbv5: generators for SDT, desc_service and mpeg_ts
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -31,16 +31,16 @@ Example usage:
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/desc_service.h     |    3 +
- lib/include/libdvbv5/descriptors.h      |    8 +++
- lib/include/libdvbv5/mpeg_ts.h          |    3 +
- lib/include/libdvbv5/sdt.h              |    5 ++
- lib/libdvbv5/descriptors.c              |   59 +++++++++++++---
- lib/libdvbv5/descriptors/desc_service.c |   56 ++++++++++++++++
- lib/libdvbv5/parse_string.c             |    5 +-
- lib/libdvbv5/parse_string.h             |    2 +-
- lib/libdvbv5/tables/mpeg_ts.c           |  112 ++++++++++++++++++++++++++-----
- lib/libdvbv5/tables/sdt.c               |   87 +++++++++++++++++++++++-
+ lib/include/libdvbv5/desc_service.h     |   3 +
+ lib/include/libdvbv5/descriptors.h      |   8 +++
+ lib/include/libdvbv5/mpeg_ts.h          |   3 +
+ lib/include/libdvbv5/sdt.h              |   5 ++
+ lib/libdvbv5/descriptors.c              |  59 ++++++++++++++---
+ lib/libdvbv5/descriptors/desc_service.c |  56 ++++++++++++++++
+ lib/libdvbv5/parse_string.c             |   5 +-
+ lib/libdvbv5/parse_string.h             |   2 +-
+ lib/libdvbv5/tables/mpeg_ts.c           | 112 +++++++++++++++++++++++++++-----
+ lib/libdvbv5/tables/sdt.c               |  87 ++++++++++++++++++++++++-
  10 files changed, 309 insertions(+), 31 deletions(-)
 
 diff --git a/lib/include/libdvbv5/desc_service.h b/lib/include/libdvbv5/desc_service.h
@@ -567,5 +567,5 @@ index d27cec8..f168d80 100644
 +	return size_total;
 +}
 -- 
-1.7.10.4
+1.8.3.2
 

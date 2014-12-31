@@ -1,7 +1,7 @@
-From aa5a7ca66b4d2583f6b7a83c489d5d160bdb1dd3 Mon Sep 17 00:00:00 2001
+From 31e188161364b153a8eccaad3837a429f14fbfcf Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:41:32 +0200
-Subject: [PATCH 04/11] libdvbv5: generators for PAT and PMT
+Subject: [PATCH 04/12] libdvbv5: generators for PAT and PMT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -37,13 +37,13 @@ Example usage:
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/pat.h    |    4 ++
- lib/include/libdvbv5/pmt.h    |   10 +++--
- lib/include/libdvbv5/sdt.h    |    1 -
- lib/libdvbv5/tables/mpeg_ts.c |    1 +
- lib/libdvbv5/tables/pat.c     |   77 +++++++++++++++++++++++++++++++++-
- lib/libdvbv5/tables/pmt.c     |   92 ++++++++++++++++++++++++++++++++++++++---
- lib/libdvbv5/tables/sdt.c     |   17 ++++----
+ lib/include/libdvbv5/pat.h    |  4 ++
+ lib/include/libdvbv5/pmt.h    | 10 +++--
+ lib/include/libdvbv5/sdt.h    |  1 -
+ lib/libdvbv5/tables/mpeg_ts.c |  1 +
+ lib/libdvbv5/tables/pat.c     | 77 +++++++++++++++++++++++++++++++++++-
+ lib/libdvbv5/tables/pmt.c     | 92 ++++++++++++++++++++++++++++++++++++++++---
+ lib/libdvbv5/tables/sdt.c     | 17 ++++----
  7 files changed, 180 insertions(+), 22 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
@@ -394,5 +394,5 @@ index f168d80..6eaf7bd 100644
  	ssize_t size, size_total;
  
 -- 
-1.7.10.4
+1.8.3.2
 

@@ -1,7 +1,7 @@
-From 9a4009cdec7a4324e677cd3fc32d997b009ff9c1 Mon Sep 17 00:00:00 2001
+From 4e409fb7300eb80bda6fa5dcc1eaa1b926d11440 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sun, 23 Nov 2014 15:10:22 +0100
-Subject: [PATCH 07/11] libdvbv5: support different parsers per table
+Subject: [PATCH 07/12] libdvbv5: support different parsers per table
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -12,10 +12,10 @@ dvb_table_header.
 
 Signed-off-by: André Roth <neolynx@gmail.com>
 ---
- lib/include/libdvbv5/descriptors.h |  112 +++++++++++++++++++++++++++++++++++-
- lib/include/libdvbv5/dvb-scan.h    |   30 ----------
- lib/libdvbv5/descriptors.c         |  109 ++++++++++++++++++++++++++++++++++-
- lib/libdvbv5/dvb-scan.c            |   49 ++--------------
+ lib/include/libdvbv5/descriptors.h | 112 ++++++++++++++++++++++++++++++++++++-
+ lib/include/libdvbv5/dvb-scan.h    |  30 ----------
+ lib/libdvbv5/descriptors.c         | 109 +++++++++++++++++++++++++++++++++++-
+ lib/libdvbv5/dvb-scan.c            |  49 ++--------------
  4 files changed, 223 insertions(+), 77 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
@@ -403,5 +403,5 @@ index ba56934..140655d 100644
  	free(buf);
  	dvb_dmx_stop(dmx_fd);
 -- 
-1.7.10.4
+1.8.3.2
 

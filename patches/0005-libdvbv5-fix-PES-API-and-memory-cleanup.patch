@@ -1,11 +1,11 @@
-From 301ed758c5c4babd47a4c5c9e92f2822636c93c8 Mon Sep 17 00:00:00 2001
+From 04a4d10d83e7ec7d6fdae15391e6ffdf3a701874 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 14 Oct 2014 17:32:29 +0200
-Subject: [PATCH 05/11] libdvbv5: fix PES API and memory cleanup
+Subject: [PATCH 05/12] libdvbv5: fix PES API and memory cleanup
 
 ---
- lib/include/libdvbv5/mpeg_pes.h |    2 +-
- lib/libdvbv5/tables/mpeg_pes.c  |   23 ++++++++++++++++++-----
+ lib/include/libdvbv5/mpeg_pes.h |  2 +-
+ lib/libdvbv5/tables/mpeg_pes.c  | 23 ++++++++++++++++++-----
  2 files changed, 19 insertions(+), 6 deletions(-)
 
 diff --git a/lib/include/libdvbv5/mpeg_pes.h b/lib/include/libdvbv5/mpeg_pes.h
@@ -74,5 +74,5 @@ index 8ccbbab..0880f1a 100644
  		memcpy(pes->optional, p, sizeof(struct dvb_mpeg_pes_optional) -
  					 sizeof(pes->optional->pts) -
 -- 
-1.7.10.4
+1.8.3.2
 

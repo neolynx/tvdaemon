@@ -1,11 +1,11 @@
-From 717f193214513bea8d92b2d2f87fcf42f072d095 Mon Sep 17 00:00:00 2001
+From e1a4e415da1e4bdda32250a02801fab326778b99 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 14 Oct 2014 17:33:20 +0200
-Subject: [PATCH 06/11] libdvbv5: fix TS API and do memory cleanup
+Subject: [PATCH 06/12] libdvbv5: fix TS API and do memory cleanup
 
 ---
- lib/include/libdvbv5/mpeg_ts.h |    4 ++--
- lib/libdvbv5/tables/mpeg_ts.c  |   29 +++++++++++++++++++----------
+ lib/include/libdvbv5/mpeg_ts.h |  4 ++--
+ lib/libdvbv5/tables/mpeg_ts.c  | 29 +++++++++++++++++++----------
  2 files changed, 21 insertions(+), 12 deletions(-)
 
 diff --git a/lib/include/libdvbv5/mpeg_ts.h b/lib/include/libdvbv5/mpeg_ts.h
@@ -97,5 +97,5 @@ index 73496b2..0d86cdb 100644
  	memset(&ts, 0x00, size);
  	ts.sync_byte = DVB_MPEG_TS;
 -- 
-1.7.10.4
+1.8.3.2
 
