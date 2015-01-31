@@ -78,7 +78,7 @@ TVDaemon *TVDaemon::Instance( )
 
 TVDaemon::TVDaemon( ) :
   ConfigObject( ),
-  Thread( ),
+  Thread( PTHREAD_STACK_MIN * 3 ), // udev monitor needs more stack
   epg_update_interval(0),
   udev(NULL),
   udev_mon(NULL),

@@ -23,6 +23,8 @@
 #define _Thread_
 
 #include <pthread.h>
+#include <unistd.h> // ssize_t
+#include <limits.h> // PTHREAD_STACK_MIN
 
 class Mutex
 {
@@ -63,13 +65,14 @@ class Condition : public Mutex
 class Thread : public Mutex
 {
   protected:
-    Thread( );
+    Thread( ssize_t stacksize = PTHREAD_STACK_MIN );
     virtual ~Thread( );
 
     bool StartThread( );
     void JoinThread( );
 
   private:
+    ssize_t stacksize;
     bool started; // FIXME: up should go here
     pthread_t thread;
     static void *run( void *ptr );

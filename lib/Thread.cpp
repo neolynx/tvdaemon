@@ -23,7 +23,6 @@
 
 #include <sys/time.h>
 #include <errno.h>  // ETIMEDOUT
-#include <limits.h> // PTHREAD_STACK_MIN
 
 #include "Log.h"
 
@@ -105,7 +104,7 @@ bool Condition::WaitUntil( struct timespec ts ) const
   return false;
 }
 
-Thread::Thread( ) : Mutex( ), started(false)
+Thread::Thread( ssize_t stacksize ) : Mutex( ), stacksize(stacksize), started(false)
 {
 }
 
@@ -125,7 +124,7 @@ bool Thread::StartThread( )
   int ret;
   pthread_attr_t attr;
   pthread_attr_init( &attr );
-  if(( ret = pthread_attr_setstacksize( &attr, PTHREAD_STACK_MIN * 2 )) != 0 )
+  if(( ret = pthread_attr_setstacksize( &attr, stacksize )) != 0 )
   {
     LogError( "Thread: error setting stack size: %d", ret );
     return false;
