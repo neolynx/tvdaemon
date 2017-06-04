@@ -1,7 +1,7 @@
-From 467a01fe9347eb4023164a2b0b49bbffc42ca5b7 Mon Sep 17 00:00:00 2001
+From e19bd37a1dbd1e8e0a5c2ff530bbf7ef3bd4747a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Sat, 5 Oct 2013 14:09:47 +0200
-Subject: [PATCH 02/12] v4l: lvimrc
+Subject: [PATCH 2/8] v4l: lvimrc
 
 ---
  .lvimrc | 4 ++++
@@ -10,7 +10,7 @@ Subject: [PATCH 02/12] v4l: lvimrc
 
 diff --git a/.lvimrc b/.lvimrc
 new file mode 100644
-index 0000000..b8658a7
+index 00000000..b8658a71
 --- /dev/null
 +++ b/.lvimrc
 @@ -0,0 +1,4 @@
@@ -19,5 +19,5 @@ index 0000000..b8658a7
 +set softtabstop=8
 +
 -- 
-1.8.3.2
+2.11.0
 

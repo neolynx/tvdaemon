@@ -1,23 +1,18 @@
-From 4fcf6178f198bcb0e037a57ab29be7a54382a3ff Mon Sep 17 00:00:00 2001
+From 294a62988439a931473f63ce4d11e6ef8edb8e6e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:53:01 +0200
-Subject: [PATCH 01/12] build with tvdaemon
+Subject: [PATCH 1/8] build with tvdaemon
 
 ---
- lib/libdvbv5/Makefile.am | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ lib/libdvbv5/Makefile.am | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/lib/libdvbv5/Makefile.am b/lib/libdvbv5/Makefile.am
-index f0c0b3a..1f91cd5 100644
+index c46c4586..41290276 100644
 --- a/lib/libdvbv5/Makefile.am
 +++ b/lib/libdvbv5/Makefile.am
-@@ -107,10 +107,12 @@ libdvbv5_la_SOURCES = \
- 	descriptors/desc_ca.c			\
- 	descriptors/desc_ca_identifier.c
- 
--libdvbv5_la_CPPFLAGS = -I../.. $(ENFORCE_LIBDVBV5_STATIC)
-+libdvbv5_la_CPPFLAGS = -I../.. $(ENFORCE_LIBDVBV5_STATIC) -std=c99
- libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) -lm
+@@ -121,6 +121,8 @@ libdvbv5_la_CPPFLAGS = -I../.. $(ENFORCE_LIBDVBV5_STATIC) $(LIBUDEV_CFLAGS)
+ libdvbv5_la_LDFLAGS = $(LIBDVBV5_VERSION) $(ENFORCE_LIBDVBV5_STATIC) $(LIBUDEV_LIBS) -lm -lrt
  libdvbv5_la_LIBADD = $(LTLIBICONV)
  
 +AUTOMAKE_OPTIONS = subdir-objects
@@ -26,5 +21,5 @@ index f0c0b3a..1f91cd5 100644
  
  sync-with-kernel:
 -- 
-1.8.3.2
+2.11.0
 

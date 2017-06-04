@@ -250,7 +250,7 @@ bool Activity_Scan::Perform( )
             case stream_audio_latm:       // 0x11
               type = Stream::Type_Audio_LATM;
               break;
-            case stream_private + 1:      // 0x81  user private - in general ATSC Dolby - AC-3
+            case stream_audio_a52:      // 0x81
               type = Stream::Type_Audio_AC3;
               break;
 

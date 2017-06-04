@@ -112,7 +112,7 @@ int Stream::GetTypeMPEG( )
     case Stream::Type_Audio_LATM:
       return stream_audio_latm;       // 0x11
     case Stream::Type_Audio_AC3:
-      return stream_private + 1;      // 0x81  user private - in general ATSC Dolby - AC-3
+      return stream_audio_a52;        // 0x81
 
     // FIXME: support those types
     //case stream_private_sections: // 0x05

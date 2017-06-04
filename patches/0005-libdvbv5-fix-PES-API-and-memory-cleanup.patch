@@ -1,7 +1,7 @@
-From 04a4d10d83e7ec7d6fdae15391e6ffdf3a701874 Mon Sep 17 00:00:00 2001
+From 2976c472e83e858d42467a0751ad48df84c5a96d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Tue, 14 Oct 2014 17:32:29 +0200
-Subject: [PATCH 05/12] libdvbv5: fix PES API and memory cleanup
+Subject: [PATCH 5/8] libdvbv5: fix PES API and memory cleanup
 
 ---
  lib/include/libdvbv5/mpeg_pes.h |  2 +-
@@ -9,10 +9,10 @@ Subject: [PATCH 05/12] libdvbv5: fix PES API and memory cleanup
  2 files changed, 19 insertions(+), 6 deletions(-)
 
 diff --git a/lib/include/libdvbv5/mpeg_pes.h b/lib/include/libdvbv5/mpeg_pes.h
-index 1bf62d7..b43adad 100644
+index 9f214b26..55537166 100644
 --- a/lib/include/libdvbv5/mpeg_pes.h
 +++ b/lib/include/libdvbv5/mpeg_pes.h
-@@ -218,7 +218,7 @@ extern "C" {
+@@ -217,7 +217,7 @@ extern "C" {
   * allocated on stack or dynamically.
   */
  ssize_t dvb_mpeg_pes_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssize_t buflen,
@@ -22,10 +22,10 @@ index 1bf62d7..b43adad 100644
  /**
   * @brief Deallocate memory associated with a struct dvb_mpeg_pes
 diff --git a/lib/libdvbv5/tables/mpeg_pes.c b/lib/libdvbv5/tables/mpeg_pes.c
-index 8ccbbab..0880f1a 100644
+index 5a2a582e..3d06d915 100644
 --- a/lib/libdvbv5/tables/mpeg_pes.c
 +++ b/lib/libdvbv5/tables/mpeg_pes.c
-@@ -23,13 +23,22 @@
+@@ -22,13 +22,22 @@
  #include <libdvbv5/dvb-fe.h>
  #include <inttypes.h>
  
@@ -51,7 +51,7 @@ index 8ccbbab..0880f1a 100644
  	p += sizeof(struct dvb_mpeg_pes);
  	bytes_read += sizeof(struct dvb_mpeg_pes);
  
-@@ -38,7 +47,9 @@ ssize_t dvb_mpeg_pes_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssi
+@@ -37,7 +46,9 @@ ssize_t dvb_mpeg_pes_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssi
  
  	if (pes->sync != 0x000001) {
  		dvb_logerr("mpeg pes invalid, sync 0x%06x should be 0x000001", pes->sync);
@@ -62,7 +62,7 @@ index 8ccbbab..0880f1a 100644
  	}
  
  	if (pes->stream_id == DVB_MPEG_STREAM_PADDING) {
-@@ -51,7 +62,9 @@ ssize_t dvb_mpeg_pes_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssi
+@@ -50,7 +61,9 @@ ssize_t dvb_mpeg_pes_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf, ssi
  		   pes->stream_id == DVB_MPEG_STREAM_DSMCC ||
  		   pes->stream_id == DVB_MPEG_STREAM_H222E ) {
  		dvb_logerr("mpeg pes: unsupported stream type 0x%04x", pes->stream_id);
@@ -74,5 +74,5 @@ index 8ccbbab..0880f1a 100644
  		memcpy(pes->optional, p, sizeof(struct dvb_mpeg_pes_optional) -
  					 sizeof(pes->optional->pts) -
 -- 
-1.8.3.2
+2.11.0
 

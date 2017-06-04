@@ -144,7 +144,8 @@ bool Source::ReadScanfile( std::string scanfile )
   }
   filename += scanfile;
 
-  struct dvb_file *file = dvb_read_file_format( filename.c_str( ), SYS_UNDEFINED, FILE_CHANNEL );
+
+  struct dvb_file *file = dvb_read_file_format( filename.c_str( ), SYS_UNDEFINED, FILE_DVBV5 );
   if( !file )
   {
     LogError( "Failed to parse '%s'", scanfile.c_str( ));

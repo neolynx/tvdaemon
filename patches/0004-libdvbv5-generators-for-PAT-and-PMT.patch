@@ -1,7 +1,7 @@
-From 31e188161364b153a8eccaad3837a429f14fbfcf Mon Sep 17 00:00:00 2001
+From 35cbf66dfecf8fae4d937174360fead7b4dfb22d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Fri, 18 Apr 2014 13:41:32 +0200
-Subject: [PATCH 04/12] libdvbv5: generators for PAT and PMT
+Subject: [PATCH 4/8] libdvbv5: generators for PAT and PMT
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -47,7 +47,7 @@ Signed-off-by: André Roth <neolynx@gmail.com>
  7 files changed, 180 insertions(+), 22 deletions(-)
 
 diff --git a/lib/include/libdvbv5/pat.h b/lib/include/libdvbv5/pat.h
-index c12f123..97a0ed0 100644
+index bdf31ab5..8f538556 100644
 --- a/lib/include/libdvbv5/pat.h
 +++ b/lib/include/libdvbv5/pat.h
 @@ -165,6 +165,10 @@ void dvb_table_pat_free(struct dvb_table_pat *table);
@@ -62,10 +62,10 @@ index c12f123..97a0ed0 100644
  }
  #endif
 diff --git a/lib/include/libdvbv5/pmt.h b/lib/include/libdvbv5/pmt.h
-index e043b71..e8e03f3 100644
+index 5876c594..ca49a89c 100644
 --- a/lib/include/libdvbv5/pmt.h
 +++ b/lib/include/libdvbv5/pmt.h
-@@ -207,7 +207,7 @@ struct dvb_table_pmt {
+@@ -217,7 +217,7 @@ struct dvb_table_pmt {
  		uint16_t bitfield;
  		struct {
  			uint16_t pcr_pid:13;
@@ -74,7 +74,7 @@ index e043b71..e8e03f3 100644
  		} __attribute__((packed));
  	} __attribute__((packed));
  
-@@ -215,8 +215,8 @@ struct dvb_table_pmt {
+@@ -225,8 +225,8 @@ struct dvb_table_pmt {
  		uint16_t bitfield2;
  		struct {
  			uint16_t desc_length:10;
@@ -85,7 +85,7 @@ index e043b71..e8e03f3 100644
  		} __attribute__((packed));
  	} __attribute__((packed));
  	struct dvb_desc *descriptor;
-@@ -282,6 +282,10 @@ void dvb_table_pmt_free(struct dvb_table_pmt *table);
+@@ -293,6 +293,10 @@ void dvb_table_pmt_free(struct dvb_table_pmt *table);
  void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms,
  			 const struct dvb_table_pmt *table);
  
@@ -97,7 +97,7 @@ index e043b71..e8e03f3 100644
  }
  #endif
 diff --git a/lib/include/libdvbv5/sdt.h b/lib/include/libdvbv5/sdt.h
-index a4132ff..15adfde 100644
+index 33102472..9918f763 100644
 --- a/lib/include/libdvbv5/sdt.h
 +++ b/lib/include/libdvbv5/sdt.h
 @@ -182,7 +182,6 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *ta
@@ -109,10 +109,10 @@ index a4132ff..15adfde 100644
  
  #ifdef __cplusplus
 diff --git a/lib/libdvbv5/tables/mpeg_ts.c b/lib/libdvbv5/tables/mpeg_ts.c
-index 58581a4..73496b2 100644
+index 7c10ac4b..eaa86ec3 100644
 --- a/lib/libdvbv5/tables/mpeg_ts.c
 +++ b/lib/libdvbv5/tables/mpeg_ts.c
-@@ -63,6 +63,7 @@ void dvb_mpeg_ts_print(struct dvb_v5_fe_parms *parms, struct dvb_mpeg_ts *ts)
+@@ -62,6 +62,7 @@ void dvb_mpeg_ts_print(struct dvb_v5_fe_parms *parms, struct dvb_mpeg_ts *ts)
  	dvb_loginfo("| pid           0x%04x", ts->pid);
  	dvb_loginfo("| scrambling         %d", ts->scrambling);
  	dvb_loginfo("| adaptation_field   %d", ts->adaptation_field);
@@ -121,10 +121,10 @@ index 58581a4..73496b2 100644
  	if (ts->adaptation_field) {
  		dvb_loginfo("|- Adaptation Field");
 diff --git a/lib/libdvbv5/tables/pat.c b/lib/libdvbv5/tables/pat.c
-index 03b75b0..63c7c39 100644
+index 092beef4..8b1b1e56 100644
 --- a/lib/libdvbv5/tables/pat.c
 +++ b/lib/libdvbv5/tables/pat.c
-@@ -22,6 +22,8 @@
+@@ -21,6 +21,8 @@
  #include <libdvbv5/pat.h>
  #include <libdvbv5/descriptors.h>
  #include <libdvbv5/dvb-fe.h>
@@ -133,7 +133,7 @@ index 03b75b0..63c7c39 100644
  
  ssize_t dvb_table_pat_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
  			ssize_t buflen, struct dvb_table_pat **table)
-@@ -120,11 +122,82 @@ void dvb_table_pat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pat *pa
+@@ -119,11 +121,82 @@ void dvb_table_pat_print(struct dvb_v5_fe_parms *parms, struct dvb_table_pat *pa
  
  	dvb_loginfo("PAT");
  	dvb_table_header_print(parms, &pat->header);
@@ -219,10 +219,10 @@ index 03b75b0..63c7c39 100644
  }
  
 diff --git a/lib/libdvbv5/tables/pmt.c b/lib/libdvbv5/tables/pmt.c
-index d2e2693..946bfcc 100644
+index 4efa6b3a..0cca9ff0 100644
 --- a/lib/libdvbv5/tables/pmt.c
 +++ b/lib/libdvbv5/tables/pmt.c
-@@ -22,6 +22,8 @@
+@@ -21,6 +21,8 @@
  #include <libdvbv5/pmt.h>
  #include <libdvbv5/descriptors.h>
  #include <libdvbv5/dvb-fe.h>
@@ -231,7 +231,7 @@ index d2e2693..946bfcc 100644
  
  #include <string.h> /* memcpy */
  
-@@ -152,11 +154,11 @@ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_p
+@@ -151,11 +153,11 @@ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_p
  {
  	dvb_loginfo("PMT");
  	dvb_table_header_print(parms, &pmt->header);
@@ -248,7 +248,7 @@ index d2e2693..946bfcc 100644
  	dvb_desc_print(parms, pmt->descriptor);
  	dvb_loginfo("|\\");
  	const struct dvb_table_pmt_stream *stream = pmt->stream;
-@@ -169,7 +171,7 @@ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_p
+@@ -168,7 +170,7 @@ void dvb_table_pmt_print(struct dvb_v5_fe_parms *parms, const struct dvb_table_p
  		stream = stream->next;
  		streams++;
  	}
@@ -257,8 +257,8 @@ index d2e2693..946bfcc 100644
  }
  
  const char *pmt_stream_name[] = {
-@@ -198,3 +200,81 @@ const char *pmt_stream_name[] = {
- 	[stream_private  ... 0xff] = "User Private"
+@@ -212,3 +214,81 @@ const char *pmt_stream_name[] = {
+ 	[stream_audio_sdds2]       = "SDDS",
  };
  
 +
@@ -340,10 +340,10 @@ index d2e2693..946bfcc 100644
 +	return size_total;
 +}
 diff --git a/lib/libdvbv5/tables/sdt.c b/lib/libdvbv5/tables/sdt.c
-index f168d80..6eaf7bd 100644
+index 43ab43ba..0b4637d0 100644
 --- a/lib/libdvbv5/tables/sdt.c
 +++ b/lib/libdvbv5/tables/sdt.c
-@@ -151,26 +151,23 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
+@@ -150,26 +150,23 @@ void dvb_table_sdt_print(struct dvb_v5_fe_parms *parms, struct dvb_table_sdt *sd
  		service = service->next;
  		services++;
  	}
@@ -375,7 +375,7 @@ index f168d80..6eaf7bd 100644
  	return sdt;
  }
  
-@@ -181,7 +178,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
+@@ -180,7 +177,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
  	/* append to the list */
  	while (*head != NULL)
  		head = &(*head)->next;
@@ -384,7 +384,7 @@ index f168d80..6eaf7bd 100644
  	(*head)->service_id = service_id;
  	(*head)->running_status = 4;
  	(*head)->reserved = 63;
-@@ -190,7 +187,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
+@@ -189,7 +186,7 @@ struct dvb_table_sdt_service *dvb_table_sdt_service_create(struct dvb_table_sdt
  
  ssize_t dvb_table_sdt_store(struct dvb_v5_fe_parms *parms, const struct dvb_table_sdt *sdt, uint8_t **data)
  {
@@ -394,5 +394,5 @@ index f168d80..6eaf7bd 100644
  	ssize_t size, size_total;
  
 -- 
-1.8.3.2
+2.11.0
 

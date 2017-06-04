@@ -1,23 +1,20 @@
-From 4b00e3cd22c2f7877a7af7946b4868e8124d21c8 Mon Sep 17 00:00:00 2001
+From fd82363e225b8bcb8500ced47b07d90f0e253250 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
 Date: Mon, 17 Nov 2014 22:12:29 +0100
-Subject: [PATCH 10/12] libdvbv5: fix DVB time
+Subject: [PATCH 7/8] libdvbv5: fix DVB time
 
 ---
  lib/include/libdvbv5/descriptors.h | 11 +++++++++++
  lib/include/libdvbv5/eit.h         | 10 ----------
- lib/include/libdvbv5/header.h      |  2 +-
- lib/include/libdvbv5/tot.h         |  2 ++
  lib/libdvbv5/descriptors.c         | 29 +++++++++++++++++++++++++++++
  lib/libdvbv5/tables/eit.c          | 28 ----------------------------
- lib/libdvbv5/tables/tot.c          |  4 ++++
- 7 files changed, 47 insertions(+), 39 deletions(-)
+ 4 files changed, 40 insertions(+), 38 deletions(-)
 
 diff --git a/lib/include/libdvbv5/descriptors.h b/lib/include/libdvbv5/descriptors.h
-index 05dc0ef..25d924d 100644
+index 3f720549..00385421 100644
 --- a/lib/include/libdvbv5/descriptors.h
 +++ b/lib/include/libdvbv5/descriptors.h
-@@ -48,6 +48,7 @@
+@@ -47,6 +47,7 @@
  #include <unistd.h>
  #include <stdint.h>
  #include <arpa/inet.h>
@@ -25,7 +22,7 @@ index 05dc0ef..25d924d 100644
  
  /**
   * @brief Maximum size of a table session to be parsed
-@@ -286,6 +287,16 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix,
+@@ -162,6 +163,16 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix,
  		 const unsigned char *buf, int len);
  
  /**
@@ -43,10 +40,10 @@ index 05dc0ef..25d924d 100644
   * @ingroup dvb_table
   *
 diff --git a/lib/include/libdvbv5/eit.h b/lib/include/libdvbv5/eit.h
-index 04b34e2..c576f8b 100644
+index 9129861e..5af266b1 100644
 --- a/lib/include/libdvbv5/eit.h
 +++ b/lib/include/libdvbv5/eit.h
-@@ -207,16 +207,6 @@ void dvb_table_eit_free(struct dvb_table_eit *table);
+@@ -209,16 +209,6 @@ void dvb_table_eit_free(struct dvb_table_eit *table);
  void dvb_table_eit_print(struct dvb_v5_fe_parms *parms,
  			 struct dvb_table_eit *table);
  
@@ -63,44 +60,11 @@ index 04b34e2..c576f8b 100644
  #ifdef __cplusplus
  }
  #endif
-diff --git a/lib/include/libdvbv5/header.h b/lib/include/libdvbv5/header.h
-index 5e42f5d..2e04a16 100644
---- a/lib/include/libdvbv5/header.h
-+++ b/lib/include/libdvbv5/header.h
-@@ -137,7 +137,7 @@ struct dvb_table_header_datetime {
- 	} __attribute__((packed));
- 	union {
- 		uint16_t bitfield2; /* first 2 bytes are MJD, they need to be bswapped */
--		uint8_t time[5];
-+		uint8_t dvbtime[5];
- 	} __attribute__((packed));
- 	union {
- 		uint16_t bitfield3;
-diff --git a/lib/include/libdvbv5/tot.h b/lib/include/libdvbv5/tot.h
-index e6701c7..9ab271e 100644
---- a/lib/include/libdvbv5/tot.h
-+++ b/lib/include/libdvbv5/tot.h
-@@ -34,6 +34,7 @@
- 
- #include <stdint.h>
- #include <unistd.h> /* ssize_t */
-+#include <time.h>
- 
- #include <libdvbv5/header.h>
- 
-@@ -58,6 +59,7 @@
- struct dvb_table_tot {
- 	struct dvb_table_header_datetime header;
- 	struct dvb_desc *descriptor;
-+	struct tm time;
- } __attribute__((packed));
- 
- struct dvb_v5_fe_parms;
 diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
-index 265b672..21423e9 100644
+index f0b3eb6f..74eeccd0 100644
 --- a/lib/libdvbv5/descriptors.c
 +++ b/lib/libdvbv5/descriptors.c
-@@ -1529,3 +1529,32 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsign
+@@ -1430,3 +1430,32 @@ void dvb_hexdump(struct dvb_v5_fe_parms *parms, const char *prefix, const unsign
  		dvb_loginfo("%s%s %s %s", prefix, hex, spaces, ascii);
  	}
  }
@@ -134,10 +98,10 @@ index 265b672..21423e9 100644
 +}
 +
 diff --git a/lib/libdvbv5/tables/eit.c b/lib/libdvbv5/tables/eit.c
-index f9c15b8..34bebfb 100644
+index a6ba566a..799e4c9a 100644
 --- a/lib/libdvbv5/tables/eit.c
 +++ b/lib/libdvbv5/tables/eit.c
-@@ -155,34 +155,6 @@ void dvb_table_eit_print(struct dvb_v5_fe_parms *parms, struct dvb_table_eit *ei
+@@ -154,34 +154,6 @@ void dvb_table_eit_print(struct dvb_v5_fe_parms *parms, struct dvb_table_eit *ei
  	dvb_loginfo("|_  %d events", events);
  }
  
@@ -172,28 +136,6 @@ index f9c15b8..34bebfb 100644
  
  const char *dvb_eit_running_status_name[8] = {
  	[0] = "Undefined",
-diff --git a/lib/libdvbv5/tables/tot.c b/lib/libdvbv5/tables/tot.c
-index 8e85b00..d975e1d 100644
---- a/lib/libdvbv5/tables/tot.c
-+++ b/lib/libdvbv5/tables/tot.c
-@@ -54,6 +54,7 @@ ssize_t dvb_table_tot_init(struct dvb_v5_fe_parms *parms, const uint8_t *buf,
- 	memcpy(tot, p, size);
- 	p += size;
- 	dvb_table_header_datetime_init(&tot->header);
-+	dvb_time(tot->header.dvbtime, &tot->time);
- 
- 	/* find end of current lists */
- 	head_desc = &tot->descriptor;
-@@ -95,6 +96,9 @@ void dvb_table_tot_print(struct dvb_v5_fe_parms *parms, struct dvb_table_tot *to
- {
- 	dvb_loginfo("TOT");
- 	dvb_table_header_datetime_print(parms, &tot->header);
-+	char time[255];
-+	strftime(time, sizeof(time), "%F %T", &tot->time);
-+	dvb_loginfo("| Time                %s UTC", time);
- 	dvb_desc_print(parms, tot->descriptor);
- }
- 
 -- 
-1.8.3.2
+2.11.0
 

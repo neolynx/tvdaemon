@@ -47,6 +47,7 @@ AC_CHECK_FUNCS([clock_gettime memset mkdir select socket strcasecmp strdup strto
 # for including libdvbv5 Makefile.am
 AC_SUBST([pkgconfigdir], [$libdir/pkgconfig])
 AM_CONDITIONAL([WITH_LIBDVBV5], [true])
+AM_CONDITIONAL([WITH_DVBV5_REMOTE], [false])
 AC_SUBST([ENFORCE_LIBDVBV5_STATIC], ["-I../include -I../../../../v4l-utils/lib/include"])
 AM_GNU_GETTEXT_VERSION([0.17])
 AM_GNU_GETTEXT([external])

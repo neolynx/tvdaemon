@@ -1,0 +1,36 @@
+From a47da3b0493cf9aba77aa90789abf09db567b967 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Roth?= <neolynx@gmail.com>
+Date: Wed, 24 Dec 2014 22:24:33 +0100
+Subject: [PATCH 8/8] fix stuff
+
+---
+ lib/libdvbv5/descriptors.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/lib/libdvbv5/descriptors.c b/lib/libdvbv5/descriptors.c
+index 74eeccd0..3c8fede7 100644
+--- a/lib/libdvbv5/descriptors.c
++++ b/lib/libdvbv5/descriptors.c
+@@ -56,6 +56,19 @@
+ #include <libdvbv5/desc_ca_identifier.h>
+ #include <libdvbv5/desc_extension.h>
+ 
++#include "dvb-fe-priv.h"
++
++#ifdef ENABLE_NLS
++# include "gettext.h"
++# include <libintl.h>
++# define _(string) dgettext(LIBDVBV5_DOMAIN, string)
++
++#else
++# define _(string) string
++#endif
++
++# define N_(string) string
++
+ struct dvb_desc *dvb_desc_create(struct dvb_v5_fe_parms *parms, uint8_t type, struct dvb_desc **list)
+ {
+ 	dvb_desc_create_func create = dvb_descriptors[type].create;
+-- 
+2.11.0
+
