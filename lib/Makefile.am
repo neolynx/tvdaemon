@@ -39,7 +39,7 @@ libtvdaemon_la_SOURCES = TVDaemon.cpp \
 			  Daemon.cpp \
 			  Avahi_Client.cpp
 
-libtvdaemon_la_LDFLAGS = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONXX_LIBS} -ldvbv5 \
+libtvdaemon_la_LDFLAGS = -ludev ${LIBCONFIGXX_LIBS} -lrt -lpthread ${LIBJSONC_LIBS} -ldvbv5 \
 			${LIBCCRTP_LIBS} \
 			../tsdecrypt/libtsdecrypt.la
 libtvdaemon_la_CXXFLAGS = -D__STDC_CONSTANT_MACROS -I ../v4l-utils/lib/include
