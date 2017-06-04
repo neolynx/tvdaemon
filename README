@@ -2,7 +2,11 @@
 Prerequisites
 ==============
 
-On Ubuntu >= quantal or Debian >= wheezy, install the following:
+Supported distros:
+- Ubuntu >= trusty
+- Debian >= jessie
+
+Build dependencies:
 
 sudo apt-get install autoconf libtool automake autopoint pkg-config g++ \
                     gettext libjpeg62-dev libudev-dev libconfig++8-dev \
