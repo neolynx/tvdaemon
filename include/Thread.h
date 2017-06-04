@@ -65,7 +65,7 @@ class Condition : public Mutex
 class Thread : public Mutex
 {
   protected:
-    Thread( ssize_t stacksize = PTHREAD_STACK_MIN );
+    Thread( ssize_t stacksize = 0 );
     virtual ~Thread( );
 
     bool StartThread( );

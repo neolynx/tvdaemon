@@ -124,7 +124,7 @@ bool Thread::StartThread( )
   int ret;
   pthread_attr_t attr;
   pthread_attr_init( &attr );
-  if(( ret = pthread_attr_setstacksize( &attr, stacksize )) != 0 )
+  if( stacksize > 0 && ( ret = pthread_attr_setstacksize( &attr, stacksize )) != 0 )
   {
     LogError( "Thread: error setting stack size: %d", ret );
     return false;
