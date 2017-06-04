@@ -388,6 +388,7 @@ void TVDaemon::ProcessAdapters( )
     //
     Adapter *a = new Adapter( *this, dev_it->adapter_name, dev_it->uid, adapters.size( ));
     a->SetFrontend( dev_it->frontend_name, dev_it->adapter_id, dev_it->frontend_id );
+    a->SaveConfig( );
 
     LockAdapters( );
     int next_id = GetAvailableKey<Adapter, int>( adapters );
@@ -647,6 +648,7 @@ Channel *TVDaemon::CreateChannel( Service *service )
   int next_id = GetAvailableKey<Channel, int>( channels );
   Channel *c = new Channel( *this, service, next_id );
   channels[next_id] = c;
+  c->SaveConfig( );
   return c;
 }
 
@@ -809,6 +811,9 @@ bool TVDaemon::RPC( const HTTPRequest &request, const std::string &cat, const st
         Port *p = f->GetPort( port_id );
         p->SetSource( s );
         s->AddPort( p );
+
+        s->SaveConfig( );
+        p->SaveConfig( );
       }
     }
     request.Reply( HTTP_OK, s->GetKey( ));
