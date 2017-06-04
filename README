@@ -6,7 +6,7 @@ On Ubuntu >= quantal or Debian >= wheezy, install the following:
 
 sudo apt-get install autoconf libtool automake autopoint pkg-config g++ \
                     gettext libjpeg62-dev libudev-dev libconfig++8-dev \
-                    libjson0-dev \
+                    libjson-c-dev \
                     libccrtp-dev libdvbcsa-dev dvb-apps libavahi-client-dev \
                     libssl-dev
 
@@ -26,6 +26,24 @@ Start tvdaemon locally
 =======================
 
 src/tvdaemon -d -r html
+
+Configure tvdaemon
+===================
+
+Point your browser to http://loalhost:7777/ (or where your tvdaemon is reachable).
+
+You should see your DVB adapter(s) in the Setup page.
+
+To configure a DVB source:
+- click on the 'Undefined' right of the antenna icon
+- select 'Create Source'
+- specify the Name, i.e. hometown
+- select a configuration to initially create the transponders
+  (if the list is empty, install dvb-apps)
+- tvdaemon should not scan the transponders and add services to the Services tab
+- click on the services to add them to the Channels tab
+- the Channels are then scanned for DVB EPG data
+- in the EPG tab, click on an entry to schedule recording
 
 
 Install tvdaemon
