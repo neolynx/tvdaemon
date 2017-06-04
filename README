@@ -9,7 +9,7 @@ Supported distros:
 Build dependencies:
 
 sudo apt-get install autoconf libtool automake autopoint pkg-config g++ \
-                    gettext libjpeg62-dev libudev-dev libconfig++8-dev \
+                    gettext libudev-dev libconfig++8-dev \
                     libjson-c-dev \
                     libccrtp-dev libdvbcsa-dev dvb-apps libavahi-client-dev \
                     libssl-dev

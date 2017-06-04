@@ -2,7 +2,7 @@ Source: tvdaemon
 Section: misc
 Priority: optional
 Maintainer: André Roth <neolynx@gmail.com>
-Build-Depends: debhelper (>= 8), dh-autoreconf, autopoint, pkg-config, libjpeg62-dev, libudev-dev, libconfig++8-dev, libjson-c-dev, libebml-dev, libmatroska-dev, libccrtp-dev, libavahi-client-dev, libdvbcsa-dev
+Build-Depends: debhelper (>= 8), dh-autoreconf, autopoint, pkg-config, libudev-dev, libconfig++8-dev, libjson-c-dev, libebml-dev, libmatroska-dev, libccrtp-dev, libavahi-client-dev, libdvbcsa-dev
 Standards-Version: 3.9.3
 Homepage: https://github.com/neolynx/tvdaemon/wiki
 Vcs-Git: http://github.com/neolynx/tvdaemon.git
