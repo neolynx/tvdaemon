@@ -2,12 +2,15 @@ SCRIPT_FILE=`readlink -f $0`
 SCRIPT_DIR=`dirname $SCRIPT_FILE`
 
 set -x
+set -e
 
 die()
 {
   echo $1
   exit -1
 }
+
+rm -rf v4l-utils/build-aux/
 
 cd $SCRIPT_DIR                          || die "change to home failed"
 git submodule update --init --recursive || die "submodule update failed"
