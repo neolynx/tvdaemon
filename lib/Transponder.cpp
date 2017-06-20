@@ -219,6 +219,9 @@ bool Transponder::LoadConfig( )
   ReadConfig( "Signal",           signal );
   ReadConfig( "Noise",            noise );
   ReadConfig( "EPGState", (int &) epg_state );
+  if( epg_state == EPGState_Updating )
+    epg_state = EPGState_Missing;
+
   ReadConfig( "LastEPGUpdate",    last_epg_update );
 
   Setting &n = ConfigList( "Services" );
