@@ -102,6 +102,8 @@ TVDaemon::~TVDaemon( )
   }
 
   LogInfo( "Closing Tuners" );
+  for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
+    it->second->Abort( );
   LockAdapters( );
   for( std::map<int, Adapter *>::iterator it = adapters.begin( ); it != adapters.end( ); it++ )
     it->second->Shutdown( );
