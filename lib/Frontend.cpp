@@ -202,7 +202,7 @@ void Frontend::Close()
 
 bool Frontend::GetInfo( int adapter_id, int frontend_id, fe_delivery_system_t *delsys, std::string *name )
 {
-  struct dvb_v5_fe_parms *fe = dvb_fe_open( adapter_id, frontend_id, 0, 0 );
+  struct dvb_v5_fe_parms *fe = dvb_fe_open2( adapter_id, frontend_id, 0, 0, TVD_Log );
   if( !fe )
   {
     ::LogError( "Error opening /dev/dvb/adapter%d/frontend%d", adapter_id, frontend_id );
