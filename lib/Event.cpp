@@ -48,7 +48,7 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
 
   time( &now );
   localtime_r( &now, &t );
-  printf( "local: %ld %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
+//  printf( "local: %ld %d %s", t.tm_gmtoff, t.tm_isdst, asctime( &t ));
   //t.tm_isdst = 1; // dst in effect, do not adjust
   //time_t local = mktime( &t );
 
@@ -58,7 +58,7 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
 
   t = event->start;
   mktime( &t );
-  printf( "event utc  : %s", asctime( &t ));
+//  printf( "event utc  : %s", asctime( &t ));
 
   //t.tm_isdst = 0;
   t.tm_hour += gmt_offset / 3600;
@@ -92,7 +92,7 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
     }
     desc = desc->next;
   }
-  printf( "name: %s\n\n", name.c_str( ));
+//  printf( "name: %s\n\n", name.c_str( ));
   //LogWarn( "Event %s: %d.%d.%d %d:%d", name.c_str( ), t.tm_mday, t.tm_mon, t.tm_year, t.tm_hour, t.tm_min );
   //localtime_r( &start, &t );
   //LogError( "Check: %s", asctime( &t ));
