@@ -34,6 +34,7 @@ FIXME: dvbcsa
 PKG_CHECK_MODULES([LIBCONFIGXX], [libconfig++ >= 1.3.2],, AC_MSG_ERROR([libconfig++8-dev 1.3.2 or newer not found.]))
 PKG_CHECK_MODULES([LIBJSONC], [json-c >= 0.9],, AC_MSG_ERROR([libjson-c-dev 0.9 or newer not found.]))
 PKG_CHECK_MODULES([LIBCCRTP], [libccrtp >= 2.0.3],, AC_MSG_ERROR([libccrtp-dev 2.0.3 or newer not found.]))
+# check openssl/aes.h for tsdecrypt
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
