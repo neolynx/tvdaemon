@@ -154,7 +154,8 @@ bool Source::ReadScanfile( std::string scanfile )
 
   for( struct dvb_entry *entry = file->first_entry; entry != NULL; entry = entry->next )
   {
-    CreateTransponder( *entry );
+    if( entry and (uint64_t) entry != 0xffffffff )
+        CreateTransponder( *entry );
   }
 
   return true;
