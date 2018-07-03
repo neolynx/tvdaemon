@@ -38,6 +38,7 @@ class Adapter : public ConfigObject, public RPCObject
     Adapter( TVDaemon &tvd, const std::string &name, const std::string &uid, const int config_id );
     Adapter( TVDaemon &tvd, const std::string &configfile );
     virtual ~Adapter( );
+    void Abort( );
     void Shutdown( );
     void Delete( );
 

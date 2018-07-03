@@ -56,6 +56,12 @@ Adapter::~Adapter( )
     delete *it;
 }
 
+void Adapter::Abort( )
+{
+  for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )
+    (*it)->Abort( );
+}
+
 void Adapter::Shutdown( )
 {
   for( std::vector<Frontend *>::iterator it = frontends.begin( ); it != frontends.end( ); it++ )

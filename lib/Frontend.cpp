@@ -699,6 +699,12 @@ bool Frontend::compare( const JSONObject &other, const int &p ) const
   return GetKey( ) < b.GetKey( );
 }
 
+void Frontend::Abort( )
+{
+  if( fe )
+      fe->abort = 1;
+}
+
 void Frontend::Shutdown( )
 {
   up = false;
