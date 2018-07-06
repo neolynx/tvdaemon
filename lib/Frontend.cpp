@@ -419,7 +419,6 @@ bool Frontend::Tune( Transponder &t )
   Log( "Tuning %s", t.toString( ).c_str( ));
 
   uint8_t signal, noise;
-  LogWarn( "dvb_set_compat_delivery_system %d", t.GetDelSys( ));
   int r = dvb_set_compat_delivery_system( fe, t.GetDelSys( ));
   if( r != 0 )
   {
@@ -429,7 +428,6 @@ bool Frontend::Tune( Transponder &t )
 
   SetTuneParams( t );
   t.GetParams( fe );
-  LogWarn( "dvb_estimate_freq_shift");
   dvb_estimate_freq_shift( fe );
 
   r = dvb_fe_set_parms( fe );
@@ -439,14 +437,14 @@ bool Frontend::Tune( Transponder &t )
     dvb_fe_prt_parms( fe );
     goto fail;
   }
-  dvb_fe_prt_parms( fe );
+  //dvb_fe_prt_parms( fe );
 
 	/* As the DVB core emulates it, better to always use auto */
 	dvb_fe_store_parm(fe, DTV_INVERSION, INVERSION_AUTO);
 
 	uint32_t freq;
 	dvb_fe_retrieve_parm(fe, DTV_FREQUENCY, &freq);
-	dvb_fe_prt_parms(fe);
+	//dvb_fe_prt_parms(fe);
 
   if( !GetLockStatus( signal, noise, tune_timeout ))
   {
