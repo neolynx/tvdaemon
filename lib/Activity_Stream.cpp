@@ -532,7 +532,7 @@ bool Activity_Stream::StreamRecording( )
         ts_map[ts->pid] = file_timestamp;
         f->SetTimestamp( file_timestamp );
       }
-      else
+      else if( ts )
       {
         std::map<uint16_t, uint64_t>::iterator it = ts_map.find( ts->pid );
         if( it == ts_map.end( ))
@@ -543,6 +543,8 @@ bool Activity_Stream::StreamRecording( )
         else
           f->SetTimestamp( it->second );
       }
+      else
+          continue;
 
       //LogWarn( "Frame pid %d ts %ld", f->GetPID( ), f->GetTimestamp( ));
       frames[ts->pid].push_back( f );
