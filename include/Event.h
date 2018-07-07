@@ -64,6 +64,7 @@ class Event : public RPCObject
     Name name;
     Name description;
     std::string language;
+    std::string description_extended;
 
   friend bool operator<( const Event &a, const Event &b );
 };

@@ -29,6 +29,7 @@
 #include <string.h>
 #include <libdvbv5/eit.h>
 #include <libdvbv5/desc_event_short.h>
+#include <libdvbv5/desc_event_extended.h>
 
 Event::Event( Channel &channel ) : channel(channel)
 {
@@ -84,7 +85,13 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
       case content_descriptor:
         break;
       case extended_event_descriptor:
-        //dvb_desc_default_print( NULL, desc );
+        {
+            struct dvb_desc_event_extended *d = (struct dvb_desc_event_extended *) desc;
+
+            if( d->text ) description_extended += d->text;
+            //dvb_desc_default_print( NULL, desc );
+            Log( "Got dvb_desc_event_extended %s", description_extended.c_str());
+        }
         break;
       default:
         //LogWarn( "event desc unhandled: %s", dvb_descriptors[desc->type].name );
@@ -141,6 +148,7 @@ bool Event::SaveConfig( ConfigBase &config )
   config.WriteConfig( "Duration",    duration );
   config.WriteConfig( "Name",        name );
   config.WriteConfig( "Description", description );
+  config.WriteConfig( "DescriptionExtended", description_extended );
   config.WriteConfig( "Language",    language );
 }
 
@@ -151,6 +159,7 @@ bool Event::LoadConfig( ConfigBase &config )
   config.ReadConfig( "Duration",    duration );
   config.ReadConfig( "Name",        name );
   config.ReadConfig( "Description", description );
+  config.ReadConfig( "DescriptionExtended", description_extended );
   config.ReadConfig( "Language",    language );
 }
 
@@ -158,6 +167,7 @@ void Event::json( json_object *entry ) const
 {
   json_object_object_add( entry, "name",          json_object_new_string( name.c_str( )));
   json_object_object_add( entry, "description",   json_object_new_string( description.c_str( )));
+  json_object_object_add( entry, "description_extended",   json_object_new_string( description_extended.c_str( )));
   json_object_object_add( entry, "id",            json_object_new_int( id ));
   json_object_time_add  ( entry, "start",         start );
   json_object_object_add( entry, "duration",      json_object_new_int( duration ));

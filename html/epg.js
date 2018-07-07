@@ -31,9 +31,13 @@ function duration( row )
 
 function print_event( row )
 {
-  return "<div>" + row["name"] + "</div>" +
+  cell = "<div><strong>" + row["name"] + "</strong></div>" +
          "<div>" + row["channel"] + "</div>" +
-         "<div>" + row["description"] + "</div>";
+         "<div><strong>" + row["description"] + "</strong></div>";
+
+    if(row["description_extended"] != "")
+         cell += "<div>" + row["description_extended"] + "</div>";
+    return cell;
 }
 
 function print_start( row, field )
@@ -42,3 +46,4 @@ function print_start( row, field )
   r += "<br/>" + duration( row );
   return r;
 }
+

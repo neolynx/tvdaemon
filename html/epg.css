@@ -36,3 +36,10 @@ td.sst_name div:nth-child(3)
   font-size: small;
   max-width: 30em;
 }
+
+td.sst_name div:nth-child(4)
+{
+  clear: both;
+  font-size: small;
+  max-width: 30em;
+}
