@@ -88,7 +88,7 @@ void LoggerSyslog::Log( int level, char *log )
 
 void TVD_Log( int level, const char *fmt, ... )
 {
-  char msg[255];
+  char msg[1024];
   va_list ap;
   va_start( ap, fmt );
   vsnprintf( msg, sizeof( msg ), fmt, ap );
@@ -98,7 +98,7 @@ void TVD_Log( int level, const char *fmt, ... )
 
 void Log( const char *fmt, ... )
 {
-  char msg[255];
+  char msg[1024];
   va_list ap;
   va_start( ap, fmt );
   vsnprintf( msg, sizeof( msg ), fmt, ap );
@@ -108,7 +108,7 @@ void Log( const char *fmt, ... )
 
 void LogInfo( const char *fmt, ... )
 {
-  char msg[255];
+  char msg[1024];
   va_list ap;
   va_start( ap, fmt );
   vsnprintf( msg, sizeof( msg ), fmt, ap );
@@ -118,7 +118,7 @@ void LogInfo( const char *fmt, ... )
 
 void LogWarn( const char *fmt, ... )
 {
-  char msg[255];
+  char msg[1024];
   va_list ap;
   va_start( ap, fmt );
   vsnprintf( msg, sizeof( msg ), fmt, ap );
@@ -128,7 +128,7 @@ void LogWarn( const char *fmt, ... )
 
 void LogError( const char *fmt, ... )
 {
-  char msg[255];
+  char msg[1024];
   va_list ap;
   va_start( ap, fmt );
   vsnprintf( msg, sizeof( msg ), fmt, ap );
