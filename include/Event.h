@@ -28,6 +28,8 @@
 #include <time.h>
 #include <stdint.h>
 #include <string>
+#include <map>
+#include <vector>
 
 struct dvb_table_eit_event;
 class ConfigBase;
@@ -65,6 +67,7 @@ class Event : public RPCObject
     Name description;
     std::string language;
     std::string description_extended;
+    std::map<std::string, std::vector<std::string>> description_items;
 
   friend bool operator<( const Event &a, const Event &b );
 };

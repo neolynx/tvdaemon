@@ -88,14 +88,18 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
       case extended_event_descriptor:
         {
             struct dvb_desc_event_extended *d = (struct dvb_desc_event_extended *) desc;
-            char id[255];
-            snprintf(id, sizeof(id), "[%d/%d]", d->id, d->last_id);
 
-            if( d->text ) description_extended += std::string(id) + d->text;
+            if( d->text ) description_extended += d->text;
             //dvb_desc_default_print( NULL, desc );
             //Log( "Got dvb_desc_event_extended %s", description_extended.c_str());
             if (first and d->id != 0)
-                LogError( "id not 0" );
+                LogError( "description_extended: id not 0" );
+
+            for( int i = 0; i < d->num_items; i++ )
+            {
+                std::vector<std::string> &l = this->description_items[d->items[i].description];
+                l.push_back(d->items[i].item);
+            }
         }
         break;
       default:
@@ -157,6 +161,21 @@ bool Event::SaveConfig( ConfigBase &config )
   config.WriteConfig( "Description", description );
   config.WriteConfig( "DescriptionExtended", description_extended );
   config.WriteConfig( "Language",    language );
+
+  config.DeleteConfig( "DescriptionItems" );
+  Setting &n = config.ConfigList( "DescriptionItems" );
+  ConfigBase c( n );
+  for( std::map<std::string, std::vector<std::string>>::const_iterator it = description_items.begin( ); it != description_items.end( ); it++ )
+  {
+    Setting &n2 = c.ConfigList( );
+    Setting &n3 = n2.add( Setting::TypeString );
+    n3 = it->first;
+      for( std::vector<std::string>::const_iterator it2 = it->second.begin(); it2 != it->second.end(); it2++ )
+      {
+        Setting &n3 = n2.add( Setting::TypeString );
+        n3 = *it2;
+      }
+  }
 }
 
 bool Event::LoadConfig( ConfigBase &config )
@@ -168,6 +187,21 @@ bool Event::LoadConfig( ConfigBase &config )
   config.ReadConfig( "Description", description );
   config.ReadConfig( "DescriptionExtended", description_extended );
   config.ReadConfig( "Language",    language );
+
+  Setting &n = config.ConfigList( "DescriptionItems" );
+  ConfigBase c2( n );
+  for( int i = 0; i < n.getLength( ); i++ )
+  {
+      Setting &n2 = n[i];
+      std::string item_desc;
+      for( int j = 0; j < n2.getLength( ); j++ )
+      {
+          if( j == 0 )
+              item_desc = n2[j].c_str();
+          else
+              description_items[item_desc].push_back(n2[j]);
+      }
+  }
 }
 
 void Event::json( json_object *entry ) const
@@ -180,6 +214,16 @@ void Event::json( json_object *entry ) const
   json_object_object_add( entry, "duration",      json_object_new_int( duration ));
   json_object_object_add( entry, "channel",       json_object_new_string( channel.GetName( ).c_str( )));
   json_object_object_add( entry, "channel_id",    json_object_new_int( channel.GetKey( )));
+  json_object *json_desc_items = json_object_new_object( );
+  for( std::map<std::string, std::vector<std::string>>::const_iterator it = description_items.begin( ); it != description_items.end( ); it++ )
+  {
+      json_object *json_desc_item = json_object_new_array( );
+      for( std::vector<std::string>::const_iterator it2 = it->second.begin(); it2 != it->second.end(); it2++ )
+          json_object_array_add( json_desc_item, json_object_new_string(it2->c_str()));
+      json_object_object_add( json_desc_items, it->first.c_str(), json_desc_item);
+
+  }
+  json_object_object_add( entry, "description_items", json_desc_items);
 }
 
 bool Event::compare( const JSONObject &other, const int &p ) const

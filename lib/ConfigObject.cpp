@@ -61,7 +61,6 @@ Setting &ConfigBase::ConfigList( const char *key )
   return settings->add( key, Setting::TypeList );
 }
 
-
 void ConfigBase::ReadConfig( const char *key, int &i )
 {
   if( settings->exists( key ))

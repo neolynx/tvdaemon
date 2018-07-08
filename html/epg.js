@@ -36,7 +36,16 @@ function print_event( row )
          "<div><strong>" + row["description"] + "</strong></div>";
 
     if(row["description_extended"] != "")
-         cell += "<div>" + row["description_extended"] + "</div>";
+         cell += "<div>" + row["description_extended"].replace(/\n/g, '<br/>') + "</div>";
+    if(row["description_items"])
+         for( item in row["description_items"]) {
+            //alert( JSON.stringify(item, null, 4));
+            cell += "<div>" + item + ":<ul>";
+            for( desc in row["description_items"][item] ) {
+                cell += "<li>" + row["description_items"][item][desc] + "</li>";
+            }
+            cell += "</ul><div>";
+         }
     return cell;
 }
 
