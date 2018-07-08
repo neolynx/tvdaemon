@@ -266,21 +266,22 @@ void TVDaemon::FindAdapters( )
   }
 
   DIR *dir;
-  struct dirent dp;
-  struct dirent *result = NULL;
+  struct dirent *dp = NULL;
   dir = opendir( "/dev/dvb" );
   if( !dir )
     return;
-  for( readdir_r( dir, &dp, &result ); result != NULL; readdir_r( dir, &dp, &result ))
+  while( true )
   {
-    if( dp.d_name[0] == '.' )
+    dp = readdir( dir );
+    if( dp == NULL )
+        break;
+    if( dp->d_name[0] == '.' )
       continue;
     int adapter_id;
-    if( sscanf( dp.d_name, "adapter%d", &adapter_id ) == 1 )
+    if( sscanf( dp->d_name, "adapter%d", &adapter_id ) == 1 )
     {
       DIR *dir2;
-      struct dirent dp2;
-      struct dirent *result2 = NULL;
+      struct dirent *dp2 = NULL;
       char adapter[255];
       snprintf( adapter, sizeof( adapter ), "/dev/dvb/adapter%d", adapter_id );
       dir2 = opendir( adapter );
@@ -289,14 +290,17 @@ void TVDaemon::FindAdapters( )
         LogError( "cannot open directory %s", adapter );
         continue;
       }
-      for( readdir_r( dir2, &dp2, &result2 ); result2 != NULL; readdir_r( dir2, &dp2, &result2 ))
+      while( true )
       {
-        if( dp2.d_name[0] == '.' )
+        dp2 = readdir( dir2 );
+        if( dp2 == NULL )
+            break;
+        if( dp2->d_name[0] == '.' )
           continue;
         int frontend_id;
-        if( sscanf( dp2.d_name, "frontend%d", &frontend_id ) == 1 )
+        if( sscanf( dp2->d_name, "frontend%d", &frontend_id ) == 1 )
         {
-          std::string path = std::string( adapter ) + "/" + dp2.d_name;
+          std::string path = std::string( adapter ) + "/" + dp2->d_name;
           AddFrontendToList( NULL, path.c_str(), adapter_id, frontend_id );
         }
       }

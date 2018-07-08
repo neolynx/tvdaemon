@@ -84,8 +84,7 @@ class ConfigObject : public ConfigBase
     template <class Class, class Parent> static bool CreateFromConfig( Parent &parent, std::string configname, std::vector<Class *> &list )
     {
       DIR *d;
-      struct dirent dp;
-      struct dirent *result = NULL;
+      struct dirent *dp = NULL;
       struct stat st;
       std::string dir;
       std::string file;
@@ -97,11 +96,14 @@ class ConfigObject : public ConfigBase
         LogError( "error opening config directory '%s'", path.c_str( ));
         return false;
       }
-      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      while( true )
       {
-        if( dp.d_name[0] == '.' )
+        dp = readdir( d );
+        if( dp == NULL )
+            break;
+        if( dp->d_name[0] == '.' )
           continue;
-        dir = path + dp.d_name;
+        dir = path + dp->d_name;
         if( stat( dir.c_str( ), &st ) < 0)
         {
           LogError( "cannot stat '%s'", dir.c_str( ));
@@ -110,7 +112,7 @@ class ConfigObject : public ConfigBase
         if( !S_ISDIR( st.st_mode ))
           continue;
         int id;
-        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+        if( sscanf( dp->d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
           continue;
         file = dir + "/config";
         if( !Utils::IsFile( file ))
@@ -136,8 +138,7 @@ class ConfigObject : public ConfigBase
     template <class Class, class Key, class Parent> static bool CreateFromConfig( Parent &parent, std::string configname, std::map<Key, Class *> &map )
     {
       DIR *d;
-      struct dirent dp;
-      struct dirent *result = NULL;
+      struct dirent *dp = NULL;
       struct stat st;
       std::string dir;
       std::string file;
@@ -149,11 +150,14 @@ class ConfigObject : public ConfigBase
         LogError( "error opening config directory '%s'", path.c_str( ));
         return false;
       }
-      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      while( true )
       {
-        if( dp.d_name[0] == '.' )
+        dp = readdir( d );
+        if( dp == NULL )
+            break;
+        if( dp->d_name[0] == '.' )
           continue;
-        dir = path + dp.d_name;
+        dir = path + dp->d_name;
         if( stat( dir.c_str( ), &st ) < 0)
         {
           LogError( "cannot stat '%s'", dir.c_str( ));
@@ -162,7 +166,7 @@ class ConfigObject : public ConfigBase
         if( !S_ISDIR( st.st_mode ))
           continue;
         int id;
-        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+        if( sscanf( dp->d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
           continue;
         file = dir + "/config";
         if( !Utils::IsFile( file ))
@@ -188,8 +192,7 @@ class ConfigObject : public ConfigBase
     template <class Class, class Parent> static bool CreateFromConfigFactory( Parent &parent, std::string configname, std::vector<Class *> &list )
     {
       DIR *d;
-      struct dirent dp;
-      struct dirent *result = NULL;
+      struct dirent *dp = NULL;
       struct stat st;
       std::string dir;
       std::string file;
@@ -201,11 +204,14 @@ class ConfigObject : public ConfigBase
         LogError( "error opening config directory '%s'", path.c_str( ));
         return false;
       }
-      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      while( true )
       {
-        if( dp.d_name[0] == '.' )
+        dp = readdir( d );
+        if( dp == NULL )
+            break;
+        if( dp->d_name[0] == '.' )
           continue;
-        dir = path + dp.d_name;
+        dir = path + dp->d_name;
         if( stat( dir.c_str( ), &st ) < 0)
         {
           LogError( "cannot stat '%s'", dir.c_str( ));
@@ -214,7 +220,7 @@ class ConfigObject : public ConfigBase
         if( !S_ISDIR( st.st_mode ))
           continue;
         int id;
-        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+        if( sscanf( dp->d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
           continue;
         file = dir + "/config";
         if( !Utils::IsFile( file ))
@@ -246,8 +252,7 @@ class ConfigObject : public ConfigBase
     template <class Class, class Key, class Parent> static bool CreateFromConfigFactory( Parent &parent, std::string configname, std::map<Key, Class *> &map )
     {
       DIR *d;
-      struct dirent dp;
-      struct dirent *result = NULL;
+      struct dirent *dp = NULL;
       struct stat st;
       std::string dir;
       std::string file;
@@ -259,11 +264,14 @@ class ConfigObject : public ConfigBase
         LogError( "error opening config directory '%s'", path.c_str( ));
         return false;
       }
-      for( readdir_r( d, &dp, &result ); result != NULL; readdir_r( d, &dp, &result ))
+      while( true )
       {
-        if( dp.d_name[0] == '.' )
+        dp = readdir( d );
+        if( dp == NULL )
+            break;
+        if( dp->d_name[0] == '.' )
           continue;
-        dir = path + dp.d_name;
+        dir = path + dp->d_name;
         if( stat( dir.c_str( ), &st ) < 0)
         {
           LogError( "cannot stat '%s'", dir.c_str( ));
@@ -272,7 +280,7 @@ class ConfigObject : public ConfigBase
         if( !S_ISDIR( st.st_mode ))
           continue;
         int id;
-        if( sscanf( dp.d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
+        if( sscanf( dp->d_name, ( configname +"%d" ).c_str( ), &id ) != 1 )
           continue;
         file = dir + "/config";
         if( !Utils::IsFile( file ))
