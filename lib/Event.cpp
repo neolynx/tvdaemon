@@ -68,6 +68,7 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
 
   duration = event->duration;
 
+  bool first = true;
   struct dvb_desc *desc = event->descriptor;
   while( desc )
   {
@@ -87,10 +88,14 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
       case extended_event_descriptor:
         {
             struct dvb_desc_event_extended *d = (struct dvb_desc_event_extended *) desc;
+            char id[255];
+            snprintf(id, sizeof(id), "[%d/%d]", d->id, d->last_id);
 
-            if( d->text ) description_extended += d->text;
+            if( d->text ) description_extended += std::string(id) + d->text;
             //dvb_desc_default_print( NULL, desc );
-            Log( "Got dvb_desc_event_extended %s", description_extended.c_str());
+            //Log( "Got dvb_desc_event_extended %s", description_extended.c_str());
+            if (first and d->id != 0)
+                LogError( "id not 0" );
         }
         break;
       default:
@@ -98,6 +103,8 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
         break;
     }
     desc = desc->next;
+    if (first)
+        first = false;
   }
 //  printf( "name: %s\n\n", name.c_str( ));
   //LogWarn( "Event %s: %d.%d.%d %d:%d", name.c_str( ), t.tm_mday, t.tm_mon, t.tm_year, t.tm_hour, t.tm_min );
