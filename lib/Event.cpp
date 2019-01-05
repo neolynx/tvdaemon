@@ -35,6 +35,22 @@ Event::Event( Channel &channel ) : channel(channel)
 {
 }
 
+void dvb_escape( std::string &s )
+{
+    std::string t;
+    for( int i = 0; i < s.size(); i++ )
+    {
+        unsigned char c = s[i];
+        if( c >= 0x80 && c <= 0x9F ){
+            Log( "Char 0x%02x", c );
+            t += "%++";
+        }
+        else
+            t += s[i];
+    }
+    s = t;
+}
+
 Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : channel(channel)
 {
   if( !event )
@@ -89,16 +105,18 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
         {
             struct dvb_desc_event_extended *d = (struct dvb_desc_event_extended *) desc;
 
-            if( d->text ) description_extended += d->text;
-            //dvb_desc_default_print( NULL, desc );
-            //Log( "Got dvb_desc_event_extended %s", description_extended.c_str());
             if (first and d->id != 0)
                 LogError( "description_extended: id not 0" );
 
+            if( d->text ) description_extended += d->text;
+
             for( int i = 0; i < d->num_items; i++ )
             {
+                if( ! d->items[i].description)
+                    continue;
                 std::vector<std::string> &l = this->description_items[d->items[i].description];
-                l.push_back(d->items[i].item);
+                std::string t( d->items[i].item );
+                l.push_back( t );
             }
         }
         break;
@@ -106,6 +124,7 @@ Event::Event( Channel &channel, const struct dvb_table_eit_event *event ) : chan
         //LogWarn( "event desc unhandled: %s", dvb_descriptors[desc->type].name );
         break;
     }
+    //dvb_escape( description_extended );
     desc = desc->next;
     if (first)
         first = false;
